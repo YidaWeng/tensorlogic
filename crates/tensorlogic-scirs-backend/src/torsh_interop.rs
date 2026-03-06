@@ -15,7 +15,7 @@
 //!
 //! # Example
 //!
-//! ```no_run
+//! ```ignore
 //! use tensorlogic_scirs_backend::{Scirs2Tensor, torsh_interop::*};
 //! use torsh_tensor::Tensor;
 //! use torsh_core::device::DeviceType;

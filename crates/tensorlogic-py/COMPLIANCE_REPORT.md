@@ -1,7 +1,7 @@
 # TensorLogic-Py Compliance Report
 
 **Date:** 2026-01-28
-**Version:** 0.1.0-beta.1
+**Version:** 0.1.0-rc.1
 **Status:** ✅ **FULLY COMPLIANT**
 
 ---

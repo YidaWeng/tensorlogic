@@ -6,6 +6,9 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+readme = "README.md"
+keywords = ["tensor", "logic", "adapters", "import-export", "migration"]
+categories = ["science", "algorithms", "data-structures"]
 
 [dependencies]
 tensorlogic-ir.workspace = true
@@ -20,7 +23,7 @@ oxicode.workspace = true
 # Optional database backends
 rusqlite = { version = "0.38", features = ["bundled"], optional = true }
 tokio-postgres = { version = "0.7", optional = true }
-tokio = { version = "1.49", features = ["full"], optional = true }
+tokio = { version = "1.50", features = ["full"], optional = true }
 async-trait = { version = "0.1", optional = true }
 
 [features]

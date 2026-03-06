@@ -8,7 +8,7 @@
 [![Examples](https://img.shields.io/badge/examples-17-blue)](#)
 [![Benchmarks](https://img.shields.io/badge/benchmarks-50+-orange)](#)
 [![Production](https://img.shields.io/badge/status-production_ready-success)](#)
-[![Version](https://img.shields.io/badge/version-0.1.0--beta.1-blue)](#)
+[![Version](https://img.shields.io/badge/version-0.1.0--rc.1-blue)](#)
 [![Zero Warnings](https://img.shields.io/badge/warnings-0-success)](#)
 
 ## Overview
@@ -19,7 +19,7 @@ This crate serves as the **lingua franca** between all TensorLogic components, p
 
 ## Features
 
-### ✅ Production Ready (v0.1.0-beta.1)
+### Production Ready (v0.1.0-rc.1)
 
 #### Advanced Type Systems
 - **Parametric Types**: Type constructors (`List<T>`, `Option<T>`, `Map<K,V>`), unification, generalization
@@ -36,16 +36,16 @@ This crate serves as the **lingua franca** between all TensorLogic components, p
 - **Expression Extensions**: Arithmetic, comparison, conditional operations, numeric constants
 - **Serialization**: Full serde support for JSON/binary serialization
 
-#### Automated Theorem Proving ✨ NEW
+#### Automated Theorem Proving
 - **Unification**: Robinson's algorithm, MGU computation, anti-unification (LGG)
 - **Resolution**: Refutation-based proving, multiple strategies (Saturation, Set-of-Support, Linear, Unit)
 - **Sequent Calculus**: Gentzen's LK system, automated proof search (DFS/BFS/ID), cut elimination
 - **Constraint Logic Programming**: CSP solving, arc/path consistency, backtracking search
 
 #### Advanced Logic Systems
-- **Modal Logic**: 6 axiom systems (K, T, S4, S5, D, B), necessity (□) and possibility (◇)
+- **Modal Logic**: 6 axiom systems (K, T, S4, S5, D, B), necessity (Box) and possibility (Diamond)
 - **Temporal Logic**: LTL/CTL operators (Next, Eventually, Always, Until), safety/liveness analysis
-- **Probabilistic Reasoning**: Imprecise probabilities, Fréchet bounds, credal sets, MLN semantics
+- **Probabilistic Reasoning**: Imprecise probabilities, Frechet bounds, credal sets, MLN semantics
 - **Fuzzy Logic**: 6 defuzzification methods, T-norms, T-conorms, fuzzy implications
 
 #### Advanced Graph Analysis
@@ -59,16 +59,16 @@ This crate serves as the **lingua franca** between all TensorLogic components, p
 - **Advanced Rewriting**: AC pattern matching, confluence checking, priority-based rules
 - **Cost Models**: Operation cost estimation, memory footprint tracking, auto-annotation
 
-### 🚧 Infrastructure Ready
+### Infrastructure Ready
 
-- **Aggregation Operations**: Count, Sum, Average, Max, Min (temporarily disabled)
+- **Aggregation Operations**: Count, Sum, Average, Max, Min (temporarily disabled pending compiler integration)
 - **Graph Transformation**: Visitor patterns, subgraph extraction, merging (module disabled)
 
 ## Installation
 
 ```toml
 [dependencies]
-tensorlogic-ir = "0.1.0-beta.1"
+tensorlogic-ir = "0.1.0-rc.1"
 ```
 
 ## Quick Start
@@ -78,7 +78,7 @@ tensorlogic-ir = "0.1.0-beta.1"
 ```rust
 use tensorlogic_ir::{TLExpr, Term};
 
-// Build a logical expression: ∀x. Person(x) → Mortal(x)
+// Build a logical expression: forall x. Person(x) -> Mortal(x)
 let person = TLExpr::pred("Person", vec![Term::var("x")]);
 let mortal = TLExpr::pred("Mortal", vec![Term::var("x")]);
 let rule = TLExpr::forall("x", "Entity", TLExpr::imply(person, mortal));
@@ -319,13 +319,13 @@ let still_free = quantified.free_vars();  // {"y"} - x is bound
 ### Arity Validation
 
 ```rust
-// Consistent arity ✓
+// Consistent arity
 let p1 = TLExpr::pred("P", vec![Term::var("x"), Term::var("y")]);
 let p2 = TLExpr::pred("P", vec![Term::var("a"), Term::var("b")]);
 let expr = TLExpr::and(p1, p2);
 assert!(expr.validate_arity().is_ok());
 
-// Inconsistent arity ✗
+// Inconsistent arity
 let p3 = TLExpr::pred("P", vec![Term::var("z")]);
 let bad_expr = TLExpr::and(p1, p3);
 assert!(bad_expr.validate_arity().is_err());
@@ -358,9 +358,9 @@ assert!(bad.validate_domains(&registry).is_err());
 | `AND(a, b)` | `a * b` | Element-wise multiplication |
 | `OR(a, b)` | `max(a, b)` | Or soft variant |
 | `NOT(a)` | `1 - a` | Complement |
-| `∃x. P(x)` | `sum(P, axis=x)` | Or `max` for hard quantification |
-| `∀x. P(x)` | `NOT(∃x. NOT(P(x)))` | Or `product` reduction |
-| `a → b` | `ReLU(b - a)` | Soft implication |
+| `exists x. P(x)` | `sum(P, axis=x)` | Or `max` for hard quantification |
+| `forall x. P(x)` | `NOT(exists x. NOT(P(x)))` | Or `product` reduction |
+| `a -> b` | `ReLU(b - a)` | Soft implication |
 
 ## Serialization
 
@@ -465,10 +465,10 @@ cargo bench -p tensorlogic-ir
 cargo tarpaulin --out Html
 ```
 
-**Test Status**: ✅ 676/676 passing (100%)
+**Test Status**: 676/676 passing (100%)
 - **632 unit tests**: Core functionality, edge cases, and automated theorem proving
 - **44 property tests**: Randomized invariant checking (43 passing, 1 ignored)
-- **40+ benchmarks**: Performance measurement across all operations
+- **50+ benchmarks**: Performance measurement across all operations
 - **Zero compiler/clippy warnings**: Production-ready code quality
 
 ## Performance
@@ -505,7 +505,7 @@ tensorlogic-ir/
 
 ### Related Crates
 
-- **tensorlogic-compiler**: Compiles TLExpr → EinsumGraph
+- **tensorlogic-compiler**: Compiles TLExpr into EinsumGraph
 - **tensorlogic-infer**: Execution & autodiff traits
 - **tensorlogic-scirs-backend**: SciRS2-powered runtime
 - **tensorlogic-adapters**: Symbol tables, axis metadata
@@ -546,7 +546,7 @@ cargo build 2>&1 | grep warning
 ### Standards
 
 - **Zero Warnings**: Code must compile cleanly
-- **File Size**: ≤ 2000 lines per file (use `splitrs` for refactoring)
+- **File Size**: <= 2000 lines per file (use `splitrs` for refactoring)
 - **Naming**: `snake_case` variables, `PascalCase` types
 - **Documentation**: Rustdoc for all public APIs
 
@@ -578,29 +578,20 @@ cargo bench -p tensorlogic-ir --bench ir_benchmarks -- serialization
 
 See [TODO.md](./TODO.md) for detailed roadmap.
 
-**Current Status**: ~90% complete (46/51 tasks)
+**Current Status**: 100% complete (76/76 tasks) as of v0.1.0-rc.1
 
-### Recently Completed (2025-11-04)
+### Completed in RC.1 (2026-03-06)
 
-- ✅ 7 comprehensive examples demonstrating all IR features
-- ✅ 30 property-based tests with proptest
-- ✅ 40+ performance benchmarks covering all core operations
-- ✅ Comprehensive rustdoc with zero warnings and inline examples
-- ✅ Enhanced test coverage (161 total tests)
-
-### Upcoming Features
-
-- Advanced graph optimizations (CSE, DCE public API)
-- Fuzzing with cargo-fuzz
-- ONNX/TorchScript export
-- Advanced types (parametric, dependent)
-- Modal and temporal logic operators
+- Advanced type systems: dependent types, linear types, refinement types
+- Automated theorem proving: unification, resolution, sequent calculus, CLP
+- Advanced graph analysis: SCC, critical paths, cycle enumeration, isomorphism
+- Profile-guided optimization (PGO) module
+- 676 passing tests with zero warnings
 
 ## References
 
 - **Tensor Logic Paper**: https://arxiv.org/abs/2510.12269
 - **Project Guide**: [CLAUDE.md](../../CLAUDE.md)
-- **SciRS2 Policy**: [SCIRS2_INTEGRATION_POLICY.md](../../SCIRS2_INTEGRATION_POLICY.md)
 
 ## License
 
@@ -608,10 +599,10 @@ Apache-2.0
 
 ---
 
-**Status**: 🎉 Production Ready (v0.1.0-beta.1)
-****Last Updated**: 2025-12-16
-**Tests**: 161/161 passing (100%)
-**Examples**: 7 comprehensive demonstrations
-**Benchmarks**: 40+ performance tests
+**Status**: Production Ready (v0.1.0-rc.1)
+**Last Updated**: 2026-03-06
+**Tests**: 676/676 passing (100%)
+**Examples**: 17 comprehensive demonstrations
+**Benchmarks**: 50+ performance tests
 **Documentation**: Zero rustdoc warnings with comprehensive module docs
 **Maintained By**: [COOLJAPAN Ecosystem](https://github.com/cool-japan)

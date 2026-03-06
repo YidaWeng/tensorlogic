@@ -8,6 +8,7 @@ repository.workspace = true
 description = "Logic-as-Tensor planning layer - meta crate re-exporting all TensorLogic components"
 keywords = ["logic", "tensor", "neural-symbolic", "differentiable", "machine-learning"]
 categories = ["science", "algorithms", "mathematics"]
+readme = "README.md"
 
 [dependencies]
 # Core planning layer (engine-agnostic)

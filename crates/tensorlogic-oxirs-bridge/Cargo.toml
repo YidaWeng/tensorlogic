@@ -6,6 +6,9 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+readme = "README.md"
+keywords = ["tensor", "logic", "rdf", "knowledge-graph", "sparql"]
+categories = ["science", "algorithms", "data-structures"]
 
 [dependencies]
 tensorlogic-ir.workspace = true
@@ -18,8 +21,8 @@ oxirs-gql.workspace = true
 oxirs-ttl.workspace = true
 
 # Low-level RDF types (for compatibility with existing code)
-oxrdf = "0.3.2"
-oxttl = "0.2.2"
+oxrdf = "0.3.3"
+oxttl = "0.2.3"
 
 # Random number generation
 scirs2-core = { workspace = true, features = ["random"] }

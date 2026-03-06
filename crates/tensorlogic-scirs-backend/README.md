@@ -4,7 +4,7 @@
 
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic--scirs--backend-orange)](https://crates.io/crates/tensorlogic-scirs-backend)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-scirs-backend)
-[![Tests](https://img.shields.io/badge/tests-195%2F195-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/tests-288%2F288-brightgreen)](#)
 [![Production](https://img.shields.io/badge/status-production_ready-success)](#)
 
 ## Overview
@@ -48,15 +48,15 @@ let input_grads = executor.backward(&graph, grads)?;
 
 ## Key Features
 
-### ✅ Execution Engine
+### Execution Engine
 - **Real Execution**: Full implementation of forward pass with all operations
 - **Autodiff**: Production-ready backward pass with gradient computation
 - **Einsum Operations**: Matrix multiplication, tensor contractions via scirs2-linalg
-- **Element-wise Ops**: Unary (ReLU, Sigmoid, OneMinus) and Binary (Add, Sub, Mul, Div, Comparisons)
+- **Element-wise Ops**: Unary (ReLU, Sigmoid, Tanh, OneMinus, Abs, Neg, Exp, Log, Sqrt, Square, Clip) and Binary (Add, Sub, Mul, Div, Comparisons)
 - **Reductions**: Sum, Max, Min, Mean, Product over specified axes
 - **Logical Ops**: AND, OR (Max/ProbSum), NAND, NOR, XOR, FORALL
 
-### ✅ Performance
+### Performance
 - **Graph Optimization**: Dead code elimination, CSE, constant folding, operation fusion
 - **Memory Planning**: Liveness analysis, peak memory estimation, reuse detection
 - **In-Place Operations**: 24 operations with zero-allocation execution
@@ -65,23 +65,33 @@ let input_grads = executor.backward(&graph, grads)?;
 - **SIMD Support**: Vectorized operations via feature flags
 - **Batch Execution**: Parallel processing for multiple inputs
 
-### ✅ Reliability
+### Reliability
 - **Error Handling**: Comprehensive error types (ShapeMismatch, Numerical, Device, etc.)
 - **Execution Tracing**: Multi-level debugging (Error/Warn/Info/Debug/Trace)
 - **Numerical Stability**: Fallback mechanisms for NaN/Inf handling
 - **Shape Validation**: Runtime shape inference and verification
 - **Gradient Checking**: Numeric verification for autodiff correctness
 
-### ✅ Testing
-- **195 Tests**: All passing with comprehensive coverage (including 8 CUDA detection tests)
-- **Optimization Tests**: 9 tests for DCE, CSE, and memory planning
-- **In-Place Tests**: 16 tests for zero-allocation operations
-- **Checkpoint Tests**: 11 tests for save/load/restore functionality
-- **Property-Based**: 11 proptest tests for mathematical properties
+### Advanced Features
+- **Quantization**: INT8/INT4/INT2 quantization (PTQ and QAT modes)
+- **Fuzzy Logic**: Soft/fuzzy logic operations with temperature control (soft_and, soft_or, soft_not, soft_imply, FuzzyLogic struct)
+- **GPU Readiness**: CUDA device detection and GPU readiness assessment
+- **Custom Operations**: User-defined operation trait (CustomOp, OpRegistry)
+- **Graph Optimizer**: Constant folding, CSE, DCE, algebraic simplification
+- **Metrics Collection**: Per-operation timing, memory tracking, throughput measurement
+- **Memory Profiler**: Allocation tracking with configurable profiling
+- **Checkpoint/Resume**: Full training state save/load with JSON serialization
+
+### Testing
+- **288 Tests**: All passing with comprehensive coverage
+- **Optimization Tests**: DCE, CSE, and memory planning
+- **In-Place Tests**: Zero-allocation operations
+- **Checkpoint Tests**: Save/load/restore functionality
+- **Property-Based**: proptest tests for mathematical properties
 - **Gradient Tests**: Numeric gradient checking verifies autodiff accuracy
 - **Integration Tests**: End-to-end TLExpr → Graph → Execution
-- **Parallel Tests**: 8 tests for multi-threaded execution
-- **Device Tests**: 8 tests for CUDA device detection and management
+- **Parallel Tests**: Multi-threaded execution
+- **Device Tests**: CUDA device detection and management
 
 ## Architecture
 
@@ -372,27 +382,6 @@ let config = CheckpointConfig {
 let checkpoint = Checkpoint::from_executor_with_config(&executor, iteration, &config)?;
 ```
 
-### Checkpoint Metadata
-
-```rust
-let mut checkpoint = Checkpoint::from_executor(&executor, 50)?;
-
-// Add custom metadata
-checkpoint.add_metadata("learning_rate".to_string(), "0.001".to_string());
-checkpoint.add_metadata("optimizer".to_string(), "adam".to_string());
-checkpoint.add_metadata("loss".to_string(), "0.523".to_string());
-
-// Save with metadata
-checkpoint.save("checkpoint_epoch_50.json")?;
-
-// Load and access metadata
-let checkpoint = Checkpoint::load("checkpoint_epoch_50.json")?;
-println!("Iteration: {}", checkpoint.metadata.iteration);
-println!("Timestamp: {}", checkpoint.metadata.timestamp);
-println!("LR: {}", checkpoint.get_metadata("learning_rate").unwrap());
-println!("Size: {}", checkpoint.size_human_readable());
-```
-
 ### Checkpoint Manager
 
 For managing multiple checkpoints with automatic cleanup:
@@ -423,21 +412,6 @@ for path in manager.list_checkpoints()? {
     println!("Checkpoint: {:?}", path);
 }
 ```
-
-### Features
-
-- **Metadata tracking**: Iteration number, timestamp, custom key-value pairs
-- **Checksum verification**: Optional data integrity checks
-- **Compression**: Reduce checkpoint file sizes (configurable)
-- **Incremental saves**: Save only changed tensors
-- **Automatic cleanup**: Keep only N most recent checkpoints
-- **Human-readable sizes**: Display checkpoint sizes in KB/MB/GB
-
-**Use Cases**:
-- **Mid-training checkpoints**: Save progress during long training runs
-- **Failure recovery**: Resume training after interruptions
-- **Model versioning**: Track model state across iterations
-- **Hyperparameter tuning**: Save/restore for different configurations
 
 ## Advanced Features
 
@@ -586,39 +560,6 @@ let mut executor = ParallelScirs2Exec::with_config(config);
 let result = executor.forward(&graph)?;
 ```
 
-#### How It Works
-
-The parallel executor:
-1. **Analyzes dependencies** between operations in the graph
-2. **Groups operations** into execution levels (topologically sorted)
-3. **Executes each level** with operations running in parallel using Rayon
-4. **Optimizes overhead** by running small levels sequentially
-
-**Example Graph:**
-```
-Op0: c = relu(a)     │ Level 0: Execute Op0 and Op1 in parallel
-Op1: d = sigmoid(b)  │
-Op2: e = c + d       │ Level 1: Execute Op2 sequentially
-Op3: f = relu(e)     │ Level 2: Execute Op3 sequentially
-```
-
-#### Performance Characteristics
-
-- **Best speedup**: Graphs with many independent operations (e.g., `AND(p1, p2, p3, p4)`)
-- **No speedup**: Sequential chains (e.g., `EXISTS(j, NOT(P))`)
-- **Overhead threshold**: Operations below `min_parallel_ops` run sequentially
-- **Backward pass**: Currently sequential (dependencies more complex)
-
-#### Benchmarking
-
-```bash
-# Run parallel performance benchmarks
-cargo bench --bench parallel_performance --features parallel
-
-# Compare sequential vs parallel
-cargo bench --bench parallel_performance --features parallel -- "high_parallelism"
-```
-
 ## Backend Features
 
 ### CPU Backend (Default)
@@ -649,49 +590,9 @@ Combines multi-threaded execution with SIMD vectorization for maximum performanc
 tensorlogic-scirs-backend = { version = "0.1", features = ["gpu"] }
 ```
 
-**Note:** CUDA device detection is already available! The backend can detect NVIDIA GPUs using nvidia-smi and report device information (name, memory, compute capability). Full GPU execution support will be added when scirs2-core gains GPU features.
+**Note:** CUDA device detection is already available. The backend can detect NVIDIA GPUs using nvidia-smi and report device information (name, memory, compute capability). Full GPU execution support will be added when scirs2-core gains GPU features.
 
-## Advanced Backend Features
-
-### Execution Modes
-
-The backend supports multiple execution modes for different performance/debugging tradeoffs:
-
-```rust
-use tensorlogic_scirs_backend::{ExecutionMode, ExecutionConfig, Scirs2Exec};
-
-// Eager mode (default) - immediate execution
-let config = ExecutionConfig::eager();
-
-// Graph mode - compile and optimize before execution
-let config = ExecutionConfig::graph()
-    .with_optimizations(true)
-    .with_memory_planning(true);
-
-// JIT mode (future) - compile to native code
-// let config = ExecutionConfig::jit();
-```
-
-**Graph Compilation Example:**
-
-```rust
-use tensorlogic_scirs_backend::execution_mode::CompiledGraph;
-
-// Compile a graph for optimized execution
-let compiled = CompiledGraph::compile(graph);
-
-// View compilation statistics
-println!("Original ops: {}", compiled.stats().original_ops);
-println!("Optimized ops: {}", compiled.stats().optimized_ops);
-println!("Compilation time: {:.2}ms", compiled.stats().compilation_time_ms);
-
-// Execute the optimized graph
-let result = executor.forward(compiled.graph())?;
-```
-
-### Device Management
-
-Manage compute devices (CPU/GPU) with the device API:
+## Device Management
 
 ```rust
 use tensorlogic_scirs_backend::{DeviceManager, Device, DeviceType};
@@ -738,11 +639,7 @@ if manager.is_available(&device) {
 - **Vulkan**: Cross-platform compute (future)
 - **ROCm**: AMD GPUs (future)
 
-**CUDA Detection:** The backend now includes automatic CUDA device detection using nvidia-smi. When you create a DeviceManager, it will automatically detect available CUDA devices and populate the device list. This allows you to prepare your code for GPU execution even before full GPU support is implemented.
-
-### Precision Control
-
-Control numerical precision for memory/speed tradeoffs:
+## Precision Control
 
 ```rust
 use tensorlogic_scirs_backend::{Precision, PrecisionConfig, Scalar};
@@ -752,35 +649,27 @@ let config = PrecisionConfig::f32();  // 32-bit (faster, less memory)
 let config = PrecisionConfig::f64();  // 64-bit (more accurate, default)
 let config = PrecisionConfig::mixed_precision(); // Mixed 16/32-bit
 
-// Configure mixed precision training
-let config = PrecisionConfig::mixed_precision()
-    .with_loss_scale(2048.0)
-    .with_dynamic_loss_scaling(true);
-
 // Query precision properties
 println!("Precision: {}", Precision::F32);
 println!("Memory savings: {:.1}%", Precision::F32.memory_savings() * 100.0);
 ```
 
-**Precision Options:**
-- **F32**: 32-bit floating point (50% memory savings vs F64)
-- **F64**: 64-bit floating point (default, maximum accuracy)
-- **Mixed16**: FP16 storage, FP32 compute (75% memory savings)
-- **BFloat16**: BF16 storage, FP32 compute (75% memory savings)
-
-**Generic Scalar Operations:**
-
-The `Scalar` trait abstracts over f32/f64:
+## Quantization
 
 ```rust
-use tensorlogic_scirs_backend::Scalar;
+use tensorlogic_scirs_backend::{QuantizationType, QuantizationScheme, QuantizationGranularity};
+use tensorlogic_scirs_backend::{calibrate_quantization, QatConfig};
 
-fn compute<T: Scalar>(x: T, y: T) -> T {
-    x.sqrt() + y.exp()
-}
+// Calibrate for post-training quantization
+let params = calibrate_quantization(&tensor, QuantizationType::Int8, QuantizationScheme::Symmetric)?;
 
-let result_f32 = compute(2.0f32, 1.0f32);
-let result_f64 = compute(2.0f64, 1.0f64);
+// Quantization-aware training configuration
+let qat_config = QatConfig {
+    quantization_type: QuantizationType::Int8,
+    scheme: QuantizationScheme::Asymmetric,
+    granularity: QuantizationGranularity::PerChannel,
+    ..Default::default()
+};
 ```
 
 ## SciRS2 Integration
@@ -788,15 +677,15 @@ let result_f64 = compute(2.0f64, 1.0f64);
 This crate strictly adheres to the SciRS2 integration policy:
 
 ```rust
-// ✓ Correct: Use SciRS2
+// Correct: Use SciRS2
 use scirs2_core::ndarray::{Array, ArrayD, Axis};
 use scirs2_core::array;
 use scirs2_linalg::einsum;
 
-// ✗ Wrong: Never import these directly
-use ndarray::Array2;  // ❌
-use rand::thread_rng;  // ❌
-use num_complex::Complex64;  // ❌
+// Wrong: Never import these directly
+use ndarray::Array2;  // Never
+use rand::thread_rng;  // Never
+use num_complex::Complex64;  // Never
 ```
 
 All tensor operations, linear algebra, and future autograd features use SciRS2.
@@ -825,20 +714,31 @@ cargo bench -p tensorlogic-scirs-backend --bench parallel_performance --features
 
 ### Test Coverage
 
-**152 tests, all passing:**
-- **120 unit tests**: Core functionality (einsum, operations, reductions, parallel execution, backend features)
-- **14 integration tests**: End-to-end TLExpr → Graph → Execution
-- **7 logical ops tests**: Extended operations (OR, NAND, NOR, XOR)
-- **11 property tests**: Mathematical properties (commutativity, associativity, etc.)
+**288 tests, all passing:**
 
-**Module breakdown:**
-- autodiff, executor, ops: Core execution and gradient computation
-- parallel_executor: Multi-threaded execution (8 tests)
-- memory_pool: Tensor reuse and pooling (7 tests)
-- dependency_analyzer: Graph analysis for parallelization (8 tests)
-- gradient_ops: Advanced gradient estimators (12 tests)
-- error, tracing, fallback: Reliability features (29 tests)
-- execution_mode, device, precision: Backend features (21 tests)
+| Module | Tests |
+|--------|-------|
+| autodiff, executor, ops | Core execution and gradient computation |
+| parallel_executor | Multi-threaded execution (8 tests) |
+| memory_pool | Tensor reuse and pooling (6 tests) |
+| dependency_analyzer | Graph analysis for parallelization (8 tests) |
+| gradient_ops | Advanced gradient estimators (11 tests) |
+| error, tracing, fallback | Reliability features (26 tests) |
+| execution_mode, device, precision | Backend features (38 tests) |
+| custom_ops | User-defined operations (16 tests) |
+| graph_optimizer | Optimization passes (13 tests) |
+| metrics | MetricsCollector, AtomicMetrics (19 tests) |
+| checkpoint | Save/load/restore (11 tests) |
+| inplace_ops | Zero-allocation operations (16 tests) |
+| memory_profiler | Allocation tracking (8 tests) |
+| quantization | INT8/INT4/INT2 quantization (10 tests) |
+| fuzzy_logic | Soft/fuzzy logic operations (21 tests) |
+| gpu_readiness | GPU assessment and recommendations (8 tests) |
+| cuda_detect | CUDA device detection (8 tests) |
+| batch_executor | Batch processing (5 tests) |
+| fusion | Operation fusion analysis (6 tests) |
+| shape_inference | Shape validation (8 tests) |
+| capabilities | Runtime capability detection (4 tests) |
 
 ### Property-Based Testing
 
@@ -847,30 +747,8 @@ Uses proptest to verify mathematical properties:
 - Multiplication associativity: `(a * b) * c = a * (b * c)`
 - Distributivity: `a * (b + c) = a*b + a*c`
 - Sum linearity: `sum(a*x + b*y) = a*sum(x) + b*sum(y)`
-- Sigmoid range: `0 ≤ sigmoid(x) ≤ 1`
+- Sigmoid range: `0 <= sigmoid(x) <= 1`
 - Identity/inverse properties
-
-## Performance
-
-### Benchmarks
-
-```bash
-cargo bench -p tensorlogic-scirs-backend
-```
-
-Available benchmarks:
-- `forward_pass`: Forward execution throughput
-- `simd_comparison`: CPU vs SIMD performance
-- `memory_footprint`: Memory usage tracking
-- `gradient_stability`: Backward pass stability
-- `throughput`: Operations per second
-
-### Optimization Features
-
-1. **Memory Pooling**: Reuses tensors with matching shapes (tracked statistics)
-2. **Operation Fusion**: Detects fusion opportunities (analysis-only, execution pending)
-3. **SIMD**: Vectorized operations via `--features simd`
-4. **Batch Execution**: Parallel processing for multiple inputs
 
 ## Integration Example
 
@@ -927,22 +805,21 @@ Key public types:
 - `ForwardTape`: Stores intermediate values for backward pass
 - `ParallelBatchExecutor`: Batch processing with parallelization
 - `ProfiledScirs2Exec`: Performance profiling wrapper
+- `MetricsCollector`: Per-operation timing and memory tracking
+- `GraphOptimizer`: Pre-execution optimization passes
+- `InplaceExecutor`: Zero-allocation in-place operations
+- `CheckpointManager`: Training state save/restore
 
 See [full API docs](https://docs.rs/tensorlogic-scirs-backend) for details.
 
-## Limitations & Future Work
+## Limitations and Future Work
 
 Current limitations:
-- **No GPU support**: CPU/SIMD only (GPU planned via scirs2 GPU features)
-- **No JIT compilation**: Eager execution only
+- **No GPU execution**: CPU/SIMD only (CUDA detection ready; execution planned via scirs2 GPU features)
+- **No JIT compilation**: Eager and graph modes supported; JIT planned
 - **No distributed execution**: Single-device only
 
-See [TODO.md](TODO.md) for the complete roadmap (72% complete, 65/90 tasks).
-
-Next priorities:
-- Parallelization (scirs2 parallel features)
-- In-place operations (memory optimization)
-- Multiple execution modes (eager/compiled/JIT)
+See [TODO.md](TODO.md) for the complete roadmap.
 
 ## Contributing
 
@@ -960,8 +837,7 @@ Apache-2.0
 
 ---
 
-**Status**: 🎉 Production Ready (v0.1.0-beta.1)
-****Last Updated**: 2025-12-16
-**Tests**: 104/104 passing (100%)
-**Completion**: 72% (65/90 tasks)
+**Status**: Production Ready (v0.1.0-rc.1)
+**Last Updated**: 2026-03-06
+**Tests**: 288/288 passing (100%)
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

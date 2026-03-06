@@ -1,6 +1,6 @@
 //! Tensorlogic - Logic-as-Tensor planning layer
 //!
-//! **Version**: 0.1.0-beta.1 | **Status**: Production Ready
+//! **Version**: 0.1.0-rc.1 | **Status**: Production Ready
 //!
 //! This is the top-level umbrella crate that re-exports all TensorLogic components.
 //!

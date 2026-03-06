@@ -4,32 +4,39 @@
 
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic--trustformers-orange)](https://crates.io/crates/tensorlogic-trustformers)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-trustformers)
-[![Tests](https://img.shields.io/badge/tests-229%2F229-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/tests-306%2F306-brightgreen)](#)
 [![Production](https://img.shields.io/badge/status-production_ready-success)](#)
 
 This crate provides implementations of transformer components (self-attention, multi-head attention, feed-forward networks) as einsum operations that compile to TensorLogic IR and execute on any TensorLogic backend.
 
 ## Features
 
-- ✅ **Self-Attention** - Scaled dot-product attention as einsum operations
-- ✅ **Multi-Head Attention** - Parallel attention heads with automatic head splitting/merging
-- ✅ **Feed-Forward Networks** - Position-wise FFN with configurable activations (GELU, ReLU, etc.)
-- ✅ **Gated FFN** - GLU-style gated feed-forward networks
-- ✅ **Position Encodings** - Sinusoidal, learned, and relative position encodings
-- ✅ **Layer Normalization** - Standard LayerNorm and RMSNorm implementations
-- ✅ **Encoder Layers** - Complete transformer encoder layers with pre/post-norm variants
-- ✅ **Decoder Layers** - Complete transformer decoder layers with masked self-attention
-- ✅ **Encoder/Decoder Stacks** - Multi-layer transformer stacks with flexible configuration
-- ✅ **Rule-Based Attention** - Logical rules guiding attention patterns (hard/soft/gated)
-- ✅ **Sparse Attention** - Efficient attention for long sequences (strided, local, block-sparse)
-- ✅ **Utility Functions** - Parameter counting, FLOP calculations, model presets
-- ✅ **Gradient Checkpointing** - Memory-efficient training with uniform/selective/dynamic strategies
-- ✅ **KV-Cache** - Efficient autoregressive inference with 10-1000x speedup
-- ✅ **Performance Benchmarks** - Criterion-based benchmark suite with HTML reports
-- ✅ **Type-Safe Configuration** - Builder pattern with validation
-- ✅ **Einsum-Native** - All operations expressed as einsum for maximum flexibility
-- ✅ **Zero Warnings** - Strict code quality enforcement
-- ✅ **229 Tests** - Comprehensive test coverage (100% passing)
+- **Self-Attention** - Scaled dot-product attention as einsum operations
+- **Multi-Head Attention** - Parallel attention heads with automatic head splitting/merging
+- **Feed-Forward Networks** - Position-wise FFN with configurable activations (GELU, ReLU, etc.)
+- **Gated FFN** - GLU-style gated feed-forward networks
+- **Position Encodings** - Sinusoidal, learned, relative, RoPE, and ALiBi position encodings
+- **Layer Normalization** - Standard LayerNorm and RMSNorm implementations
+- **Encoder Layers** - Complete transformer encoder layers with pre/post-norm variants
+- **Decoder Layers** - Complete transformer decoder layers with masked self-attention
+- **Encoder/Decoder Stacks** - Multi-layer transformer stacks with flexible configuration
+- **Rule-Based Attention** - Logical rules guiding attention patterns (hard/soft/gated)
+- **Sparse Attention** - Efficient attention for long sequences (strided, local, block-sparse)
+- **Flash Attention** - Memory-efficient O(1) attention with tiled SRAM computation
+- **Grouped-Query Attention (GQA)** - Reduce KV cache memory (MHA/GQA/MQA support)
+- **Sliding Window Attention** - Efficient long-context with O(n*w) complexity
+- **LoRA** - Low-Rank Adaptation for parameter-efficient fine-tuning
+- **Mixture-of-Experts (MoE)** - Sparse expert routing (TopK, Softmax, Switch, ExpertChoice)
+- **Vision Transformers (ViT)** - Patch embedding and ViT configurations (Tiny/Small/Base/Large/Huge)
+- **Gradient Checkpointing** - Memory-efficient training with uniform/selective/dynamic strategies
+- **KV-Cache** - Efficient autoregressive inference with 10-1000x speedup
+- **TrustformeRS Integration** - Bidirectional conversion with TrustformeRS ecosystem
+- **Utility Functions** - Parameter counting, FLOP calculations, model presets
+- **Performance Benchmarks** - Criterion-based benchmark suite with HTML reports
+- **Type-Safe Configuration** - Builder pattern with validation
+- **Einsum-Native** - All operations expressed as einsum for maximum flexibility
+- **Zero Warnings** - Strict code quality enforcement
+- **306 Tests** - Comprehensive test coverage (100% passing)
 
 ## Quick Start
 
@@ -51,10 +58,6 @@ graph.add_tensor("V");
 
 let outputs = self_attn.build_attention_graph(&mut graph).unwrap();
 
-// Configure multi-head attention
-let mha_config = AttentionConfig::new(512, 8).unwrap();
-let mha = MultiHeadAttention::new(mha_config).unwrap();
-
 // Configure feed-forward network
 let ffn_config = FeedForwardConfig::new(512, 2048)
     .with_activation("gelu")
@@ -67,7 +70,7 @@ let ffn = FeedForward::new(ffn_config).unwrap();
 ### Self-Attention Formula
 
 ```
-Attention(Q, K, V) = softmax(QK^T / √d_k) V
+Attention(Q, K, V) = softmax(QK^T / sqrt(d_k)) V
 ```
 
 **Einsum breakdown:**
@@ -76,16 +79,7 @@ Attention(Q, K, V) = softmax(QK^T / √d_k) V
 3. Softmax: `softmax(scores, axis=-1)`
 4. Attention-Value: `einsum("bqk,bkv->bqv", attn, V)`
 
-Where:
-- `b` = batch dimension
-- `q` = query sequence length
-- `k` = key sequence length
-- `d` = model dimension
-- `v` = value dimension
-
 ### Multi-Head Attention
-
-Multi-head attention splits the model dimension into parallel attention heads:
 
 ```
 1. Reshape: [B, S, D] -> [B, H, S, D_k] where D_k = D/H
@@ -94,23 +88,6 @@ Multi-head attention splits the model dimension into parallel attention heads:
 4. Apply to values: einsum("bhqk,bhkv->bhqv", attn, V)
 5. Concatenate heads: [B, H, S, D_k] -> [B, S, D]
 ```
-
-### Feed-Forward Network
-
-Position-wise feed-forward network with two linear transformations:
-
-```
-FFN(x) = activation(xW1 + b1)W2 + b2
-```
-
-**Einsum notation:**
-1. First linear: `einsum("bsd,df->bsf", x, W1)`
-2. Activation: `activation(h1)`  (GELU, ReLU, etc.)
-3. Second linear: `einsum("bsf,fd->bsd", h2, W2)`
-
-Where:
-- `d` = d_model
-- `f` = d_ff (typically 4 * d_model)
 
 ## Configuration
 
@@ -128,19 +105,6 @@ assert_eq!(config.n_heads, 8);
 assert_eq!(config.d_k, 64);  // Automatically computed
 ```
 
-### Feed-Forward Configuration
-
-```rust
-use tensorlogic_trustformers::FeedForwardConfig;
-
-let config = FeedForwardConfig::new(512, 2048)
-    .with_activation("gelu")  // or "relu", "silu", etc.
-    .with_dropout(0.1);
-
-assert_eq!(config.d_model, 512);
-assert_eq!(config.d_ff, 2048);
-```
-
 ### Complete Transformer Layer
 
 ```rust
@@ -152,304 +116,126 @@ let config = TransformerLayerConfig::new(512, 8, 2048)?
 assert!(config.validate().is_ok());
 ```
 
-## Graph Building
+## Position Encodings
 
-### Self-Attention Graph
-
-```rust
-use tensorlogic_trustformers::SelfAttention;
-use tensorlogic_ir::EinsumGraph;
-
-let attn = SelfAttention::new(config)?;
-let mut graph = EinsumGraph::new();
-
-// Add input tensors (Q, K, V)
-graph.add_tensor("Q");  // [batch, seq, d_model]
-graph.add_tensor("K");  // [batch, seq, d_model]
-graph.add_tensor("V");  // [batch, seq, d_model]
-
-// Build attention graph
-let outputs = attn.build_attention_graph(&mut graph)?;
-// outputs[0] = attention output [batch, seq, d_model]
-```
-
-### Multi-Head Attention Graph
+Five types of position encodings for sequence modeling:
 
 ```rust
-use tensorlogic_trustformers::MultiHeadAttention;
-
-let mha = MultiHeadAttention::new(config)?;
-let mut graph = EinsumGraph::new();
-
-graph.add_tensor("Q");
-graph.add_tensor("K");
-graph.add_tensor("V");
-
-let outputs = mha.build_mha_graph(&mut graph)?;
-```
-
-### Feed-Forward Network Graph
-
-```rust
-use tensorlogic_trustformers::FeedForward;
-
-let ffn = FeedForward::new(config)?;
-let mut graph = EinsumGraph::new();
-
-// Add input tensors
-graph.add_tensor("x");   // [batch, seq, d_model]
-graph.add_tensor("W1");  // [d_model, d_ff]
-graph.add_tensor("b1");  // [d_ff]
-graph.add_tensor("W2");  // [d_ff, d_model]
-graph.add_tensor("b2");  // [d_model]
-
-let outputs = ffn.build_ffn_graph(&mut graph)?;
-```
-
-## Advanced Features
-
-### Gated Feed-Forward Network (GLU)
-
-GLU-style networks use element-wise gating for improved capacity:
-
-```rust
-use tensorlogic_trustformers::GatedFeedForward;
-
-let glu = GatedFeedForward::new(config)?;
-let mut graph = EinsumGraph::new();
-
-graph.add_tensor("x");
-graph.add_tensor("W_gate");
-graph.add_tensor("W_value");
-graph.add_tensor("W_out");
-
-let outputs = glu.build_glu_graph(&mut graph)?;
-```
-
-Formula: `GLU(x) = σ(xW_gate) ⊙ activation(xW_value) W_out`
-
-## Integration with TensorLogic
-
-The einsum graphs produced by this crate integrate seamlessly with the TensorLogic ecosystem:
-
-### Compilation
-
-```rust
-use tensorlogic_compiler::CompilerContext;
-
-let mut ctx = CompilerContext::new();
-// Compile TLExpr rules that use transformer operations
-```
-
-### Execution
-
-```rust
-use tensorlogic_scirs_backend::Scirs2Executor;
-
-let executor = Scirs2Executor::new();
-// Execute the transformer graph on SciRS2 backend
-```
-
-### Optimization
-
-```rust
-use tensorlogic_ir::graph::optimization::optimize_graph;
-
-let stats = optimize_graph(&mut graph)?;
-// Apply dead code elimination, CSE, etc.
-```
-
-## Design Philosophy
-
-This crate follows core TensorLogic principles:
-
-1. **Backend Independence**: Same graph works on CPU, GPU, TPU
-2. **Einsum-Native**: Clear mathematical semantics
-3. **Composability**: Mix transformer layers with logical rules
-4. **Type Safety**: Compile-time dimension checking where possible
-5. **Zero Cost Abstractions**: No runtime overhead
-
-## Examples
-
-See the [examples directory](examples/) for complete examples:
-
-- `01_basic_encoder.rs` - Basic transformer encoder usage
-- `02_trustformers_integration.rs` - TrustformeRS integration
-- `03_rule_based_attention.rs` - Rule-based attention patterns
-- `04_sparse_attention.rs` - Sparse attention for long sequences
-- `05_gradient_checkpointing.rs` - Memory-efficient training strategies
-- `06_kv_cache_inference.rs` - Fast autoregressive generation with KV-cache
-
-## Testing
-
-Run the test suite:
-
-```bash
-cargo nextest run -p tensorlogic-trustformers
-```
-
-All 229 tests should pass with zero warnings.
-
-## Benchmarking
-
-Run performance benchmarks:
-
-```bash
-cargo bench --bench model_benchmarks
-```
-
-This will generate HTML reports in `target/criterion/` with detailed performance metrics.
-
-## Performance
-
-The einsum-based approach enables:
-
-- **Operation Fusion**: Compiler can fuse consecutive operations
-- **Memory Efficiency**: Minimal intermediate tensors
-- **Parallelization**: Natural SIMD/GPU mapping
-- **Optimization**: Graph-level optimizations
-
-## Roadmap
-
-See [TODO.md](TODO.md) for the development roadmap. Current status: **100% complete** 🎉
-
-### Completed ✅
-- Self-attention as einsum
-- Multi-head attention
-- Feed-forward networks (standard + gated GLU)
-- Position encodings (sinusoidal, learned, relative, RoPE, ALiBi)
-- Layer normalization (LayerNorm + RMSNorm)
-- Transformer encoder layers (pre-norm + post-norm)
-- Transformer decoder layers (pre-norm + post-norm)
-- Encoder/decoder stacks with position encoding
-- Rule-based attention patterns (hard/soft/gated)
-- Sparse attention patterns (strided, local, block-sparse, global-local)
-- Gradient checkpointing (uniform, selective, dynamic)
-- KV-cache for efficient inference (10-1000x speedup)
-- TrustformeRS integration (bidirectional conversion)
-- Utility functions (parameter counting, FLOP calculations, presets)
-- Performance benchmarking suite (Criterion)
-- Configuration system with validation
-- Error handling with IrError conversion
-- 229 comprehensive tests (100% passing, zero warnings)
-- 6 complete examples
-
-### Future Enhancements 📋
-- Vision transformers (ViT)
-- Flash Attention integration
-- Pre-trained model weight import
-- Advanced pattern composition
-- GPU-specific optimizations
-- Speculative decoding
-- Quantization support
-
-## References
-
-- [Attention Is All You Need](https://arxiv.org/abs/1706.03762) - Original transformer paper
-- [Tensor Logic Paper](https://arxiv.org/abs/2510.12269) - TensorLogic framework
-- [Einsum Documentation](https://numpy.org/doc/stable/reference/generated/numpy.einsum.html) - Einsum notation
-
-## License
-
-This crate is part of the TensorLogic project and is licensed under Apache-2.0.
-
-## New Features in v0.1.0
-
-### Position Encodings
-Three types of position encodings for sequence modeling:
-
-```rust
-use tensorlogic_trustformers::{PositionEncodingConfig, SinusoidalPositionEncoding};
+use tensorlogic_trustformers::{
+    SinusoidalPositionEncoding, PositionEncodingConfig,
+    RotaryPositionEncoding, AlibiPositionEncoding,
+};
 
 // Sinusoidal (fixed) encoding
 let config = PositionEncodingConfig::sinusoidal(512, 2048);
 let pe = SinusoidalPositionEncoding::new(config).unwrap();
 
-// Learned position embeddings
-let config = PositionEncodingConfig::learned(512, 2048);
-let pe = LearnedPositionEncoding::new(config).unwrap();
-
-// Relative position encoding
-let config = PositionEncodingConfig::relative(512, 32, 128);
-let pe = RelativePositionEncoding::new(config).unwrap();
+// Rotary Position Embedding (RoPE) - used in LLaMA
+// Attention with Linear Biases (ALiBi) - used in BLOOM
 ```
 
-### Layer Normalization
-Standard LayerNorm and efficient RMSNorm:
+## Flash Attention
+
+Memory-efficient attention with tiled SRAM computation:
 
 ```rust
-use tensorlogic_trustformers::{LayerNormConfig, LayerNorm, RMSNorm};
+use tensorlogic_trustformers::{FlashAttention, FlashAttentionConfig, FlashAttentionPreset};
 
-// Standard layer normalization
-let config = LayerNormConfig::new(512).with_eps(1e-6);
-let ln = LayerNorm::new(config).unwrap();
+// A100 GPU preset
+let config = FlashAttentionPreset::a100();
+let flash = FlashAttention::new(config)?;
 
-// RMS normalization (more efficient)
-let rms = RMSNorm::new(config).unwrap();
+// Custom tiling
+let config = FlashAttentionConfig::new(512, 8)
+    .with_block_size_q(64)
+    .with_block_size_kv(64)
+    .with_causal(true);
 ```
 
-### Complete Transformer Layers
-Full encoder and decoder layers with residual connections:
+## Grouped-Query Attention (GQA)
+
+Reduce KV cache memory for efficient inference:
 
 ```rust
-use tensorlogic_trustformers::{EncoderLayerConfig, EncoderLayer};
+use tensorlogic_trustformers::{GroupedQueryAttention, GQAConfig, GQAPreset};
 
-// Encoder layer with pre-normalization
-let config = EncoderLayerConfig::new(512, 8, 2048)?
-    .with_pre_norm(true)
-    .with_dropout(0.1);
-let encoder = EncoderLayer::new(config)?;
+// LLaMA 2 70B style (8 KV heads, 64 query heads)
+let config = GQAPreset::llama2_70b();
+let gqa = GroupedQueryAttention::new(config)?;
 
-// Decoder layer with causal masking
-let decoder_config = DecoderLayerConfig::new(512, 8, 2048)?;
-let decoder = DecoderLayer::new(decoder_config)?;
+// Memory savings compared to MHA
+println!("KV cache memory: {:.1}x of MHA", config.memory_factor());
 ```
 
-### Transformer Stacks
-Multi-layer transformer architectures:
+## Sliding Window Attention
+
+Efficient long-context handling:
 
 ```rust
-use tensorlogic_trustformers::{EncoderStackConfig, EncoderStack};
+use tensorlogic_trustformers::{SlidingWindowAttention, SlidingWindowPreset};
 
-// 6-layer transformer encoder
-let config = EncoderStackConfig::new(6, 512, 8, 2048, 1024)?
-    .with_dropout(0.1)
-    .with_final_layer_norm(true);
-let encoder_stack = EncoderStack::new(config)?;
+// Mistral 7B style
+let config = SlidingWindowPreset::mistral_7b();
+let swa = SlidingWindowAttention::new(config)?;
 
-// Build complete encoder graph
-let mut graph = EinsumGraph::new();
-graph.add_tensor("input");
-let outputs = encoder_stack.build_encoder_stack_graph(&mut graph)?;
+// O(n*w) complexity instead of O(n^2)
+println!("Complexity reduction: {:.1}x", config.complexity_reduction(4096));
 ```
 
-### Rule-Based Attention
-Integrate logical rules with attention mechanisms:
+## LoRA (Low-Rank Adaptation)
+
+Parameter-efficient fine-tuning:
 
 ```rust
-use tensorlogic_trustformers::{RuleAttentionConfig, RuleBasedAttention};
-use tensorlogic_trustformers::rule_attention::patterns;
+use tensorlogic_trustformers::{LoRAConfig, LoRAAttention, LoRAPreset};
 
-// Hard constraint: only attend where rule is satisfied
-let base_attn = AttentionConfig::new(512, 8)?;
-let config = RuleAttentionConfig::hard(base_attn);
-let rule = patterns::syntactic_dependency("head", "dep");
-let attn = RuleBasedAttention::new(config)?.with_rule(rule);
+// Standard LoRA configuration
+let config = LoRAPreset::standard(512, 8)?;
+let lora_attn = LoRAAttention::new(config)?;
 
-// Soft constraint: bias attention towards rule-satisfying positions
-let config = RuleAttentionConfig::soft(base_attn, 0.7);
-
-// Gated: interpolate between content and rule attention
-let config = RuleAttentionConfig::gated(base_attn, 0.5);
+// Compression ratio
+println!("Parameter reduction: {:.0}x", config.compression_ratio());
 ```
 
-### Gradient Checkpointing
+## Mixture-of-Experts (MoE)
+
+Sparse conditional computation:
+
+```rust
+use tensorlogic_trustformers::{MoeConfig, MoeLayer, MoePreset, RouterType};
+
+// Mixtral 8x7B style
+let config = MoePreset::mixtral_8x7b();
+let moe = MoeLayer::new(config)?;
+
+// Custom MoE
+let config = MoeConfig::new(512, 8, RouterType::TopK(2))?
+    .with_load_balancing(0.01);
+```
+
+## Vision Transformers (ViT)
+
+Image recognition with transformer architecture:
+
+```rust
+use tensorlogic_trustformers::{VisionTransformer, ViTPreset};
+
+// ViT-Base/16 configuration
+let config = ViTPreset::base();
+let vit = VisionTransformer::new(config)?;
+
+println!("Parameters: {:.1}M", config.num_parameters() as f64 / 1e6);
+```
+
+Available presets: Tiny (5.7M), Small (22M), Base (86M), Large (307M), Huge (632M)
+
+## Gradient Checkpointing
+
 Memory-efficient training for large models:
 
 ```rust
 use tensorlogic_trustformers::{CheckpointConfig, EncoderStackConfig};
 
-// Create a large model
 let config = EncoderStackConfig::new(12, 768, 12, 3072, 512)?;
 
 // Uniform checkpointing: checkpoint every 2 layers
@@ -461,21 +247,11 @@ println!("Compute overhead: {:.2}x", checkpoint.compute_overhead(12));
 let checkpoint = CheckpointConfig::selective(vec![0, 3, 6, 9]);
 
 // Dynamic checkpointing: automatically balance memory vs. compute
-let checkpoint = CheckpointConfig::dynamic(12, 0.3)?; // Target 30% memory usage
-
-// Customize what to checkpoint
-let checkpoint = CheckpointConfig::uniform(2)
-    .with_checkpoint_attention(true)   // Checkpoint attention
-    .with_checkpoint_ffn(false);       // Don't checkpoint FFN
+let checkpoint = CheckpointConfig::dynamic(12, 0.3)?;
 ```
 
-Benefits:
-- **50-80% memory savings** depending on strategy
-- **1.1-1.3x compute overhead** (modest increase)
-- **Train larger models** or use bigger batch sizes
-- **Three strategies**: uniform, selective, dynamic
+## KV-Cache for Fast Inference
 
-### KV-Cache for Fast Inference
 Enable efficient autoregressive generation with dramatic speedups:
 
 ```rust
@@ -484,108 +260,152 @@ use tensorlogic_trustformers::{KVCache, KVCacheConfig};
 // Create cache for 12-layer model (GPT-2 small)
 let mut cache = KVCache::new(12, 12, 64);
 
-// During autoregressive generation
-for step in 0..100 {
-    // Compute keys/values only for new token
-    let keys = compute_keys_for_new_token();   // [batch, heads, 1, dim]
-    let values = compute_values_for_new_token(); // [batch, heads, 1, dim]
-
-    // Update cache for all layers
-    for layer_idx in 0..12 {
-        cache.update_layer(layer_idx, keys.clone(), values.clone())?;
-    }
-
-    // Retrieve cached keys/values for attention
-    let (all_keys, all_values) = cache.get_layer(0)?;
-
-    // Compute attention only over new position
-    // ... (attention computation using cached K,V)
-
-    cache.next_step();
-}
-
 // Monitor cache usage
 let stats = cache.stats();
 println!("{}", stats.summary());
-// CacheStats:
-//   Layers: 12
-//   Seq len: 100
-//   Memory: 7.0/4608.0 MB (0.2%)
-//   Step: 100
-//   Enabled: true
 ```
 
-**Performance Impact:**
+Benefits:
 - **10-1000x speedup** depending on sequence length
-- Linear speedup with sequence length: 100 tokens = 100x faster
 - Minimal memory cost: ~2-10 MB for typical models
 - Essential for production text generation
 
-**Configuration Options:**
-```rust
-// Custom cache configuration
-let config = KVCacheConfig::new(24, 16, 64)  // GPT-2 large
-    .with_max_seq_len(4096)    // Support longer contexts
-    .with_max_batch_size(64)   // Larger batch inference
-    .with_enabled(true);       // Enable/disable dynamically
+## Rule-Based Attention
 
-let cache = KVCache::from_config(config)?;
-
-// Memory estimation
-println!("Max memory: {:.1} MB", config.memory_usage_mb());
-```
-
----
-
-### Sparse Attention
-Efficient attention for long sequences:
+Integrate logical rules with attention mechanisms:
 
 ```rust
-use tensorlogic_trustformers::{SparseAttentionConfig, SparseAttention, LocalAttention};
+use tensorlogic_trustformers::{RuleAttentionConfig, RuleBasedAttention};
 
-// Strided sparse attention (attend every k-th position)
+// Hard constraint: only attend where rule is satisfied
 let base_attn = AttentionConfig::new(512, 8)?;
-let config = SparseAttentionConfig::strided(base_attn, 4)?;
-let sparse = SparseAttention::new(config)?;
+let config = RuleAttentionConfig::hard(base_attn);
 
-// Local windowed attention
-let config = SparseAttentionConfig::local(base_attn, 128)?;
-let sparse = SparseAttention::new(config)?;
+// Soft constraint: bias attention towards rule-satisfying positions
+let config = RuleAttentionConfig::soft(base_attn, 0.7);
 
-// Or use dedicated LocalAttention for efficiency
-let local = LocalAttention::new(base_attn, 64)?;
-println!("Memory savings: {:.1}%", local.memory_savings(1024) * 100.0);
+// Gated: interpolate between content and rule attention
+let config = RuleAttentionConfig::gated(base_attn, 0.5);
 ```
 
-### Utility Functions
-Helper functions for model analysis:
+## TrustformeRS Integration
+
+Bidirectional conversion with the TrustformeRS ecosystem:
 
 ```rust
-use tensorlogic_trustformers::utils::{encoder_stack_stats, presets};
+use tensorlogic_trustformers::{TrustformersConverter, IntegrationConfig};
+
+// Convert TrustformeRS architectures (BERT, GPT, T5) to TLExpr
+let converter = TrustformersConverter::new(config)?;
+let tlexpr = converter.convert_bert_encoder(bert_config)?;
+
+// Load pretrained weights
+let loader = TrustformersWeightLoader::new();
+let weights = loader.load_checkpoint("model.bin")?;
+```
+
+## Model Presets
+
+```rust
+use tensorlogic_trustformers::{presets, utils::encoder_stack_stats};
+
+// Standard presets
+let gpt2 = presets::gpt2_small();
+let bert = presets::bert_base();
+let (encoder, decoder) = presets::transformer_base();
 
 // Get model statistics
-let config = presets::gpt2_small();
-let stats = encoder_stack_stats(&config);
+let stats = encoder_stack_stats(&gpt2);
 println!("{}", stats.summary());
-// Output: ModelStats:
+// ModelStats:
 //   Total params: 117.00M
 //   Trainable: 117.00M
 //   Layers: 12
 //   d_model: 768
 //   Memory: 468 MB
-
-// Use preset configurations
-let gpt2 = presets::gpt2_small();
-let bert = presets::bert_base();
-let (encoder, decoder) = presets::transformer_base();
 ```
+
+## Integration with TensorLogic
+
+The einsum graphs produced by this crate integrate seamlessly with the TensorLogic ecosystem:
+
+```rust
+use tensorlogic_compiler::CompilerContext;
+use tensorlogic_scirs_backend::Scirs2Executor;
+
+// Compile the transformer graph
+let mut ctx = CompilerContext::new();
+// ... compile transformer einsum graph
+
+// Execute on SciRS2 backend
+let executor = Scirs2Executor::new();
+// ... execute the graph
+```
+
+## Design Philosophy
+
+1. **Backend Independence**: Same graph works on CPU, GPU, TPU
+2. **Einsum-Native**: Clear mathematical semantics
+3. **Composability**: Mix transformer layers with logical rules
+4. **Type Safety**: Compile-time dimension checking where possible
+5. **Zero Cost Abstractions**: No runtime overhead
+
+## Examples
+
+See the [examples directory](examples/) for 10 complete examples:
+
+- `01_basic_encoder.rs` - Basic transformer encoder usage
+- `02_trustformers_integration.rs` - TrustformeRS integration
+- `03_rule_based_attention.rs` - Rule-based attention patterns
+- `04_sparse_attention.rs` - Sparse attention for long sequences
+- `05_gradient_checkpointing.rs` - Memory-efficient training strategies
+- `06_kv_cache_inference.rs` - Fast autoregressive generation with KV-cache
+- `07_vision_transformers.rs` - Vision Transformer (ViT) for image classification
+- `08_mixture_of_experts.rs` - Mixture-of-Experts for sparse models
+- `09_modern_llm_optimizations.rs` - GQA, Sliding Window, LoRA
+- `10_modern_llm_complete.rs` - Complete modern LLM configurations
+
+## Testing
+
+```bash
+cargo nextest run -p tensorlogic-trustformers
+# 306 tests, all passing, zero warnings
+```
+
+## Benchmarking
+
+```bash
+cargo bench --bench model_benchmarks
+```
+
+This generates HTML reports in `target/criterion/` with detailed performance metrics.
+
+## Performance
+
+The einsum-based approach enables:
+
+- **Operation Fusion**: Compiler can fuse consecutive operations
+- **Memory Efficiency**: Minimal intermediate tensors
+- **Parallelization**: Natural SIMD/GPU mapping
+- **Optimization**: Graph-level optimizations
+
+## References
+
+- [Attention Is All You Need](https://arxiv.org/abs/1706.03762) - Original transformer paper
+- [Tensor Logic Paper](https://arxiv.org/abs/2510.12269) - TensorLogic framework
+- [Flash Attention](https://arxiv.org/abs/2205.14135) - Memory-efficient attention
+- [LoRA](https://arxiv.org/abs/2106.09685) - Low-rank adaptation
+
+## License
+
+Apache-2.0
 
 ---
 
-**Status**: 🎉 Production Ready (v0.1.0-beta.1)
-****Last Updated**: 2025-12-16
-**Tests**: 229/229 passing (100%)
-**Examples**: 6 comprehensive examples
+**Status**: Production Ready (v0.1.0-rc.1)
+**Last Updated**: 2026-03-06
+**Tests**: 306/306 passing (100%)
+**Examples**: 10 comprehensive examples
 **Benchmarks**: Criterion suite with HTML reports
-**Features**: Complete transformer implementation with optimizations
+**Features**: Complete transformer implementation with modern LLM optimizations
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

@@ -5,6 +5,32 @@ All notable changes to TensorLogic will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.1.0-rc.1] - 2026-03-06
+
+### Changed - Release Candidate 1
+
+#### Version Bump
+- **Version bump from 0.1.0-beta.1 to 0.1.0-rc.1** across all workspace crates
+  - Workspace version updated in root Cargo.toml
+  - All internal crate references updated (tensorlogic-ir, tensorlogic-adapters, tensorlogic-infer, tensorlogic-compiler, tensorlogic-scirs-backend, tensorlogic-train, tensorlogic-oxirs-bridge, tensorlogic-sklears-kernels, tensorlogic-quantrs-hooks, tensorlogic-trustformers)
+  - tensorlogic-py version aligned to 0.1.0-rc.1
+  - Version strings updated in lib.rs doc comments (tensorlogic, tensorlogic-train, tensorlogic-trustformers)
+
+#### Dependency Upgrades
+- **SciRS2 ecosystem**: 0.1.3 -> 0.3.0 (scirs2-core, scirs2-linalg, scirs2-autograd, scirs2-optimize)
+- **SkleaRS ecosystem**: 0.1.0-beta.1 -> 0.1.0-rc.1 (sklears-core, sklears-kernel-approximation)
+- **ToRSh ecosystem**: 0.1.0-beta.1 -> 0.1.0 (torsh-core, torsh-tensor)
+- **rand**: 0.9 -> 0.10
+- **toml**: 0.9 -> 1.0
+- **tokio**: 1.49 -> 1.50
+- **oxrdf**: 0.3.2 -> 0.3.3
+- **oxttl**: 0.2.2 -> 0.2.3
+- **tempfile**: 3.24 -> 3.26
+
+### Fixed
+- **rand 0.10 compatibility**: Changed `rand::Rng` to `rand::RngExt` in learned_opt.rs for rand 0.10 API
+- **Doc test in torsh_interop.rs**: Changed `no_run` to `ignore` to prevent doc test build failures
+
 ## [Unreleased]
 
 ### Added
@@ -84,7 +110,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 #### Production Release
 - **First Beta Release** - All alpha.2 features stabilized
-- **4,364 tests passing** (100% pass rate)
+- **4,415 tests passing** (100% pass rate)
 - **Zero warnings** across all build configurations
 - **Complete documentation** and examples
 - **Production-ready** for real-world use

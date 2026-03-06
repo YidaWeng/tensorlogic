@@ -9,30 +9,35 @@
 
 ## Overview
 
-**Status**: 🎉 **Production Ready - ALL HIGH-PRIORITY FEATURES COMPLETE (100%)**
-**Version**: 0.1.0-beta.1 (with Async Execution)
-**Last Updated**: 2025-11-17
+**Status**: Production Ready - ALL HIGH-PRIORITY FEATURES COMPLETE (100%)
+**Version**: 0.1.0-rc.1
+**Last Updated**: 2026-03-06
 
 TensorLogic compiles logical rules (predicates, quantifiers, implications) into **tensor equations (einsum graphs)** that can be executed on various backends. This Python package provides a comprehensive Pythonic API for researchers and practitioners to use TensorLogic from Jupyter notebooks and Python workflows.
 
 ## Key Features
 
 ### Core Capabilities
-- ✅ **Logical Expression DSL**: Build complex logical rules using predicates, quantifiers, and connectives
-- ✅ **Arithmetic & Comparisons**: Full support for arithmetic operations and conditional logic
-- ✅ **Multiple Compilation Strategies**: 6 preset configurations (soft/hard logic, fuzzy variants, probabilistic)
-- ✅ **NumPy Integration**: Seamless bidirectional conversion between NumPy arrays and internal tensors
-- ✅ **Type Safety**: Complete type stubs (.pyi) for IDE support and static type checking
-- ✅ **Comprehensive Error Handling**: Clear, actionable error messages
+- **Logical Expression DSL**: Build complex logical rules using predicates, quantifiers, and connectives
+- **Arithmetic & Comparisons**: Full support for arithmetic operations and conditional logic
+- **Multiple Compilation Strategies**: 6 preset configurations (soft/hard logic, fuzzy variants, probabilistic)
+- **NumPy Integration**: Seamless bidirectional conversion between NumPy arrays and internal tensors
+- **Type Safety**: Complete type stubs (.pyi) for IDE support and static type checking
+- **Comprehensive Error Handling**: Clear, actionable error messages
 
 ### Advanced Features
-- ✅ **Async Execution** (NEW!): Non-blocking execution, parallel graphs, batch processing
-- ✅ **Backend Selection**: Choose between CPU, SIMD, or GPU backends (39 functions, 16 classes)
-- ✅ **Domain Management**: SymbolTable, CompilerContext for advanced schema management
-- ✅ **Provenance Tracking**: Full RDF*/SHACL integration with confidence-based inference
-- ✅ **SciRS2 Backend**: High-performance execution with SIMD acceleration (2-4x speedup)
-- ✅ **Autodiff Support**: Forward and backward passes for neural-symbolic learning
-- ✅ **Production Ready**: 273 tests passing, zero warnings, comprehensive documentation
+- **Async Execution**: Non-blocking execution, parallel graphs, batch processing, cancellation support
+- **Backend Selection**: Choose between CPU, SIMD, or GPU backends
+- **Domain Management**: SymbolTable, CompilerContext for advanced schema management
+- **Provenance Tracking**: Full RDF*/SHACL integration with confidence-based inference
+- **SciRS2 Backend**: High-performance execution with SIMD acceleration (2-4x speedup)
+- **Training API**: Loss functions (MSE, BCE, cross-entropy), optimizers (SGD, Adam, RMSprop), callbacks
+- **Model Persistence**: Save/load models in JSON and binary formats with pickle support
+- **Rule Builder DSL**: Python-native syntax with operator overloading (&, |, ~, >>)
+- **Jupyter Integration**: Rich HTML display (`_repr_html_()`) for all major types
+- **Performance Monitoring**: GIL release, profiler, memory tracking
+- **Streaming Execution**: Process large datasets in chunks
+- **Utility Functions**: Context managers, custom exceptions, batch operations
 
 ## Installation
 
@@ -95,7 +100,7 @@ print(result["output"])
 import pytensorlogic as tl
 import numpy as np
 
-# ∃y. knows(x, y) - "x knows someone"
+# exists y. knows(x, y) - "x knows someone"
 x = tl.var("x")
 y = tl.var("y")
 knows = tl.pred("knows", [x, y])
@@ -115,7 +120,7 @@ print(f"Shape: {result['output'].shape}")
 ```python
 import pytensorlogic as tl
 
-# Rule: knows(x,y) ∧ knows(y,z) → knows(x,z) (transitivity)
+# Rule: knows(x,y) AND knows(y,z) -> knows(x,z) (transitivity)
 x, y, z = tl.var("x"), tl.var("y"), tl.var("z")
 
 knows_xy = tl.pred("knows", [x, y])
@@ -153,7 +158,7 @@ classification = tl.if_then_else(
 ```
 
 
-## Async Execution (NEW!)
+## Async Execution
 
 TensorLogic provides asynchronous execution capabilities for non-blocking workflows, perfect for Jupyter notebooks and web applications.
 
@@ -220,6 +225,19 @@ results = executor.execute_batch(inputs_list, parallel=True)
 results = executor.execute_batch(inputs_list, parallel=False)
 ```
 
+### Async Cancellation
+
+```python
+# Create a cancellation token
+token = tl.cancellation_token()
+
+# Start async computation
+future = tl.execute_async(graph, inputs)
+
+# Cancel if needed
+token.cancel()
+```
+
 ### Progress Monitoring
 
 Monitor long-running async computations:
@@ -247,19 +265,6 @@ else:
 - **Parallel Speedup**: 2-4x for independent graphs on multi-core systems
 - **Batch Processing**: Near-linear scaling with number of batches
 - **Thread Safety**: All operations are thread-safe
-
-### When to Use Async
-
-**Use Async When**:
-- Running in Jupyter notebooks (non-blocking cells)
-- Processing long-running computations (>10ms)
-- Building web applications with background processing
-- Need to run other Python code while computing
-
-**Use Sync When**:
-- Fast operations (<1ms)
-- Sequential pipeline where results depend on each other
-- Simpler code flow is preferred
 
 See `examples/async_execution_demo.py` for comprehensive examples.
 
@@ -294,9 +299,9 @@ graph = tl.compile_with_config(expr, config)
 |----------|-----|----|----|----------|
 | **soft_differentiable** | Product | Probabilistic sum | Complement | Neural training (default) |
 | **hard_boolean** | Min | Max | Complement | Discrete reasoning |
-| **fuzzy_godel** | Min | Max | Complement | Gödel fuzzy logic |
+| **fuzzy_godel** | Min | Max | Complement | Godel fuzzy logic |
 | **fuzzy_product** | Product | Probabilistic sum | Complement | Product fuzzy logic |
-| **fuzzy_lukasiewicz** | Łukasiewicz | Łukasiewicz | Complement | Łukasiewicz logic |
+| **fuzzy_lukasiewicz** | Lukasiewicz | Lukasiewicz | Complement | Lukasiewicz logic |
 | **probabilistic** | Product (indep.) | Probabilistic sum | Complement | Probability theory |
 
 ## Advanced Features
@@ -410,9 +415,80 @@ provenance_list = tl.get_provenance(graph)
 metadata_list = tl.get_metadata(graph)
 ```
 
-### Source Location Tracking
+### Training API
 
-Track source code locations for debugging and error reporting:
+Train neural-symbolic models with familiar ML patterns:
+
+```python
+import pytensorlogic as tl
+import numpy as np
+
+# Define loss functions
+loss_fn = tl.mse_loss()       # Mean Squared Error
+loss_fn = tl.bce_loss()       # Binary Cross-Entropy
+loss_fn = tl.cross_entropy_loss()  # Multi-class Cross-Entropy
+
+# Define optimizers
+opt = tl.sgd(learning_rate=0.01, momentum=0.9)
+opt = tl.adam(learning_rate=0.001, beta1=0.9, beta2=0.999)
+opt = tl.rmsprop(learning_rate=0.01, alpha=0.99)
+
+# Callbacks
+early_stop = tl.early_stopping(patience=10, min_delta=1e-4)
+checkpoint = tl.model_checkpoint("model.json")
+log = tl.logger(verbosity=1)
+
+# High-level Trainer
+trainer = tl.Trainer(graph, loss_fn, opt, callbacks=[early_stop, log])
+history = trainer.fit(train_data, epochs=100, validation_data=val_data)
+predictions = trainer.predict(test_data)
+```
+
+### Model Persistence
+
+```python
+import pytensorlogic as tl
+
+# Save a compiled graph
+tl.save_model(graph, "model.json")
+graph = tl.load_model("model.json")
+
+# Save with full metadata
+pkg = tl.model_package(graph, config=config, metadata={"author": "alice"})
+tl.save_full_model(pkg, "full_model.json")
+pkg = tl.load_full_model("full_model.json")
+
+# Pickle support
+import pickle
+data = pickle.dumps(pkg)
+pkg2 = pickle.loads(data)
+```
+
+### Rule Builder DSL
+
+Python-native rule building with operator overloading:
+
+```python
+import pytensorlogic as tl
+
+# Domain-bound variables
+x = tl.var_dsl("x", domain="Person")
+y = tl.var_dsl("y", domain="Person")
+
+# Callable predicate builders
+knows = tl.pred_dsl("knows", arity=2)
+adult = tl.pred_dsl("adult", arity=1)
+
+# Operator overloading: &, |, ~, >>
+rule = (knows(x, y) & adult(x)) >> adult(y)
+
+# Context manager for rule building
+with tl.rule_builder() as rb:
+    rb.add(knows(x, y) >> knows(y, x))
+    graph = rb.compile()
+```
+
+### Source Location Tracking
 
 ```python
 import pytensorlogic as tl
@@ -456,32 +532,35 @@ alice = tl.const("alice") # Constant
 Logical expression with comprehensive operations:
 
 **Logical Operations:**
-- `and_(left, right)` - Logical AND (∧)
-- `or_(left, right)` - Logical OR (∨)
-- `not_(expr)` - Logical NOT (¬)
+- `and_(left, right)` - Logical AND
+- `or_(left, right)` - Logical OR
+- `not_(expr)` - Logical NOT
 
 **Quantifiers:**
-- `exists(var, domain, body)` - Existential quantifier (∃)
-- `forall(var, domain, body)` - Universal quantifier (∀)
+- `exists(var, domain, body)` - Existential quantifier
+- `forall(var, domain, body)` - Universal quantifier
 
 **Implications:**
-- `imply(premise, conclusion)` - Logical implication (→)
+- `imply(premise, conclusion)` - Logical implication
 
 **Arithmetic:**
 - `add(left, right)` - Addition (+)
 - `sub(left, right)` - Subtraction (-)
-- `mul(left, right)` - Multiplication (×)
-- `div(left, right)` - Division (÷)
+- `mul(left, right)` - Multiplication (x)
+- `div(left, right)` - Division (/)
 
 **Comparisons:**
 - `eq(left, right)` - Equal (=)
 - `lt(left, right)` - Less than (<)
 - `gt(left, right)` - Greater than (>)
-- `lte(left, right)` - Less than or equal (≤)
-- `gte(left, right)` - Greater than or equal (≥)
+- `lte(left, right)` - Less than or equal
+- `gte(left, right)` - Greater than or equal
 
 **Conditionals:**
 - `if_then_else(condition, then_expr, else_expr)` - Ternary conditional
+
+**Operator overloading (DSL mode):**
+- `__and__`, `__or__`, `__invert__`, `__rshift__`
 
 **Methods:**
 - `free_vars() -> List[str]` - Get list of free variables
@@ -500,6 +579,7 @@ stats = graph.stats()  # {'num_nodes': 5, 'num_outputs': 1, 'num_tensors': 3}
 
 **Methods:**
 - `stats() -> Dict[str, int]` - Get detailed statistics
+- `_repr_html_()` - Rich Jupyter display
 
 ### Adapter Types
 
@@ -602,7 +682,7 @@ Backend capability information.
 ```python
 caps = tl.get_backend_capabilities(tl.Backend.SCIRS2_CPU)
 print(caps.name)              # "SciRS2 Backend"
-print(caps.version)           # "0.1.0-rc.2"
+print(caps.version)           # "0.1.0-rc.1"
 print(caps.devices)           # ["CPU"]
 print(caps.dtypes)            # ["f64", "f32", "i64", "i32", "bool"]
 print(caps.features)          # ["Autodiff", "BatchExecution", ...]
@@ -695,6 +775,39 @@ tracker.get_entity_mappings()  # Dict[str, int]
 tracker.get_shape_mappings()   # Dict[str, str]
 ```
 
+### Async Execution Types
+
+#### `AsyncResult`
+Future result of an async computation.
+
+```python
+future = tl.execute_async(graph, inputs)
+future.is_ready()                  # bool
+future.result()                    # Dict[str, np.ndarray] (blocks if not ready)
+future.wait(timeout_secs=5.0)      # bool - True if completed within timeout
+future.cancel()                    # Request cancellation
+future.is_cancelled()              # bool
+future.get_cancellation_token()    # CancellationToken
+```
+
+#### `BatchExecutor`
+Batch graph execution over multiple inputs.
+
+```python
+executor = tl.BatchExecutor(graph)
+results = executor.execute_batch(inputs_list, parallel=True)
+```
+
+#### `CancellationToken`
+Cooperative cancellation for async operations.
+
+```python
+token = tl.cancellation_token()
+token.cancel()
+token.is_cancelled()  # bool
+token.reset()
+```
+
 ### Core Functions
 
 #### Compilation
@@ -708,6 +821,11 @@ Compile a logical expression to a tensor computation graph.
 compile_with_config(expr: TLExpr, config: CompilationConfig) -> EinsumGraph
 ```
 Compile with a custom configuration.
+
+```python
+compile_with_context(expr: TLExpr, ctx: CompilerContext) -> EinsumGraph
+```
+Compile with a low-level compiler context.
 
 #### Execution
 
@@ -724,40 +842,28 @@ Execute a graph with NumPy array inputs. Backend defaults to AUTO (best availabl
 
 ```python
 get_backend_capabilities(backend: Optional[Backend] = None) -> BackendCapabilities
-```
-Get capabilities for a specific backend.
-
-```python
 list_available_backends() -> Dict[str, bool]
-```
-List all available backends and their availability status.
-
-```python
 get_default_backend() -> Backend
-```
-Get the default backend for this system.
-
-```python
 get_system_info() -> Dict[str, Any]
 ```
-Get comprehensive system and backend information.
 
 #### Provenance Functions
 
 ```python
 get_provenance(graph: EinsumGraph) -> List[Optional[Provenance]]
-```
-Extract provenance metadata from all nodes in the graph.
-
-```python
 get_metadata(graph: EinsumGraph) -> List[Optional[Dict[str, Any]]]
-```
-Extract all metadata (names, spans, provenance, attributes) from graph nodes.
-
-```python
 provenance_tracker(enable_rdfstar: bool = False) -> ProvenanceTracker
 ```
-Create a new provenance tracker with optional RDF* support.
+
+#### Persistence Functions
+
+```python
+save_model(graph: EinsumGraph, path: str) -> None
+load_model(path: str) -> EinsumGraph
+save_full_model(pkg: ModelPackage, path: str) -> None
+load_full_model(path: str) -> ModelPackage
+model_package(...) -> ModelPackage
+```
 
 #### Helper Functions
 
@@ -767,6 +873,19 @@ domain_info(name: str, cardinality: int) -> DomainInfo
 predicate_info(name: str, domains: List[str]) -> PredicateInfo
 symbol_table() -> SymbolTable
 compiler_context() -> CompilerContext
+
+# DSL
+var_dsl(name: str, domain: Optional[str] = None) -> Var
+pred_dsl(name: str, arity: int) -> PredicateBuilder
+rule_builder() -> RuleBuilder
+
+# Utility
+quick_execute(expr: TLExpr, inputs: Dict[str, np.ndarray]) -> Dict[str, np.ndarray]
+validate_inputs(graph: EinsumGraph, inputs: Dict[str, np.ndarray]) -> None
+batch_compile(exprs: List[TLExpr]) -> List[EinsumGraph]
+batch_predict(graph: EinsumGraph, inputs_list: List[Dict]) -> List[Dict]
+execution_context() -> ExecutionContext
+compilation_context() -> CompilationContext
 ```
 
 ## Examples
@@ -779,6 +898,12 @@ The `examples/` directory contains comprehensive demonstrations:
 4. **`advanced_symbol_table.py`** - Domain management and symbol tables
 5. **`backend_selection.py`** - Backend selection and capabilities
 6. **`provenance_tracking.py`** - Complete provenance tracking workflow
+7. **`training_workflow.py`** - Training API (450+ lines, 10 scenarios)
+8. **`model_persistence.py`** - Model persistence (600+ lines, 10 scenarios)
+9. **`rule_builder_dsl.py`** - Rule Builder DSL (550+ lines, 10 examples)
+10. **`async_execution_demo.py`** - Async execution (300+ lines)
+11. **`performance_benchmark.py`** - Performance benchmarks
+12. **`memory_profiling.py`** - Memory profiling and streaming
 
 Run any example:
 
@@ -789,7 +914,7 @@ python examples/provenance_tracking.py
 
 ## Testing
 
-The package includes 100+ comprehensive tests:
+The package includes 300+ comprehensive tests across 7 test suites:
 
 ```bash
 # Install development dependencies
@@ -808,18 +933,19 @@ pytest tests/ --cov=pytensorlogic --cov-report=html
 Test suites:
 - **`test_types.py`** - Core type creation and operations
 - **`test_execution.py`** - End-to-end execution tests
-- **`test_adapters.py`** - Symbol table and domain management
-- **`test_strategies.py`** - Compilation strategies and properties
 - **`test_backend.py`** - Backend selection and capabilities
 - **`test_provenance.py`** - Provenance tracking (40+ tests)
+- **`test_training.py`** - Training API (40+ tests)
+- **`test_persistence.py`** - Model persistence (20+ tests)
+- **`test_dsl.py`** - Rule Builder DSL (100+ tests)
 
 ## Architecture
 
 TensorLogic Python bindings are built with:
 
-- **PyO3 0.27**: Rust-Python interop with abi3 compatibility (Python 3.9+)
-- **NumPy 0.27**: Array interface via `numpy` crate
-- **SciRS2 0.1.0-rc.2**: High-performance scientific computing backend
+- **PyO3 0.23+**: Rust-Python interop with abi3 compatibility (Python 3.9+)
+- **NumPy**: Array interface via `numpy` crate
+- **SciRS2**: High-performance scientific computing backend
 - **Maturin**: Build system for Python extensions
 - **Zero-copy** where possible for efficiency
 
@@ -828,22 +954,30 @@ TensorLogic Python bindings are built with:
 ```
 pytensorlogic/
 ├── src/
-│   ├── lib.rs           # Main module registration
-│   ├── types.rs         # Core type bindings (PyTerm, PyTLExpr, PyEinsumGraph)
-│   ├── compiler.rs      # Compilation API and strategies
-│   ├── executor.rs      # Execution engine bindings
-│   ├── numpy_conversion.rs  # NumPy interop
-│   ├── adapters.rs      # Domain and symbol table management
-│   ├── backend.rs       # Backend selection and capabilities
-│   └── provenance.rs    # Provenance tracking (700+ lines)
-├── tests/              # Python test suites (5 files, 100+ tests)
-├── examples/           # Demonstration scripts (6 files)
-└── pytensorlogic.pyi  # Type stubs for IDE support
+│   ├── lib.rs                # Main module registration
+│   ├── types.rs              # Core type bindings (PyTerm, PyTLExpr, PyEinsumGraph)
+│   ├── compiler.rs           # Compilation API and strategies
+│   ├── executor.rs           # Execution engine bindings
+│   ├── numpy_conversion.rs   # NumPy interop
+│   ├── adapters.rs           # Domain and symbol table management
+│   ├── backend.rs            # Backend selection and capabilities
+│   ├── provenance.rs         # Provenance tracking
+│   ├── training.rs           # Training API
+│   ├── persistence.rs        # Model save/load
+│   ├── dsl.rs                # Rule Builder DSL
+│   ├── jupyter.rs            # Rich HTML display
+│   ├── performance.rs        # Performance monitoring
+│   ├── streaming.rs          # Streaming execution
+│   ├── async_executor.rs     # Async execution and cancellation
+│   └── utils.rs              # Utility functions and context managers
+├── tests/                    # Python test suites (7 files, 300+ tests)
+├── examples/                 # Demonstration scripts (12 files)
+└── pytensorlogic.pyi         # Type stubs for IDE support (1100+ lines)
 ```
 
 ## Implementation Status
 
-### Completed ✅ (100% of high-priority features)
+### Completed (All high-priority features)
 
 **Phase 1-3**: Core Infrastructure
 - [x] Core types binding (PyTerm, PyTLExpr, PyEinsumGraph)
@@ -858,37 +992,39 @@ pytensorlogic/
 - [x] Conditional operations (if_then_else)
 
 **Phase 9-13**: Advanced Features
-- [x] Type stubs (.pyi) for IDE support
-- [x] Comprehensive Python test suite (100+ tests)
+- [x] Type stubs (.pyi) for IDE support (1100+ lines)
+- [x] Comprehensive Python test suite (300+ tests)
 - [x] Symbol tables and domain management (SymbolTable, CompilerContext)
 - [x] Backend selection API (Backend, BackendCapabilities)
 - [x] Provenance tracking with RDF* support (4 classes, 3 functions)
+
+**Phase 14-21**: Complete Feature Set
+- [x] Training API (loss functions, optimizers, callbacks, Trainer class)
+- [x] Model Persistence (JSON/binary formats, pickle support)
+- [x] Jupyter Integration (rich HTML display for all types)
+- [x] Rule Builder DSL (operator overloading, domain validation)
+- [x] Performance Monitoring (GIL release, profiler, memory tracking)
+- [x] Streaming Execution (StreamingExecutor, ResultAccumulator)
+- [x] Async Cancellation (CancellationToken, cancel support)
+- [x] Utility Functions (context managers, custom exceptions, helpers)
 
 **Documentation & Quality**
 - [x] Comprehensive docstrings
 - [x] Error handling with clear messages
 - [x] `__repr__` and `__str__` implementations
-- [x] 6 comprehensive examples
+- [x] 12 comprehensive examples
 - [x] Zero compilation warnings
 - [x] Production-ready code quality
 
-### In Progress 🚧
-
-- [ ] Tutorial Jupyter notebooks
-- [ ] mypy type checking setup
-- [ ] Coverage reporting
-- [ ] Performance benchmarks
-
-### Future Enhancements 🔜
+### Future Enhancements
 
 - [ ] PyTorch tensor integration
 - [ ] GPU backend support
-- [ ] Rule builder DSL with decorators
-- [ ] Training API (fit(), loss functions, callbacks)
-- [ ] Model persistence (save/load, pickle, ONNX export)
-- [ ] Rich display for Jupyter (`__repr_html__`)
+- [ ] ONNX export
+- [ ] Tutorial Jupyter notebooks
+- [ ] Coverage reporting in CI
 - [ ] Visualization widgets
-- [ ] Async execution support
+- [ ] Interactive debugging
 
 ## Performance
 
@@ -910,10 +1046,10 @@ result = tl.execute(graph, inputs, backend=tl.Backend.SCIRS2_SIMD)
 
 ## Limitations & Known Issues
 
-- ⚠️ **Build system**: Must use `maturin` (not regular `cargo build`)
-- ⚠️ **GPU backend**: Not yet implemented (CPU and SIMD only)
-- ⚠️ **PyTorch integration**: Not yet available (NumPy only)
-- ⚠️ **Zero-copy**: Not fully optimized in all paths
+- Build system: Must use `maturin` (not regular `cargo build`)
+- GPU backend: Not yet implemented (CPU and SIMD only)
+- PyTorch integration: Not yet available (NumPy only)
+- Zero-copy: Not fully optimized in all paths
 
 ## Development
 
@@ -926,7 +1062,7 @@ pip install maturin
 
 # Clone and build
 git clone https://github.com/cool-japan/tensorlogic.git
-cd tensorlogic/crates/pytensorlogic
+cd tensorlogic/crates/tensorlogic-py
 maturin develop
 
 # Run tests
@@ -937,10 +1073,10 @@ pytest tests/ -v    # Python tests
 ### Code Quality
 
 All code passes strict quality checks:
-- ✅ `cargo check` - Zero warnings
-- ✅ `cargo clippy --all-targets -- -D warnings` - Strict linting
-- ✅ `cargo fmt --all -- --check` - Consistent formatting
-- ✅ `pytest tests/` - 100+ tests passing
+- `cargo check` - Zero warnings
+- `cargo clippy --all-targets -- -D warnings` - Strict linting
+- `cargo fmt --all -- --check` - Consistent formatting
+- `pytest tests/` - 300+ tests passing
 
 ### Contributing
 
@@ -1010,9 +1146,9 @@ Apache-2.0 - See [LICENSE](../../LICENSE) for details.
 
 ---
 
-**Status**: 🎉 **Production Ready (v0.1.0-beta.1)**
-**Last Updated**: 2025-12-16
-**Completion**: 100% of high-priority features (13/13 phases complete)
-**Tests**: 100+ tests passing (5 test suites)
-**API**: 37 functions, 14 classes, 6 compilation strategies
+**Status**: Production Ready (v0.1.0-rc.1)
+**Last Updated**: 2026-03-06
+**Completion**: 100% of high-priority features (21/21 phases complete)
+**Tests**: 300+ tests passing (7 test suites)
+**API**: 80+ functions, 35+ classes, 5 custom exceptions, 6 compilation strategies, 3 serialization formats
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

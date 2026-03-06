@@ -2,7 +2,7 @@
 
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic--infer-orange)](https://crates.io/crates/tensorlogic-infer)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-infer)
-[![Tests](https://img.shields.io/badge/tests-285-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/tests-522-brightgreen)](#)
 [![Production](https://img.shields.io/badge/status-production_ready-success)](#)
 [![Completion](https://img.shields.io/badge/completion-100%25-success)](#)
 
@@ -17,12 +17,12 @@ Engine-agnostic execution traits, optimization utilities, and planning API for T
 #### Core Execution Traits
 - **TlExecutor**: Basic forward execution of compiled graphs
 - **TlAutodiff**: Forward/backward pass for automatic differentiation
-- **TlEagerAutodiff**: 🆕 Eager mode autodiff with dynamic graph building
+- **TlEagerAutodiff**: Eager mode autodiff with dynamic graph building
 - **TlBatchExecutor**: Efficient batch execution with parallel support
 - **TlStreamingExecutor**: Streaming execution for large datasets
 - **TlCompilableExecutor**: Ahead-of-time graph compilation support
-- **TlJitExecutor**: 🆕 Just-In-Time compilation with hot path detection
-- **TlDistributedExecutor**: 🆕 Multi-device distributed execution
+- **TlJitExecutor**: Just-In-Time compilation with hot path detection
+- **TlDistributedExecutor**: Multi-device distributed execution
 - **TlRecoverableExecutor**: Execution with error recovery and checkpointing
 - **TlCapabilities**: Backend capability queries (devices, dtypes, features)
 - **TlProfiledExecutor**: Execution profiling and performance analysis
@@ -44,7 +44,7 @@ Engine-agnostic execution traits, optimization utilities, and planning API for T
 - **ExecutionContext**: State management with lifecycle hooks
 - **GraphValidator**: Graph validation and diagnostics
 
-#### Testing & Development Tools 🆕
+#### Testing & Development Tools
 - **BackendTestAdapter**: Comprehensive test templates for backend validation
 - **GradientChecker**: Numerical gradient checking for autodiff verification
 - **PerfRegression**: Performance regression testing with baseline comparison
@@ -368,9 +368,7 @@ match executor.execute_with_recovery(&graph, &inputs, &config)? {
 - **FallbackExecution**: Fall back to alternative execution path
 - **GracefulDegradation**: Continue with reduced functionality
 
-## Beta.1 Features 🆕
-
-### Zero-Copy Tensor Operations
+## Zero-Copy Tensor Operations
 
 Efficient memory-safe tensor views and slicing without data duplication:
 
@@ -407,20 +405,7 @@ let specs = vec![
 ];
 ```
 
-**Key Features:**
-- **Zero-copy views**: No data duplication
-- **Flexible slicing**: Range, index, strided, and reverse slices
-- **View composition**: Create views of views
-- **Contiguity checks**: Optimize based on memory layout
-- **In-place operations**: Safe in-place computation support
-
-**Use Cases:**
-- Large tensor slicing without memory overhead
-- Windowed operations on sequences
-- Batch processing with tensor views
-- Memory-efficient data augmentation
-
-### Async Execution
+## Async Execution
 
 Non-blocking execution with async/await support (feature-gated):
 
@@ -448,15 +433,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 // Async batch processing
 let batch_outputs = executor.execute_batch_async(&graph, batch_inputs).await?;
 
-// Async streaming with backpressure
-let config = AsyncConfig::default()
-    .with_max_concurrent(4)
-    .with_backpressure_threshold(100);
-
-let stream_results = executor
-    .execute_stream_async(&graph, input_stream, &config)
-    .await?;
-
 // Load-balanced executor pool
 let pool = AsyncExecutorPool::new(vec![
     executor1,
@@ -468,31 +444,12 @@ let pool = AsyncExecutorPool::new(vec![
 // Pool automatically distributes work
 let output = pool.execute(&graph, &inputs).await?;
 
-// Cancellable execution
-let handle = executor.execute_async(&graph, &inputs);
-// ... later ...
-handle.cancel();
-
 let stats = pool.stats();
 println!("Total executions: {}", stats.total_executions);
 println!("Average queue time: {}ms", stats.avg_queue_time_ms);
 ```
 
-**Key Features:**
-- **Non-blocking execution**: Use async/await for concurrency
-- **Async batch processing**: Process multiple inputs concurrently
-- **Async streaming**: Stream processing with backpressure control
-- **Executor pooling**: Load-balanced execution across multiple backends
-- **Cancellation support**: Cancel long-running operations
-- **Feature-gated**: Optional async support to minimize dependencies
-
-**Use Cases:**
-- Web services with concurrent requests
-- Real-time inference pipelines
-- Distributed training coordination
-- Resource-efficient batch processing
-
-### Enhanced Diagnostics
+## Enhanced Diagnostics
 
 Rich error messages with helpful suggestions and context:
 
@@ -508,7 +465,6 @@ let diag = Diagnostic::error("Tensor operation failed")
     .with_code("E001")
     .with_context("Expected shape [64, 128], got [64, 256]")
     .with_suggestion("Use tensor.reshape([64, 128]) to match expected shape")
-    .with_suggestion("Check input tensor dimensions")
     .with_location(
         SourceLocation::new()
             .with_file("model.rs".to_string())
@@ -517,30 +473,10 @@ let diag = Diagnostic::error("Tensor operation failed")
 
 println!("{}", diag.format());
 
-// Shape mismatch diagnostics
-let expected = TensorShape::static_shape(vec![64, 128]);
-let actual = TensorShape::static_shape(vec![64, 256]);
-let diag = ShapeMismatchDiagnostic::create(&expected, &actual, "matmul");
-
-// Memory diagnostics
-let diag = MemoryDiagnostic::out_of_memory(
-    1024 * 1024 * 1024,  // 1 GB requested
-    512 * 1024 * 1024     // 512 MB available
-);
-println!("{}", diag);  // Includes helpful suggestions
-
-// Performance diagnostics
-let diag = PerformanceDiagnostic::slow_operation(
-    "einsum",
-    150.0,  // actual: 150ms
-    50.0    // expected: 50ms
-);
-
 // Diagnostic collector
 let mut collector = DiagnosticCollector::new();
 collector.add(diag1);
 collector.add(diag2);
-collector.add(diag3);
 
 if collector.has_errors() {
     println!("{}", collector.format_all());
@@ -550,36 +486,6 @@ if collector.has_errors() {
     );
 }
 ```
-
-**Example Output:**
-```
-[ERROR] Shape mismatch in matmul operation
-  at model.rs:42
-  code: E001
-
-Context:
-  Expected shape: [64, 128], but got: [64, 256]
-  Dimension 1 mismatch: expected Static(128), got Static(256)
-
-Suggestions:
-  1. Check your input tensor shapes match the expected dimensions
-  2. Use tensor.reshape([64, 128]) to match the expected shape
-
-Summary: 1 error(s), 0 warning(s)
-```
-
-**Diagnostic Types:**
-- **Shape mismatch**: Detailed shape error analysis
-- **Type mismatch**: Type conversion suggestions
-- **Memory errors**: Out-of-memory with mitigation strategies
-- **Performance warnings**: Slow operations with optimization hints
-- **Node execution errors**: Failed operations with graph context
-
-**Severity Levels:**
-- **Info**: Informational messages
-- **Warning**: Non-fatal issues
-- **Error**: Fatal errors preventing execution
-- **Critical**: System-level issues
 
 ## Graph Compilation
 
@@ -618,13 +524,6 @@ let compiled = executor.compile_graph(&graph, &config)?;
 // Execute multiple times with different inputs
 let outputs1 = executor.execute_compiled(&compiled, &inputs1)?;
 let outputs2 = executor.execute_compiled(&compiled, &inputs2)?;
-let outputs3 = executor.execute_compiled(&compiled, &inputs3)?;
-
-// Check compilation statistics
-let stats = compiled.compilation_stats();
-println!("Nodes before: {}", stats.nodes_before_optimization);
-println!("Nodes after: {}", stats.nodes_after_optimization);
-println!("Reduction: {:.2}%", stats.reduction_percentage);
 ```
 
 **Optimization Levels:**
@@ -632,25 +531,6 @@ println!("Reduction: {:.2}%", stats.reduction_percentage);
 - **Basic**: Dead code elimination only
 - **Standard**: DCE + common subexpression elimination
 - **Aggressive**: All optimizations + fusion planning
-
-**Compilation Cache:**
-```rust
-use tensorlogic_infer::{CompilationCache, CompilationKey};
-
-let mut cache = CompilationCache::new(100); // Cache up to 100 graphs
-
-// Automatic caching
-let key = CompilationKey::from_graph(&graph, &config);
-if let Some(compiled) = cache.get(&key) {
-    println!("Cache hit!");
-} else {
-    let compiled = executor.compile_graph(&graph, &config)?;
-    cache.insert(key, compiled);
-}
-
-let stats = cache.stats();
-println!("Hit rate: {:.2}%", stats.hit_rate * 100.0);
-```
 
 ## Optimization Utilities
 
@@ -734,7 +614,6 @@ use tensorlogic_infer::{TensorCache, EvictionPolicy};
 
 let mut cache = TensorCache::new(EvictionPolicy::LRU, 1000); // 1000 MB limit
 
-// Cache usage is automatic when integrated with executor
 cache.insert(key, tensor);
 if let Some(tensor) = cache.get(&key) {
     // Cache hit
@@ -754,7 +633,6 @@ let tensor = pool.allocate(shape)?;
 // Return to pool
 pool.deallocate(tensor);
 
-// Stats
 let stats = pool.stats();
 println!("Reuse rate: {:.2}%", stats.reuse_rate * 100.0);
 ```
@@ -1100,30 +978,34 @@ tensorlogic-infer
 ├── Core Traits
 │   ├── TlExecutor (basic execution)
 │   ├── TlAutodiff (training with gradients)
-│   ├── TlEagerAutodiff (eager mode autodiff) 🆕
-│   ├── TlAsyncExecutor (async/await execution) 🆕 Alpha.2
-│   ├── TlAsyncBatchExecutor (async batching) 🆕 Alpha.2
-│   ├── TlAsyncStreamExecutor (async streaming) 🆕 Alpha.2
+│   ├── TlEagerAutodiff (eager mode autodiff)
+│   ├── TlAsyncExecutor (async/await execution) [feature = "async"]
+│   ├── TlAsyncBatchExecutor (async batching) [feature = "async"]
+│   ├── TlAsyncStreamExecutor (async streaming) [feature = "async"]
 │   ├── TlBatchExecutor (batch processing)
 │   ├── TlStreamingExecutor (streaming for large datasets)
 │   ├── TlCompilableExecutor (AOT graph compilation)
-│   ├── TlJitExecutor (JIT compilation) 🆕
-│   ├── TlDistributedExecutor (multi-device) 🆕
-│   ├── TlRecoverableExecutor (error recovery) 🆕
+│   ├── TlJitExecutor (JIT compilation)
+│   ├── TlDistributedExecutor (multi-device)
+│   ├── TlRecoverableExecutor (error recovery)
 │   ├── TlCapabilities (backend queries)
 │   └── TlProfiledExecutor (profiling & analysis)
 ├── Compilation & Optimization
 │   ├── GraphCompiler (AOT compilation)
 │   ├── CompilationCache (compiled graph caching)
-│   ├── JitCompiler (runtime compilation) 🆕
-│   ├── JitCache (JIT-specific caching) 🆕
-│   ├── HotPathDetector (hot path identification) 🆕
-│   ├── AdaptiveOptimizer (adaptive optimization) 🆕
+│   ├── JitCompiler (runtime compilation)
+│   ├── JitCache (JIT-specific caching)
+│   ├── HotPathDetector (hot path identification)
+│   ├── AdaptiveOptimizer (adaptive optimization)
 │   ├── GraphOptimizer (fusion, DCE, redundancy)
 │   ├── FusionPlanner (operation fusion)
 │   ├── Scheduler (execution ordering)
+│   ├── FusionOptimizer (advanced kernel fusion)
+│   ├── RewriteEngine (pattern-based graph transformations)
+│   ├── ProfilingOptimizer (profiling-guided optimization)
+│   ├── CacheOptimizer (memory hierarchy aware optimization)
 │   └── PlacementOptimizer (device placement)
-├── Distributed Execution 🆕
+├── Distributed Execution
 │   ├── DistributedExecutor (multi-device coordinator)
 │   ├── DataParallelCoordinator (data parallelism)
 │   ├── ModelParallelCoordinator (model parallelism)
@@ -1132,33 +1014,46 @@ tensorlogic-infer
 ├── Runtime & Memory
 │   ├── TensorCache (result caching)
 │   ├── MemoryPool (allocation pooling)
-│   ├── TensorView (zero-copy views) 🆕 Alpha.2
-│   ├── ViewBuilder (ergonomic view API) 🆕 Alpha.2
+│   ├── TensorView (zero-copy views)
+│   ├── ViewBuilder (ergonomic view API)
+│   ├── WorkspacePool (memory workspace management)
 │   ├── ExecutionStrategy (strategy config)
 │   ├── ExecutionContext (state management)
-│   ├── AsyncExecutorPool (async load balancing) 🆕 Alpha.2
-│   ├── CheckpointManager (checkpointing) 🆕
+│   ├── AsyncExecutorPool (async load balancing) [feature = "async"]
+│   ├── CheckpointManager (checkpointing)
 │   └── StreamProcessor (streaming processing)
+├── Advanced Execution
+│   ├── WorkStealingScheduler (work-stealing parallel scheduler)
+│   ├── AutoParallelizer (automatic parallelization)
+│   ├── SpeculativeExecutor (speculative execution)
+│   ├── DynamicBatcher (adaptive request batching)
+│   ├── MultiModelCoordinator (ensemble & multi-model)
+│   └── LearnedOptimizer (ML-based optimization)
+├── Precision & Sparsity
+│   ├── Quantizer (INT8/INT4/FP8/Binary quantization)
+│   ├── MixedPrecisionConfig (FP16/BF16/FP8 training)
+│   ├── LossScaler (automatic loss scaling)
+│   └── SparseTensor (CSR/CSC/COO sparse formats)
 ├── Analysis & Validation
 │   ├── GraphValidator (graph validation)
 │   ├── MemoryEstimator (memory estimation)
 │   ├── ShapeInferenceContext (shape inference)
 │   └── BottleneckAnalyzer (performance analysis)
-├── Debugging & Profiling 🆕
+├── Debugging & Profiling
 │   ├── ExecutionTracer (execution recording)
 │   ├── TensorInspector (tensor inspection)
 │   ├── BreakpointManager (execution breakpoints)
 │   ├── ExecutionRecorder (full history recording)
 │   ├── TimelineProfiler (timeline visualization)
 │   └── Visualization (DOT, JSON, GraphML export)
-├── Enhanced Diagnostics 🆕 Alpha.2
+├── Enhanced Diagnostics
 │   ├── Diagnostic (rich error messages)
 │   ├── DiagnosticCollector (error aggregation)
 │   ├── ShapeMismatchDiagnostic (shape errors)
 │   ├── MemoryDiagnostic (memory issues)
 │   ├── PerformanceDiagnostic (performance warnings)
 │   └── SourceLocation (error tracking)
-└── Testing Support 🆕
+└── Testing Support
     ├── DummyExecutor (test executor)
     ├── BackendTestAdapter (backend test templates)
     ├── GradientChecker (numerical gradient checking)
@@ -1217,47 +1112,7 @@ cargo test -p tensorlogic-infer -- --nocapture
 cargo test -p tensorlogic-infer test_streaming
 ```
 
-**Test Coverage**: 368 tests covering all traits and utilities (100% passing)
-
-### New Beta.1 Modules
-
-The following production-grade modules have been added in Beta.1:
-
-#### Advanced Quantization (`quantization.rs`)
-Complete quantization pipeline for model compression:
-- INT8, INT4, INT2, FP8, Binary, Ternary quantization types
-- QAT and PTQ with multiple calibration strategies
-- Per-tensor and per-channel granularity
-- Symmetric and asymmetric modes
-- Comprehensive compression analysis
-
-#### Dynamic Batching (`dynamic_batching.rs`)
-Adaptive request batching for inference serving:
-- 4 priority levels (Low/Normal/High/Critical)
-- Adaptive batch size optimization
-- Request timeout and queueing
-- Latency and throughput optimization strategies
-
-#### Advanced Kernel Fusion (`fusion.rs`)
-Pattern-based fusion optimization:
-- MatMul+Bias, MatMul+Activation, BatchNorm+ReLU patterns
-- Vertical and horizontal fusion detection
-- Memory bandwidth-aware cost modeling
-- Conservative/Aggressive/Balanced/Memory-aware strategies
-
-#### Workspace Management (`workspace.rs`)
-Memory pool for efficient allocation reuse:
-- BestFit/FirstFit/ExactFit/PowerOfTwo allocation strategies
-- Automatic expansion and defragmentation
-- Thread-safe shared workspace pools
-- Comprehensive efficiency metrics
-
-#### Multi-Model Coordination (`multimodel.rs`)
-Ensemble and multi-model management:
-- Ensemble strategies: Averaging, Voting, Stacking, Boosting
-- Model routing: Priority, Latency, Accuracy, Round-robin, Cascade
-- Early-exit cascade support
-- Resource tracking and usage statistics
+**Test Coverage**: 522 tests covering all traits and utilities (100% passing)
 
 ## Contributing
 
@@ -1269,11 +1124,9 @@ Apache-2.0
 
 ---
 
-**Status**: 🎉 Production Ready (v0.1.0-beta.1)
-**Last Updated**: 2025-12-10
-**Tests**: 368 passing (100%)
-**Code**: 46 files, 19,921 lines
+**Status**: Production Ready (v0.1.0-rc.1)
+**Last Updated**: 2026-03-06
+**Tests**: 522 passing (100%)
+**Code**: 46 files, 21,349 lines
 **Completeness**: 100%
-**Previous Features**: JIT Compilation, Distributed Execution, Comprehensive Debugging Tools
-**Beta.1 Features**: Zero-Copy Tensor Views, Async Execution, Enhanced Diagnostics, Advanced Quantization, Dynamic Batching, Kernel Fusion, Workspace Management, Multi-Model Coordination 🆕
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

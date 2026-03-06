@@ -7,7 +7,8 @@ homepage.workspace = true
 repository.workspace = true
 description = "TensorLogic command-line interface and library for compiling logical expressions to tensor graphs"
 keywords = ["logic", "tensor", "compiler", "cli"]
-categories = ["command-line-utilities", "compilers"]
+categories = ["command-line-utilities", "science"]
+readme = "README.md"
 
 [lib]
 name = "tensorlogic_cli"

@@ -6,6 +6,9 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+readme = "README.md"
+keywords = ["tensor", "logic", "scientific-computing", "numerical", "backend"]
+categories = ["science", "algorithms", "mathematics"]
 
 [features]
 default = ["cpu"]

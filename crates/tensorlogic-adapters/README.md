@@ -27,7 +27,7 @@ The `tensorlogic-adapters` crate provides the bridge between logical expressions
 - **PredicateInfo**: Predicate metadata including arity and domain types
 - **AxisMetadata**: Variable-to-axis mappings for einsum notation
 
-### Product Domains (NEW)
+### Product Domains
 - **ProductDomain**: Cartesian product types for cross-domain reasoning
 - **Binary/Ternary products**: Convenient constructors for common cases
 - **Product cardinality**: Automatic computation from components
@@ -69,14 +69,14 @@ The `tensorlogic-adapters` crate provides the bridge between logical expressions
 - **Semantic validation**: Detect unused domains, suggest missing predicates
 - **Validation reports**: Detailed reports with errors, warnings, and hints
 
-### Computed Domains (NEW)
+### Computed Domains
 - **ComputedDomain**: Virtual domains derived from operations
 - **DomainComputation**: Filter, union, intersection, difference, product operations
 - **Lazy evaluation**: Compute domains on-demand
 - **Cardinality bounds**: Automatic bound computation
 - **ComputedDomainRegistry**: Manage computed domain dependencies
 
-### Lazy Loading (NEW)
+### Lazy Loading
 - **LazySymbolTable**: On-demand loading for huge schemas
 - **SchemaLoader**: Pluggable loader trait (file, database, remote)
 - **FileSchemaLoader**: Built-in file-based loader
@@ -92,6 +92,7 @@ The `tensorlogic-adapters` crate provides the bridge between logical expressions
 - **String interning**: Reduce memory usage of repeated strings
 - **Lookup caching**: LRU cache for frequently accessed data
 - **Compact representation**: Binary serialization with compression
+- **Query result caching**: TTL-based LRU cache for expensive queries
 
 ### Schema Analysis
 - **Statistics**: Comprehensive metrics about schema structure
@@ -99,26 +100,67 @@ The `tensorlogic-adapters` crate provides the bridge between logical expressions
 - **Recommendations**: Detect issues and suggest improvements
 - **Usage patterns**: Track domain usage frequency
 
-### Incremental Validation (NEW)
+### Incremental Validation
 - **ChangeTracker**: Record schema modifications for efficient revalidation
 - **DependencyGraph**: Track relationships between components
 - **IncrementalValidator**: Validate only affected components (10-100x speedup)
 - **ValidationCache**: Cache validation results for unchanged components
 - **Batch operations**: Group changes for atomic validation
 
-### Query Planning (NEW)
+### Query Planning
 - **QueryPlanner**: Cost-based query optimization for predicate lookups
 - **IndexStrategy**: Multiple index types (hash, range, composite, inverted)
 - **PredicateQuery**: Rich query language (by name, arity, signature, pattern)
 - **QueryStatistics**: Track access patterns and selectivity
 - **Plan caching**: Reuse execution plans for repeated queries
 
-### Schema Evolution (NEW)
+### Schema Evolution
 - **EvolutionAnalyzer**: Detect breaking changes between schema versions
 - **BreakingChange**: Categorize changes by severity and impact
 - **MigrationPlan**: Generate executable migration steps
 - **CompatibilityReport**: Detailed backward/forward compatibility analysis
 - **VersionBump**: Semantic versioning guidance (major/minor/patch)
+
+### Schema Merge Strategies
+- **SchemaMerger**: Core merging engine with 5 strategies
+- **MergeStrategy**: KeepFirst, KeepSecond, FailOnConflict, Union, Intersection
+- **MergeReport**: Comprehensive merge statistics and conflict tracking
+- **Conflict resolution**: Automatic resolution with configurable behavior
+
+### Advanced Type System
+- **Refinement types**: RefinementPredicate with 18 predicate types, RefinementRegistry
+- **Dependent types**: DimExpr for symbolic dimensions, DependentType, DependentTypeContext
+- **Linear types**: LinearKind (Unrestricted/Linear/Affine/Relevant), resource tracking
+- **Effect system**: 14 Effect types (IO, State, NonDet, Exception, GPU, etc.), EffectRow
+
+### Code Generation
+- **RustCodegen**: Generate Rust types from schemas
+- **GraphQLCodegen**: Generate GraphQL schemas
+- **TypeScriptCodegen**: Generate TypeScript interfaces and validators
+- **PythonCodegen**: Generate Python type stubs and PyO3 bindings
+
+### Database Backends
+- **MemoryDatabase**: In-memory schema storage with versioning
+- **SQLiteDatabase**: Persistent file-based storage (feature = "sqlite")
+- **PostgreSQLDatabase**: Server-based multi-user storage (feature = "postgres")
+
+### Multi-User Schema Management
+- **LockedSymbolTable**: Read/write locks for concurrent access
+- **Transaction**: Commit/rollback support
+- **LockStats**: Lock monitoring and statistics
+
+### Distributed Synchronization
+- **VectorClock**: Causality tracking for distributed systems
+- **SynchronizationManager**: Coordinate schema updates across nodes
+- **ConflictResolution**: Multiple conflict resolution strategies
+- **EventListener**: Event-based propagation
+
+### AI/ML Integration
+- **SchemaEmbedder**: 64-dimensional vector embeddings
+- **SimilaritySearch**: Cosine similarity and Euclidean distance metrics
+- **AutoCompleter**: Domain, predicate, and variable name suggestions
+- **SchemaLearner**: Automatic schema inference from JSON/CSV data
+- **SchemaRecommender**: Intelligent schema discovery with multiple strategies
 
 ### CLI Tools
 - **schema_validate**: Validate schemas with detailed reports
@@ -135,7 +177,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tensorlogic-adapters = "0.1.0-beta.1"
+tensorlogic-adapters = "0.1.0-rc.1"
 ```
 
 ## Quick Start
@@ -269,7 +311,7 @@ let mut meta = Metadata::new();
 
 // Add provenance
 meta.provenance = Some(
-    Provenance::new("Alice", "2025-01-15T10:30:00Z")
+    Provenance::new("Alice", "2026-03-06T10:30:00Z")
         .with_source("schema.yaml", Some(42))
 );
 
@@ -363,24 +405,46 @@ let registry = symbol_integration::build_signature_registry(&table);
 ### Module Structure
 
 ```
-tensorlogic-adapters/
+tensorlogic-adapters/src/
+├── autocompletion.rs     # AI-powered schema auto-completion
 ├── axis.rs               # Axis metadata for einsum notation
+├── builder.rs            # Fluent schema builder API
+├── codegen.rs            # Code generation (Rust, GraphQL, TypeScript, Python)
 ├── compact.rs            # Compact schema representation
 ├── compiler_integration.rs # Export/import for compiler
 ├── composition.rs        # Predicate composition system
+├── computed.rs           # Computed/virtual domains
 ├── constraint.rs         # Predicate constraints and properties
+├── database.rs           # Database backends (Memory, SQLite, PostgreSQL)
+├── dependent.rs          # Dependent type system
 ├── diff.rs               # Schema diff and compatibility
 ├── domain.rs             # Domain information and management
+├── effects.rs            # Effect system
+├── embeddings.rs         # Schema vector embeddings
 ├── error.rs              # Error types
+├── evolution.rs          # Schema evolution and breaking change detection
 ├── hierarchy.rs          # Domain hierarchy and subtyping
+├── incremental_validation.rs # Incremental validation with change tracking
+├── lazy.rs               # Lazy loading for large schemas
+├── learning.rs           # Schema learning from data
+├── linear.rs             # Linear type system for resource tracking
+├── locking.rs            # Multi-user locking and transactions
 ├── mask.rs               # Domain masks for filtering
+├── merge_strategies.rs   # Schema merge strategies
 ├── metadata.rs           # Rich metadata with provenance/tags
 ├── parametric.rs         # Parametric types (List<T>, etc.)
 ├── performance.rs        # String interning and caching
 ├── predicate.rs          # Predicate metadata
+├── product.rs            # Product domains (Cartesian products)
+├── query_cache.rs        # Query result caching
+├── query_planner.rs      # Cost-based query optimization
+├── recommendation.rs     # Schema recommendation system
+├── refinement.rs         # Refinement type system
 ├── schema_analysis.rs    # Schema statistics and analysis
 ├── signature_matcher.rs  # Fast predicate lookups
 ├── symbol_table.rs       # Central symbol table
+├── synchronization.rs    # Distributed schema synchronization
+├── utilities.rs          # Batch operations and utility functions
 ├── validation.rs         # Schema validation
 └── bin/
     ├── schema_validate.rs  # CLI validation tool
@@ -496,7 +560,7 @@ let report = analyzer.analyze()?;
 
 if report.has_breaking_changes() {
     for change in &report.breaking_changes {
-        println!("⚠️  {}: {}", change.impact, change.description);
+        println!("WARNING {}: {}", change.impact, change.description);
         if let Some(hint) = &change.migration_hint {
             println!("   Migration: {}", hint);
         }
@@ -507,6 +571,23 @@ println!("Suggested version bump: {}", report.suggested_version_bump());
 println!("Migration steps: {}", report.migration_plan.steps.len());
 ```
 
+### Distributed Synchronization Example
+
+```rust
+use tensorlogic_adapters::synchronization::{
+    SynchronizationManager, ConflictResolution, InMemorySyncProtocol
+};
+
+let protocol = InMemorySyncProtocol::new();
+let mut manager = SynchronizationManager::new(node_id, protocol);
+
+// Broadcast schema changes to other nodes
+manager.broadcast_change(event)?;
+
+// Apply incoming changes with conflict resolution
+let result = manager.apply_change(incoming_event, ConflictResolution::LastWriteWins)?;
+```
+
 ## Testing
 
 Run the test suite:
@@ -515,20 +596,10 @@ Run the test suite:
 cargo nextest run -p tensorlogic-adapters
 ```
 
-**Current Test Stats**: 447 tests (all passing, zero warnings) ⬆️ +18 new tests
-**Lines of Code**: ~23,000 (production code)
-**Examples**: 13 complete examples in `examples/`
-**Benchmarks**: 6 comprehensive benchmark suites
-**Recent Enhancements v0.1.0-beta.1**:
-- ✨ **Semantic Subtyping** - Practical SMT-based implication checking (+8 tests)
-- ✨ **Database Property Tests** - 10 comprehensive proptest validations
-- ✨ **Refinement Benchmarks** - 6 benchmark suites measuring type checking performance
-- ✨ **Modular Database** - Refactored for maintainability (<2000 lines/file)
-- Incremental validation with change tracking (10-100x speedup)
-- Cost-based query planning and optimization
-- Schema evolution with breaking change detection
-- Product domains, computed domains, lazy loading
-- CLI integration tests for schema tools
+**Current Test Stats**: 490 tests (all passing, zero warnings)
+**Lines of Code**: ~31,500 (26,300+ code, 1,250+ comments, 70 Rust files)
+**Examples**: 26 complete examples in `examples/`
+**Benchmarks**: 33 comprehensive benchmark groups
 
 ## Performance Considerations
 
@@ -536,16 +607,8 @@ cargo nextest run -p tensorlogic-adapters
 - **HashSet** used for tags and hierarchy tracking for O(1) membership tests
 - **Validation** performed eagerly at construction time to catch errors early
 - **Serialization** uses efficient binary formats (JSON/YAML) with serde
-
-## Future Enhancements
-
-See [TODO.md](TODO.md) for the complete roadmap. Upcoming features include:
-
-- **Computed domains**: Domains derived from operations
-- **Enhanced composition**: Predicate calculus operators
-- **Property-based testing**: QuickCheck-style validation
-- **Performance optimization**: Caching, lazy evaluation, memory pooling
-- **CLI tools**: Schema validation, migration, and diff tools
+- **Incremental validation** provides 10-100x speedup for large schemas with small changes
+- **Query result caching** reduces repeated query overhead with TTL-based LRU cache
 
 ## Contributing
 
@@ -564,21 +627,13 @@ Licensed under the Apache License, Version 2.0. See [LICENSE](../../LICENSE) for
 
 ---
 
-**Status**: 🎉 Production Ready (v0.1.0-beta.1)
-**Last Updated**: 2026-01-28 (Beta.1 Release)
-**Tests**: 447/447 passing (100%) ⬆️ +18 new tests (8 subtyping + 10 database property tests)
-**Lines of Code**: ~23,000 (production code)
-**Examples**: 13 comprehensive examples
-**Benchmarks**: 6 comprehensive benchmark suites (250+ benchmark functions)
-**Completion**: ~99% (Advanced production features)
+**Status**: Production Ready (v0.1.0-rc.1)
+**Last Updated**: 2026-03-06
+**Tests**: 490/490 passing (100%)
+**Lines of Code**: ~31,500 (70 Rust files)
+**Examples**: 26 comprehensive examples
+**Benchmarks**: 33 comprehensive benchmark groups
+**Completion**: 100%
 **CLI Tools**: 2 production-ready binaries with integration tests
 **Code Quality**: Zero warnings, zero clippy issues
-**New in 0.1.0-beta.1**:
-- ✨ **Semantic Subtyping** - Practical SMT-based subtyping check for refinement types (+8 tests)
-- ✨ **Database Property Tests** - 10 comprehensive proptest validations for database operations
-- ✨ **Refinement Benchmarks** - 6 benchmark groups measuring type checking, subtyping, and scaling
-- ✨ **Modular Database** - Refactored database.rs for better maintainability (<2000 lines/file)
-- ✨ **Incremental Validation** - 10-100x faster revalidation
-- ✨ **Query Planner** - Cost-based query optimization
-- ✨ **Schema Evolution** - Breaking change detection & migration planning
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

@@ -1,9 +1,10 @@
-# Beta.1 Release Status ✅
+# RC.1 Release Status
 
-**Version**: 0.1.0-beta.1
+**Version**: 0.1.0-rc.1
+**Release Date**: 2026-03-06
 **Status**: Production Ready
 
-This meta crate is part of the TensorLogic v0.1.0-beta.1 release with:
+This meta crate is part of the TensorLogic v0.1.0-rc.1 release with:
 - Zero compiler warnings
 - 100% test pass rate
 - Complete documentation
@@ -15,7 +16,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
 
 # tensorlogic (Meta Crate) TODO
 
-## Completed ✓
+## Completed
 
 ### Core Functionality
 - [x] Re-export all planning layer components
@@ -32,7 +33,18 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] tensorlogic-quantrs-hooks
   - [x] tensorlogic-trustformers
 
-### Documentation ✅ COMPLETE
+### Prelude Module - COMPLETE
+- [x] `Term` (from tensorlogic::ir)
+- [x] `TLExpr` (from tensorlogic::ir)
+- [x] `compile_to_einsum` (from tensorlogic::compiler)
+- [x] `TlExecutor` (from tensorlogic::infer)
+- [x] `TlAutodiff` (from tensorlogic::infer)
+- [x] `Scirs2Exec` (from tensorlogic::scirs_backend)
+
+Note: `EinsumGraph`, `CompilerContext`, `CompilationConfig`, `IrError`, `CompilerError`
+are available via their respective sub-modules but are not in the prelude.
+
+### Documentation - COMPLETE
 - [x] Comprehensive README.md
   - [x] Overview and quick start
   - [x] Architecture explanation
@@ -40,17 +52,13 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Examples with commands
   - [x] Feature flags documentation
   - [x] Migration guide from individual crates
+  - [x] Accurate prelude contents
 - [x] Module organization
   - [x] Planning layer exports
   - [x] Execution layer exports
   - [x] Integration layer exports
-- [x] Prelude module for convenient imports
-  - [x] Common types (Term, TLExpr, EinsumGraph)
-  - [x] Compilation functions
-  - [x] Execution traits
-  - [x] Error types
 
-### Examples ✅ COMPLETE
+### Examples - COMPLETE
 - [x] 00_minimal_rule - Basic predicate and compilation
 - [x] 01_exists_reduce - Existential quantifier with reduction
 - [x] 02_scirs2_execution - Full execution with SciRS2 backend
@@ -59,7 +67,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
 
 All examples work correctly and demonstrate meta crate usage.
 
-### Workspace Integration ✅ COMPLETE
+### Workspace Integration - COMPLETE
 - [x] Proper Cargo.toml structure
   - [x] All component dependencies specified
   - [x] Workspace inheritance (version, edition, license, etc.)
@@ -69,17 +77,18 @@ All examples work correctly and demonstrate meta crate usage.
   - [x] lib.rs with organized re-exports
   - [x] examples/ directory with all examples
   - [x] README.md and TODO.md
-
-### Virtual Workspace Structure ✅ COMPLETE
 - [x] Moved from root to crates/tensorlogic/
 - [x] All examples migrated successfully
 - [x] Build and test infrastructure working
 - [x] Documentation references updated
 
-## Future Enhancements 🔮
+## Future Enhancements
 
 ### Prelude Improvements
 - [ ] Add more convenience re-exports based on user feedback
+  - [ ] `EinsumGraph` - frequently needed alongside `TLExpr`
+  - [ ] `CompilationConfig` - needed for most non-default compilations
+  - [ ] `IrError`, `CompilerError` - for error handling in user code
 - [ ] Group exports by common use cases
 - [ ] Trait extension methods for ergonomic API
 
@@ -111,7 +120,7 @@ All examples work correctly and demonstrate meta crate usage.
 - [ ] Component dependency graph visualization
 - [ ] Automatic re-export generation tool
 
-## Low Priority 🟢
+## Low Priority
 
 ### Optimization
 - [ ] Compile time optimization
@@ -132,21 +141,20 @@ All examples work correctly and demonstrate meta crate usage.
 
 ---
 
-**Completion**: 100% (All planned features for beta.1)
+**Completion**: 100% (All planned features for rc.1)
+**Release**: v0.1.0-rc.1 (2026-03-06)
+
 **Production Ready Features:**
 - Complete re-export of all 10 component crates
 - Organized module structure (planning/execution/integration layers)
-- Convenient prelude module
+- Prelude module with 6 core items
 - 5 comprehensive examples
 - Complete documentation
 - Virtual workspace integration
-
-**Test Coverage**: Examples tested via `cargo run`
-**Build Status**: Zero warnings
-**Documentation**: Complete with migration guide
 
 **Notes:**
 - This is a pure re-export crate with no implementation code
 - All functionality is provided by component crates
 - Examples serve as integration tests
-- Version is synchronized with all components (0.1.0-beta.1)
+- Version is synchronized with all components (0.1.0-rc.1)
+- Prelude intentionally kept minimal; users should import from sub-modules for additional types

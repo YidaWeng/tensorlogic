@@ -1,4 +1,4 @@
-# Release Notes - v0.1.0-beta.1
+# Release Notes - v0.1.0-rc.1
 
 **Release Date**: 2025-11-17
 **Status**: 🎉 Production Ready for Alpha Release
@@ -212,7 +212,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tensorlogic-adapters = "0.1.0-beta.1"
+tensorlogic-adapters = "0.1.0-rc.1"
 ```
 
 ## 🎓 Migration Guide

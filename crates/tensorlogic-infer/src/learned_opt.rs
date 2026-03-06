@@ -35,7 +35,7 @@
 //! remain lightweight and engine-agnostic. The rand usage here is minimal (only
 //! for exploration strategy) and does not involve heavy tensor operations.
 
-use rand::Rng;
+use rand::RngExt;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;

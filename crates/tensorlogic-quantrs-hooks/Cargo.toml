@@ -6,6 +6,9 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+readme = "README.md"
+keywords = ["tensor", "logic", "quantum-computing", "quantum-circuits", "hooks"]
+categories = ["science", "algorithms", "simulation"]
 
 [dependencies]
 anyhow.workspace = true

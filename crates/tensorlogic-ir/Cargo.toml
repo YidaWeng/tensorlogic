@@ -6,6 +6,9 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+readme = "README.md"
+keywords = ["tensor", "logic", "compiler-ir", "type-system", "compiler"]
+categories = ["science", "algorithms", "mathematics"]
 
 [dependencies]
 serde.workspace = true

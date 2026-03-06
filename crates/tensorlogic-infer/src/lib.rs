@@ -1,6 +1,6 @@
 //! Engine-agnostic traits and execution planning API.
 //!
-//! **Version**: 0.1.0-beta.1 | **Status**: Production Ready
+//! **Version**: 0.1.0-rc.1 | **Status**: Production Ready
 //!
 //! This crate defines the abstract execution interfaces and optimization utilities for TensorLogic:
 

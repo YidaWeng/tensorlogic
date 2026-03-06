@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.90%2B-orange.svg)](https://www.rust-lang.org/)
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-4364%2F4364-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-4415%2F4415-brightgreen.svg)](#testing)
 
 TensorLogic compiles logical rules (predicates, quantifiers, implications) into **tensor equations (einsum graphs)** with a minimal DSL + IR, enabling neural/symbolic/probabilistic models within a unified tensor computation framework.
 
@@ -16,18 +16,25 @@ TensorLogic compiles logical rules (predicates, quantifiers, implications) into 
 - 🐍 **Python Bindings**: Production-ready PyO3 bindings with NumPy integration
 - 🔧 **Multiple Backends**: CPU, SIMD-accelerated CPU, GPU (future)
 - 📊 **Comprehensive Benchmarks**: 24 benchmark groups across 5 suites
-- 🧪 **Extensively Tested**: 4,363 tests with 100% pass rate
+- 🧪 **Extensively Tested**: 4,415 tests with 100% pass rate
 - 📚 **Rich Documentation**: Tutorials, examples, API docs
 - 🔗 **Ecosystem Integration**: OxiRS (RDF*/SHACL), SkleaRS, QuantrS2, TrustformeRS, ToRSh
 - 🤖 **Neurosymbolic AI**: Bidirectional tensor conversion with ToRSh (pure Rust PyTorch alternative)
 
-## 🎉 Production Ready
+## 🎉 Release Candidate
 
-**Version**: 0.1.0-beta.1 | **Status**: Production Ready
+**Version**: 0.1.0-rc.1 | **Status**: Release Candidate
 
-TensorLogic has reached production-ready status with comprehensive testing, benchmarking, and documentation:
+TensorLogic has reached release candidate status with comprehensive testing, benchmarking, and documentation:
 
-- ✅ **4,364/4,364 tests passing** (100% pass rate) - Comprehensive coverage across all crates
+**RC.1 Key Improvements**:
+- ✅ **SciRS2 ecosystem upgraded to 0.3.0** - Latest scientific computing backend
+- ✅ **SkleaRS upgraded to 0.1.0-rc.1** - Aligned release candidate versioning
+- ✅ **ToRSh upgraded to 0.1.0 (stable)** - Production-ready neurosymbolic tensor interop
+- ✅ **rand 0.10 compatibility** - Updated to latest random number generation API
+
+
+- ✅ **4,415/4,415 tests passing** (100% pass rate) - Comprehensive coverage across all crates
 - ✅ **Zero compiler warnings** - Clean build with latest dependencies
 - ✅ **Complete benchmark suite** - 24 groups covering SIMD, memory, gradients, throughput
 - ✅ **Production packaging** - Ready for PyPI with cross-platform wheels
@@ -359,10 +366,10 @@ pytest tests/ -v
 ```
 
 **Test Statistics**:
-- **4,364 tests** across all crates (lib + integration + doc)
+- **4,415 tests** across all crates (lib + integration + doc)
 - **100% pass rate** (12 tests intentionally skipped)
 - **Zero compiler warnings, zero clippy warnings, zero rustdoc warnings**
-- **313,107 lines of code** (278,630 Rust, 34,790 comments, 50,564 blank)
+- **317,127 lines of code** (282,741 Rust, 34,905 comments, 51,108 blank)
 - Coverage includes:
   - Unit tests (logic operations, type checking, optimization)
   - Integration tests (end-to-end workflows)
@@ -519,7 +526,7 @@ let output = attention.forward(&query, &key, &value)?;
 | 7 | Python Bindings | ✅ Production Ready | 98% |
 | 8 | Validation & Scale | ✅ Complete | 100% |
 
-**Overall Project Status**: 🎉 **Production Ready**
+**Overall Project Status**: 🎉 **Release Candidate (RC.1)**
 
 ## 🤝 Contributing
 
@@ -570,6 +577,8 @@ Licensed under Apache 2.0 License. See [LICENSE](LICENSE) for details.
 - [ ] Additional fuzzy logic variants
 - [x] **ToRSh tensor interoperability** - ✅ COMPLETE (pure Rust alternative to PyTorch)
 - [x] **Provenance API in Python bindings** - ✅ COMPLETE (get_provenance)
+- [x] **SciRS2 3.0 ecosystem upgrade** - ✅ COMPLETE (upgraded to 0.3.0)
+- [x] **rand 0.10 compatibility** - ✅ COMPLETE
 
 ### Medium-term
 

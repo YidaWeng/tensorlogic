@@ -976,5 +976,5 @@ For implementation details, see:
 ---
 
 **Document Maintained By:** TensorLogic Contributors
-**License:** MIT OR Apache-2.0
+**License:** Apache-2.0
 **Repository:** https://github.com/cool-japan/tensorlogic
