@@ -75,11 +75,12 @@ mod tests {
     }
 
     #[test]
-    fn test_decoder_layer_build() {
+    fn test_decoder_layer_build() -> Result<(), Box<dyn std::error::Error>> {
         let config = DecoderConfig::default();
-        let decoder = DecoderLayer::new(config).unwrap();
+        let decoder = DecoderLayer::new(config)?;
         let graph = decoder.build();
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]

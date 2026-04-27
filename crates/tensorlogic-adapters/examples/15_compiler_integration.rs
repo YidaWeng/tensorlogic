@@ -31,33 +31,33 @@ fn main() {
     // Define domain hierarchy
     schema
         .add_domain(DomainInfo::new("Entity", 1000).with_description("Root of type hierarchy"))
-        .unwrap();
+        .expect("unwrap");
 
     schema
         .add_domain(
             DomainInfo::new("Agent", 500).with_description("Autonomous agents in the system"),
         )
-        .unwrap();
+        .expect("unwrap");
 
     schema
         .add_domain(DomainInfo::new("Person", 200).with_description("Human agents with identities"))
-        .unwrap();
+        .expect("unwrap");
 
     schema
         .add_domain(DomainInfo::new("Student", 80).with_description("Students enrolled in courses"))
-        .unwrap();
+        .expect("unwrap");
 
     schema
         .add_domain(DomainInfo::new("Professor", 20).with_description("Faculty teaching courses"))
-        .unwrap();
+        .expect("unwrap");
 
     schema
         .add_domain(DomainInfo::new("Course", 50).with_description("Academic courses"))
-        .unwrap();
+        .expect("unwrap");
 
     schema
         .add_domain(DomainInfo::new("Grade", 5).with_description("Letter grades A-F"))
-        .unwrap();
+        .expect("unwrap");
 
     // Set up hierarchy: Student <: Person <: Agent <: Entity
     hierarchy.add_subtype("Agent", "Entity");
@@ -77,7 +77,7 @@ fn main() {
     let enrolled_constraints =
         PredicateConstraints::new().with_property(PredicateProperty::Functional); // Each student enrolled in at most one course per predicate instance
     enrolled.constraints = Some(enrolled_constraints);
-    schema.add_predicate(enrolled).unwrap();
+    schema.add_predicate(enrolled).expect("unwrap");
 
     let mut teaches = PredicateInfo::new(
         "teaches",
@@ -85,7 +85,7 @@ fn main() {
     )
     .with_description("Professor teaches a course");
     teaches.constraints = Some(PredicateConstraints::new());
-    schema.add_predicate(teaches).unwrap();
+    schema.add_predicate(teaches).expect("unwrap");
 
     let mut grade = PredicateInfo::new(
         "grade",
@@ -100,7 +100,7 @@ fn main() {
     let grade_constraints =
         PredicateConstraints::new().with_property(PredicateProperty::Functional); // Each (student, course) pair has at most one grade
     grade.constraints = Some(grade_constraints);
-    schema.add_predicate(grade).unwrap();
+    schema.add_predicate(grade).expect("unwrap");
 
     let mut knows = PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])
         .with_description("Person knows another person");
@@ -109,7 +109,7 @@ fn main() {
         .with_property(PredicateProperty::Symmetric) // If A knows B, then B knows A
         .with_property(PredicateProperty::Reflexive); // Everyone knows themselves
     knows.constraints = Some(knows_constraints);
-    schema.add_predicate(knows).unwrap();
+    schema.add_predicate(knows).expect("unwrap");
 
     let mut age =
         PredicateInfo::new("age", vec!["Person".to_string()]).with_description("Person's age");
@@ -117,7 +117,7 @@ fn main() {
     let age_range = ValueRange::new().with_min(0.0, true).with_max(120.0, true); // Age between 0 and 120 (inclusive)
     let age_constraints = PredicateConstraints::new().with_value_range(0, age_range);
     age.constraints = Some(age_constraints);
-    schema.add_predicate(age).unwrap();
+    schema.add_predicate(age).expect("unwrap");
 
     println!("✓ Defined 5 predicates with various constraints:");
     println!("  - enrolled: functional property");
@@ -127,9 +127,11 @@ fn main() {
     println!("  - age: value range [0, 120]");
 
     // Bind some variables
-    schema.bind_variable("student", "Student").unwrap();
-    schema.bind_variable("professor", "Professor").unwrap();
-    schema.bind_variable("course", "Course").unwrap();
+    schema.bind_variable("student", "Student").expect("unwrap");
+    schema
+        .bind_variable("professor", "Professor")
+        .expect("unwrap");
+    schema.bind_variable("course", "Course").expect("unwrap");
 
     println!("✓ Bound 3 variables to their domains\n");
 

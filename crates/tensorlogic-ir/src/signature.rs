@@ -224,7 +224,7 @@ mod tests {
         assert!(registry.contains("knows"));
         assert!(!registry.contains("likes"));
 
-        let retrieved = registry.get("knows").unwrap();
+        let retrieved = registry.get("knows").expect("unwrap");
         assert_eq!(retrieved.arity, 2);
     }
 
@@ -250,7 +250,7 @@ mod tests {
         assert_eq!(sig.name, "contains");
         assert_eq!(sig.arity, 2);
         assert!(sig.is_parametric());
-        assert_eq!(sig.get_parametric_types().unwrap().len(), 2);
+        assert_eq!(sig.get_parametric_types().expect("unwrap").len(), 2);
     }
 
     #[test]
@@ -265,8 +265,10 @@ mod tests {
         let list_int = ParametricType::list(int_type.clone());
 
         // Unify List<T>, T with List<Int>, Int
-        let subst = sig.unify_parametric(&[list_int, int_type.clone()]).unwrap();
-        assert_eq!(subst.get("T").unwrap(), &int_type);
+        let subst = sig
+            .unify_parametric(&[list_int, int_type.clone()])
+            .expect("unwrap");
+        assert_eq!(subst.get("T").expect("unwrap"), &int_type);
     }
 
     #[test]
@@ -280,7 +282,7 @@ mod tests {
 
         let instantiated = sig.instantiate(&subst);
         assert!(instantiated.is_parametric());
-        let param_types = instantiated.get_parametric_types().unwrap();
+        let param_types = instantiated.get_parametric_types().expect("unwrap");
         assert_eq!(param_types[0], int_type);
         assert_eq!(param_types[1], int_type);
     }
@@ -321,10 +323,10 @@ mod tests {
                 ParametricType::list(int_type.clone()),
                 ParametricType::list(string_type.clone()),
             ])
-            .unwrap();
+            .expect("unwrap");
 
-        assert_eq!(subst.get("T").unwrap(), &int_type);
-        assert_eq!(subst.get("U").unwrap(), &string_type);
+        assert_eq!(subst.get("T").expect("unwrap"), &int_type);
+        assert_eq!(subst.get("U").expect("unwrap"), &string_type);
     }
 
     #[test]

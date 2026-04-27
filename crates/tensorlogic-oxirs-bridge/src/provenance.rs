@@ -49,7 +49,9 @@ impl ProvenanceTracker {
         if self.rdfstar_store.is_none() {
             self.rdfstar_store = Some(RdfStarProvenanceStore::new());
         }
-        self.rdfstar_store.as_mut().unwrap()
+        self.rdfstar_store
+            .as_mut()
+            .expect("rdfstar_store just initialized above")
     }
 
     /// Get the RDF* provenance store (read-only)

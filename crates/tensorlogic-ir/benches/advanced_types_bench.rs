@@ -92,7 +92,7 @@ fn bench_linear_types(c: &mut Criterion) {
     c.bench_function("linear_context_validation", |b| {
         let mut ctx = LinearContext::new();
         ctx.bind("x", LinearType::linear("Tensor"));
-        ctx.use_var("x").unwrap();
+        ctx.use_var("x").expect("unwrap");
 
         b.iter(|| {
             let _ = black_box(&ctx).validate();
@@ -102,11 +102,11 @@ fn bench_linear_types(c: &mut Criterion) {
     c.bench_function("linear_context_merge", |b| {
         let mut ctx1 = LinearContext::new();
         ctx1.bind("x", LinearType::unrestricted("Int"));
-        ctx1.use_var("x").unwrap();
+        ctx1.use_var("x").expect("unwrap");
 
         let mut ctx2 = LinearContext::new();
         ctx2.bind("x", LinearType::unrestricted("Int"));
-        ctx2.use_var("x").unwrap();
+        ctx2.use_var("x").expect("unwrap");
 
         b.iter(|| {
             let _ = black_box(&ctx1).merge(black_box(&ctx2));

@@ -210,7 +210,7 @@ pub enum GradientScalingStrategy {
 /// let mut grad_accum = GradientAccumulationCallback::new(
 ///     4, // accumulate over 4 mini-batches
 ///     GradientScalingStrategy::Average,
-/// ).unwrap();
+/// ).expect("unwrap");
 /// ```
 pub struct GradientAccumulationCallback {
     /// Number of steps to accumulate gradients before updating.
@@ -460,33 +460,33 @@ mod tests {
         let mut grads = HashMap::new();
         grads.insert(
             "layer1".to_string(),
-            Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap(),
+            Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("unwrap"),
         );
         grads.insert(
             "layer2".to_string(),
-            Array2::from_shape_vec((2, 2), vec![0.5, 1.0, 1.5, 2.0]).unwrap(),
+            Array2::from_shape_vec((2, 2), vec![0.5, 1.0, 1.5, 2.0]).expect("unwrap"),
         );
         grads
     }
 
     #[test]
     fn test_gradient_accumulation_average_strategy() {
-        let mut accum = GradientAccumulationCallback::new(2).unwrap();
+        let mut accum = GradientAccumulationCallback::new(2).expect("unwrap");
         let grads = create_test_gradients();
 
         // First accumulation
-        accum.accumulate(&grads).unwrap();
+        accum.accumulate(&grads).expect("unwrap");
         assert_eq!(accum.current_step, 1);
         assert!(!accum.should_update());
 
         // Second accumulation
-        accum.accumulate(&grads).unwrap();
+        accum.accumulate(&grads).expect("unwrap");
         assert_eq!(accum.current_step, 2);
         assert!(accum.should_update());
 
         // Get averaged gradients
         let averaged = accum.get_and_reset();
-        let layer1 = averaged.get("layer1").unwrap();
+        let layer1 = averaged.get("layer1").expect("unwrap");
 
         // Should be average of 2 accumulations (same gradient twice)
         assert_eq!(layer1[[0, 0]], 1.0); // (1.0 + 1.0) / 2
@@ -499,14 +499,15 @@ mod tests {
     #[test]
     fn test_gradient_accumulation_sum_strategy() {
         let mut accum =
-            GradientAccumulationCallback::with_strategy(2, GradientScalingStrategy::Sum).unwrap();
+            GradientAccumulationCallback::with_strategy(2, GradientScalingStrategy::Sum)
+                .expect("unwrap");
         let grads = create_test_gradients();
 
-        accum.accumulate(&grads).unwrap();
-        accum.accumulate(&grads).unwrap();
+        accum.accumulate(&grads).expect("unwrap");
+        accum.accumulate(&grads).expect("unwrap");
 
         let summed = accum.get_and_reset();
-        let layer1 = summed.get("layer1").unwrap();
+        let layer1 = summed.get("layer1").expect("unwrap");
 
         // Should be sum (no scaling)
         assert_eq!(layer1[[0, 0]], 2.0); // 1.0 + 1.0
@@ -517,16 +518,16 @@ mod tests {
     fn test_gradient_accumulation_dynamic_strategy() {
         let mut accum =
             GradientAccumulationCallback::with_strategy(4, GradientScalingStrategy::Dynamic)
-                .unwrap();
+                .expect("unwrap");
         let grads = create_test_gradients();
 
         // Accumulate only 3 times (less than configured 4)
-        accum.accumulate(&grads).unwrap();
-        accum.accumulate(&grads).unwrap();
-        accum.accumulate(&grads).unwrap();
+        accum.accumulate(&grads).expect("unwrap");
+        accum.accumulate(&grads).expect("unwrap");
+        accum.accumulate(&grads).expect("unwrap");
 
         let scaled = accum.get_and_reset();
-        let layer1 = scaled.get("layer1").unwrap();
+        let layer1 = scaled.get("layer1").expect("unwrap");
 
         // Should scale by actual steps (3) not configured steps (4)
         assert_eq!(layer1[[0, 0]], 1.0); // (1.0 + 1.0 + 1.0) / 3
@@ -535,17 +536,17 @@ mod tests {
     #[test]
     fn test_gradient_clipping_during_accumulation() {
         let mut accum = GradientAccumulationCallback::new(2)
-            .unwrap()
+            .expect("unwrap")
             .with_grad_clipping(1.0); // Very small max norm
 
         let mut grads = HashMap::new();
         grads.insert(
             "layer1".to_string(),
-            Array2::from_shape_vec((2, 2), vec![10.0, 10.0, 10.0, 10.0]).unwrap(),
+            Array2::from_shape_vec((2, 2), vec![10.0, 10.0, 10.0, 10.0]).expect("unwrap"),
         );
 
         // Large gradients should be clipped
-        accum.accumulate(&grads).unwrap();
+        accum.accumulate(&grads).expect("unwrap");
         assert!(accum.max_grad_norm > 0.0);
 
         // Accumulated gradients should be clipped
@@ -559,12 +560,12 @@ mod tests {
 
     #[test]
     fn test_overflow_detection() {
-        let mut accum = GradientAccumulationCallback::new(2).unwrap();
+        let mut accum = GradientAccumulationCallback::new(2).expect("unwrap");
 
         let mut grads = HashMap::new();
         grads.insert(
             "layer1".to_string(),
-            Array2::from_shape_vec((2, 2), vec![f64::NAN, 1.0, 2.0, 3.0]).unwrap(),
+            Array2::from_shape_vec((2, 2), vec![f64::NAN, 1.0, 2.0, 3.0]).expect("unwrap"),
         );
 
         // Should detect NaN
@@ -575,11 +576,11 @@ mod tests {
 
     #[test]
     fn test_gradient_accumulation_stats() {
-        let mut accum = GradientAccumulationCallback::new(2).unwrap();
+        let mut accum = GradientAccumulationCallback::new(2).expect("unwrap");
         let grads = create_test_gradients();
 
-        accum.accumulate(&grads).unwrap();
-        accum.accumulate(&grads).unwrap();
+        accum.accumulate(&grads).expect("unwrap");
+        accum.accumulate(&grads).expect("unwrap");
         accum.get_and_reset();
 
         let stats = accum.get_stats();
@@ -590,10 +591,10 @@ mod tests {
 
     #[test]
     fn test_memory_usage_estimation() {
-        let mut accum = GradientAccumulationCallback::new(2).unwrap();
+        let mut accum = GradientAccumulationCallback::new(2).expect("unwrap");
         let grads = create_test_gradients();
 
-        accum.accumulate(&grads).unwrap();
+        accum.accumulate(&grads).expect("unwrap");
 
         let stats = accum.get_stats();
         assert!(stats.memory_usage_mb > 0.0);
@@ -602,10 +603,10 @@ mod tests {
 
     #[test]
     fn test_gradient_accumulation_reset() {
-        let mut accum = GradientAccumulationCallback::new(2).unwrap();
+        let mut accum = GradientAccumulationCallback::new(2).expect("unwrap");
         let grads = create_test_gradients();
 
-        accum.accumulate(&grads).unwrap();
+        accum.accumulate(&grads).expect("unwrap");
         assert_eq!(accum.current_step, 1);
 
         accum.reset();
@@ -622,17 +623,17 @@ mod tests {
 
     #[test]
     fn test_gradient_accumulation_multiple_cycles() {
-        let mut accum = GradientAccumulationCallback::new(2).unwrap();
+        let mut accum = GradientAccumulationCallback::new(2).expect("unwrap");
         let grads = create_test_gradients();
 
         // First cycle
-        accum.accumulate(&grads).unwrap();
-        accum.accumulate(&grads).unwrap();
+        accum.accumulate(&grads).expect("unwrap");
+        accum.accumulate(&grads).expect("unwrap");
         accum.get_and_reset();
 
         // Second cycle
-        accum.accumulate(&grads).unwrap();
-        accum.accumulate(&grads).unwrap();
+        accum.accumulate(&grads).expect("unwrap");
+        accum.accumulate(&grads).expect("unwrap");
         accum.get_and_reset();
 
         let stats = accum.get_stats();
@@ -641,25 +642,25 @@ mod tests {
 
     #[test]
     fn test_different_gradient_shapes() {
-        let mut accum = GradientAccumulationCallback::new(2).unwrap();
+        let mut accum = GradientAccumulationCallback::new(2).expect("unwrap");
 
         let mut grads1 = HashMap::new();
         grads1.insert(
             "layer1".to_string(),
-            Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap(),
+            Array2::from_shape_vec((2, 3), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).expect("unwrap"),
         );
 
         let mut grads2 = HashMap::new();
         grads2.insert(
             "layer1".to_string(),
-            Array2::from_shape_vec((2, 3), vec![0.5, 1.0, 1.5, 2.0, 2.5, 3.0]).unwrap(),
+            Array2::from_shape_vec((2, 3), vec![0.5, 1.0, 1.5, 2.0, 2.5, 3.0]).expect("unwrap"),
         );
 
-        accum.accumulate(&grads1).unwrap();
-        accum.accumulate(&grads2).unwrap();
+        accum.accumulate(&grads1).expect("unwrap");
+        accum.accumulate(&grads2).expect("unwrap");
 
         let averaged = accum.get_and_reset();
-        let layer1 = averaged.get("layer1").unwrap();
+        let layer1 = averaged.get("layer1").expect("unwrap");
 
         assert_eq!(layer1.dim(), (2, 3));
         assert_eq!(layer1[[0, 0]], 0.75); // (1.0 + 0.5) / 2

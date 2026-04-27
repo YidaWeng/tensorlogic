@@ -320,12 +320,12 @@ mod tests {
         let b = graph.add_tensor("B");
         let c = graph.add_tensor("C");
 
-        graph.add_input(a).unwrap();
-        graph.add_input(b).unwrap();
+        graph.add_input(a).expect("unwrap");
+        graph.add_input(b).expect("unwrap");
         graph
             .add_node(EinsumNode::einsum("i,j->ij", vec![a, b], vec![c]))
-            .unwrap();
-        graph.add_output(c).unwrap();
+            .expect("unwrap");
+        graph.add_output(c).expect("unwrap");
 
         let cost_model = auto_annotate_costs(&graph);
         assert_eq!(cost_model.node_costs.len(), 1);

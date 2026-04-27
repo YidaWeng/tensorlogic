@@ -586,7 +586,7 @@ mod tests {
         graph.add_variable("var_0".to_string(), "D1".to_string());
 
         let algorithm = SumProductAlgorithm::default();
-        let beliefs = algorithm.run(&graph).unwrap();
+        let beliefs = algorithm.run(&graph).expect("unwrap");
 
         if let Some(belief) = beliefs.get("var_0") {
             let sum: f64 = belief.iter().sum();

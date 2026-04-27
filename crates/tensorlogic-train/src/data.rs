@@ -143,7 +143,10 @@ impl Dataset {
     pub fn train_test_split(&self, train_ratio: f64) -> TrainResult<(Dataset, Dataset)> {
         let splits = self.split(&[train_ratio, 1.0 - train_ratio])?;
         let mut iter = splits.into_iter();
-        Ok((iter.next().unwrap(), iter.next().unwrap()))
+        Ok((
+            iter.next().expect("split returns exactly 2 parts"),
+            iter.next().expect("split returns exactly 2 parts"),
+        ))
     }
 
     /// Split into train, validation, and test sets.
@@ -161,9 +164,9 @@ impl Dataset {
         let splits = self.split(&[train_ratio, val_ratio, test_ratio])?;
         let mut iter = splits.into_iter();
         Ok((
-            iter.next().unwrap(),
-            iter.next().unwrap(),
-            iter.next().unwrap(),
+            iter.next().expect("split returns exactly 3 parts"),
+            iter.next().expect("split returns exactly 3 parts"),
+            iter.next().expect("split returns exactly 3 parts"),
         ))
     }
 
@@ -601,7 +604,10 @@ impl OneHotEncoder {
             .ok_or_else(|| TrainError::Other(format!("Column {} not fitted", col_idx)))?;
 
         let n_samples = values.len();
-        let n_cats = *self.n_categories.get(&col_idx).unwrap();
+        let n_cats = *self
+            .n_categories
+            .get(&col_idx)
+            .expect("n_categories populated during fit for all fitted columns");
 
         let mut result = Array2::zeros((n_samples, n_cats));
 
@@ -727,8 +733,9 @@ mod tests {
 
     #[test]
     fn test_dataset_creation() {
-        let features = Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
-        let targets = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 0.0]).unwrap();
+        let features =
+            Array2::from_shape_vec((3, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).expect("unwrap");
+        let targets = Array2::from_shape_vec((3, 1), vec![0.0, 1.0, 0.0]).expect("unwrap");
 
         let dataset = Dataset::new(features, targets);
 
@@ -743,7 +750,7 @@ mod tests {
         let targets = Array2::from_shape_fn((10, 1), |(i, _)| i as f64);
 
         let dataset = Dataset::new(features, targets);
-        let splits = dataset.split(&[0.6, 0.2, 0.2]).unwrap();
+        let splits = dataset.split(&[0.6, 0.2, 0.2]).expect("unwrap");
 
         assert_eq!(splits.len(), 3);
         assert_eq!(splits[0].num_samples(), 6);
@@ -757,7 +764,7 @@ mod tests {
         let targets = Array2::from_shape_fn((100, 1), |(i, _)| (i % 2) as f64);
 
         let dataset = Dataset::new(features, targets);
-        let (train, test) = dataset.train_test_split(0.8).unwrap();
+        let (train, test) = dataset.train_test_split(0.8).expect("unwrap");
 
         assert_eq!(train.num_samples(), 80);
         assert_eq!(test.num_samples(), 20);
@@ -788,7 +795,7 @@ mod tests {
         let targets = Array2::from_shape_fn((10, 1), |(i, _)| i as f64);
 
         let dataset = Dataset::new(features, targets);
-        let subset = dataset.subset(&[0, 2, 4]).unwrap();
+        let subset = dataset.subset(&[0, 2, 4]).expect("unwrap");
 
         assert_eq!(subset.num_samples(), 3);
         assert_eq!(subset.features[[0, 0]], 0.0);
@@ -798,11 +805,11 @@ mod tests {
 
     #[test]
     fn test_preprocessor_standardize() {
-        let data =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        let data = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .expect("unwrap");
 
         let mut preprocessor = DataPreprocessor::standardize();
-        let transformed = preprocessor.fit_transform(&data).unwrap();
+        let transformed = preprocessor.fit_transform(&data).expect("unwrap");
 
         // Check that mean is approximately 0
         let col0_mean: f64 = transformed.column(0).iter().sum::<f64>() / 4.0;
@@ -812,7 +819,9 @@ mod tests {
         assert!(col1_mean.abs() < 1e-10);
 
         // Check inverse transform
-        let recovered = preprocessor.inverse_transform(&transformed).unwrap();
+        let recovered = preprocessor
+            .inverse_transform(&transformed)
+            .expect("unwrap");
         for i in 0..4 {
             for j in 0..2 {
                 assert!((recovered[[i, j]] - data[[i, j]]).abs() < 1e-10);
@@ -824,10 +833,10 @@ mod tests {
     fn test_preprocessor_min_max() {
         let data =
             Array2::from_shape_vec((4, 2), vec![0.0, 10.0, 5.0, 20.0, 10.0, 30.0, 15.0, 40.0])
-                .unwrap();
+                .expect("unwrap");
 
         let mut preprocessor = DataPreprocessor::min_max_normalize();
-        let transformed = preprocessor.fit_transform(&data).unwrap();
+        let transformed = preprocessor.fit_transform(&data).expect("unwrap");
 
         // Check that values are in [0, 1]
         for &val in transformed.iter() {
@@ -849,7 +858,7 @@ mod tests {
         ];
 
         let mut encoder = LabelEncoder::new();
-        let encoded = encoder.fit_transform(&labels).unwrap();
+        let encoded = encoder.fit_transform(&labels).expect("unwrap");
 
         assert_eq!(encoder.num_classes(), 3);
         assert_eq!(encoded.len(), 4);
@@ -858,7 +867,7 @@ mod tests {
         assert_eq!(encoded[0], encoded[2]);
 
         // Test inverse transform
-        let decoded = encoder.inverse_transform(&encoded).unwrap();
+        let decoded = encoder.inverse_transform(&encoded).expect("unwrap");
         assert_eq!(decoded, labels);
     }
 
@@ -874,7 +883,7 @@ mod tests {
         let mut encoder = OneHotEncoder::new();
         encoder.fit(&[(0, values.clone())]);
 
-        let encoded = encoder.transform(0, &values).unwrap();
+        let encoded = encoder.transform(0, &values).expect("unwrap");
 
         assert_eq!(encoded.nrows(), 4);
         assert_eq!(encoded.ncols(), 3);

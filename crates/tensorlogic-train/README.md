@@ -1,7 +1,7 @@
 # tensorlogic-train
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic-train-orange)](https://crates.io/crates/tensorlogic-train)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-train)
-[![Tests](https://img.shields.io/badge/tests-499%2F499-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/tests-716%2F716-brightgreen)](#)
 [![Production](https://img.shields.io/badge/status-production_ready-success)](#)
 
 Training scaffolds for Tensorlogic: loss composition, optimizers, schedulers, and callbacks.
@@ -75,7 +75,7 @@ Training scaffolds for Tensorlogic: loss composition, optimizers, schedulers, an
 ### Callbacks (14+ types)
 - **Training Events**: on_train/epoch/batch/validation hooks
 - **EarlyStoppingCallback**: Stop training when validation plateaus
-- **CheckpointCallback**: Save model checkpoints (best/periodic) with optional gzip compression
+- **CheckpointCallback**: Save model checkpoints (best/periodic) with optional compression via `oxiarc-deflate` (Pure Rust)
 - **ReduceLrOnPlateauCallback**: Adaptive learning rate reduction
 - **LearningRateFinder**: Find optimal learning rate automatically
 - **GradientMonitor**: Track gradient flow and detect issues
@@ -190,6 +190,32 @@ Training scaffolds for Tensorlogic: loss composition, optimizers, schedulers, an
 - **TimeEstimator**: Training time prediction
 - **LrRangeTestAnalyzer**: Optimal LR finding analysis
 - **compare_models**: Model comparison utilities
+
+### Neural ODE (v0.1.18)
+- **OdeFunc trait**: User-defined dynamics `f(t, y, params) -> dy/dt` with `vjp()` for vector-Jacobian products
+- **rk4_solve()**: Fixed-step RK4 integrator returning full `OdeSolution` trajectory
+- **dopri5_solve()**: Adaptive Dormand-Prince RK45 solver with step-size control and error estimation
+- **OdeSolverConfig**: Builder with `rtol`, `atol`, `max_steps`, `dense_output`
+- **NeuralOde**: Wraps user dynamics function with `(t0, t1)` integration bounds; `forward()` returns endpoint state
+- **adjoint_backward()**: Adjoint sensitivity method — memory-efficient gradient O(1) storage rather than O(T)
+
+### Online Learning (v0.1.20)
+- **OnlineLearner trait**: `update()`, `predict()`, `reset()` unified interface
+- **Perceptron**: Binary classifier with margin-based weight updates
+- **PassiveAggressive**: PA / PA-I / PA-II variants with configurable aggressiveness `C`
+- **OnlineGradientDescent**: Squared-loss, hinge-loss, and logistic-loss modes with configurable step size
+- **FtrlProximal**: Follow The Regularized Leader with L1/L2 regularization, per-coordinate adaptive learning rates
+- **OnlineStats**: Per-step loss, mistake rate, cumulative regret, and `n_updates`
+- **online_evaluate()**: Batch helper for evaluating/training over a labelled dataset
+
+### Adversarial Training (v0.1.21)
+- **FGSM**: Fast Gradient Sign Method — one-step sign gradient attack
+- **PGD**: Projected Gradient Descent — iterative attack with random start and norm-ball projection
+- **Norm constraints**: L∞, L2, and L1 perturbation norm support
+- **CrossEntropyAttackLoss / MseAttackLoss**: Attack-specific loss functions
+- **LinearAttackModel**: Reference model for adversarial experiments
+- **adversarial_training_loss()**: Combined clean + adversarial loss for robust training
+- **robustness_eval()**: Evaluate model accuracy under adversarial perturbations
 
 ## Installation
 
@@ -531,6 +557,9 @@ tensorlogic-train/
 │   ├── few_shot.rs               # Prototypical/Matching networks
 │   ├── meta_learning.rs          # MAML and Reptile
 │   ├── gradient_centralization.rs# Gradient centralization
+│   ├── neural_ode.rs             # Neural ODE (RK4, DOPRI5, adjoint sensitivity) (v0.1.18)
+│   ├── online_learning.rs        # Online learning (Perceptron, PA, OGD, FTRL) (v0.1.20)
+│   ├── adversarial.rs            # Adversarial training (FGSM, PGD, L∞/L2/L1) (v0.1.21)
 │   ├── structured_logging.rs     # tracing integration (feature-gated)
 │   └── utils.rs                  # Model introspection utilities
 ```
@@ -602,7 +631,10 @@ All modules have comprehensive unit tests:
 | `meta_learning.rs` | 15 | MAML, Reptile, task management |
 | `pruning.rs` | 13 | Magnitude, Gradient, Structured, Global, Iterative |
 | `sampling.rs` | 14 | Hard negative mining, Importance, Focal, Class balanced |
-| **Total** | **499** | **100%** |
+| `neural_ode.rs` | 22 | RK4, DOPRI5, NeuralOde, adjoint sensitivity (v0.1.18) |
+| `online_learning.rs` | 28 | Perceptron, PassiveAggressive, OGD, FTRL, OnlineStats (v0.1.20) |
+| `adversarial.rs` | 29 | FGSM, PGD, L∞/L2/L1, adversarial training loss (v0.1.21) |
+| **Total** | **716** | **100%** |
 
 Run tests with:
 
@@ -689,10 +721,10 @@ See [CONTRIBUTING.md](../../CONTRIBUTING.md) for guidelines.
 
 ---
 
-**Status**: Production Ready (v0.1.0-rc.1)
-**Last Updated**: 2026-03-06
-**Version**: 0.1.0-rc.1
-**Test Coverage**: 499/499 tests passing (100%)
+**Status**: Production Ready (v0.1.0 Stable)
+**Last Updated**: 2026-04-06
+**Version**: 0.1.0
+**Test Coverage**: 716/716 tests passing (100%)
 **Code Quality**: Zero warnings, clippy clean
-**Features**: 15 losses, 18 optimizers, 12 schedulers, 14+ callbacks, 9 regularization techniques, 9 augmentations, DropPath, DropBlock, quantization, mixed precision, few-shot learning, meta-learning, Bayesian optimization, gradient centralization
+**Features**: 15 losses, 18 optimizers, 12 schedulers, 14+ callbacks, 9 regularization techniques, 9 augmentations, DropPath, DropBlock, quantization, mixed precision, few-shot learning, meta-learning, Bayesian optimization, gradient centralization, Neural ODE (RK4/DOPRI5/adjoint), online learning (Perceptron/PA/OGD/FTRL), adversarial training (FGSM/PGD)
 **Examples**: 20 comprehensive training examples

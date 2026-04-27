@@ -154,7 +154,7 @@ mod tests {
         // Create a chain that might have fusable operations
         let expr = TLExpr::mul(TLExpr::add(x.clone(), y.clone()), x);
 
-        let graph = compile_to_einsum(&expr).unwrap();
+        let graph = compile_to_einsum(&expr).expect("unwrap");
         let _opportunities = analyze_fusion_opportunities(&graph);
 
         // Fusion opportunities depend on compilation strategy
@@ -170,7 +170,7 @@ mod tests {
         let zero = TLExpr::constant(0.0);
         let expr = TLExpr::gt(sum, zero);
 
-        let graph = compile_to_einsum(&expr).unwrap();
+        let graph = compile_to_einsum(&expr).expect("unwrap");
         let _opportunities = analyze_fusion_opportunities(&graph);
 
         // May find fusion opportunities depending on compilation
@@ -210,7 +210,7 @@ mod tests {
         let y = TLExpr::pred("y", vec![Term::var("i")]);
         let expr = TLExpr::mul(x, y);
 
-        let graph = compile_to_einsum(&expr).unwrap();
+        let graph = compile_to_einsum(&expr).expect("unwrap");
         let (opportunities, stats) = suggest_fusions(&graph);
 
         // Basic sanity check
@@ -234,7 +234,7 @@ mod tests {
     #[test]
     fn test_single_node_no_fusion() {
         let x = TLExpr::pred("x", vec![Term::var("i")]);
-        let graph = compile_to_einsum(&x).unwrap();
+        let graph = compile_to_einsum(&x).expect("unwrap");
 
         let opportunities = analyze_fusion_opportunities(&graph);
         // Single node - no fusion possible

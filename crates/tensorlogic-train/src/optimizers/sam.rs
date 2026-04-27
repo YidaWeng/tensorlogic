@@ -169,17 +169,17 @@ mod tests {
             ..Default::default()
         };
         let inner_optimizer = SgdOptimizer::new(inner_config);
-        let mut optimizer = SamOptimizer::new(inner_optimizer, 0.05).unwrap();
+        let mut optimizer = SamOptimizer::new(inner_optimizer, 0.05).expect("unwrap");
         let mut params = HashMap::new();
         params.insert("w".to_string(), array![[1.0, 2.0]]);
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), array![[0.1, 0.1]]);
-        let original_w = params.get("w").unwrap().clone();
-        optimizer.first_step(&mut params, &grads).unwrap();
-        let perturbed_w = params.get("w").unwrap();
+        let original_w = params.get("w").expect("unwrap").clone();
+        optimizer.first_step(&mut params, &grads).expect("unwrap");
+        let perturbed_w = params.get("w").expect("unwrap");
         assert_ne!(perturbed_w[[0, 0]], original_w[[0, 0]]);
-        optimizer.second_step(&mut params, &grads).unwrap();
-        let final_w = params.get("w").unwrap();
+        optimizer.second_step(&mut params, &grads).expect("unwrap");
+        let final_w = params.get("w").expect("unwrap");
         assert!(final_w[[0, 0]] < original_w[[0, 0]]);
         let state = optimizer.state_dict();
         assert!(state.contains_key("rho"));

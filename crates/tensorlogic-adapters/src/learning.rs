@@ -37,11 +37,11 @@
 //!     {"id": 3, "name": "Charlie", "age": 35, "city": "NYC"}
 //! ]"#;
 //!
-//! let sample = DataSample::from_json(json_data).unwrap();
+//! let sample = DataSample::from_json(json_data).expect("unwrap");
 //! let config = InferenceConfig::default();
 //! let mut learner = SchemaLearner::new(config);
 //!
-//! let schema = learner.learn_from_sample(&sample).unwrap();
+//! let schema = learner.learn_from_sample(&sample).expect("unwrap");
 //! let stats = learner.statistics();
 //!
 //! assert!(stats.domains_inferred > 0);
@@ -156,7 +156,10 @@ impl DataSample {
                     .zip(values.iter())
                     .map(|(k, v)| {
                         let json_val = if let Ok(num) = v.parse::<f64>() {
-                            Value::Number(serde_json::Number::from_f64(num).unwrap())
+                            Value::Number(
+                                serde_json::Number::from_f64(num)
+                                    .unwrap_or_else(|| serde_json::Number::from(0i64)),
+                            )
                         } else if *v == "true" || *v == "false" {
                             Value::Bool(*v == "true")
                         } else {
@@ -453,7 +456,7 @@ mod tests {
             {"id": 2, "name": "Bob"}
         ]"#;
 
-        let sample = DataSample::from_json(json).unwrap();
+        let sample = DataSample::from_json(json).expect("unwrap");
         assert_eq!(sample.len(), 2);
         assert_eq!(sample.field_names().len(), 2);
     }
@@ -462,7 +465,7 @@ mod tests {
     fn test_data_sample_from_csv() {
         let csv = "id,name,age\n1,Alice,30\n2,Bob,25";
 
-        let sample = DataSample::from_csv(csv).unwrap();
+        let sample = DataSample::from_csv(csv).expect("unwrap");
         assert_eq!(sample.len(), 2);
         assert_eq!(sample.field_names().len(), 3);
     }
@@ -474,11 +477,11 @@ mod tests {
             {"id": 2, "name": "Bob", "age": 25}
         ]"#;
 
-        let sample = DataSample::from_json(json).unwrap();
+        let sample = DataSample::from_json(json).expect("unwrap");
         let config = InferenceConfig::default();
         let mut learner = SchemaLearner::new(config);
 
-        let _schema = learner.learn_from_sample(&sample).unwrap();
+        let _schema = learner.learn_from_sample(&sample).expect("unwrap");
         let stats = learner.statistics();
 
         assert!(stats.domains_inferred > 0);
@@ -505,7 +508,7 @@ mod tests {
 
         let config = InferenceConfig::default();
         let learner = SchemaLearner::new(config);
-        let range = learner.infer_value_range(&values).unwrap();
+        let range = learner.infer_value_range(&values).expect("unwrap");
 
         assert_eq!(range.min, Some(10.0));
         assert_eq!(range.max, Some(30.0));
@@ -536,7 +539,7 @@ mod tests {
             {"id": 3, "type": "A"}
         ]"#;
 
-        let sample = DataSample::from_json(json).unwrap();
+        let sample = DataSample::from_json(json).expect("unwrap");
         let config = InferenceConfig::default();
         let learner = SchemaLearner::new(config);
 
@@ -551,7 +554,7 @@ mod tests {
             {"name": "Bob", "age": 25}
         ]"#;
 
-        let sample = DataSample::from_json(json).unwrap();
+        let sample = DataSample::from_json(json).expect("unwrap");
         let names = sample.field_values("name");
 
         assert_eq!(names.len(), 2);
@@ -564,7 +567,7 @@ mod tests {
             {"person": "Bob", "city": "LA"}
         ]"#;
 
-        let sample = DataSample::from_json(json).unwrap();
+        let sample = DataSample::from_json(json).expect("unwrap");
         let config = InferenceConfig::default();
         let learner = SchemaLearner::new(config);
 
@@ -574,7 +577,7 @@ mod tests {
     #[test]
     fn test_empty_sample() {
         let json = "[]";
-        let sample = DataSample::from_json(json).unwrap();
+        let sample = DataSample::from_json(json).expect("unwrap");
         assert!(sample.is_empty());
         assert_eq!(sample.len(), 0);
     }
@@ -582,14 +585,14 @@ mod tests {
     #[test]
     fn test_single_object_json() {
         let json = r#"{"id": 1, "name": "Alice"}"#;
-        let sample = DataSample::from_json(json).unwrap();
+        let sample = DataSample::from_json(json).expect("unwrap");
         assert_eq!(sample.len(), 1);
     }
 
     #[test]
     fn test_csv_type_detection() {
         let csv = "id,name,active\n1,Alice,true\n2,Bob,false";
-        let sample = DataSample::from_csv(csv).unwrap();
+        let sample = DataSample::from_csv(csv).expect("unwrap");
 
         let active_values = sample.field_values("active");
         assert!(active_values.iter().all(|v| v.is_boolean()));
@@ -598,22 +601,22 @@ mod tests {
     #[test]
     fn test_confidence_scores_tracking() {
         let json = r#"[{"id": 1, "name": "Alice"}]"#;
-        let sample = DataSample::from_json(json).unwrap();
+        let sample = DataSample::from_json(json).expect("unwrap");
         let config = InferenceConfig::default();
         let mut learner = SchemaLearner::new(config);
 
-        learner.learn_from_sample(&sample).unwrap();
+        learner.learn_from_sample(&sample).expect("unwrap");
         assert!(!learner.all_confidences().is_empty());
     }
 
     #[test]
     fn test_learning_statistics() {
         let json = r#"[{"id": 1}, {"id": 2}, {"id": 3}]"#;
-        let sample = DataSample::from_json(json).unwrap();
+        let sample = DataSample::from_json(json).expect("unwrap");
         let config = InferenceConfig::default();
         let mut learner = SchemaLearner::new(config);
 
-        learner.learn_from_sample(&sample).unwrap();
+        learner.learn_from_sample(&sample).expect("unwrap");
         let stats = learner.statistics();
 
         assert_eq!(stats.total_samples_analyzed, 3);

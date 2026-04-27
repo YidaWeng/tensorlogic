@@ -281,7 +281,7 @@ mod tests {
         let loss = LabelSmoothingLoss::new(0.1, 10);
         assert!(loss.is_ok());
 
-        let loss = loss.unwrap();
+        let loss = loss.expect("unwrap");
         assert_eq!(loss.epsilon, 0.1);
         assert_eq!(loss.num_classes, 10);
     }
@@ -294,7 +294,7 @@ mod tests {
 
     #[test]
     fn test_label_smoothing_smooth_labels() {
-        let loss = LabelSmoothingLoss::new(0.1, 3).unwrap();
+        let loss = LabelSmoothingLoss::new(0.1, 3).expect("unwrap");
 
         // One-hot encoded: class 1 is true
         let targets = array![[0.0, 1.0, 0.0], [1.0, 0.0, 0.0]];
@@ -310,7 +310,7 @@ mod tests {
 
     #[test]
     fn test_label_smoothing_loss_compute() {
-        let loss = LabelSmoothingLoss::new(0.1, 3).unwrap();
+        let loss = LabelSmoothingLoss::new(0.1, 3).expect("unwrap");
 
         let predictions = array![[1.0, 2.0, 0.5], [0.5, 1.0, 2.0]];
         let targets = array![[0.0, 1.0, 0.0], [0.0, 0.0, 1.0]];
@@ -318,7 +318,7 @@ mod tests {
         let result = loss.compute(&predictions.view(), &targets.view());
         assert!(result.is_ok());
 
-        let loss_value = result.unwrap();
+        let loss_value = result.expect("unwrap");
         assert!(loss_value > 0.0);
         assert!(loss_value.is_finite());
     }
@@ -339,7 +339,7 @@ mod tests {
         let data1 = array![[1.0, 2.0], [3.0, 4.0]];
         let data2 = array![[5.0, 6.0], [7.0, 8.0]];
 
-        let mixed = MixupLoss::mix_data(&data1.view(), &data2.view(), 0.5).unwrap();
+        let mixed = MixupLoss::mix_data(&data1.view(), &data2.view(), 0.5).expect("unwrap");
 
         // With lambda=0.5, should be average
         assert!((mixed[[0, 0]] - 3.0).abs() < 1e-6);
@@ -354,12 +354,12 @@ mod tests {
         let data2 = array![[5.0, 6.0]];
 
         // Lambda = 1.0 should return data1
-        let mixed = MixupLoss::mix_data(&data1.view(), &data2.view(), 1.0).unwrap();
+        let mixed = MixupLoss::mix_data(&data1.view(), &data2.view(), 1.0).expect("unwrap");
         assert!((mixed[[0, 0]] - 1.0).abs() < 1e-6);
         assert!((mixed[[0, 1]] - 2.0).abs() < 1e-6);
 
         // Lambda = 0.0 should return data2
-        let mixed = MixupLoss::mix_data(&data1.view(), &data2.view(), 0.0).unwrap();
+        let mixed = MixupLoss::mix_data(&data1.view(), &data2.view(), 0.0).expect("unwrap");
         assert!((mixed[[0, 0]] - 5.0).abs() < 1e-6);
         assert!((mixed[[0, 1]] - 6.0).abs() < 1e-6);
     }
@@ -367,7 +367,7 @@ mod tests {
     #[test]
     fn test_label_smoothing_zero_epsilon() {
         // With epsilon = 0, should behave like regular one-hot
-        let loss = LabelSmoothingLoss::new(0.0, 3).unwrap();
+        let loss = LabelSmoothingLoss::new(0.0, 3).expect("unwrap");
 
         let targets = array![[0.0, 1.0, 0.0]];
         let smoothed = loss.smooth_labels(&targets.view());

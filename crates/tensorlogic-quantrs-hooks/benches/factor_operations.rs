@@ -15,8 +15,10 @@ use tensorlogic_quantrs_hooks::Factor;
 /// Create a binary factor for benchmarking
 fn create_binary_factor(name: &str, vars: Vec<String>, values: Vec<f64>) -> Factor {
     let shape = vec![2, 2];
-    let array = Array::from_shape_vec(shape, values).unwrap().into_dyn();
-    Factor::new(name.to_string(), vars, array).unwrap()
+    let array = Array::from_shape_vec(shape, values)
+        .expect("Failed to create binary factor array")
+        .into_dyn();
+    Factor::new(name.to_string(), vars, array).expect("Failed to create binary Factor")
 }
 
 /// Create a ternary factor (3 values per variable)
@@ -24,8 +26,10 @@ fn create_ternary_factor(name: &str, vars: Vec<String>) -> Factor {
     let size = 3_usize.pow(vars.len() as u32);
     let values: Vec<f64> = (0..size).map(|i| (i as f64 + 1.0) / size as f64).collect();
     let shape: Vec<usize> = vec![3; vars.len()];
-    let array = Array::from_shape_vec(shape, values).unwrap().into_dyn();
-    Factor::new(name.to_string(), vars, array).unwrap()
+    let array = Array::from_shape_vec(shape, values)
+        .expect("Failed to create ternary factor array")
+        .into_dyn();
+    Factor::new(name.to_string(), vars, array).expect("Failed to create ternary Factor")
 }
 
 /// Create a factor with specified cardinality per variable
@@ -33,8 +37,10 @@ fn create_factor_with_card(name: &str, vars: Vec<String>, card: usize) -> Factor
     let size = card.pow(vars.len() as u32);
     let values: Vec<f64> = (0..size).map(|i| (i as f64 + 1.0) / size as f64).collect();
     let shape: Vec<usize> = vec![card; vars.len()];
-    let array = Array::from_shape_vec(shape, values).unwrap().into_dyn();
-    Factor::new(name.to_string(), vars, array).unwrap()
+    let array = Array::from_shape_vec(shape, values)
+        .expect("Failed to create factor array with cardinality")
+        .into_dyn();
+    Factor::new(name.to_string(), vars, array).expect("Failed to create Factor with cardinality")
 }
 
 /// Benchmark factor product operations
@@ -48,7 +54,7 @@ fn bench_factor_product(c: &mut Criterion) {
     group.throughput(Throughput::Elements(1));
     group.bench_function("binary_2x2", |b| {
         b.iter(|| {
-            black_box(f1.product(&f2).unwrap());
+            black_box(f1.product(&f2).expect("binary_2x2 factor product failed"));
         });
     });
 
@@ -66,7 +72,10 @@ fn bench_factor_product(c: &mut Criterion) {
 
     group.bench_function("overlapping_binary", |b| {
         b.iter(|| {
-            black_box(f3.product(&f4).unwrap());
+            black_box(
+                f3.product(&f4)
+                    .expect("overlapping_binary factor product failed"),
+            );
         });
     });
 
@@ -76,7 +85,7 @@ fn bench_factor_product(c: &mut Criterion) {
 
     group.bench_function("ternary_3x3", |b| {
         b.iter(|| {
-            black_box(f5.product(&f6).unwrap());
+            black_box(f5.product(&f6).expect("ternary_3x3 factor product failed"));
         });
     });
 
@@ -93,7 +102,7 @@ fn bench_factor_product(c: &mut Criterion) {
             &(large_f1, large_f2),
             |b, (f1, f2)| {
                 b.iter(|| {
-                    black_box(f1.product(f2).unwrap());
+                    black_box(f1.product(f2).expect("large_card factor product failed"));
                 });
             },
         );
@@ -116,7 +125,10 @@ fn bench_marginalization(c: &mut Criterion) {
     group.throughput(Throughput::Elements(1));
     group.bench_function("binary_2x2", |b| {
         b.iter(|| {
-            black_box(f1.marginalize_out("Y").unwrap());
+            black_box(
+                f1.marginalize_out("Y")
+                    .expect("binary_2x2 marginalize_out failed"),
+            );
         });
     });
 
@@ -128,14 +140,22 @@ fn bench_marginalization(c: &mut Criterion) {
 
     group.bench_function("ternary_3x3x3_marginalize_one", |b| {
         b.iter(|| {
-            black_box(f2.marginalize_out("C").unwrap());
+            black_box(
+                f2.marginalize_out("C")
+                    .expect("ternary marginalize_out C failed"),
+            );
         });
     });
 
     group.bench_function("ternary_3x3x3_marginalize_two", |b| {
         b.iter(|| {
-            let temp = f2.marginalize_out("C").unwrap();
-            black_box(temp.marginalize_out("B").unwrap());
+            let temp = f2
+                .marginalize_out("C")
+                .expect("ternary marginalize_out C failed (two-step)");
+            black_box(
+                temp.marginalize_out("B")
+                    .expect("ternary marginalize_out B failed (two-step)"),
+            );
         });
     });
 
@@ -150,7 +170,10 @@ fn bench_marginalization(c: &mut Criterion) {
         group.throughput(Throughput::Elements((card * card * card) as u64));
         group.bench_with_input(BenchmarkId::new("large_card", card), &large_f, |b, f| {
             b.iter(|| {
-                black_box(f.marginalize_out("V3").unwrap());
+                black_box(
+                    f.marginalize_out("V3")
+                        .expect("large_card marginalize_out V3 failed"),
+                );
             });
         });
     }
@@ -168,7 +191,10 @@ fn bench_division(c: &mut Criterion) {
     group.throughput(Throughput::Elements(1));
     group.bench_function("binary_division", |b| {
         b.iter(|| {
-            black_box(f1.divide(&f2).unwrap());
+            black_box(
+                f1.divide(&f2)
+                    .expect("binary_division factor divide failed"),
+            );
         });
     });
 
@@ -183,7 +209,7 @@ fn bench_division(c: &mut Criterion) {
             &(large_f1, large_f2),
             |b, (f1, f2)| {
                 b.iter(|| {
-                    black_box(f1.divide(f2).unwrap());
+                    black_box(f1.divide(f2).expect("large_card factor divide failed"));
                 });
             },
         );
@@ -205,7 +231,10 @@ fn bench_reduction(c: &mut Criterion) {
     group.throughput(Throughput::Elements(1));
     group.bench_function("binary_reduce", |b| {
         b.iter(|| {
-            black_box(f1.reduce("Y", 1).unwrap());
+            black_box(
+                f1.reduce("Y", 1)
+                    .expect("binary_reduce factor reduce failed"),
+            );
         });
     });
 
@@ -217,14 +246,22 @@ fn bench_reduction(c: &mut Criterion) {
 
     group.bench_function("ternary_reduce_one", |b| {
         b.iter(|| {
-            black_box(f2.reduce("C", 1).unwrap());
+            black_box(
+                f2.reduce("C", 1)
+                    .expect("ternary_reduce_one factor reduce failed"),
+            );
         });
     });
 
     group.bench_function("ternary_reduce_two", |b| {
         b.iter(|| {
-            let temp = f2.reduce("C", 1).unwrap();
-            black_box(temp.reduce("B", 1).unwrap());
+            let temp = f2
+                .reduce("C", 1)
+                .expect("ternary_reduce_two first reduce failed");
+            black_box(
+                temp.reduce("B", 1)
+                    .expect("ternary_reduce_two second reduce failed"),
+            );
         });
     });
 
@@ -244,7 +281,10 @@ fn bench_maximization(c: &mut Criterion) {
     group.throughput(Throughput::Elements(1));
     group.bench_function("binary_maximize", |b| {
         b.iter(|| {
-            black_box(f1.maximize_out("Y").unwrap());
+            black_box(
+                f1.maximize_out("Y")
+                    .expect("binary_maximize maximize_out failed"),
+            );
         });
     });
 
@@ -256,7 +296,10 @@ fn bench_maximization(c: &mut Criterion) {
 
     group.bench_function("ternary_maximize", |b| {
         b.iter(|| {
-            black_box(f2.maximize_out("C").unwrap());
+            black_box(
+                f2.maximize_out("C")
+                    .expect("ternary_maximize maximize_out failed"),
+            );
         });
     });
 
@@ -271,7 +314,10 @@ fn bench_maximization(c: &mut Criterion) {
         group.throughput(Throughput::Elements((card * card * card) as u64));
         group.bench_with_input(BenchmarkId::new("large_card", card), &large_f, |b, f| {
             b.iter(|| {
-                black_box(f.maximize_out("V3").unwrap());
+                black_box(
+                    f.maximize_out("V3")
+                        .expect("large_card maximize_out V3 failed"),
+                );
             });
         });
     }

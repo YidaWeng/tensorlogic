@@ -24,14 +24,14 @@ use crate::types::Kernel;
 /// };
 ///
 /// let linear = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
-/// let rbf = Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()) as Box<dyn Kernel>;
+/// let rbf = Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap")) as Box<dyn Kernel>;
 ///
 /// let weights = vec![0.7, 0.3];
-/// let composite = WeightedSumKernel::new(vec![linear, rbf], weights).unwrap();
+/// let composite = WeightedSumKernel::new(vec![linear, rbf], weights).expect("unwrap");
 ///
 /// let x = vec![1.0, 2.0, 3.0];
 /// let y = vec![4.0, 5.0, 6.0];
-/// let sim = composite.compute(&x, &y).unwrap();
+/// let sim = composite.compute(&x, &y).expect("unwrap");
 /// // sim = 0.7 * linear(x,y) + 0.3 * rbf(x,y)
 /// ```
 pub struct WeightedSumKernel {
@@ -165,11 +165,11 @@ impl Kernel for WeightedSumKernel {
 /// let linear = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
 /// let cosine = Box::new(CosineKernel::new()) as Box<dyn Kernel>;
 ///
-/// let product = ProductKernel::new(vec![linear, cosine]).unwrap();
+/// let product = ProductKernel::new(vec![linear, cosine]).expect("unwrap");
 ///
 /// let x = vec![1.0, 2.0, 3.0];
 /// let y = vec![4.0, 5.0, 6.0];
-/// let sim = product.compute(&x, &y).unwrap();
+/// let sim = product.compute(&x, &y).expect("unwrap");
 /// // sim = linear(x,y) * cosine(x,y)
 /// ```
 pub struct ProductKernel {
@@ -363,15 +363,16 @@ mod tests {
     #[test]
     fn test_weighted_sum_kernel() {
         let linear = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
-        let rbf = Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()) as Box<dyn Kernel>;
+        let rbf =
+            Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap")) as Box<dyn Kernel>;
 
         let weights = vec![0.7, 0.3];
-        let kernel = WeightedSumKernel::new(vec![linear, rbf], weights).unwrap();
+        let kernel = WeightedSumKernel::new(vec![linear, rbf], weights).expect("unwrap");
 
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         assert!(result > 0.0);
         assert_eq!(kernel.name(), "WeightedSum");
     }
@@ -382,12 +383,13 @@ mod tests {
         let cosine = Box::new(CosineKernel::new()) as Box<dyn Kernel>;
 
         let weights = vec![2.0, 3.0]; // Will be normalized to [0.4, 0.6]
-        let kernel = WeightedSumKernel::new_normalized(vec![linear, cosine], weights).unwrap();
+        let kernel =
+            WeightedSumKernel::new_normalized(vec![linear, cosine], weights).expect("unwrap");
 
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         assert!(result > 0.0);
     }
 
@@ -395,14 +397,15 @@ mod tests {
     fn test_weighted_sum_uniform() {
         let linear = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
         let cosine = Box::new(CosineKernel::new()) as Box<dyn Kernel>;
-        let rbf = Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()) as Box<dyn Kernel>;
+        let rbf =
+            Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap")) as Box<dyn Kernel>;
 
-        let kernel = WeightedSumKernel::uniform(vec![linear, cosine, rbf]).unwrap();
+        let kernel = WeightedSumKernel::uniform(vec![linear, cosine, rbf]).expect("unwrap");
 
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         assert!(result > 0.0);
     }
 
@@ -431,12 +434,12 @@ mod tests {
         let linear = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
         let cosine = Box::new(CosineKernel::new()) as Box<dyn Kernel>;
 
-        let kernel = ProductKernel::new(vec![linear, cosine]).unwrap();
+        let kernel = ProductKernel::new(vec![linear, cosine]).expect("unwrap");
 
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         assert!(result > 0.0);
         assert_eq!(kernel.name(), "Product");
     }
@@ -450,9 +453,10 @@ mod tests {
     #[test]
     fn test_product_psd_property() {
         let linear = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
-        let rbf = Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()) as Box<dyn Kernel>;
+        let rbf =
+            Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap")) as Box<dyn Kernel>;
 
-        let kernel = ProductKernel::new(vec![linear, rbf]).unwrap();
+        let kernel = ProductKernel::new(vec![linear, rbf]).expect("unwrap");
         assert!(kernel.is_psd());
     }
 
@@ -471,7 +475,7 @@ mod tests {
             vec![0.55, 0.65, 1.0],
         ];
 
-        let alignment = KernelAlignment::compute_alignment(&k1, &k2).unwrap();
+        let alignment = KernelAlignment::compute_alignment(&k1, &k2).expect("unwrap");
 
         // Similar matrices should have high alignment
         assert!(alignment > 0.9);
@@ -486,7 +490,7 @@ mod tests {
             vec![0.3, 0.4, 1.0],
         ];
 
-        let alignment = KernelAlignment::compute_alignment(&k, &k).unwrap();
+        let alignment = KernelAlignment::compute_alignment(&k, &k).expect("unwrap");
 
         // A kernel should have perfect alignment with itself
         assert!((alignment - 1.0).abs() < 1e-10);
@@ -511,11 +515,11 @@ mod tests {
         let linear = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
         let cosine = Box::new(CosineKernel::new()) as Box<dyn Kernel>;
 
-        let kernel = WeightedSumKernel::uniform(vec![linear, cosine]).unwrap();
+        let kernel = WeightedSumKernel::uniform(vec![linear, cosine]).expect("unwrap");
 
         let inputs = vec![vec![1.0, 2.0], vec![3.0, 4.0], vec![5.0, 6.0]];
 
-        let matrix = kernel.compute_matrix(&inputs).unwrap();
+        let matrix = kernel.compute_matrix(&inputs).expect("unwrap");
         assert_eq!(matrix.len(), 3);
         assert_eq!(matrix[0].len(), 3);
 

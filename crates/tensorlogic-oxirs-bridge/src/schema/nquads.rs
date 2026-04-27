@@ -102,7 +102,7 @@ impl NQuadsProcessor {
     /// "#;
     ///
     /// let mut processor = NQuadsProcessor::new();
-    /// processor.load_nquads(nquads).unwrap();
+    /// processor.load_nquads(nquads).expect("unwrap");
     ///
     /// assert_eq!(processor.total_quads(), 2);
     /// assert_eq!(processor.graph_count(), 2);
@@ -206,6 +206,18 @@ impl NQuadsProcessor {
         for (graph, quads) in other.graphs {
             self.graphs.entry(graph).or_default().extend(quads);
         }
+    }
+
+    /// Consume this processor and build a [`QuadStore`](crate::quad_store::QuadStore)
+    /// from all parsed quads, preserving per-graph grouping.
+    pub fn into_quad_store(self) -> crate::quad_store::QuadStore {
+        let mut qs = crate::quad_store::QuadStore::new();
+        for (_graph, quads) in self.graphs {
+            for quad in quads {
+                qs.insert_quad(quad);
+            }
+        }
+        qs
     }
 }
 
@@ -391,7 +403,7 @@ mod tests {
     fn test_parse_nquad_default_graph() {
         let line =
             r#"<http://example.org/Alice> <http://example.org/knows> <http://example.org/Bob> ."#;
-        let quad = parse_nquad_line(line).unwrap();
+        let quad = parse_nquad_line(line).expect("unwrap");
 
         assert_eq!(quad.subject, "http://example.org/Alice");
         assert_eq!(quad.predicate, "http://example.org/knows");
@@ -402,7 +414,7 @@ mod tests {
     #[test]
     fn test_parse_nquad_named_graph() {
         let line = r#"<http://example.org/Alice> <http://example.org/knows> <http://example.org/Bob> <http://example.org/graph1> ."#;
-        let quad = parse_nquad_line(line).unwrap();
+        let quad = parse_nquad_line(line).expect("unwrap");
 
         assert_eq!(quad.subject, "http://example.org/Alice");
         assert_eq!(quad.predicate, "http://example.org/knows");
@@ -414,7 +426,7 @@ mod tests {
     fn test_parse_nquad_with_literal() {
         let line =
             r#"<http://example.org/Alice> <http://www.w3.org/2000/01/rdf-schema#label> "Alice" ."#;
-        let quad = parse_nquad_line(line).unwrap();
+        let quad = parse_nquad_line(line).expect("unwrap");
 
         assert_eq!(quad.subject, "http://example.org/Alice");
         assert_eq!(quad.object, r#""Alice""#);
@@ -429,7 +441,7 @@ mod tests {
         "#;
 
         let mut processor = NQuadsProcessor::new();
-        processor.load_nquads(nquads).unwrap();
+        processor.load_nquads(nquads).expect("unwrap");
 
         assert_eq!(processor.total_quads(), 3);
         assert_eq!(processor.graph_count(), 3); // default + graph1 + graph2
@@ -443,14 +455,14 @@ mod tests {
         "#;
 
         let mut processor = NQuadsProcessor::new();
-        processor.load_nquads(nquads).unwrap();
+        processor.load_nquads(nquads).expect("unwrap");
 
-        let default = processor.get_graph(None).unwrap();
+        let default = processor.get_graph(None).expect("unwrap");
         assert_eq!(default.len(), 1);
 
         let graph1 = processor
             .get_graph(Some("http://example.org/graph1"))
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(graph1.len(), 1);
     }
 
@@ -479,7 +491,7 @@ mod tests {
             None,
         );
 
-        let triple = quad_to_triple(&quad).unwrap();
+        let triple = quad_to_triple(&quad).expect("unwrap");
         assert_eq!(triple.predicate.as_str(), "http://example.org/knows");
     }
 
@@ -492,7 +504,7 @@ mod tests {
         "#;
 
         let mut processor = NQuadsProcessor::new();
-        processor.load_nquads(nquads).unwrap();
+        processor.load_nquads(nquads).expect("unwrap");
 
         let iris = processor.graph_iris();
         assert!(iris.contains(&"http://example.org/g1"));
@@ -506,12 +518,12 @@ mod tests {
 "#;
 
         let mut processor = NQuadsProcessor::new();
-        processor.load_nquads(original).unwrap();
+        processor.load_nquads(original).expect("unwrap");
 
         let output = processor.to_nquads();
 
         let mut processor2 = NQuadsProcessor::new();
-        processor2.load_nquads(&output).unwrap();
+        processor2.load_nquads(&output).expect("unwrap");
 
         assert_eq!(processor.total_quads(), processor2.total_quads());
     }
@@ -519,9 +531,9 @@ mod tests {
     #[test]
     fn test_literal_with_escape() {
         let line = r#"<http://example.org/s> <http://example.org/p> "line1\nline2" ."#;
-        let quad = parse_nquad_line(line).unwrap();
+        let quad = parse_nquad_line(line).expect("unwrap");
 
-        let triple = quad_to_triple(&quad).unwrap();
+        let triple = quad_to_triple(&quad).expect("unwrap");
         if let Term::Literal(lit) = triple.object {
             assert!(lit.value().contains('\n'));
         } else {

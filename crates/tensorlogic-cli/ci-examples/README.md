@@ -220,7 +220,7 @@ Configure these variables in your CI system:
 
 | Variable | Description | Default |
 |----------|-------------|---------|
-| `TENSORLOGIC_VERSION` | CLI version to install | `0.1.0-rc.1` |
+| `TENSORLOGIC_VERSION` | CLI version to install | `0.1.0` |
 | `RUST_TOOLCHAIN` | Rust toolchain version | `stable` |
 | `RULE_DIR` | Directory containing rules | `rules/` |
 | `OUTPUT_DIR` | Output directory | `compiled/` |
@@ -330,7 +330,7 @@ Build with Docker for consistent environments:
 ```dockerfile
 FROM rust:latest
 
-RUN cargo install tensorlogic-cli --version 0.1.0-rc.1
+RUN cargo install tensorlogic-cli --version 0.1.0
 
 WORKDIR /workspace
 COPY rules/ ./rules/

@@ -378,7 +378,7 @@ mod tests {
 
     #[test]
     fn test_hard_rule_attention_config() {
-        let base = AttentionConfig::new(512, 8).unwrap();
+        let base = AttentionConfig::new(512, 8).expect("unwrap");
         let config = RuleAttentionConfig::hard(base);
         assert!(matches!(config.rule_type, RuleAttentionType::Hard));
         assert!(config.validate().is_ok());
@@ -386,7 +386,7 @@ mod tests {
 
     #[test]
     fn test_soft_rule_attention_config() {
-        let base = AttentionConfig::new(512, 8).unwrap();
+        let base = AttentionConfig::new(512, 8).expect("unwrap");
         let config = RuleAttentionConfig::soft(base, 0.5);
         assert!(matches!(
             config.rule_type,
@@ -397,7 +397,7 @@ mod tests {
 
     #[test]
     fn test_gated_rule_attention_config() {
-        let base = AttentionConfig::new(512, 8).unwrap();
+        let base = AttentionConfig::new(512, 8).expect("unwrap");
         let config = RuleAttentionConfig::gated(base, 0.7);
         assert!(matches!(
             config.rule_type,
@@ -408,26 +408,28 @@ mod tests {
 
     #[test]
     fn test_rule_based_attention_creation() {
-        let base = AttentionConfig::new(512, 8).unwrap();
+        let base = AttentionConfig::new(512, 8).expect("unwrap");
         let config = RuleAttentionConfig::hard(base);
-        let attn = RuleBasedAttention::new(config).unwrap();
+        let attn = RuleBasedAttention::new(config).expect("unwrap");
         assert!(attn.get_rule().is_none());
     }
 
     #[test]
     fn test_rule_based_attention_with_rule() {
-        let base = AttentionConfig::new(512, 8).unwrap();
+        let base = AttentionConfig::new(512, 8).expect("unwrap");
         let config = RuleAttentionConfig::hard(base);
         let rule = patterns::syntactic_dependency("i", "j");
-        let attn = RuleBasedAttention::new(config).unwrap().with_rule(rule);
+        let attn = RuleBasedAttention::new(config)
+            .expect("unwrap")
+            .with_rule(rule);
         assert!(attn.get_rule().is_some());
     }
 
     #[test]
     fn test_rule_based_attention_graph_building() {
-        let base = AttentionConfig::new(512, 8).unwrap();
+        let base = AttentionConfig::new(512, 8).expect("unwrap");
         let config = RuleAttentionConfig::soft(base, 0.5);
-        let attn = RuleBasedAttention::new(config).unwrap();
+        let attn = RuleBasedAttention::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("Q");
@@ -435,38 +437,40 @@ mod tests {
         graph.add_tensor("V");
         graph.add_tensor("rule_mask");
 
-        let outputs = attn.build_rule_attention_graph(&mut graph).unwrap();
+        let outputs = attn.build_rule_attention_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
 
     #[test]
     fn test_structured_attention_creation() {
-        let config = AttentionConfig::new(512, 8).unwrap();
-        let attn = StructuredAttention::new(config).unwrap();
+        let config = AttentionConfig::new(512, 8).expect("unwrap");
+        let attn = StructuredAttention::new(config).expect("unwrap");
         assert!(attn.get_predicate().is_none());
     }
 
     #[test]
     fn test_structured_attention_with_predicate() {
-        let config = AttentionConfig::new(512, 8).unwrap();
+        let config = AttentionConfig::new(512, 8).expect("unwrap");
         let predicate = patterns::coreference("m1", "m2");
         let attn = StructuredAttention::new(config)
-            .unwrap()
+            .expect("unwrap")
             .with_predicate(predicate);
         assert!(attn.get_predicate().is_some());
     }
 
     #[test]
     fn test_structured_attention_graph_building() {
-        let config = AttentionConfig::new(512, 8).unwrap();
-        let attn = StructuredAttention::new(config).unwrap();
+        let config = AttentionConfig::new(512, 8).expect("unwrap");
+        let attn = StructuredAttention::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("V");
         graph.add_tensor("structure_matrix");
 
-        let outputs = attn.build_structured_attention_graph(&mut graph).unwrap();
+        let outputs = attn
+            .build_structured_attention_graph(&mut graph)
+            .expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
@@ -497,14 +501,14 @@ mod tests {
 
     #[test]
     fn test_invalid_soft_strength() {
-        let base = AttentionConfig::new(512, 8).unwrap();
+        let base = AttentionConfig::new(512, 8).expect("unwrap");
         let config = RuleAttentionConfig::soft(base, 1.5);
         assert!(config.validate().is_err());
     }
 
     #[test]
     fn test_invalid_gated_weight() {
-        let base = AttentionConfig::new(512, 8).unwrap();
+        let base = AttentionConfig::new(512, 8).expect("unwrap");
         let config = RuleAttentionConfig::gated(base, -0.1);
         assert!(config.validate().is_err());
     }

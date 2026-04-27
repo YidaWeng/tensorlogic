@@ -291,12 +291,67 @@ fn diff_exprs_impl(left: &TLExpr, right: &TLExpr, path: &mut Vec<String>) -> Exp
                 }
             }
         }
+        (TLExpr::SymbolLiteral(s1), TLExpr::SymbolLiteral(s2)) => {
+            if s1 == s2 {
+                ExprDiff::Identical
+            } else {
+                ExprDiff::SubexprMismatch {
+                    path: path.clone(),
+                    left: format!(":{s1}"),
+                    right: format!(":{s2}"),
+                }
+            }
+        }
+        (
+            TLExpr::Match {
+                scrutinee: s1,
+                arms: a1,
+            },
+            TLExpr::Match {
+                scrutinee: s2,
+                arms: a2,
+            },
+        ) => {
+            path.push("scrutinee".to_string());
+            let sd = diff_exprs_impl(s1, s2, path);
+            path.pop();
+            if !matches!(sd, ExprDiff::Identical) {
+                return sd;
+            }
+            if a1.len() != a2.len() {
+                return ExprDiff::SubexprMismatch {
+                    path: path.clone(),
+                    left: format!("{} arms", a1.len()),
+                    right: format!("{} arms", a2.len()),
+                };
+            }
+            for (i, ((p1, b1), (p2, b2))) in a1.iter().zip(a2.iter()).enumerate() {
+                if p1 != p2 {
+                    return ExprDiff::SubexprMismatch {
+                        path: path.clone(),
+                        left: format!("arm[{i}] pattern {p1}"),
+                        right: format!("arm[{i}] pattern {p2}"),
+                    };
+                }
+                path.push(format!("arm[{i}]"));
+                let bd = diff_exprs_impl(b1, b2, path);
+                path.pop();
+                if !matches!(bd, ExprDiff::Identical) {
+                    return bd;
+                }
+            }
+            ExprDiff::Identical
+        }
         _ => ExprDiff::TypeMismatch {
-            left: format!("{:?}", left).split('(').next().unwrap().to_string(),
+            left: format!("{:?}", left)
+                .split('(')
+                .next()
+                .unwrap_or("unknown")
+                .to_string(),
             right: format!("{:?}", right)
                 .split('(')
                 .next()
-                .unwrap()
+                .unwrap_or("unknown")
                 .to_string(),
         },
     }

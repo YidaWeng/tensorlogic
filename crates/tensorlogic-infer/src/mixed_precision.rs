@@ -677,8 +677,8 @@ mod tests {
         assert_eq!(scaler.scale(), 1024.0);
 
         // No overflow for 2 steps
-        scaler.update(false).unwrap();
-        scaler.update(false).unwrap();
+        scaler.update(false).expect("unwrap");
+        scaler.update(false).expect("unwrap");
 
         // Scale should have grown
         assert_eq!(scaler.scale(), 2048.0);
@@ -696,7 +696,7 @@ mod tests {
         assert_eq!(scaler.scale(), 1024.0);
 
         // Overflow detected
-        scaler.update(true).unwrap();
+        scaler.update(true).expect("unwrap");
 
         // Scale should have reduced
         assert_eq!(scaler.scale(), 512.0);
@@ -764,7 +764,7 @@ mod tests {
     #[test]
     fn test_mixed_precision_state() {
         let config = MixedPrecisionConfig::fp16();
-        let mut state = MixedPrecisionState::new(config).unwrap();
+        let mut state = MixedPrecisionState::new(config).expect("unwrap");
 
         assert_eq!(state.step, 0);
         assert_eq!(state.successful_steps, 0);
@@ -775,7 +775,7 @@ mod tests {
         grads.insert("w1".to_string(), 0.1);
         grads.insert("w2".to_string(), 0.2);
 
-        let should_update = state.process_step(0.5, &mut grads).unwrap();
+        let should_update = state.process_step(0.5, &mut grads).expect("unwrap");
         assert!(should_update);
         assert_eq!(state.step, 1);
         assert_eq!(state.successful_steps, 1);
@@ -821,9 +821,9 @@ mod tests {
             growth_interval: 2,
         });
 
-        scaler.update(false).unwrap();
-        scaler.update(true).unwrap();
-        scaler.update(false).unwrap();
+        scaler.update(false).expect("unwrap");
+        scaler.update(true).expect("unwrap");
+        scaler.update(false).expect("unwrap");
 
         let stats = scaler.stats();
         assert_eq!(stats.total_steps, 3);
@@ -840,8 +840,8 @@ mod tests {
             growth_interval: 2,
         });
 
-        scaler.update(false).unwrap();
-        scaler.update(false).unwrap();
+        scaler.update(false).expect("unwrap");
+        scaler.update(false).expect("unwrap");
         assert_eq!(scaler.scale(), 2048.0);
 
         scaler.reset();
@@ -859,7 +859,7 @@ mod tests {
 
         scaler.unscale_gradients(&mut grads);
 
-        assert_eq!(grads.get("w1").unwrap(), &1.0);
-        assert_eq!(grads.get("w2").unwrap(), &2.0);
+        assert_eq!(grads.get("w1").expect("unwrap"), &1.0);
+        assert_eq!(grads.get("w2").expect("unwrap"), &2.0);
     }
 }

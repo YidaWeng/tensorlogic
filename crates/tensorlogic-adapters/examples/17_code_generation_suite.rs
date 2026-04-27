@@ -21,18 +21,18 @@ fn main() {
             DomainInfo::new("Student", 500)
                 .with_description("A student enrolled in the university"),
         )
-        .unwrap();
+        .expect("unwrap");
     table
         .add_domain(
             DomainInfo::new("Course", 100).with_description("A course offered by the university"),
         )
-        .unwrap();
+        .expect("unwrap");
     table
         .add_domain(DomainInfo::new("Professor", 50).with_description("A university professor"))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_domain(DomainInfo::new("Grade", 5).with_description("Letter grades A-F"))
-        .unwrap();
+        .expect("unwrap");
 
     // Add predicates
     table
@@ -43,7 +43,7 @@ fn main() {
             )
             .with_description("Student is enrolled in a course"),
         )
-        .unwrap();
+        .expect("unwrap");
     table
         .add_predicate(
             PredicateInfo::new(
@@ -52,7 +52,7 @@ fn main() {
             )
             .with_description("Professor teaches a course"),
         )
-        .unwrap();
+        .expect("unwrap");
     table
         .add_predicate(
             PredicateInfo::new(
@@ -65,7 +65,7 @@ fn main() {
             )
             .with_description("Student received a grade in a course"),
         )
-        .unwrap();
+        .expect("unwrap");
 
     println!("Schema created with:");
     println!("  - {} domains", table.domains.len());

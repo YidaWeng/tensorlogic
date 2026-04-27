@@ -422,7 +422,7 @@ mod tests {
     fn test_joinability_via_rewriting() {
         let system = RewriteSystem::new().add_rule(RewriteRule::new(
             Pattern::negation(Pattern::negation(Pattern::var("A"))),
-            |bindings| bindings.get("A").unwrap().clone(),
+            |bindings| bindings.get("A").expect("unwrap").clone(),
         ));
 
         let expr1 = TLExpr::negate(TLExpr::negate(TLExpr::pred("P", vec![Term::var("x")])));
@@ -436,11 +436,11 @@ mod tests {
     fn test_normalize_to_normal_form() {
         let system = RewriteSystem::new().add_rule(RewriteRule::new(
             Pattern::negation(Pattern::negation(Pattern::var("A"))),
-            |bindings| bindings.get("A").unwrap().clone(),
+            |bindings| bindings.get("A").expect("unwrap").clone(),
         ));
 
         let expr = TLExpr::negate(TLExpr::negate(TLExpr::pred("P", vec![Term::var("x")])));
-        let normal_form = normalize(&expr, &system, 100).unwrap();
+        let normal_form = normalize(&expr, &system, 100).expect("unwrap");
 
         assert!(matches!(normal_form, TLExpr::Pred { .. }));
     }

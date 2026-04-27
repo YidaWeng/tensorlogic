@@ -420,7 +420,7 @@ mod tests {
     #[test]
     fn test_analyze_constants_empty_graph() {
         let graph = EinsumGraph::new();
-        let result = analyze_constants(&graph).unwrap();
+        let result = analyze_constants(&graph).expect("unwrap");
         assert!(result.constant_tensors.is_empty());
     }
 
@@ -432,9 +432,9 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
 
-        let result = analyze_constants(&graph).unwrap();
+        let result = analyze_constants(&graph).expect("unwrap");
         assert!(result.is_constant(a));
         assert!(result.is_constant(b)); // Propagated from a
         assert_eq!(result.foldable_operations, 1);
@@ -524,10 +524,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_binary("add", a, b, c))
-            .unwrap();
+            .expect("unwrap");
 
-        let constants = analyze_constants(&graph).unwrap();
-        let stats = apply_constant_folding(&mut graph, &constants).unwrap();
+        let constants = analyze_constants(&graph).expect("unwrap");
+        let stats = apply_constant_folding(&mut graph, &constants).expect("unwrap");
 
         assert!(stats.operations_folded > 0 || stats.total_transformations() > 0);
     }
@@ -542,12 +542,12 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_binary("add", a, b, c))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("relu", c, d))
-            .unwrap();
+            .expect("unwrap");
 
-        let stats = fold_constants_aggressive(&mut graph).unwrap();
+        let stats = fold_constants_aggressive(&mut graph).expect("unwrap");
         assert!(stats.operations_folded >= 1);
     }
 
@@ -560,9 +560,9 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_binary("add", a, b, c))
-            .unwrap();
+            .expect("unwrap");
 
-        let subgraphs = identify_constant_subgraphs(&graph).unwrap();
+        let subgraphs = identify_constant_subgraphs(&graph).expect("unwrap");
         assert!(!subgraphs.is_empty());
     }
 
@@ -590,15 +590,15 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("relu", b, c))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("relu", c, d))
-            .unwrap();
+            .expect("unwrap");
 
-        let result = analyze_constants(&graph).unwrap();
+        let result = analyze_constants(&graph).expect("unwrap");
 
         assert!(result.is_constant(a));
         assert!(result.is_constant(b));
@@ -616,9 +616,9 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_binary("add", const_a, var_x, result))
-            .unwrap();
+            .expect("unwrap");
 
-        let analysis = analyze_constants(&graph).unwrap();
+        let analysis = analyze_constants(&graph).expect("unwrap");
 
         assert!(analysis.is_constant(const_a));
         assert!(!analysis.is_constant(var_x));
@@ -645,9 +645,9 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
 
-        let result = analyze_constants(&graph).unwrap();
+        let result = analyze_constants(&graph).expect("unwrap");
         assert!(result.estimated_speedup > 1.0);
     }
 }

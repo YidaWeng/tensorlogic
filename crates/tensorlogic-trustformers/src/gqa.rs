@@ -392,7 +392,7 @@ mod tests {
 
     #[test]
     fn test_gqa_config_creation() {
-        let config = GQAConfig::new(4096, 32, 8).unwrap();
+        let config = GQAConfig::new(4096, 32, 8).expect("unwrap");
         assert_eq!(config.d_model, 4096);
         assert_eq!(config.n_heads, 32);
         assert_eq!(config.n_kv_heads, 8);
@@ -402,7 +402,7 @@ mod tests {
 
     #[test]
     fn test_gqa_mha_config() {
-        let config = GQAConfig::mha(512, 8).unwrap();
+        let config = GQAConfig::mha(512, 8).expect("unwrap");
         assert!(config.is_mha());
         assert!(!config.is_mqa());
         assert_eq!(config.group_size(), 1);
@@ -411,7 +411,7 @@ mod tests {
 
     #[test]
     fn test_gqa_mqa_config() {
-        let config = GQAConfig::mqa(512, 8).unwrap();
+        let config = GQAConfig::mqa(512, 8).expect("unwrap");
         assert!(!config.is_mha());
         assert!(config.is_mqa());
         assert_eq!(config.group_size(), 8);
@@ -421,7 +421,7 @@ mod tests {
     #[test]
     fn test_gqa_config_builder() {
         let config = GQAConfig::new(4096, 32, 8)
-            .unwrap()
+            .expect("unwrap")
             .with_causal(true)
             .with_dropout(0.1);
 
@@ -443,56 +443,56 @@ mod tests {
 
     #[test]
     fn test_gqa_graph_building() {
-        let config = GQAConfig::new(512, 8, 2).unwrap();
-        let gqa = GroupedQueryAttention::new(config).unwrap();
+        let config = GQAConfig::new(512, 8, 2).expect("unwrap");
+        let gqa = GroupedQueryAttention::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("Q");
         graph.add_tensor("K");
         graph.add_tensor("V");
 
-        let outputs = gqa.build_gqa_graph(&mut graph).unwrap();
+        let outputs = gqa.build_gqa_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
     }
 
     #[test]
     fn test_gqa_mha_graph() {
-        let config = GQAConfig::mha(512, 8).unwrap();
-        let gqa = GroupedQueryAttention::new(config).unwrap();
+        let config = GQAConfig::mha(512, 8).expect("unwrap");
+        let gqa = GroupedQueryAttention::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("Q");
         graph.add_tensor("K");
         graph.add_tensor("V");
 
-        let outputs = gqa.build_gqa_graph(&mut graph).unwrap();
+        let outputs = gqa.build_gqa_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
     }
 
     #[test]
     fn test_gqa_presets() {
         // LLaMA 2 7B (MHA)
-        let config = GQAPreset::Llama2_7B.config().unwrap();
+        let config = GQAPreset::Llama2_7B.config().expect("unwrap");
         assert_eq!(config.d_model, 4096);
         assert!(config.is_mha());
 
         // LLaMA 2 70B (GQA)
-        let config = GQAPreset::Llama2_70B.config().unwrap();
+        let config = GQAPreset::Llama2_70B.config().expect("unwrap");
         assert_eq!(config.group_size(), 8);
 
         // Mistral 7B
-        let config = GQAPreset::Mistral7B.config().unwrap();
+        let config = GQAPreset::Mistral7B.config().expect("unwrap");
         assert_eq!(config.group_size(), 4);
 
         // Falcon 40B (MQA)
-        let config = GQAPreset::Falcon40B.config().unwrap();
+        let config = GQAPreset::Falcon40B.config().expect("unwrap");
         assert!(config.is_mqa());
     }
 
     #[test]
     fn test_gqa_memory_calculations() {
-        let config = GQAConfig::new(4096, 32, 8).unwrap();
-        let gqa = GroupedQueryAttention::new(config).unwrap();
+        let config = GQAConfig::new(4096, 32, 8).expect("unwrap");
+        let gqa = GroupedQueryAttention::new(config).expect("unwrap");
 
         let savings = gqa.memory_savings(1, 2048);
         // With 8 KV heads vs 32 query heads, we save 75%
@@ -501,7 +501,7 @@ mod tests {
 
     #[test]
     fn test_gqa_num_parameters() {
-        let config = GQAConfig::mha(4096, 32).unwrap();
+        let config = GQAConfig::mha(4096, 32).expect("unwrap");
         let params = config.num_parameters();
         // 4 * 4096 * 4096 = 67,108,864
         assert_eq!(params, 67_108_864);
@@ -509,7 +509,7 @@ mod tests {
 
     #[test]
     fn test_gqa_stats() {
-        let config = GQAConfig::new(4096, 32, 8).unwrap();
+        let config = GQAConfig::new(4096, 32, 8).expect("unwrap");
         let stats = GQAStats::from_config(&config);
 
         assert_eq!(stats.group_size, 4);
@@ -526,7 +526,7 @@ mod tests {
 
     #[test]
     fn test_gqa_validate() {
-        let config = GQAConfig::new(512, 8, 2).unwrap();
+        let config = GQAConfig::new(512, 8, 2).expect("unwrap");
         assert!(config.validate().is_ok());
 
         // Invalid dropout

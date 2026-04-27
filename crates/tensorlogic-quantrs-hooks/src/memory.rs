@@ -62,8 +62,8 @@ impl FactorPool {
 
     /// Allocate or reuse an array of the given size.
     pub fn allocate(&self, size: usize) -> Vec<f64> {
-        let mut pools = self.pools.lock().unwrap();
-        let mut stats = self.stats.lock().unwrap();
+        let mut pools = self.pools.lock().expect("lock should not be poisoned");
+        let mut stats = self.stats.lock().expect("lock should not be poisoned");
 
         if let Some(pool) = pools.get_mut(&size) {
             if let Some(array) = pool.pop() {
@@ -80,8 +80,8 @@ impl FactorPool {
     /// Return an array to the pool for reuse.
     pub fn return_array(&self, mut array: Vec<f64>) {
         let size = array.len();
-        let mut pools = self.pools.lock().unwrap();
-        let mut stats = self.stats.lock().unwrap();
+        let mut pools = self.pools.lock().expect("lock should not be poisoned");
+        let mut stats = self.stats.lock().expect("lock should not be poisoned");
 
         let pool = pools.entry(size).or_default();
         if pool.len() < self.max_pool_size {
@@ -97,20 +97,23 @@ impl FactorPool {
 
     /// Get pool statistics.
     pub fn stats(&self) -> PoolStats {
-        self.stats.lock().unwrap().clone()
+        self.stats
+            .lock()
+            .expect("lock should not be poisoned")
+            .clone()
     }
 
     /// Clear all pooled arrays.
     pub fn clear(&self) {
-        let mut pools = self.pools.lock().unwrap();
-        let mut stats = self.stats.lock().unwrap();
+        let mut pools = self.pools.lock().expect("lock should not be poisoned");
+        let mut stats = self.stats.lock().expect("lock should not be poisoned");
         pools.clear();
         stats.current_bytes = 0;
     }
 
     /// Get hit rate.
     pub fn hit_rate(&self) -> f64 {
-        let stats = self.stats.lock().unwrap();
+        let stats = self.stats.lock().expect("lock should not be poisoned");
         let total = stats.hits + stats.misses;
         if total > 0 {
             stats.hits as f64 / total as f64
@@ -273,7 +276,14 @@ pub struct LazyFactor {
 impl std::fmt::Debug for LazyFactor {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("LazyFactor")
-            .field("cached", &self.cached.lock().unwrap().is_some())
+            .field(
+                "cached",
+                &self
+                    .cached
+                    .lock()
+                    .expect("lock should not be poisoned")
+                    .is_some(),
+            )
             .finish()
     }
 }
@@ -304,7 +314,7 @@ impl LazyFactor {
 
     /// Evaluate the lazy factor, computing if necessary.
     pub fn evaluate(&self) -> Result<Factor> {
-        let mut cached = self.cached.lock().unwrap();
+        let mut cached = self.cached.lock().expect("lock should not be poisoned");
 
         if let Some(ref factor) = *cached {
             return Ok(factor.clone());
@@ -317,12 +327,15 @@ impl LazyFactor {
 
     /// Check if the factor has been computed.
     pub fn is_computed(&self) -> bool {
-        self.cached.lock().unwrap().is_some()
+        self.cached
+            .lock()
+            .expect("lock should not be poisoned")
+            .is_some()
     }
 
     /// Clear cached result to free memory.
     pub fn clear_cache(&self) {
-        let mut cached = self.cached.lock().unwrap();
+        let mut cached = self.cached.lock().expect("lock should not be poisoned");
         *cached = None;
     }
 
@@ -727,12 +740,12 @@ mod tests {
             vec!["x".to_string()],
             Array::from_vec(vec![0.0, 1.0, 0.0, 0.5]).into_dyn(),
         )
-        .unwrap();
+        .expect("unwrap");
 
         let sparse = SparseFactor::from_dense(&factor, 0.1);
         assert_eq!(sparse.entries.len(), 2); // Only 1.0 and 0.5
 
-        let dense = sparse.to_dense().unwrap();
+        let dense = sparse.to_dense().expect("unwrap");
         assert_abs_diff_eq!(dense.values[[1]], 1.0, epsilon = 1e-10);
         assert_abs_diff_eq!(dense.values[[3]], 0.5, epsilon = 1e-10);
     }
@@ -752,7 +765,7 @@ mod tests {
         let counter_clone = counter.clone();
 
         let lazy = LazyFactor::new(move || {
-            let mut count = counter_clone.lock().unwrap();
+            let mut count = counter_clone.lock().expect("unwrap");
             *count += 1;
             Factor::new(
                 "test".to_string(),
@@ -762,15 +775,15 @@ mod tests {
         });
 
         assert!(!lazy.is_computed());
-        assert_eq!(*counter.lock().unwrap(), 0);
+        assert_eq!(*counter.lock().expect("unwrap"), 0);
 
-        let _ = lazy.evaluate().unwrap();
+        let _ = lazy.evaluate().expect("unwrap");
         assert!(lazy.is_computed());
-        assert_eq!(*counter.lock().unwrap(), 1);
+        assert_eq!(*counter.lock().expect("unwrap"), 1);
 
         // Second evaluation uses cache
-        let _ = lazy.evaluate().unwrap();
-        assert_eq!(*counter.lock().unwrap(), 1);
+        let _ = lazy.evaluate().expect("unwrap");
+        assert_eq!(*counter.lock().expect("unwrap"), 1);
     }
 
     #[test]
@@ -780,12 +793,12 @@ mod tests {
             vec!["x".to_string()],
             Array::from_vec(vec![0.3, 0.7]).into_dyn(),
         )
-        .unwrap();
+        .expect("unwrap");
 
         let lazy = LazyFactor::from_factor(factor);
         assert!(lazy.is_computed());
 
-        let result = lazy.evaluate().unwrap();
+        let result = lazy.evaluate().expect("unwrap");
         assert_abs_diff_eq!(result.values[[0]], 0.3, epsilon = 1e-10);
     }
 
@@ -796,10 +809,10 @@ mod tests {
             vec!["x".to_string()],
             Array::from_vec(vec![0.1, 0.2, 0.3, 0.4]).into_dyn(),
         )
-        .unwrap();
+        .expect("unwrap");
 
         let compressed = CompressedFactor::from_factor(&factor);
-        let decompressed = compressed.to_factor().unwrap();
+        let decompressed = compressed.to_factor().expect("unwrap");
 
         // Values should be approximately preserved
         for i in 0..4 {
@@ -814,7 +827,7 @@ mod tests {
             vec!["x".to_string(), "y".to_string()],
             ArrayD::from_elem(IxDyn(&[10, 10]), 0.5),
         )
-        .unwrap();
+        .expect("unwrap");
 
         let compressed = CompressedFactor::from_factor(&factor);
         let ratio = compressed.compression_ratio();
@@ -865,7 +878,7 @@ mod tests {
             vec!["x".to_string(), "y".to_string()],
             ArrayD::from_elem(IxDyn(&[8, 8]), 0.0),
         )
-        .unwrap();
+        .expect("unwrap");
 
         let block_sparse = BlockSparseFactor::from_factor(&factor, 4, 0.001);
 

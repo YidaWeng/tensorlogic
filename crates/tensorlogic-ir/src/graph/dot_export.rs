@@ -12,7 +12,7 @@
 //! let t0 = graph.add_tensor("input".to_string());
 //! let t1 = graph.add_tensor("output".to_string());
 //! let node = EinsumNode::elem_unary("relu", t0, t1);
-//! graph.add_node(node).unwrap();
+//! graph.add_node(node).expect("unwrap");
 //!
 //! let dot = tensorlogic_ir::export_to_dot(&graph);
 //! println!("{}", dot);
@@ -47,7 +47,7 @@ use std::fmt::Write as FmtWrite;
 /// let output = graph.add_tensor("y".to_string());
 ///
 /// let node = EinsumNode::elem_unary("relu", input, output);
-/// graph.add_node(node).unwrap();
+/// graph.add_node(node).expect("unwrap");
 ///
 /// let dot = export_to_dot(&graph);
 /// assert!(dot.contains("digraph"));
@@ -78,7 +78,7 @@ pub fn export_to_dot(graph: &EinsumGraph) -> String {
 /// let t0 = graph.add_tensor("input".to_string());
 /// let t1 = graph.add_tensor("output".to_string());
 /// let node = EinsumNode::elem_unary("sigmoid", t0, t1);
-/// graph.add_node(node).unwrap();
+/// graph.add_node(node).expect("unwrap");
 ///
 /// let options = DotExportOptions {
 ///     show_tensor_ids: true,
@@ -326,7 +326,7 @@ mod tests {
         let t1 = graph.add_tensor("output".to_string());
 
         let node = EinsumNode::elem_unary("relu", t0, t1);
-        graph.add_node(node).unwrap();
+        graph.add_node(node).expect("unwrap");
 
         let dot = export_to_dot(&graph);
         assert!(dot.contains("relu"));
@@ -343,7 +343,7 @@ mod tests {
         let t2 = graph.add_tensor("C".to_string());
 
         let node = EinsumNode::einsum("ij,jk->ik", vec![t0, t1], vec![t2]);
-        graph.add_node(node).unwrap();
+        graph.add_node(node).expect("unwrap");
 
         let dot = export_to_dot(&graph);
         assert!(dot.contains("einsum"));
@@ -357,7 +357,7 @@ mod tests {
         let t1 = graph.add_tensor("y".to_string());
 
         let node = EinsumNode::elem_unary("sigmoid", t0, t1);
-        graph.add_node(node).unwrap();
+        graph.add_node(node).expect("unwrap");
 
         let options = DotExportOptions {
             show_tensor_ids: true,
@@ -382,13 +382,13 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("relu", t0, t1))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("sigmoid", t1, t2))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_binary("add", t2, t0, t3))
-            .unwrap();
+            .expect("unwrap");
 
         let options = DotExportOptions {
             cluster_by_operation: true,
@@ -409,10 +409,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("relu", t0, t1))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("softmax", t1, t2))
-            .unwrap();
+            .expect("unwrap");
 
         let options = DotExportOptions {
             highlight_tensors: vec!["output".to_string()],
@@ -448,10 +448,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_binary("add", a, b, sum))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_binary("multiply", sum, c, result))
-            .unwrap();
+            .expect("unwrap");
 
         let dot = export_to_dot(&graph);
 

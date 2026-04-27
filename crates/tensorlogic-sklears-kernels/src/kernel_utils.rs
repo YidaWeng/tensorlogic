@@ -32,7 +32,7 @@ use crate::types::Kernel;
 /// ];
 /// let labels = vec![1.0, 1.0, -1.0];
 ///
-/// let alignment = kernel_target_alignment(&K, &labels).unwrap();
+/// let alignment = kernel_target_alignment(&K, &labels).expect("unwrap");
 /// // High alignment means kernel separates classes well
 /// ```
 pub fn kernel_target_alignment(kernel_matrix: &[Vec<f64>], labels: &[f64]) -> Result<f64> {
@@ -122,7 +122,7 @@ fn frobenius_norm(matrix: &[Vec<f64>]) -> f64 {
 ///     vec![0.6, 0.7, 1.0],
 /// ];
 ///
-/// let distances = distances_from_kernel(&K).unwrap();
+/// let distances = distances_from_kernel(&K).expect("unwrap");
 /// // distances[i][j] = distance between points i and j
 /// ```
 pub fn distances_from_kernel(kernel_matrix: &[Vec<f64>]) -> Result<Vec<Vec<f64>>> {
@@ -184,7 +184,7 @@ pub fn distances_from_kernel(kernel_matrix: &[Vec<f64>]) -> Result<Vec<Vec<f64>>
 ///     vec![0.6, 0.7, 1.0],
 /// ];
 ///
-/// assert!(is_valid_kernel_matrix(&K, 1e-10).unwrap());
+/// assert!(is_valid_kernel_matrix(&K, 1e-10).expect("unwrap"));
 /// ```
 #[allow(clippy::needless_range_loop)]
 pub fn is_valid_kernel_matrix(kernel_matrix: &[Vec<f64>], tolerance: f64) -> Result<bool> {
@@ -257,7 +257,7 @@ pub fn estimate_kernel_rank(kernel_matrix: &[Vec<f64>], variance_threshold: f64)
 
     // Simple estimate: use diagonal elements as proxy for eigenvalues
     let mut diagonal: Vec<f64> = (0..n).map(|i| kernel_matrix[i][i]).collect();
-    diagonal.sort_by(|a, b| b.partial_cmp(a).unwrap()); // Sort descending
+    diagonal.sort_by(|a, b| b.partial_cmp(a).unwrap_or(std::cmp::Ordering::Equal)); // Sort descending
 
     let total: f64 = diagonal.iter().sum();
     if total == 0.0 {
@@ -308,7 +308,7 @@ pub fn compute_gram_matrix(data: &[Vec<f64>], kernel: &dyn Kernel) -> Result<Vec
 ///     vec![5.0, 12.0],
 /// ];
 ///
-/// let normalized = normalize_rows(&data).unwrap();
+/// let normalized = normalize_rows(&data).expect("unwrap");
 /// // Each row now has unit norm
 /// ```
 pub fn normalize_rows(data: &[Vec<f64>]) -> Result<Vec<Vec<f64>>> {
@@ -393,7 +393,7 @@ pub fn median_heuristic_bandwidth(
     }
 
     // Compute median
-    distances.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    distances.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
     let median = if distances.len() % 2 == 0 {
         let mid = distances.len() / 2;
         (distances[mid - 1] + distances[mid]) / 2.0
@@ -423,7 +423,7 @@ mod tests {
         ];
         let labels = vec![1.0, 1.0, -1.0];
 
-        let alignment = kernel_target_alignment(&K, &labels).unwrap();
+        let alignment = kernel_target_alignment(&K, &labels).expect("unwrap");
 
         // Alignment should be positive for well-separated classes
         // Actual computed value is around 0.59
@@ -440,7 +440,7 @@ mod tests {
         ];
         let labels = vec![1.0, 1.0, -1.0];
 
-        let alignment = kernel_target_alignment(&K, &labels).unwrap();
+        let alignment = kernel_target_alignment(&K, &labels).expect("unwrap");
         assert!(alignment < 0.5); // Lower alignment
     }
 
@@ -461,7 +461,7 @@ mod tests {
             vec![0.6, 0.7, 1.0],
         ];
 
-        let distances = distances_from_kernel(&K).unwrap();
+        let distances = distances_from_kernel(&K).expect("unwrap");
 
         // Diagonal should be zero
         assert!(distances[0][0].abs() < 1e-10);
@@ -484,7 +484,7 @@ mod tests {
             vec![0.8, 1.0, 0.7],
             vec![0.6, 0.7, 1.0],
         ];
-        assert!(is_valid_kernel_matrix(&K, 1e-10).unwrap());
+        assert!(is_valid_kernel_matrix(&K, 1e-10).expect("unwrap"));
 
         // Asymmetric matrix
         let K_bad = vec![
@@ -492,7 +492,7 @@ mod tests {
             vec![0.7, 1.0, 0.7], // Different from K[0][1]
             vec![0.6, 0.7, 1.0],
         ];
-        assert!(!is_valid_kernel_matrix(&K_bad, 1e-10).unwrap());
+        assert!(!is_valid_kernel_matrix(&K_bad, 1e-10).expect("unwrap"));
     }
 
     #[test]
@@ -503,7 +503,7 @@ mod tests {
             vec![0.1, 0.1, 0.2],
         ];
 
-        let rank = estimate_kernel_rank(&K, 0.9).unwrap();
+        let rank = estimate_kernel_rank(&K, 0.9).expect("unwrap");
         assert!((1..=3).contains(&rank));
     }
 
@@ -511,7 +511,7 @@ mod tests {
     fn test_normalize_rows() {
         let data = vec![vec![3.0, 4.0], vec![5.0, 12.0]];
 
-        let normalized = normalize_rows(&data).unwrap();
+        let normalized = normalize_rows(&data).expect("unwrap");
 
         // Check unit norms
         for row in &normalized {
@@ -524,7 +524,7 @@ mod tests {
     fn test_normalize_rows_zero_vector() {
         let data = vec![vec![0.0, 0.0], vec![3.0, 4.0]];
 
-        let normalized = normalize_rows(&data).unwrap();
+        let normalized = normalize_rows(&data).expect("unwrap");
 
         // Zero vector should remain zero
         assert!(normalized[0][0].abs() < 1e-10);
@@ -545,7 +545,7 @@ mod tests {
         ];
 
         let kernel = LinearKernel::new();
-        let gamma = median_heuristic_bandwidth(&data, &kernel, None).unwrap();
+        let gamma = median_heuristic_bandwidth(&data, &kernel, None).expect("unwrap");
 
         // Gamma should be positive
         assert!(gamma > 0.0);
@@ -556,7 +556,7 @@ mod tests {
         let data = vec![vec![1.0, 2.0], vec![3.0, 4.0], vec![5.0, 6.0]];
 
         let kernel = LinearKernel::new();
-        let K = compute_gram_matrix(&data, &kernel).unwrap();
+        let K = compute_gram_matrix(&data, &kernel).expect("unwrap");
 
         // Check dimensions
         assert_eq!(K.len(), 3);
@@ -582,7 +582,7 @@ mod tests {
     #[test]
     fn test_kernel_target_alignment_binary_classification() {
         // Create kernel matrix and labels for binary classification
-        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
 
         // Two well-separated clusters
         let data = vec![
@@ -596,8 +596,8 @@ mod tests {
 
         let labels = vec![1.0, 1.0, 1.0, -1.0, -1.0, -1.0];
 
-        let K = kernel.compute_matrix(&data).unwrap();
-        let alignment = kernel_target_alignment(&K, &labels).unwrap();
+        let K = kernel.compute_matrix(&data).expect("unwrap");
+        let alignment = kernel_target_alignment(&K, &labels).expect("unwrap");
 
         // Should have positive alignment for separated clusters
         assert!((0.0..=1.0).contains(&alignment));

@@ -14,7 +14,8 @@ use tensorlogic_quantrs_hooks::{
 #[test]
 fn test_single_predicate_conversion() {
     let expr = TLExpr::pred("P", vec![Term::var("x")]);
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph =
+        expr_to_factor_graph(&expr).expect("Failed to convert single predicate to factor graph");
 
     assert_eq!(graph.num_variables(), 1);
     assert_eq!(graph.num_factors(), 1);
@@ -28,7 +29,7 @@ fn test_conjunction_conversion() {
         TLExpr::pred("Q", vec![Term::var("y")]),
     );
 
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph = expr_to_factor_graph(&expr).expect("Failed to convert conjunction to factor graph");
 
     assert_eq!(graph.num_variables(), 2);
     assert_eq!(graph.num_factors(), 2);
@@ -39,7 +40,8 @@ fn test_conjunction_conversion() {
 fn test_existential_quantification() {
     let expr = TLExpr::exists("x", "Domain", TLExpr::pred("P", vec![Term::var("x")]));
 
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph = expr_to_factor_graph(&expr)
+        .expect("Failed to convert existential quantification to factor graph");
 
     assert_eq!(graph.num_variables(), 1);
     assert!(graph.get_variable("x").is_some());
@@ -55,7 +57,8 @@ fn test_nested_expressions() {
     );
     let expr = TLExpr::and(inner, TLExpr::pred("R", vec![Term::var("y")]));
 
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph =
+        expr_to_factor_graph(&expr).expect("Failed to convert nested expressions to factor graph");
 
     assert_eq!(graph.num_variables(), 2); // x, y
     assert_eq!(graph.num_factors(), 3); // P, Q, R
@@ -71,11 +74,14 @@ fn test_end_to_end_inference() {
     );
 
     // Convert to factor graph
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph =
+        expr_to_factor_graph(&expr).expect("Failed to convert P(x) ∧ Q(x,y) to factor graph");
 
     // Run inference
     let algorithm = SumProductAlgorithm::default();
-    let marginals = algorithm.run(&graph).unwrap();
+    let marginals = algorithm
+        .run(&graph)
+        .expect("Failed to run sum-product on P(x) ∧ Q(x,y)");
 
     // Check that we got marginals for all variables
     assert!(marginals.contains_key("x"));
@@ -96,11 +102,14 @@ fn test_parallel_inference_from_tlexpr() {
         TLExpr::pred("Q", vec![Term::var("y")]),
     );
 
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph = expr_to_factor_graph(&expr)
+        .expect("Failed to convert P(x) ∧ Q(y) to factor graph for parallel inference");
 
     // Run parallel inference
     let parallel_bp = ParallelSumProduct::default();
-    let marginals = parallel_bp.run_parallel(&graph).unwrap();
+    let marginals = parallel_bp
+        .run_parallel(&graph)
+        .expect("Failed to run parallel sum-product");
 
     assert_eq!(marginals.len(), 2);
 
@@ -118,11 +127,14 @@ fn test_variable_elimination_from_tlexpr() {
         TLExpr::pred("Q", vec![Term::var("x"), Term::var("y")]),
     );
 
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph =
+        expr_to_factor_graph(&expr).expect("Failed to convert expression to factor graph for VE");
 
     // Run variable elimination
     let ve = VariableElimination::new();
-    let marginal_x = ve.marginalize(&graph, "x").unwrap();
+    let marginal_x = ve
+        .marginalize(&graph, "x")
+        .expect("Failed to marginalize x with variable elimination");
 
     // Check result
     assert_eq!(marginal_x.len(), 2); // Binary variable
@@ -138,7 +150,8 @@ fn test_inference_engine_with_tlexpr() {
         TLExpr::pred("Q", vec![Term::var("y")]),
     );
 
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph = expr_to_factor_graph(&expr)
+        .expect("Failed to convert expression to factor graph for inference engine");
 
     // Use inference engine
     let algorithm = Box::new(SumProductAlgorithm::default());
@@ -148,7 +161,9 @@ fn test_inference_engine_with_tlexpr() {
         variable: "x".to_string(),
     };
 
-    let marginal = engine.marginalize(&query).unwrap();
+    let marginal = engine
+        .marginalize(&query)
+        .expect("Failed to compute marginal for x with inference engine");
 
     let sum: f64 = marginal.iter().sum();
     assert_abs_diff_eq!(sum, 1.0, epsilon = 1e-6);
@@ -163,7 +178,7 @@ fn test_implication_conversion() {
         TLExpr::pred("Q", vec![Term::var("x")]),
     );
 
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph = expr_to_factor_graph(&expr).expect("Failed to convert implication to factor graph");
 
     // Both predicates should be in the graph
     assert!(graph.num_factors() >= 2);
@@ -176,7 +191,8 @@ fn test_universal_quantification() {
     // ∀x. P(x)
     let expr = TLExpr::forall("x", "Domain", TLExpr::pred("P", vec![Term::var("x")]));
 
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph = expr_to_factor_graph(&expr)
+        .expect("Failed to convert universal quantification to factor graph");
 
     assert!(graph.get_variable("x").is_some());
 }
@@ -187,7 +203,7 @@ fn test_negation_conversion() {
     // ¬P(x)
     let expr = TLExpr::negate(TLExpr::pred("P", vec![Term::var("x")]));
 
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph = expr_to_factor_graph(&expr).expect("Failed to convert negation to factor graph");
 
     assert!(graph.get_variable("x").is_some());
 }
@@ -203,7 +219,8 @@ fn test_nested_quantifiers() {
     );
     let expr = TLExpr::exists("x", "Domain", inner);
 
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph =
+        expr_to_factor_graph(&expr).expect("Failed to convert nested quantifiers to factor graph");
 
     assert!(graph.get_variable("x").is_some());
     assert!(graph.get_variable("y").is_some());
@@ -221,7 +238,8 @@ fn test_shared_variables() {
         TLExpr::pred("R", vec![Term::var("x"), Term::var("y")]),
     );
 
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph = expr_to_factor_graph(&expr)
+        .expect("Failed to convert shared-variable expression to factor graph");
 
     assert_eq!(graph.num_variables(), 2); // x, y
     assert_eq!(graph.num_factors(), 3); // P, Q, R
@@ -243,14 +261,19 @@ fn test_probabilistic_reasoning() {
         TLExpr::pred("Q", vec![Term::var("x"), Term::var("y")]),
     );
 
-    let graph = expr_to_factor_graph(&expr).unwrap();
+    let graph = expr_to_factor_graph(&expr)
+        .expect("Failed to convert expression to factor graph for probabilistic reasoning");
 
     // Run inference with both serial and parallel algorithms
     let serial_bp = SumProductAlgorithm::default();
-    let serial_marginals = serial_bp.run(&graph).unwrap();
+    let serial_marginals = serial_bp
+        .run(&graph)
+        .expect("Failed to run serial sum-product for probabilistic reasoning");
 
     let parallel_bp = ParallelSumProduct::default();
-    let parallel_marginals = parallel_bp.run_parallel(&graph).unwrap();
+    let parallel_marginals = parallel_bp
+        .run_parallel(&graph)
+        .expect("Failed to run parallel sum-product for probabilistic reasoning");
 
     // Results should be approximately equal
     for var in ["x", "y"] {

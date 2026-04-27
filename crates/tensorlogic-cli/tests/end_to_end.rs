@@ -5,16 +5,16 @@ use std::path::PathBuf;
 use std::process::Command;
 
 fn get_cli_binary() -> PathBuf {
-    let mut path = std::env::current_exe().unwrap();
+    let mut path = std::env::current_exe().expect("current_exe should be resolvable");
     path.pop(); // Remove test executable name
     path.pop(); // Remove 'deps'
 
-    let debug_path = path.join("tensorlogic");
+    let debug_path = path.join("tensorlogic-cli");
     if debug_path.exists() {
         debug_path
     } else {
         path.pop(); // Remove 'debug'
-        path.join("release").join("tensorlogic")
+        path.join("release").join("tensorlogic-cli")
     }
 }
 
@@ -257,7 +257,7 @@ fn test_pipeline_compilation_and_conversion() {
         "--to",
         "json",
         "--output",
-        json_file.to_str().unwrap(),
+        json_file.to_str().expect("temp path is valid UTF-8"),
     ]);
     assert_eq!(code, 0, "Expression to JSON conversion should succeed");
     assert!(json_file.exists(), "JSON file should be created");
@@ -265,13 +265,13 @@ fn test_pipeline_compilation_and_conversion() {
     // Step 2: Convert JSON to YAML
     let (_stdout, _stderr, code) = run_cli(&[
         "convert",
-        json_file.to_str().unwrap(),
+        json_file.to_str().expect("temp path is valid UTF-8"),
         "--from",
         "json",
         "--to",
         "yaml",
         "--output",
-        yaml_file.to_str().unwrap(),
+        yaml_file.to_str().expect("temp path is valid UTF-8"),
     ]);
     assert_eq!(code, 0, "JSON to YAML conversion should succeed");
     assert!(yaml_file.exists(), "YAML file should be created");
@@ -279,13 +279,13 @@ fn test_pipeline_compilation_and_conversion() {
     // Step 3: Convert YAML back to expression
     let (_stdout, _stderr, code) = run_cli(&[
         "convert",
-        yaml_file.to_str().unwrap(),
+        yaml_file.to_str().expect("temp path is valid UTF-8"),
         "--from",
         "yaml",
         "--to",
         "expr",
         "--output",
-        expr_file.to_str().unwrap(),
+        expr_file.to_str().expect("temp path is valid UTF-8"),
         "--pretty",
     ]);
     assert_eq!(code, 0, "YAML to expression conversion should succeed");
@@ -295,7 +295,7 @@ fn test_pipeline_compilation_and_conversion() {
     let (_stdout, _stderr, code) = run_cli(&[
         expression,
         "--output",
-        compiled_file.to_str().unwrap(),
+        compiled_file.to_str().expect("temp path is valid UTF-8"),
         "--output-format",
         "json",
         "--quiet",
@@ -307,7 +307,7 @@ fn test_pipeline_compilation_and_conversion() {
     );
 
     // Verify content
-    let expr_content = fs::read_to_string(&expr_file).unwrap();
+    let expr_content = fs::read_to_string(&expr_file).expect("expr file should be readable");
     assert!(
         expr_content.contains("knows") && expr_content.contains("likes"),
         "Expression should contain predicates"
@@ -401,9 +401,12 @@ fn test_batch_file_processing() {
         "FORALL x IN Person. mortal(x)",
     ];
 
-    fs::write(&batch_file, expressions.join("\n")).unwrap();
+    fs::write(&batch_file, expressions.join("\n")).expect("batch file write should succeed");
 
-    let (stdout, _stderr, code) = run_cli(&["batch", batch_file.to_str().unwrap()]);
+    let (stdout, _stderr, code) = run_cli(&[
+        "batch",
+        batch_file.to_str().expect("temp path is valid UTF-8"),
+    ]);
 
     // Batch command should succeed if most expressions are valid
     assert!(code == 0 || code == 1, "Batch processing should run");
@@ -435,7 +438,7 @@ fn test_visualization_workflow() {
         "--domains",
         "Node:50",
         "--output",
-        dot_file.to_str().unwrap(),
+        dot_file.to_str().expect("temp path is valid UTF-8"),
         "--output-format",
         "dot",
         "--quiet",
@@ -445,7 +448,7 @@ fn test_visualization_workflow() {
     assert!(dot_file.exists(), "DOT file should be created");
 
     // Verify DOT content
-    let dot_content = fs::read_to_string(&dot_file).unwrap();
+    let dot_content = fs::read_to_string(&dot_file).expect("dot file should be readable");
     assert!(dot_content.contains("digraph"), "Should be valid DOT");
     assert!(dot_content.contains("->"), "Should contain edges");
 

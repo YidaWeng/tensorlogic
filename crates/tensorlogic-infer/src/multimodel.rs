@@ -298,7 +298,7 @@ impl MultiModelCoordinator {
                 a.resource_requirements
                     .estimated_latency_ms
                     .partial_cmp(&b.resource_requirements.estimated_latency_ms)
-                    .unwrap()
+                    .unwrap_or(std::cmp::Ordering::Equal)
             })
             .map(|(id, _)| id.clone())
             .ok_or_else(|| MultiModelError::RoutingFailed("No models available".to_string()))
@@ -562,7 +562,7 @@ mod tests {
 
         let graph = create_test_graph("model1");
         let metadata = create_test_metadata("model1", 1);
-        coordinator.register_model(graph, metadata).unwrap();
+        coordinator.register_model(graph, metadata).expect("unwrap");
 
         assert!(coordinator.unregister_model("model1").is_ok());
         assert_eq!(coordinator.stats.total_models, 0);
@@ -578,16 +578,16 @@ mod tests {
                 create_test_graph("model1"),
                 create_test_metadata("model1", 1),
             )
-            .unwrap();
+            .expect("unwrap");
         coordinator
             .register_model(
                 create_test_graph("model2"),
                 create_test_metadata("model2", 5),
             )
-            .unwrap();
+            .expect("unwrap");
 
         coordinator.set_routing_strategy(RoutingStrategy::Priority);
-        let selected = coordinator.select_model(None).unwrap();
+        let selected = coordinator.select_model(None).expect("unwrap");
         assert_eq!(selected, "model2"); // Higher priority
     }
 
@@ -602,13 +602,13 @@ mod tests {
 
         coordinator
             .register_model(create_test_graph("model1"), meta1)
-            .unwrap();
+            .expect("unwrap");
         coordinator
             .register_model(create_test_graph("model2"), meta2)
-            .unwrap();
+            .expect("unwrap");
 
         coordinator.set_routing_strategy(RoutingStrategy::LowestLatency);
-        let selected = coordinator.select_model(None).unwrap();
+        let selected = coordinator.select_model(None).expect("unwrap");
         assert_eq!(selected, "model2"); // Lower latency
     }
 
@@ -620,7 +620,7 @@ mod tests {
         coordinator.set_ensemble_config(EnsembleConfig::voting());
         assert!(coordinator.has_ensemble());
         assert_eq!(
-            coordinator.ensemble_config().unwrap().strategy,
+            coordinator.ensemble_config().expect("unwrap").strategy,
             EnsembleStrategy::MajorityVote
         );
     }
@@ -634,13 +634,13 @@ mod tests {
                 create_test_graph("model1"),
                 create_test_metadata("model1", 1),
             )
-            .unwrap();
+            .expect("unwrap");
         coordinator
             .register_model(
                 create_test_graph("model2"),
                 create_test_metadata("model2", 1),
             )
-            .unwrap();
+            .expect("unwrap");
 
         let total = coordinator.total_resource_requirements();
         assert_eq!(total.memory_bytes, 2 * 1024 * 1024);
@@ -653,12 +653,12 @@ mod tests {
         stats.model_usage.insert("model1".to_string(), 10);
         stats.model_usage.insert("model2".to_string(), 5);
 
-        let (id, count) = stats.most_used_model().unwrap();
+        let (id, count) = stats.most_used_model().expect("unwrap");
         assert_eq!(id, "model1");
         assert_eq!(count, 10);
 
         let dist = stats.usage_distribution();
-        assert_eq!(dist.get("model1").unwrap(), &(10.0 / 15.0));
+        assert_eq!(dist.get("model1").expect("unwrap"), &(10.0 / 15.0));
     }
 
     #[test]
@@ -670,18 +670,18 @@ mod tests {
                 create_test_graph("model1"),
                 create_test_metadata("model1", 1),
             )
-            .unwrap();
+            .expect("unwrap");
         coordinator
             .register_model(
                 create_test_graph("model2"),
                 create_test_metadata("model2", 1),
             )
-            .unwrap();
+            .expect("unwrap");
 
         coordinator.set_routing_strategy(RoutingStrategy::RoundRobin);
 
-        let id1 = coordinator.select_model(None).unwrap();
-        let id2 = coordinator.select_model(None).unwrap();
+        let id1 = coordinator.select_model(None).expect("unwrap");
+        let id2 = coordinator.select_model(None).expect("unwrap");
 
         // Should alternate (though order may vary)
         assert_ne!(id1, id2);
@@ -696,13 +696,13 @@ mod tests {
                 create_test_graph("model1"),
                 create_test_metadata("model1", 1),
             )
-            .unwrap();
+            .expect("unwrap");
         coordinator
             .register_model(
                 create_test_graph("model2"),
                 create_test_metadata("model2", 1),
             )
-            .unwrap();
+            .expect("unwrap");
 
         let ids = coordinator.model_ids();
         assert_eq!(ids.len(), 2);

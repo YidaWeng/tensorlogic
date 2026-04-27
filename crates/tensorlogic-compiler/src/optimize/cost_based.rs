@@ -194,7 +194,7 @@ impl<'a> CostBasedOptimizer<'a> {
                     .partial_cmp(&b.cost)
                     .unwrap_or(std::cmp::Ordering::Equal)
             })
-            .unwrap();
+            .expect("alternatives is non-empty (original graph always added)");
 
         let time_us = start.elapsed().as_micros() as u64;
 

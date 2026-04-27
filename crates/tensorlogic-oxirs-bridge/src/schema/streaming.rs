@@ -530,7 +530,7 @@ mod tests {
             // Handler receives each triple
         });
 
-        let (stats, _) = loader.process_turtle(turtle).unwrap();
+        let (stats, _) = loader.process_turtle(turtle).expect("unwrap");
         assert_eq!(stats.triples_processed, 3);
     }
 
@@ -547,7 +547,7 @@ mod tests {
 
         let mut loader = StreamingRdfLoader::new().with_batch_size(2);
 
-        let (stats, _) = loader.process_turtle(turtle).unwrap();
+        let (stats, _) = loader.process_turtle(turtle).expect("unwrap");
         assert_eq!(stats.triples_processed, 5);
         assert_eq!(stats.batches_processed, 3); // 2 + 2 + 1
     }
@@ -562,10 +562,10 @@ mod tests {
 
         let mut loader = StreamingRdfLoader::new().collect_into_graph();
 
-        let (stats, graph) = loader.process_turtle(turtle).unwrap();
+        let (stats, graph) = loader.process_turtle(turtle).expect("unwrap");
         assert_eq!(stats.triples_processed, 2);
         assert!(graph.is_some());
-        assert_eq!(graph.unwrap().len(), 2);
+        assert_eq!(graph.expect("unwrap").len(), 2);
     }
 
     #[test]
@@ -580,7 +580,7 @@ mod tests {
 
         let mut loader = StreamingRdfLoader::new().filter_predicates(vec!["knows".to_string()]);
 
-        let (stats, _) = loader.process_turtle(turtle).unwrap();
+        let (stats, _) = loader.process_turtle(turtle).expect("unwrap");
         assert_eq!(stats.triples_processed, 2);
     }
 
@@ -617,7 +617,7 @@ mod tests {
         process_ntriples_lines(ntriples, |_s, _p, _o| {
             count += 1;
         })
-        .unwrap();
+        .expect("unwrap");
 
         assert_eq!(count, 2);
     }

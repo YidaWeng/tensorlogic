@@ -209,23 +209,23 @@ mod tests {
             metrics: HashMap::new(),
         };
 
-        callback.on_train_begin(&state).unwrap();
+        callback.on_train_begin(&state).expect("unwrap");
         assert!(callback.start_time.is_some());
 
-        callback.on_epoch_begin(0, &state).unwrap();
+        callback.on_epoch_begin(0, &state).expect("unwrap");
         assert!(callback.epoch_start_time.is_some());
 
-        callback.on_batch_begin(0, &state).unwrap();
+        callback.on_batch_begin(0, &state).expect("unwrap");
         std::thread::sleep(std::time::Duration::from_millis(10));
-        callback.on_batch_end(0, &state).unwrap();
+        callback.on_batch_end(0, &state).expect("unwrap");
 
         assert_eq!(callback.total_batches, 1);
         assert_eq!(callback.current_epoch_batch_times.len(), 1);
 
-        callback.on_epoch_end(0, &state).unwrap();
+        callback.on_epoch_end(0, &state).expect("unwrap");
         assert_eq!(callback.stats.epoch_times.len(), 1);
 
-        callback.on_train_end(&state).unwrap();
+        callback.on_train_end(&state).expect("unwrap");
         assert!(callback.stats.total_time > 0.0);
     }
 }

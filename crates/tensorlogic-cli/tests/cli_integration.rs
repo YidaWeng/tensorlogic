@@ -6,17 +6,17 @@ use std::process::Command;
 
 fn get_cli_binary() -> PathBuf {
     // Get the path to the compiled binary
-    let mut path = std::env::current_exe().unwrap();
+    let mut path = std::env::current_exe().expect("current_exe should be resolvable");
     path.pop(); // Remove test executable name
     path.pop(); // Remove 'deps'
 
     // Try debug build first, then release
-    let debug_path = path.join("tensorlogic");
+    let debug_path = path.join("tensorlogic-cli");
     if debug_path.exists() {
         debug_path
     } else {
         path.pop(); // Remove 'debug'
-        path.join("release").join("tensorlogic")
+        path.join("release").join("tensorlogic-cli")
     }
 }
 
@@ -220,7 +220,7 @@ fn test_file_output() {
     let (_stdout, _stderr, code) = run_cli(&[
         "knows(x, y)",
         "--output",
-        output_file.to_str().unwrap(),
+        output_file.to_str().expect("temp path is valid UTF-8"),
         "--output-format",
         "json",
         "--quiet",
@@ -230,7 +230,7 @@ fn test_file_output() {
     assert!(output_file.exists(), "Output file should be created");
 
     // Verify content
-    let content = fs::read_to_string(&output_file).unwrap();
+    let content = fs::read_to_string(&output_file).expect("output file should be readable");
     let _: serde_json::Value =
         serde_json::from_str(&content).expect("Output file should contain valid JSON");
 

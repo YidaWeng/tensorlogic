@@ -104,19 +104,19 @@ impl FactorCache {
 
     /// Get from cache.
     fn get(&self, key: &CacheKey) -> Option<Factor> {
-        let cache = self.cache.lock().unwrap();
+        let cache = self.cache.lock().expect("lock should not be poisoned");
         if let Some(factor) = cache.get(key) {
-            *self.hits.lock().unwrap() += 1;
+            *self.hits.lock().expect("lock should not be poisoned") += 1;
             Some(factor.clone())
         } else {
-            *self.misses.lock().unwrap() += 1;
+            *self.misses.lock().expect("lock should not be poisoned") += 1;
             None
         }
     }
 
     /// Put into cache.
     fn put(&self, key: CacheKey, factor: Factor) {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().expect("lock should not be poisoned");
 
         // Simple eviction: if at max size, remove a random entry
         if cache.len() >= self.max_size {
@@ -130,16 +130,23 @@ impl FactorCache {
 
     /// Clear the cache.
     pub fn clear(&self) {
-        self.cache.lock().unwrap().clear();
-        *self.hits.lock().unwrap() = 0;
-        *self.misses.lock().unwrap() = 0;
+        self.cache
+            .lock()
+            .expect("lock should not be poisoned")
+            .clear();
+        *self.hits.lock().expect("lock should not be poisoned") = 0;
+        *self.misses.lock().expect("lock should not be poisoned") = 0;
     }
 
     /// Get cache statistics.
     pub fn stats(&self) -> CacheStats {
-        let hits = *self.hits.lock().unwrap();
-        let misses = *self.misses.lock().unwrap();
-        let size = self.cache.lock().unwrap().len();
+        let hits = *self.hits.lock().expect("lock should not be poisoned");
+        let misses = *self.misses.lock().expect("lock should not be poisoned");
+        let size = self
+            .cache
+            .lock()
+            .expect("lock should not be poisoned")
+            .len();
 
         CacheStats {
             hits,
@@ -155,7 +162,10 @@ impl FactorCache {
 
     /// Get current cache size.
     pub fn size(&self) -> usize {
-        self.cache.lock().unwrap().len()
+        self.cache
+            .lock()
+            .expect("lock should not be poisoned")
+            .len()
     }
 }
 
@@ -260,14 +270,14 @@ mod tests {
     fn create_test_factor(name: &str) -> Factor {
         let values = vec![0.1, 0.2, 0.3, 0.4];
         let array = Array::from_shape_vec(vec![2, 2], values)
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         Factor::new(
             name.to_string(),
             vec!["X".to_string(), "Y".to_string()],
             array,
         )
-        .unwrap()
+        .expect("unwrap")
     }
 
     #[test]
@@ -277,13 +287,13 @@ mod tests {
         let f2 = CachedFactor::new(create_test_factor("f2"), cache.clone());
 
         // First call - cache miss
-        let result1 = f1.product_cached(&f2).unwrap();
+        let result1 = f1.product_cached(&f2).expect("unwrap");
         let stats1 = cache.stats();
         assert_eq!(stats1.misses, 1);
         assert_eq!(stats1.hits, 0);
 
         // Second call - cache hit
-        let result2 = f1.product_cached(&f2).unwrap();
+        let result2 = f1.product_cached(&f2).expect("unwrap");
         let stats2 = cache.stats();
         assert_eq!(stats2.misses, 1);
         assert_eq!(stats2.hits, 1);
@@ -298,12 +308,12 @@ mod tests {
         let f = CachedFactor::new(create_test_factor("f"), cache.clone());
 
         // First call - cache miss
-        let _result1 = f.marginalize_out_cached("Y").unwrap();
+        let _result1 = f.marginalize_out_cached("Y").expect("unwrap");
         let stats1 = cache.stats();
         assert_eq!(stats1.misses, 1);
 
         // Second call - cache hit
-        let _result2 = f.marginalize_out_cached("Y").unwrap();
+        let _result2 = f.marginalize_out_cached("Y").expect("unwrap");
         let stats2 = cache.stats();
         assert_eq!(stats2.hits, 1);
     }
@@ -323,7 +333,7 @@ mod tests {
         let f = CachedFactor::new(create_test_factor("f"), cache.clone());
 
         // Populate cache
-        let _ = f.marginalize_out_cached("Y").unwrap();
+        let _ = f.marginalize_out_cached("Y").expect("unwrap");
         assert_eq!(cache.size(), 1);
 
         // Clear cache

@@ -242,7 +242,7 @@ pub mod presets {
             3072, // d_ff (4 * d_model)
             1024, // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.1)
     }
 
@@ -255,18 +255,18 @@ pub mod presets {
             3072, // d_ff
             512,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.1)
     }
 
     /// Transformer Base (from "Attention Is All You Need")
     pub fn transformer_base() -> (EncoderStackConfig, DecoderStackConfig) {
         let encoder = EncoderStackConfig::new(6, 512, 8, 2048, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         let decoder = DecoderStackConfig::new(6, 512, 8, 2048, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         (encoder, decoder)
@@ -275,7 +275,7 @@ pub mod presets {
     /// Small model for testing (faster)
     pub fn tiny() -> EncoderStackConfig {
         EncoderStackConfig::new(2, 128, 4, 512, 128)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.0)
     }
 
@@ -288,7 +288,7 @@ pub mod presets {
             4096, // d_ff
             512,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.1)
     }
 
@@ -301,7 +301,7 @@ pub mod presets {
             4096, // d_ff
             1024, // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.1)
     }
 
@@ -314,7 +314,7 @@ pub mod presets {
             5120, // d_ff
             1024, // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.1)
     }
 
@@ -327,7 +327,7 @@ pub mod presets {
             6400, // d_ff
             1024, // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.1)
     }
 
@@ -340,7 +340,7 @@ pub mod presets {
             3072, // d_ff
             2048, // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
     }
 
@@ -353,7 +353,7 @@ pub mod presets {
             4096, // d_ff
             2048, // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
     }
 
@@ -366,7 +366,7 @@ pub mod presets {
             6144, // d_ff
             2048, // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
     }
 
@@ -379,7 +379,7 @@ pub mod presets {
             8192, // d_ff
             2048, // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
     }
 
@@ -392,7 +392,7 @@ pub mod presets {
             10240, // d_ff
             2048,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
     }
 
@@ -405,7 +405,7 @@ pub mod presets {
             16384, // d_ff
             2048,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
     }
 
@@ -418,7 +418,7 @@ pub mod presets {
             20480, // d_ff (4 * d_model)
             2048,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
     }
 
@@ -431,7 +431,7 @@ pub mod presets {
             49152, // d_ff
             2048,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
     }
 
@@ -445,7 +445,7 @@ pub mod presets {
             11008, // d_ff (uses SwiGLU, ~2.7x d_model)
             2048,  // max_seq_len (can be extended with RoPE)
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
         .with_learned_position_encoding() // Would use RoPE in practice
     }
@@ -459,7 +459,7 @@ pub mod presets {
             13824, // d_ff
             2048,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
         .with_learned_position_encoding()
     }
@@ -473,7 +473,7 @@ pub mod presets {
             17920, // d_ff
             2048,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
         .with_learned_position_encoding()
     }
@@ -487,7 +487,7 @@ pub mod presets {
             22016, // d_ff
             2048,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
         .with_learned_position_encoding()
     }
@@ -501,7 +501,7 @@ pub mod presets {
             4096, // d_ff
             2048, // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
         // Note: BLOOM uses ALiBi position encoding (implemented in position module)
     }
@@ -515,7 +515,7 @@ pub mod presets {
             10240, // d_ff
             2048,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
     }
 
@@ -528,18 +528,18 @@ pub mod presets {
             16384, // d_ff
             2048,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
     }
 
     /// T5 Small configuration (60M parameters)
     pub fn t5_small() -> (EncoderStackConfig, DecoderStackConfig) {
         let encoder = EncoderStackConfig::new(6, 512, 8, 2048, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         let decoder = DecoderStackConfig::new(6, 512, 8, 2048, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         (encoder, decoder)
@@ -548,11 +548,11 @@ pub mod presets {
     /// T5 Base configuration (220M parameters)
     pub fn t5_base() -> (EncoderStackConfig, DecoderStackConfig) {
         let encoder = EncoderStackConfig::new(12, 768, 12, 3072, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         let decoder = DecoderStackConfig::new(12, 768, 12, 3072, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         (encoder, decoder)
@@ -561,11 +561,11 @@ pub mod presets {
     /// T5 Large configuration (770M parameters)
     pub fn t5_large() -> (EncoderStackConfig, DecoderStackConfig) {
         let encoder = EncoderStackConfig::new(24, 1024, 16, 4096, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         let decoder = DecoderStackConfig::new(24, 1024, 16, 4096, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         (encoder, decoder)
@@ -574,11 +574,11 @@ pub mod presets {
     /// T5 XL configuration (3B parameters)
     pub fn t5_xl() -> (EncoderStackConfig, DecoderStackConfig) {
         let encoder = EncoderStackConfig::new(24, 2048, 32, 8192, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         let decoder = DecoderStackConfig::new(24, 2048, 32, 8192, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         (encoder, decoder)
@@ -587,11 +587,11 @@ pub mod presets {
     /// T5 XXL configuration (11B parameters)
     pub fn t5_xxl() -> (EncoderStackConfig, DecoderStackConfig) {
         let encoder = EncoderStackConfig::new(24, 4096, 64, 16384, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         let decoder = DecoderStackConfig::new(24, 4096, 64, 16384, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         (encoder, decoder)
@@ -604,7 +604,7 @@ mod tests {
 
     #[test]
     fn test_count_attention_params() {
-        let config = AttentionConfig::new(512, 8).unwrap();
+        let config = AttentionConfig::new(512, 8).expect("unwrap");
         let params = count_attention_params(&config);
 
         // QKV: 3 * 512 * 512 = 786,432
@@ -638,7 +638,7 @@ mod tests {
 
     #[test]
     fn test_encoder_layer_params() {
-        let config = EncoderLayerConfig::new(512, 8, 2048).unwrap();
+        let config = EncoderLayerConfig::new(512, 8, 2048).expect("unwrap");
         let params = count_encoder_layer_params(&config);
 
         // Attention: 1,050,624
@@ -651,7 +651,7 @@ mod tests {
 
     #[test]
     fn test_encoder_stack_stats() {
-        let config = EncoderStackConfig::new(6, 512, 8, 2048, 512).unwrap();
+        let config = EncoderStackConfig::new(6, 512, 8, 2048, 512).expect("unwrap");
         let stats = encoder_stack_stats(&config);
 
         assert_eq!(stats.num_layers, 6);
@@ -662,7 +662,7 @@ mod tests {
 
     #[test]
     fn test_decoder_stack_stats() {
-        let config = DecoderStackConfig::new(6, 512, 8, 2048, 512).unwrap();
+        let config = DecoderStackConfig::new(6, 512, 8, 2048, 512).expect("unwrap");
         let stats = decoder_stack_stats(&config);
 
         assert_eq!(stats.num_layers, 6);
@@ -687,13 +687,13 @@ mod tests {
 
     #[test]
     fn test_validate_compatibility() {
-        let encoder = EncoderStackConfig::new(6, 512, 8, 2048, 512).unwrap();
-        let decoder = DecoderStackConfig::new(6, 512, 8, 2048, 512).unwrap();
+        let encoder = EncoderStackConfig::new(6, 512, 8, 2048, 512).expect("unwrap");
+        let decoder = DecoderStackConfig::new(6, 512, 8, 2048, 512).expect("unwrap");
 
         assert!(validate_encoder_decoder_compatibility(&encoder, &decoder).is_ok());
 
         // Mismatched d_model
-        let encoder_mismatch = EncoderStackConfig::new(6, 768, 8, 2048, 512).unwrap();
+        let encoder_mismatch = EncoderStackConfig::new(6, 768, 8, 2048, 512).expect("unwrap");
         assert!(validate_encoder_decoder_compatibility(&encoder_mismatch, &decoder).is_err());
     }
 
@@ -715,7 +715,7 @@ mod tests {
 
     #[test]
     fn test_model_stats_summary() {
-        let config = EncoderStackConfig::new(6, 512, 8, 2048, 512).unwrap();
+        let config = EncoderStackConfig::new(6, 512, 8, 2048, 512).expect("unwrap");
         let stats = encoder_stack_stats(&config);
         let summary = stats.summary();
 

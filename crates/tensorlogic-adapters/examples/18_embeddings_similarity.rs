@@ -17,24 +17,24 @@ fn main() {
     // People-related domains
     table
         .add_domain(DomainInfo::new("Person", 1000).with_description("A human person"))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_domain(DomainInfo::new("Student", 500).with_description("A student"))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_domain(DomainInfo::new("Teacher", 100).with_description("A teacher"))
-        .unwrap();
+        .expect("unwrap");
 
     // Other domains
     table
         .add_domain(DomainInfo::new("Course", 50).with_description("An academic course"))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_domain(DomainInfo::new("Book", 5000).with_description("A book"))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_domain(DomainInfo::new("Building", 200).with_description("A physical building"))
-        .unwrap();
+        .expect("unwrap");
 
     // Add predicates
     table
@@ -42,25 +42,25 @@ fn main() {
             "knows",
             vec!["Person".to_string(), "Person".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new(
             "friends_with",
             vec!["Person".to_string(), "Person".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new(
             "teaches",
             vec!["Teacher".to_string(), "Course".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new(
             "enrolled",
             vec!["Student".to_string(), "Course".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     println!(
         "Schema indexed with {} domains and {} predicates\n",
@@ -72,14 +72,14 @@ fn main() {
     println!("=== 1. Domain Embeddings ===\n");
     let embedder = SchemaEmbedder::new();
 
-    let person_domain = table.domains.get("Person").unwrap();
+    let person_domain = table.domains.get("Person").expect("unwrap");
     let person_emb = embedder.embed_domain(person_domain);
     println!(
         "Person domain embedding (first 10 dims): {:?}",
         &person_emb[..10]
     );
 
-    let course_domain = table.domains.get("Course").unwrap();
+    let course_domain = table.domains.get("Course").expect("unwrap");
     let course_emb = embedder.embed_domain(course_domain);
     println!(
         "Course domain embedding (first 10 dims): {:?}\n",
@@ -89,9 +89,9 @@ fn main() {
     // 2. Compute similarities between domains
     println!("=== 2. Domain Similarity Analysis ===\n");
 
-    let student_domain = table.domains.get("Student").unwrap();
-    let teacher_domain = table.domains.get("Teacher").unwrap();
-    let building_domain = table.domains.get("Building").unwrap();
+    let student_domain = table.domains.get("Student").expect("unwrap");
+    let teacher_domain = table.domains.get("Teacher").expect("unwrap");
+    let building_domain = table.domains.get("Building").expect("unwrap");
 
     let student_emb = embedder.embed_domain(student_domain);
     let teacher_emb = embedder.embed_domain(teacher_domain);
@@ -144,8 +144,8 @@ fn main() {
     // 4. Predicate embeddings
     println!("=== 4. Predicate Embeddings ===\n");
 
-    let knows_pred = table.predicates.get("knows").unwrap();
-    let teaches_pred = table.predicates.get("teaches").unwrap();
+    let knows_pred = table.predicates.get("knows").expect("unwrap");
+    let teaches_pred = table.predicates.get("teaches").expect("unwrap");
 
     let knows_emb = embedder.embed_predicate(knows_pred);
     let teaches_emb = embedder.embed_predicate(teaches_pred);

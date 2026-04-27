@@ -5,13 +5,16 @@
 [![PyPI](https://img.shields.io/badge/pypi-tensorlogic--py-blue)](https://pypi.org/project/pytensorlogic)
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/pytensorlogic)
-[![Production](https://img.shields.io/badge/status-production_ready-success)](#)
+[![Alpha](https://img.shields.io/badge/status-alpha-yellow)](#)
 
 ## Overview
 
-**Status**: Production Ready - ALL HIGH-PRIORITY FEATURES COMPLETE (100%)
-**Version**: 0.1.0-rc.1
-**Last Updated**: 2026-03-06
+**Status**: Alpha (Python bindings — build and test via maturin/pytest, not cargo nextest)
+**Version**: 0.1.0
+**PyPI Classifier**: Development Status :: 3 - Alpha
+**Last Updated**: 2026-04-06
+
+> **Note on testing**: This crate uses PyO3/maturin. Tests are run with pytest after `maturin develop`, not with `cargo nextest`. See [Testing](#testing) section below.
 
 TensorLogic compiles logical rules (predicates, quantifiers, implications) into **tensor equations (einsum graphs)** that can be executed on various backends. This Python package provides a comprehensive Pythonic API for researchers and practitioners to use TensorLogic from Jupyter notebooks and Python workflows.
 
@@ -682,7 +685,7 @@ Backend capability information.
 ```python
 caps = tl.get_backend_capabilities(tl.Backend.SCIRS2_CPU)
 print(caps.name)              # "SciRS2 Backend"
-print(caps.version)           # "0.1.0-rc.1"
+print(caps.version)           # "0.1.0"
 print(caps.devices)           # ["CPU"]
 print(caps.dtypes)            # ["f64", "f32", "i64", "i32", "bool"]
 print(caps.features)          # ["Autodiff", "BatchExecution", ...]
@@ -914,13 +917,20 @@ python examples/provenance_tracking.py
 
 ## Testing
 
+> **Important**: This crate uses PyO3/maturin. Tests are run via pytest after `maturin develop`.
+> `cargo nextest` will not run the Python integration tests.
+
 The package includes 300+ comprehensive tests across 7 test suites:
 
 ```bash
+# Build the Python extension first
+cd crates/tensorlogic-py
+maturin develop
+
 # Install development dependencies
 pip install -r requirements-dev.txt
 
-# Run tests
+# Run all tests
 pytest tests/ -v
 
 # Run specific test suite
@@ -952,23 +962,24 @@ TensorLogic Python bindings are built with:
 ### Module Structure
 
 ```
-pytensorlogic/
+tensorlogic-py/
 ├── src/
-│   ├── lib.rs                # Main module registration
-│   ├── types.rs              # Core type bindings (PyTerm, PyTLExpr, PyEinsumGraph)
-│   ├── compiler.rs           # Compilation API and strategies
+│   ├── lib.rs                # Main PyO3 module registration
+│   ├── compiler.rs           # Compilation API and strategy presets
 │   ├── executor.rs           # Execution engine bindings
-│   ├── numpy_conversion.rs   # NumPy interop
+│   ├── numpy_conversion.rs   # NumPy bidirectional interop
 │   ├── adapters.rs           # Domain and symbol table management
 │   ├── backend.rs            # Backend selection and capabilities
-│   ├── provenance.rs         # Provenance tracking
-│   ├── training.rs           # Training API
-│   ├── persistence.rs        # Model save/load
-│   ├── dsl.rs                # Rule Builder DSL
-│   ├── jupyter.rs            # Rich HTML display
-│   ├── performance.rs        # Performance monitoring
-│   ├── streaming.rs          # Streaming execution
-│   ├── async_executor.rs     # Async execution and cancellation
+│   ├── provenance.rs         # Provenance tracking with RDF* support
+│   ├── training.rs           # Training API (loss, optimizers, callbacks)
+│   ├── persistence.rs        # Model save/load (JSON/binary/pickle)
+│   ├── dsl.rs                # Rule Builder DSL with operator overloading
+│   ├── jupyter.rs            # Rich HTML display for Jupyter
+│   ├── performance.rs        # GIL release, profiler, memory tracking
+│   ├── streaming.rs          # StreamingExecutor and ResultAccumulator
+│   ├── async_executor.rs     # Async execution, BatchExecutor, CancellationToken
+│   ├── progress.rs           # Training progress callbacks (v0.1.3)
+│   ├── types.rs              # Core type bindings (PyTerm, PyTLExpr, PyEinsumGraph)
 │   └── utils.rs              # Utility functions and context managers
 ├── tests/                    # Python test suites (7 files, 300+ tests)
 ├── examples/                 # Demonstration scripts (12 files)
@@ -1065,9 +1076,9 @@ git clone https://github.com/cool-japan/tensorlogic.git
 cd tensorlogic/crates/tensorlogic-py
 maturin develop
 
-# Run tests
-cargo test          # Rust tests
-pytest tests/ -v    # Python tests
+# Run Python tests (maturin must be built first)
+pytest tests/ -v
+# Note: cargo nextest does not run Python integration tests for this crate
 ```
 
 ### Code Quality
@@ -1146,7 +1157,7 @@ Apache-2.0 - See [LICENSE](../../LICENSE) for details.
 
 ---
 
-**Status**: Production Ready (v0.1.0-rc.1)
+**Status**: Production Ready (v0.1.0)
 **Last Updated**: 2026-03-06
 **Completion**: 100% of high-priority features (21/21 phases complete)
 **Tests**: 300+ tests passing (7 test suites)

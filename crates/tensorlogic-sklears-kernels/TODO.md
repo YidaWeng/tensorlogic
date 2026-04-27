@@ -1,19 +1,9 @@
-# RC.1 Release Status
+# TensorLogic SklearRS Kernels — TODO
 
-**Version**: 0.1.0-rc.1
-**Status**: Production Ready
+**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
-This crate is part of the TensorLogic v0.1.0-rc.1 release with:
-- Zero compiler warnings
-- 100% test pass rate (391 tests)
-- Complete documentation
-- Production-ready quality
-
-See main [TODO.md](../../TODO.md) for overall project status.
-
----
-
-# tensorlogic-sklears-kernels TODO
+Kernel methods bridging tensor logic with sklearRS kernel approximations.
 
 ## Completed
 
@@ -46,7 +36,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Row normalization
 - [x] Implement SkleaRS-compatible kernel trait
 - [x] Efficient kernel matrix computation
-- [x] Comprehensive test suite (391 tests)
+- [x] Comprehensive test suite (408 tests)
 - [x] Extensive documentation and examples
 - [x] Zero warnings (clippy clean)
 
@@ -207,17 +197,73 @@ See main [TODO.md](../../TODO.md) for overall project status.
 
 ---
 
-**Total Items:** 52 tasks (all complete)
-**Completion:** 100% (52/52) - ALL TASKS COMPLETE
+**Total Items:** 54 tasks (all complete)
+**Completion:** 100% (54/54) - ALL TASKS COMPLETE
 
-**Test Count:** 391 tests (100% passing, zero warnings)
+**Test Count:** 451 tests (100% passing, zero warnings)
 
-**Status:** Production-ready (v0.1.0-rc.1)
-**Release Date:** 2026-03-06
+**Status:** Production-ready (v0.1.0 Stable)
+**Release Date:** 2026-03-06 (stable: 2026-04-06)
+
+## v0.1.6 Enhancements (2026-03-30)
+
+- [x] **Kernel Matrix Cache + Batch Compute** (`batch.rs`): `KernelCache` (LRU with symmetric key normalization), `BatchKernelComputer` (O(n²/2) with optional caching), `GramMatrix` (symmetry check, trace, Frobenius norm, PSD diagonal check), `KernelMatrixStats`. 18 new tests.
+
+## v0.1.18 (2026-04-06)
+
+- [x] **Kernel Alignment** (`kernel_alignment.rs`): `KernelMatrix` with centering (`center()`), Frobenius inner product (`frobenius_inner()`), Frobenius norm, and trace operations; `KernelTargetAlignment` (KTA) — uncentered alignment between a kernel matrix and an ideal label kernel; `CenteredKernelAlignment` (CKA) — HSIC-normalized centered KTA robust to different-scale kernels; `HilbertSchmidtIndependenceCriterion` (HSIC) — statistical independence criterion between two kernel matrices; `AlignmentResult` carrying raw score, centered score, and HSIC value; `KernelAlignmentGridSearch` exhausts a parameter grid scoring each candidate by CKA; `KernelAlignmentGradientAscent` performs gradient-free gradient-ascent over a scalar parameter using finite differences to maximize alignment; `AlignmentError` typed error enum for dimension mismatches and degenerate (zero-norm) matrices.
 
 ## Future Enhancements
 
-- [ ] Deep kernel learning
 - [ ] GPU acceleration
 - [ ] Case studies (SVM, Gaussian Process, etc.)
 - [ ] SkleaRS integration (feature-gated, currently behind `sklears` feature)
+
+## v0.2.0 Research Preview (2026-04-15)
+
+- [x] **Learned kernel composition** (`learned_composition/`):
+  `LearnedMixtureKernel` computes `K_mix = sum_i softmax(w)_i * K_i` over
+  any library of `Arc<dyn Kernel>` (including `SymbolicKernel` from
+  `KernelBuilder`). Gradient with respect to logits uses the clean
+  softmax identity `dK_mix/dw_i = p_i * (K_i - K_mix)`, validated against
+  central-difference finite differences to `< 1e-4`. `TrainableKernelMixture`
+  adapter exposes `evaluate_with_gradient`, `step(grad, lr)` for
+  `tensorlogic-train`-style outer loops; `LearnedMixtureBuilder` provides
+  fluent assembly. 12 unit tests + 1 end-to-end integration test
+  (mixture over RBF(γ=0.5) + RBF(γ=2.0) converges toward the target
+  bandwidth over 400 gradient-descent steps).
+
+- [x] **Deep Kernel Learning** (`deep_kernel/`): `DeepKernel<F, K>`
+  composes a base `Kernel` with a differentiable `NeuralFeatureMap`
+  feature extractor, evaluating `K_DKL(x, y) = K_base(g_θ(x), g_θ(y))`
+  (Wilson et al., 2016). Reference extractor is `MLPFeatureExtractor`:
+  stacked `DenseLayer`s with ReLU / Tanh / Identity activations,
+  Xavier/Glorot-normal init via `scirs2_core::random::StdRng`, biases
+  initialised to zero, and a flat-parameter / per-layer-weights
+  double view (`parameters_mut` + `sync_from_flat`) usable by outer
+  optimisers. Analytical gradient `∂K_DKL/∂θ` is provided for the
+  RBF-base case (`rbf_dkl_gradient`) via MLP backprop; every extractor
+  supports `finite_difference_gradient` as a reference / fallback.
+  `DeepKernelBuilder` offers fluent topology assembly. 28 unit tests
+  (MLP forward, ReLU, Xavier bounds, identity-MLP equals base, finite-
+  difference gradient check `< 1e-3`, PSD propagation, empty-extractor
+  errors, sync round-trip) + 1 integration test (2-layer MLP + RBF on a
+  6-point dataset — Gram matrix symmetric, diagonal = 1, Cholesky
+  succeeds after a `1e-9` ridge).
+
+- [x] **Kernel PCA** (`kernel_pca/`): Scholkopf-Smola-Muller (1998)
+  implementation. `KernelPCA<K: Kernel + Clone + 'static>` with
+  `fit` / `fit_transform` / `transform`. Double-centering via
+  `centering::double_center`, symmetric eigendecomp via
+  `scirs2_linalg::eigh` selecting top-k eigenpairs, and Scholkopf-style
+  scaling `alpha_k = v_k / sqrt(lambda_k)` for out-of-sample projection.
+  `FittedKernelPCA` stores the kernel as `Box<dyn Kernel>`, training
+  data, centering stats, and provides `explained_variance_ratio()`.
+  8 unit tests (linear KPCA recovers PCA, RBF two-cluster separation,
+  double-center sums, transform-vs-fit_transform consistency, error paths,
+  explained-variance-ratio summation) + 2 integration tests (Swiss-roll
+  RBF 80-point embedding, collinear linear-KPCA dominance).
+
+## v0.2.0 / Future Work
+
+- Multi-output / vector-valued kernels.

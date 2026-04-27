@@ -397,7 +397,7 @@ mod tests {
     #[test]
     fn test_fuse_elementwise_empty_graph() {
         let mut graph = EinsumGraph::new();
-        let stats = fuse_elementwise_operations(&mut graph).unwrap();
+        let stats = fuse_elementwise_operations(&mut graph).expect("unwrap");
         assert_eq!(stats.ops_fused, 0);
         assert_eq!(stats.fusion_groups, 0);
     }
@@ -409,9 +409,9 @@ mod tests {
         let b = graph.add_tensor("B");
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
 
-        let stats = fuse_elementwise_operations(&mut graph).unwrap();
+        let stats = fuse_elementwise_operations(&mut graph).expect("unwrap");
         // Single operation, nothing to fuse
         assert_eq!(stats.ops_fused, 0);
     }
@@ -419,21 +419,21 @@ mod tests {
     #[test]
     fn test_fuse_map_reduce_empty_graph() {
         let mut graph = EinsumGraph::new();
-        let stats = fuse_map_reduce(&mut graph).unwrap();
+        let stats = fuse_map_reduce(&mut graph).expect("unwrap");
         assert_eq!(stats.ops_fused, 0);
     }
 
     #[test]
     fn test_fuse_einsum_empty_graph() {
         let mut graph = EinsumGraph::new();
-        let stats = fuse_einsum_operations(&mut graph).unwrap();
+        let stats = fuse_einsum_operations(&mut graph).expect("unwrap");
         assert_eq!(stats.ops_fused, 0);
     }
 
     #[test]
     fn test_fuse_all_empty_graph() {
         let mut graph = EinsumGraph::new();
-        let stats = fuse_all(&mut graph).unwrap();
+        let stats = fuse_all(&mut graph).expect("unwrap");
         assert_eq!(stats.ops_fused, 0);
         assert_eq!(stats.fusion_groups, 0);
     }

@@ -75,7 +75,7 @@ fn example_1_cycle_detection() {
             outputs: vec![b],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     graph
         .add_node(EinsumNode {
@@ -86,7 +86,7 @@ fn example_1_cycle_detection() {
             outputs: vec![c],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     let cycles = find_cycles(&graph);
 
@@ -116,7 +116,7 @@ fn example_2_scc() {
             outputs: vec![b],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     graph
         .add_node(EinsumNode {
@@ -127,7 +127,7 @@ fn example_2_scc() {
             outputs: vec![c],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     // D is isolated
     let _ = d;
@@ -166,7 +166,7 @@ fn example_3_topological_sort() {
             outputs: vec![c],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     graph
         .add_node(EinsumNode {
@@ -177,7 +177,7 @@ fn example_3_topological_sort() {
             outputs: vec![d],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     println!("  Graph: Input_A, Input_B → Intermediate_C → Output_D");
 
@@ -211,7 +211,7 @@ fn example_4_dag_verification() {
             outputs: vec![b],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     let is_acyclic = is_dag(&graph);
 
@@ -236,7 +236,7 @@ fn example_5_isomorphism() {
         outputs: vec![b1],
         metadata: Default::default(),
     })
-    .unwrap();
+    .expect("unwrap");
 
     // Create second graph: X -> Y (same structure, different names)
     let mut g2 = EinsumGraph::new();
@@ -250,7 +250,7 @@ fn example_5_isomorphism() {
         outputs: vec![y2],
         metadata: Default::default(),
     })
-    .unwrap();
+    .expect("unwrap");
 
     println!("  Graph 1: A → B");
     println!("  Graph 2: X → Y");
@@ -292,7 +292,7 @@ fn example_6_critical_path() {
             outputs: vec![b],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     graph
         .add_node(EinsumNode {
@@ -303,7 +303,7 @@ fn example_6_critical_path() {
             outputs: vec![c],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     graph
         .add_node(EinsumNode {
@@ -314,7 +314,7 @@ fn example_6_critical_path() {
             outputs: vec![d],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     // Assign weights (execution costs)
     let mut weights = HashMap::new();
@@ -359,7 +359,7 @@ fn example_7_diameter() {
             outputs: vec![b],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     graph
         .add_node(EinsumNode {
@@ -370,7 +370,7 @@ fn example_7_diameter() {
             outputs: vec![c],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     graph
         .add_node(EinsumNode {
@@ -381,7 +381,7 @@ fn example_7_diameter() {
             outputs: vec![d],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     println!("  Graph: A → B → C → D (linear chain)");
 
@@ -415,7 +415,7 @@ fn example_8_all_paths() {
             outputs: vec![b],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     graph
         .add_node(EinsumNode {
@@ -426,7 +426,7 @@ fn example_8_all_paths() {
             outputs: vec![c],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     graph
         .add_node(EinsumNode {
@@ -437,7 +437,7 @@ fn example_8_all_paths() {
             outputs: vec![d],
             metadata: Default::default(),
         })
-        .unwrap();
+        .expect("unwrap");
 
     let paths = find_all_paths(&graph, a, d);
 

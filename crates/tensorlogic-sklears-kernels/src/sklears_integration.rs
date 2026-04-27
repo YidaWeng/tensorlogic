@@ -17,7 +17,7 @@
 //! use tensorlogic_sklears_kernels::sklears_integration::SklearsKernelAdapter;
 //!
 //! // Create a TensorLogic kernel
-//! let tl_kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+//! let tl_kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
 //!
 //! // Wrap it for SkleaRS
 //! let sklears_kernel = SklearsKernelAdapter::new(tl_kernel);
@@ -36,9 +36,10 @@ use crate::{
     LinearKernel, PolynomialKernel, RbfKernel, SigmoidKernel,
 };
 use scirs2_core::ndarray::{s, Array2};
-use scirs2_core::random::essentials::Normal as RandNormal;
-use scirs2_core::random::rngs::StdRng as RealStdRng;
-use scirs2_core::random::Distribution;
+#[cfg(feature = "sklears")]
+use scirs2_core::rand_distributions::{Distribution, Normal as RandNormal};
+#[cfg(feature = "sklears")]
+use scirs2_core::rand_prelude::StdRng as RealStdRng;
 
 /// Adapter that wraps any TensorLogic kernel to implement SkleaRS's KernelFunction trait
 ///
@@ -93,7 +94,8 @@ impl KernelFunction for SklearsKernelAdapter<RbfKernel> {
         rng: &mut RealStdRng,
     ) -> Array2<Float> {
         let gamma = self.kernel.gamma();
-        let normal = RandNormal::new(0.0, (2.0 * gamma).sqrt()).unwrap();
+        let normal = RandNormal::new(0.0, (2.0 * gamma).sqrt())
+            .expect("Normal distribution parameters must be valid");
         let mut weights = Array2::zeros((n_features, n_components));
         for mut col in weights.columns_mut() {
             for val in col.iter_mut() {
@@ -130,7 +132,8 @@ impl KernelFunction for SklearsKernelAdapter<LaplacianKernel> {
     ) -> Array2<Float> {
         let gamma = self.kernel.gamma();
         // Sample from Cauchy distribution for Laplacian kernel
-        let normal = RandNormal::new(0.0, gamma.sqrt()).unwrap();
+        let normal = RandNormal::new(0.0, gamma.sqrt())
+            .expect("Normal distribution parameters must be valid");
         let mut weights = Array2::zeros((n_features, n_components));
         for mut col in weights.columns_mut() {
             for val in col.iter_mut() {
@@ -194,7 +197,8 @@ impl KernelFunction for SklearsKernelAdapter<PolynomialKernel> {
         rng: &mut RealStdRng,
     ) -> Array2<Float> {
         // Use standard normal for lack of better alternative
-        let normal = RandNormal::new(0.0, 1.0).unwrap();
+        let normal =
+            RandNormal::new(0.0, 1.0).expect("Normal distribution parameters must be valid");
         let mut weights = Array2::zeros((n_features, n_components));
         for mut col in weights.columns_mut() {
             for val in col.iter_mut() {
@@ -230,7 +234,8 @@ impl KernelFunction for SklearsKernelAdapter<CosineKernel> {
         n_components: usize,
         rng: &mut RealStdRng,
     ) -> Array2<Float> {
-        let normal = RandNormal::new(0.0, 1.0).unwrap();
+        let normal =
+            RandNormal::new(0.0, 1.0).expect("Normal distribution parameters must be valid");
         let mut weights = Array2::zeros((n_features, n_components));
         for mut col in weights.columns_mut() {
             for val in col.iter_mut() {
@@ -262,7 +267,8 @@ impl KernelFunction for SklearsKernelAdapter<SigmoidKernel> {
         n_components: usize,
         rng: &mut RealStdRng,
     ) -> Array2<Float> {
-        let normal = RandNormal::new(0.0, 1.0).unwrap();
+        let normal =
+            RandNormal::new(0.0, 1.0).expect("Normal distribution parameters must be valid");
         let mut weights = Array2::zeros((n_features, n_components));
         for mut col in weights.columns_mut() {
             for val in col.iter_mut() {
@@ -298,7 +304,8 @@ impl KernelFunction for SklearsKernelAdapter<ChiSquaredKernel> {
         n_components: usize,
         rng: &mut RealStdRng,
     ) -> Array2<Float> {
-        let normal = RandNormal::new(0.0, 1.0).unwrap();
+        let normal =
+            RandNormal::new(0.0, 1.0).expect("Normal distribution parameters must be valid");
         let mut weights = Array2::zeros((n_features, n_components));
         for mut col in weights.columns_mut() {
             for val in col.iter_mut() {
@@ -330,7 +337,8 @@ impl KernelFunction for SklearsKernelAdapter<HistogramIntersectionKernel> {
         n_components: usize,
         rng: &mut RealStdRng,
     ) -> Array2<Float> {
-        let normal = RandNormal::new(0.0, 1.0).unwrap();
+        let normal =
+            RandNormal::new(0.0, 1.0).expect("Normal distribution parameters must be valid");
         let mut weights = Array2::zeros((n_features, n_components));
         for mut col in weights.columns_mut() {
             for val in col.iter_mut() {
@@ -354,7 +362,7 @@ mod tests {
 
     #[test]
     fn test_rbf_kernel_adapter() {
-        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
         let adapter = SklearsKernelAdapter::new(kernel);
 
         let x = vec![1.0, 2.0, 3.0];
@@ -384,7 +392,7 @@ mod tests {
 
     #[test]
     fn test_laplacian_kernel_adapter() {
-        let kernel = LaplacianKernel::new(0.5).unwrap();
+        let kernel = LaplacianKernel::new(0.5).expect("unwrap");
         let adapter = SklearsKernelAdapter::new(kernel);
 
         let x = vec![1.0, 2.0, 3.0];
@@ -396,7 +404,7 @@ mod tests {
 
     #[test]
     fn test_polynomial_kernel_adapter() {
-        let kernel = PolynomialKernel::new(2, 1.0).unwrap();
+        let kernel = PolynomialKernel::new(2, 1.0).expect("unwrap");
         let adapter = SklearsKernelAdapter::new(kernel);
 
         let x = vec![1.0, 2.0];

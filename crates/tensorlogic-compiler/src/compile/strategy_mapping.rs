@@ -60,7 +60,11 @@ pub(crate) fn compile_and_with_strategy(
             let one_idx = if !graph.tensors.contains(&one_name) {
                 graph.add_tensor(one_name)
             } else {
-                graph.tensors.iter().position(|t| t == "const_1.0").unwrap()
+                graph
+                    .tensors
+                    .iter()
+                    .position(|t| t == "const_1.0")
+                    .expect("const_1.0 tensor was just registered")
             };
 
             // Compute (a + b) - 1
@@ -112,7 +116,11 @@ pub(crate) fn compile_or_with_strategy(
             let one_idx = if !graph.tensors.contains(&one_name) {
                 graph.add_tensor(one_name)
             } else {
-                graph.tensors.iter().position(|t| t == "const_1.0").unwrap()
+                graph
+                    .tensors
+                    .iter()
+                    .position(|t| t == "const_1.0")
+                    .expect("const_1.0 tensor was just registered")
             };
 
             // Compute min(1, a + b)
@@ -161,7 +169,11 @@ pub(crate) fn compile_not_with_strategy(
                 let temp_idx = if !graph.tensors.contains(&temp_name) {
                     graph.add_tensor(temp_name.clone())
                 } else {
-                    graph.tensors.iter().position(|t| t == &temp_name).unwrap()
+                    graph
+                        .tensors
+                        .iter()
+                        .position(|t| t == &temp_name)
+                        .expect("temp tensor was just registered")
                 };
 
                 // Multiply input by temperature: T * a
@@ -205,7 +217,8 @@ mod tests {
         let input_idx = graph.add_tensor("input");
 
         // Compile NOT with temperature=1
-        let result_idx = compile_not_with_strategy(input_idx, &mut ctx, &mut graph).unwrap();
+        let result_idx =
+            compile_not_with_strategy(input_idx, &mut ctx, &mut graph).expect("unwrap");
 
         // Should create: negate -> sigmoid
         assert!(result_idx > input_idx);
@@ -229,7 +242,8 @@ mod tests {
         let input_idx = graph.add_tensor("input");
 
         // Compile NOT with temperature=2
-        let result_idx = compile_not_with_strategy(input_idx, &mut ctx, &mut graph).unwrap();
+        let result_idx =
+            compile_not_with_strategy(input_idx, &mut ctx, &mut graph).expect("unwrap");
 
         assert!(result_idx > input_idx);
         // Should create: multiply (temp) -> negate -> sigmoid
@@ -258,7 +272,8 @@ mod tests {
 
         let input_idx = graph.add_tensor("input");
 
-        let result_idx = compile_not_with_strategy(input_idx, &mut ctx, &mut graph).unwrap();
+        let result_idx =
+            compile_not_with_strategy(input_idx, &mut ctx, &mut graph).expect("unwrap");
 
         assert!(result_idx > input_idx);
         assert_eq!(graph.nodes.len(), 3);
@@ -278,7 +293,8 @@ mod tests {
 
         let input_idx = graph.add_tensor("input");
 
-        let result_idx = compile_not_with_strategy(input_idx, &mut ctx, &mut graph).unwrap();
+        let result_idx =
+            compile_not_with_strategy(input_idx, &mut ctx, &mut graph).expect("unwrap");
 
         assert!(result_idx > input_idx);
         assert_eq!(graph.nodes.len(), 1); // Just one_minus
@@ -301,7 +317,7 @@ mod tests {
         let right_idx = graph.add_tensor("right");
 
         let result_idx =
-            compile_and_with_strategy(left_idx, right_idx, &mut ctx, &mut graph).unwrap();
+            compile_and_with_strategy(left_idx, right_idx, &mut ctx, &mut graph).expect("unwrap");
 
         assert!(result_idx > right_idx);
         assert_eq!(graph.nodes.len(), 1);
@@ -324,7 +340,7 @@ mod tests {
         let right_idx = graph.add_tensor("right");
 
         let result_idx =
-            compile_and_with_strategy(left_idx, right_idx, &mut ctx, &mut graph).unwrap();
+            compile_and_with_strategy(left_idx, right_idx, &mut ctx, &mut graph).expect("unwrap");
 
         assert!(result_idx > right_idx);
         assert_eq!(graph.nodes.len(), 1);
@@ -344,7 +360,7 @@ mod tests {
         let right_idx = graph.add_tensor("right");
 
         let result_idx =
-            compile_and_with_strategy(left_idx, right_idx, &mut ctx, &mut graph).unwrap();
+            compile_and_with_strategy(left_idx, right_idx, &mut ctx, &mut graph).expect("unwrap");
 
         assert!(result_idx > right_idx);
         // add + subtract + relu = 3 operations
@@ -365,7 +381,7 @@ mod tests {
         let right_idx = graph.add_tensor("right");
 
         let result_idx =
-            compile_or_with_strategy(left_idx, right_idx, &mut ctx, &mut graph).unwrap();
+            compile_or_with_strategy(left_idx, right_idx, &mut ctx, &mut graph).expect("unwrap");
 
         assert!(result_idx > right_idx);
         assert_eq!(graph.nodes.len(), 1);
@@ -385,7 +401,7 @@ mod tests {
         let right_idx = graph.add_tensor("right");
 
         let result_idx =
-            compile_or_with_strategy(left_idx, right_idx, &mut ctx, &mut graph).unwrap();
+            compile_or_with_strategy(left_idx, right_idx, &mut ctx, &mut graph).expect("unwrap");
 
         assert!(result_idx > right_idx);
         // add + min = 2 operations

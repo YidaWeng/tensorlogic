@@ -19,19 +19,19 @@
 //!
 //! // Build a sparse kernel matrix with parallel computation
 //! let builder = SparseKernelMatrixBuilder::new()
-//!     .with_threshold(0.1).unwrap()
-//!     .with_max_entries_per_row(100).unwrap();
+//!     .with_threshold(0.1).expect("unwrap")
+//!     .with_max_entries_per_row(100).expect("unwrap");
 //!
 //! let kernel = LinearKernel::new();
 //! let data = vec![vec![1.0, 0.0], vec![0.0, 1.0]];
-//! let matrix = builder.build_parallel(&data, &kernel).unwrap();
+//! let matrix = builder.build_parallel(&data, &kernel).expect("unwrap");
 //!
 //! // Sparse matrix-vector multiplication
 //! let mut matrix = SparseKernelMatrix::new(3);
 //! matrix.set(0, 0, 2.0);
 //! matrix.set(1, 1, 3.0);
 //! let x = vec![1.0, 2.0, 0.0];
-//! let y = matrix.spmv(&x).unwrap();
+//! let y = matrix.spmv(&x).expect("unwrap");
 //!
 //! // Iterate over non-zero entries
 //! for (row, col, value) in matrix.iter_nonzeros() {
@@ -312,7 +312,11 @@ impl SparseKernelMatrixBuilder {
             if let Some(max_entries) = self.max_entries_per_row {
                 if row_entries.len() > max_entries {
                     // Sort by absolute value (descending)
-                    row_entries.sort_by(|(_, a), (_, b)| b.abs().partial_cmp(&a.abs()).unwrap());
+                    row_entries.sort_by(|(_, a), (_, b)| {
+                        b.abs()
+                            .partial_cmp(&a.abs())
+                            .unwrap_or(std::cmp::Ordering::Equal)
+                    });
                     row_entries.truncate(max_entries);
                 }
             }
@@ -538,8 +542,11 @@ impl SparseKernelMatrixBuilder {
                 // If max_entries_per_row is set, keep only top-k entries
                 if let Some(max_entries) = self.max_entries_per_row {
                     if row_entries.len() > max_entries {
-                        row_entries
-                            .sort_by(|(_, a), (_, b)| b.abs().partial_cmp(&a.abs()).unwrap());
+                        row_entries.sort_by(|(_, a), (_, b)| {
+                            b.abs()
+                                .partial_cmp(&a.abs())
+                                .unwrap_or(std::cmp::Ordering::Equal)
+                        });
                         row_entries.truncate(max_entries);
                     }
                 }
@@ -635,7 +642,7 @@ mod tests {
         let data = vec![vec![1.0, 0.0], vec![0.0, 1.0], vec![0.5, 0.5]];
 
         let mut matrix =
-            SparseKernelMatrix::from_kernel_with_threshold(&data, &kernel, 0.1).unwrap();
+            SparseKernelMatrix::from_kernel_with_threshold(&data, &kernel, 0.1).expect("unwrap");
 
         assert!(matrix.nnz() > 0);
         let dense = matrix.to_dense();
@@ -648,7 +655,7 @@ mod tests {
         matrix.set(0, 1, 0.8);
         matrix.set(0, 2, 0.6);
 
-        let row = matrix.row(0).unwrap();
+        let row = matrix.row(0).expect("unwrap");
         assert_eq!(row.len(), 2);
         assert!(row.contains(&(1, 0.8)));
         assert!(row.contains(&(2, 0.6)));
@@ -660,7 +667,7 @@ mod tests {
         let kernel = LinearKernel::new();
         let data = vec![vec![1.0, 0.0], vec![0.0, 1.0]];
 
-        let matrix = builder.build(&data, &kernel).unwrap();
+        let matrix = builder.build(&data, &kernel).expect("unwrap");
         assert!(matrix.nnz() > 0);
     }
 
@@ -668,11 +675,11 @@ mod tests {
     fn test_sparse_matrix_builder_with_threshold() {
         let builder = SparseKernelMatrixBuilder::new()
             .with_threshold(0.5)
-            .unwrap();
+            .expect("unwrap");
         let kernel = LinearKernel::new();
         let data = vec![vec![1.0, 0.0], vec![0.0, 1.0]];
 
-        let matrix = builder.build(&data, &kernel).unwrap();
+        let matrix = builder.build(&data, &kernel).expect("unwrap");
         assert!(matrix.nnz() > 0);
     }
 
@@ -686,15 +693,15 @@ mod tests {
     fn test_sparse_matrix_builder_max_entries() {
         let builder = SparseKernelMatrixBuilder::new()
             .with_max_entries_per_row(2)
-            .unwrap();
+            .expect("unwrap");
         let kernel = LinearKernel::new();
         let data = vec![vec![1.0, 0.0], vec![0.0, 1.0], vec![0.5, 0.5]];
 
-        let matrix = builder.build(&data, &kernel).unwrap();
+        let matrix = builder.build(&data, &kernel).expect("unwrap");
         // Each row should have at most 2 entries
         for i in 0..matrix.size() {
             let mut temp_matrix = matrix.clone();
-            let row = temp_matrix.row(i).unwrap();
+            let row = temp_matrix.row(i).expect("unwrap");
             assert!(row.len() <= 2);
         }
     }
@@ -725,7 +732,7 @@ mod tests {
         matrix.set(2, 2, 2.0);
 
         let x = vec![1.0, 2.0, 3.0];
-        let y = matrix.spmv(&x).unwrap();
+        let y = matrix.spmv(&x).expect("unwrap");
 
         assert_eq!(y.len(), 3);
         assert!((y[0] - 5.0).abs() < 1e-10); // 2*1 + 1*3
@@ -751,7 +758,7 @@ mod tests {
         matrix.set(2, 0, 0.4);
         matrix.finalize();
 
-        let transposed = matrix.transpose().unwrap();
+        let transposed = matrix.transpose().expect("unwrap");
 
         assert_eq!(transposed.get(1, 0), Some(0.8));
         assert_eq!(transposed.get(2, 1), Some(0.6));
@@ -770,7 +777,7 @@ mod tests {
         matrix2.set(1, 2, 4.0);
         matrix2.set(2, 2, 5.0);
 
-        let result = matrix1.add(&matrix2).unwrap();
+        let result = matrix1.add(&matrix2).expect("unwrap");
 
         assert_eq!(result.get(0, 0), Some(1.0));
         assert_eq!(result.get(0, 1), Some(3.0)); // 2.0 + 1.0
@@ -834,11 +841,11 @@ mod tests {
         let kernel = LinearKernel::new();
         let data = vec![vec![1.0, 0.0], vec![0.0, 1.0], vec![0.5, 0.5]];
 
-        let matrix = builder.build_parallel(&data, &kernel).unwrap();
+        let matrix = builder.build_parallel(&data, &kernel).expect("unwrap");
         assert!(matrix.nnz() > 0);
 
         // Compare with sequential build
-        let matrix_seq = builder.build(&data, &kernel).unwrap();
+        let matrix_seq = builder.build(&data, &kernel).expect("unwrap");
         assert_eq!(matrix.nnz(), matrix_seq.nnz());
     }
 
@@ -846,11 +853,11 @@ mod tests {
     fn test_sparse_matrix_parallel_with_threshold() {
         let builder = SparseKernelMatrixBuilder::new()
             .with_threshold(0.5)
-            .unwrap();
+            .expect("unwrap");
         let kernel = LinearKernel::new();
         let data = vec![vec![1.0, 0.0], vec![0.0, 1.0], vec![0.5, 0.5]];
 
-        let matrix = builder.build_parallel(&data, &kernel).unwrap();
+        let matrix = builder.build_parallel(&data, &kernel).expect("unwrap");
         assert!(matrix.nnz() > 0);
     }
 }

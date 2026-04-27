@@ -249,11 +249,11 @@ mod tests {
         };
 
         // Should not log on epoch 0
-        callback.on_epoch_end(0, &state).unwrap();
+        callback.on_epoch_end(0, &state).expect("unwrap");
         assert_eq!(callback.history.len(), 0);
 
         // Should log on epoch 1 (frequency=2, so every 2 epochs)
-        callback.on_epoch_end(1, &state).unwrap();
+        callback.on_epoch_end(1, &state).expect("unwrap");
         assert_eq!(callback.history.len(), 1);
     }
 }

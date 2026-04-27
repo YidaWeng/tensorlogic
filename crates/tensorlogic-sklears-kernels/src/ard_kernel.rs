@@ -19,11 +19,11 @@
 //!
 //! // Create ARD RBF kernel with 3 features, each with its own length scale
 //! let length_scales = vec![1.0, 2.0, 0.5]; // Different relevance per dimension
-//! let kernel = ArdRbfKernel::new(length_scales.clone()).unwrap();
+//! let kernel = ArdRbfKernel::new(length_scales.clone()).expect("unwrap");
 //!
 //! let x = vec![1.0, 2.0, 3.0];
 //! let y = vec![1.5, 2.5, 3.5];
-//! let sim = kernel.compute(&x, &y).unwrap();
+//! let sim = kernel.compute(&x, &y).expect("unwrap");
 //! ```
 
 use crate::error::{KernelError, Result};
@@ -53,7 +53,7 @@ impl ArdRbfKernel {
     /// ```rust
     /// use tensorlogic_sklears_kernels::ard_kernel::ArdRbfKernel;
     ///
-    /// let kernel = ArdRbfKernel::new(vec![1.0, 2.0, 0.5]).unwrap();
+    /// let kernel = ArdRbfKernel::new(vec![1.0, 2.0, 0.5]).expect("unwrap");
     /// ```
     pub fn new(length_scales: Vec<f64>) -> Result<Self> {
         Self::with_variance(length_scales, 1.0)
@@ -696,7 +696,7 @@ mod tests {
 
     #[test]
     fn test_ard_rbf_kernel_basic() {
-        let kernel = ArdRbfKernel::new(vec![1.0, 1.0, 1.0]).unwrap();
+        let kernel = ArdRbfKernel::new(vec![1.0, 1.0, 1.0]).expect("unwrap");
         assert_eq!(kernel.name(), "ARD-RBF");
         assert_eq!(kernel.ndim(), 3);
 
@@ -704,21 +704,21 @@ mod tests {
         let y = vec![1.0, 2.0, 3.0];
 
         // Self-similarity should be variance (1.0)
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!((sim - 1.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_ard_rbf_kernel_different_length_scales() {
         // High length scale in dimension 0 makes that dimension less important
-        let kernel = ArdRbfKernel::new(vec![10.0, 1.0, 1.0]).unwrap();
+        let kernel = ArdRbfKernel::new(vec![10.0, 1.0, 1.0]).expect("unwrap");
 
         let x = vec![0.0, 0.0, 0.0];
         let y1 = vec![1.0, 0.0, 0.0]; // Difference in dim 0 (large length scale)
         let y2 = vec![0.0, 1.0, 0.0]; // Difference in dim 1 (small length scale)
 
-        let sim1 = kernel.compute(&x, &y1).unwrap();
-        let sim2 = kernel.compute(&x, &y2).unwrap();
+        let sim1 = kernel.compute(&x, &y1).expect("unwrap");
+        let sim2 = kernel.compute(&x, &y2).expect("unwrap");
 
         // y1 should be MORE similar because dim 0 has large length scale (less relevant)
         assert!(sim1 > sim2);
@@ -726,24 +726,24 @@ mod tests {
 
     #[test]
     fn test_ard_rbf_kernel_with_variance() {
-        let kernel = ArdRbfKernel::with_variance(vec![1.0, 1.0], 2.0).unwrap();
+        let kernel = ArdRbfKernel::with_variance(vec![1.0, 1.0], 2.0).expect("unwrap");
         assert!((kernel.variance() - 2.0).abs() < 1e-10);
 
         let x = vec![0.0, 0.0];
-        let sim = kernel.compute(&x, &x).unwrap();
+        let sim = kernel.compute(&x, &x).expect("unwrap");
         assert!((sim - 2.0).abs() < 1e-10); // Self-similarity = variance
     }
 
     #[test]
     fn test_ard_rbf_kernel_gradient() {
-        let kernel = ArdRbfKernel::new(vec![1.0, 2.0]).unwrap();
+        let kernel = ArdRbfKernel::new(vec![1.0, 2.0]).expect("unwrap");
         let x = vec![0.0, 0.0];
         let y = vec![1.0, 1.0];
 
-        let grad = kernel.compute_gradient(&x, &y).unwrap();
+        let grad = kernel.compute_gradient(&x, &y).expect("unwrap");
 
         // Check that value matches compute
-        let value = kernel.compute(&x, &y).unwrap();
+        let value = kernel.compute(&x, &y).expect("unwrap");
         assert!((grad.value - value).abs() < 1e-10);
 
         // Gradients should have correct dimensions
@@ -770,7 +770,7 @@ mod tests {
 
     #[test]
     fn test_ard_rbf_kernel_dimension_mismatch() {
-        let kernel = ArdRbfKernel::new(vec![1.0, 1.0]).unwrap();
+        let kernel = ArdRbfKernel::new(vec![1.0, 1.0]).expect("unwrap");
         let x = vec![1.0, 2.0, 3.0]; // 3 dims
         let y = vec![1.0, 2.0]; // 2 dims
 
@@ -779,12 +779,12 @@ mod tests {
 
     #[test]
     fn test_ard_rbf_kernel_symmetry() {
-        let kernel = ArdRbfKernel::new(vec![1.0, 2.0, 0.5]).unwrap();
+        let kernel = ArdRbfKernel::new(vec![1.0, 2.0, 0.5]).expect("unwrap");
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        let k_xy = kernel.compute(&x, &y).unwrap();
-        let k_yx = kernel.compute(&y, &x).unwrap();
+        let k_xy = kernel.compute(&x, &y).expect("unwrap");
+        let k_yx = kernel.compute(&y, &x).expect("unwrap");
         assert!((k_xy - k_yx).abs() < 1e-10);
     }
 
@@ -792,29 +792,29 @@ mod tests {
 
     #[test]
     fn test_ard_matern_kernel_nu_3_2() {
-        let kernel = ArdMaternKernel::nu_3_2(vec![1.0, 1.0]).unwrap();
+        let kernel = ArdMaternKernel::nu_3_2(vec![1.0, 1.0]).expect("unwrap");
         assert_eq!(kernel.name(), "ARD-Matérn");
         assert!((kernel.nu() - 1.5).abs() < 1e-10);
 
         let x = vec![0.0, 0.0];
-        let sim = kernel.compute(&x, &x).unwrap();
+        let sim = kernel.compute(&x, &x).expect("unwrap");
         assert!((sim - 1.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_ard_matern_kernel_nu_5_2() {
-        let kernel = ArdMaternKernel::nu_5_2(vec![1.0, 2.0]).unwrap();
+        let kernel = ArdMaternKernel::nu_5_2(vec![1.0, 2.0]).expect("unwrap");
         assert!((kernel.nu() - 2.5).abs() < 1e-10);
 
         let x = vec![0.0, 0.0];
         let y = vec![0.5, 0.5];
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!(sim > 0.0 && sim < 1.0);
     }
 
     #[test]
     fn test_ard_matern_kernel_exponential() {
-        let kernel = ArdMaternKernel::exponential(vec![1.0]).unwrap();
+        let kernel = ArdMaternKernel::exponential(vec![1.0]).expect("unwrap");
         assert!((kernel.nu() - 0.5).abs() < 1e-10);
     }
 
@@ -827,14 +827,14 @@ mod tests {
 
     #[test]
     fn test_ard_matern_kernel_different_length_scales() {
-        let kernel = ArdMaternKernel::nu_3_2(vec![10.0, 1.0]).unwrap();
+        let kernel = ArdMaternKernel::nu_3_2(vec![10.0, 1.0]).expect("unwrap");
 
         let x = vec![0.0, 0.0];
         let y1 = vec![1.0, 0.0];
         let y2 = vec![0.0, 1.0];
 
-        let sim1 = kernel.compute(&x, &y1).unwrap();
-        let sim2 = kernel.compute(&x, &y2).unwrap();
+        let sim1 = kernel.compute(&x, &y1).expect("unwrap");
+        let sim2 = kernel.compute(&x, &y2).expect("unwrap");
 
         // Larger length scale in dim 0 makes it less relevant
         assert!(sim1 > sim2);
@@ -844,21 +844,22 @@ mod tests {
 
     #[test]
     fn test_ard_rq_kernel_basic() {
-        let kernel = ArdRationalQuadraticKernel::new(vec![1.0, 1.0], 2.0).unwrap();
+        let kernel = ArdRationalQuadraticKernel::new(vec![1.0, 1.0], 2.0).expect("unwrap");
         assert_eq!(kernel.name(), "ARD-RationalQuadratic");
 
         let x = vec![0.0, 0.0];
-        let sim = kernel.compute(&x, &x).unwrap();
+        let sim = kernel.compute(&x, &x).expect("unwrap");
         assert!((sim - 1.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_ard_rq_kernel_with_variance() {
-        let kernel = ArdRationalQuadraticKernel::with_variance(vec![1.0], 2.0, 3.0).unwrap();
+        let kernel =
+            ArdRationalQuadraticKernel::with_variance(vec![1.0], 2.0, 3.0).expect("unwrap");
         assert!((kernel.variance() - 3.0).abs() < 1e-10);
 
         let x = vec![0.0];
-        let sim = kernel.compute(&x, &x).unwrap();
+        let sim = kernel.compute(&x, &x).expect("unwrap");
         assert!((sim - 3.0).abs() < 1e-10);
     }
 
@@ -866,21 +867,21 @@ mod tests {
 
     #[test]
     fn test_white_noise_kernel_same_point() {
-        let kernel = WhiteNoiseKernel::new(0.1).unwrap();
+        let kernel = WhiteNoiseKernel::new(0.1).expect("unwrap");
         assert_eq!(kernel.name(), "WhiteNoise");
 
         let x = vec![1.0, 2.0, 3.0];
-        let sim = kernel.compute(&x, &x).unwrap();
+        let sim = kernel.compute(&x, &x).expect("unwrap");
         assert!((sim - 0.1).abs() < 1e-10);
     }
 
     #[test]
     fn test_white_noise_kernel_different_points() {
-        let kernel = WhiteNoiseKernel::new(0.1).unwrap();
+        let kernel = WhiteNoiseKernel::new(0.1).expect("unwrap");
 
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![1.0, 2.0, 3.1]; // Slightly different
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!(sim.abs() < 1e-10); // Should be 0
     }
 
@@ -897,13 +898,13 @@ mod tests {
 
     #[test]
     fn test_constant_kernel() {
-        let kernel = ConstantKernel::new(2.5).unwrap();
+        let kernel = ConstantKernel::new(2.5).expect("unwrap");
         assert_eq!(kernel.name(), "Constant");
 
         let x = vec![1.0, 2.0];
         let y = vec![3.0, 4.0];
 
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!((sim - 2.5).abs() < 1e-10);
     }
 
@@ -924,31 +925,31 @@ mod tests {
         let y = vec![4.0, 5.0, 6.0];
 
         // dot = 1*4 + 2*5 + 3*6 = 32
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!((sim - 32.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_dot_product_kernel_with_bias() {
-        let kernel = DotProductKernel::new(1.0, 5.0).unwrap();
+        let kernel = DotProductKernel::new(1.0, 5.0).expect("unwrap");
 
         let x = vec![1.0, 0.0];
         let y = vec![0.0, 1.0]; // Orthogonal
 
         // dot = 0, result = bias + variance * dot = 5 + 0 = 5
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!((sim - 5.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_dot_product_kernel_with_variance() {
-        let kernel = DotProductKernel::new(2.0, 0.0).unwrap();
+        let kernel = DotProductKernel::new(2.0, 0.0).expect("unwrap");
 
         let x = vec![1.0, 2.0];
         let y = vec![3.0, 4.0];
 
         // dot = 11, result = 2 * 11 = 22
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!((sim - 22.0).abs() < 1e-10);
     }
 
@@ -959,14 +960,14 @@ mod tests {
         use crate::tensor_kernels::LinearKernel;
 
         let base = LinearKernel::new();
-        let scaled = ScaledKernel::new(base, 2.0).unwrap();
+        let scaled = ScaledKernel::new(base, 2.0).expect("unwrap");
         assert_eq!(scaled.name(), "Scaled");
 
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
         // Linear: dot = 32, scaled: 2 * 32 = 64
-        let sim = scaled.compute(&x, &y).unwrap();
+        let sim = scaled.compute(&x, &y).expect("unwrap");
         assert!((sim - 64.0).abs() < 1e-10);
     }
 
@@ -984,7 +985,7 @@ mod tests {
         use crate::tensor_kernels::LinearKernel;
 
         let base = LinearKernel::new();
-        let scaled = ScaledKernel::new(base, 2.0).unwrap();
+        let scaled = ScaledKernel::new(base, 2.0).expect("unwrap");
         assert!(scaled.is_psd());
     }
 
@@ -993,17 +994,17 @@ mod tests {
     #[test]
     fn test_ard_kernels_symmetry() {
         let kernels: Vec<Box<dyn Kernel>> = vec![
-            Box::new(ArdRbfKernel::new(vec![1.0, 2.0]).unwrap()),
-            Box::new(ArdMaternKernel::nu_3_2(vec![1.0, 2.0]).unwrap()),
-            Box::new(ArdRationalQuadraticKernel::new(vec![1.0, 2.0], 2.0).unwrap()),
+            Box::new(ArdRbfKernel::new(vec![1.0, 2.0]).expect("unwrap")),
+            Box::new(ArdMaternKernel::nu_3_2(vec![1.0, 2.0]).expect("unwrap")),
+            Box::new(ArdRationalQuadraticKernel::new(vec![1.0, 2.0], 2.0).expect("unwrap")),
         ];
 
         let x = vec![1.0, 2.0];
         let y = vec![3.0, 4.0];
 
         for kernel in kernels {
-            let k_xy = kernel.compute(&x, &y).unwrap();
-            let k_yx = kernel.compute(&y, &x).unwrap();
+            let k_xy = kernel.compute(&x, &y).expect("unwrap");
+            let k_yx = kernel.compute(&y, &x).expect("unwrap");
             assert!(
                 (k_xy - k_yx).abs() < 1e-10,
                 "{} not symmetric",
@@ -1015,8 +1016,8 @@ mod tests {
     #[test]
     fn test_utility_kernels_symmetry() {
         let kernels: Vec<Box<dyn Kernel>> = vec![
-            Box::new(WhiteNoiseKernel::new(0.1).unwrap()),
-            Box::new(ConstantKernel::new(1.0).unwrap()),
+            Box::new(WhiteNoiseKernel::new(0.1).expect("unwrap")),
+            Box::new(ConstantKernel::new(1.0).expect("unwrap")),
             Box::new(DotProductKernel::simple()),
         ];
 
@@ -1024,8 +1025,8 @@ mod tests {
         let y = vec![4.0, 5.0, 6.0];
 
         for kernel in kernels {
-            let k_xy = kernel.compute(&x, &y).unwrap();
-            let k_yx = kernel.compute(&y, &x).unwrap();
+            let k_xy = kernel.compute(&x, &y).expect("unwrap");
+            let k_yx = kernel.compute(&y, &x).expect("unwrap");
             assert!(
                 (k_xy - k_yx).abs() < 1e-10,
                 "{} not symmetric",

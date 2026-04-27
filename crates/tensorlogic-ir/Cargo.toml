@@ -6,6 +6,7 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+documentation = "https://docs.rs/tensorlogic-ir"
 readme = "README.md"
 keywords = ["tensor", "logic", "compiler-ir", "type-system", "compiler"]
 categories = ["science", "algorithms", "mathematics"]

@@ -1,20 +1,9 @@
-# RC.1 Release Status
+# TensorLogic IR — TODO
 
-**Version**: 0.1.0-rc.1
-**Status**: Production Ready
-**Release Date**: 2026-03-06
+**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
-This crate is part of the TensorLogic v0.1.0-rc.1 release with:
-- Zero compiler warnings
-- 100% test pass rate
-- Complete documentation
-- Production-ready quality
-
-See main [TODO.md](../../TODO.md) for overall project status.
-
----
-
-# tensorlogic-ir TODO
+Intermediate representation, DSL types, and einsum graph for logical rules.
 
 ## Completed
 
@@ -95,7 +84,16 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Compiles to: cond * then + (1-cond) * else
 - [x] Numeric constants
   - [x] Constant(f64) variant for scalar literals
-  - [ ] Pattern matching (deferred)
+  - [x] `ir-pattern-matching-deferred` (planned 2026-04-17)
+    - **Goal:** Add pattern matching to the IR — `Pattern` enum + `TLExpr::Match { scrutinee, arms }` — and lower to nested `IfThenElse` in the compiler. Scope locked to design (A) minimal: `Pattern::ConstSymbol(String) | ConstNumber(f64) | Wildcard`. Last arm MUST be `Wildcard` (validation enforced). Variable-binding patterns and the alpha-rename fix are out of scope this run — design (A) has no binders.
+    - **Design:** New module `src/pattern.rs`: `pub enum Pattern { ConstSymbol(String), ConstNumber(f64), Wildcard }` + Display + serde shim. `TLExpr::Match { scrutinee: Box<TLExpr>, arms: Vec<(Pattern, Box<TLExpr>)> }` added to `src/expr/mod.rs`. Validation rule: `arms.last().0 == Pattern::Wildcard` else `ValidationError::NonExhaustivePatternMatch`. Lowering in `tensorlogic-compiler/src/compile/pattern_match.rs` (NEW): translate Match into nested IfThenElse using compile_if_then_else as template; each arm condition is Eq(scrutinee, pattern_constant); wildcard arm is final else. Sequencing — stub-all-then-implement: add Match arm returning UnsupportedExpr/Unknown in every exhaustive match site first, keep compilation green, then add real lowering/display/serde/analysis.
+    - **Files:** IR (~14): `src/expr/mod.rs`, `src/expr/analysis.rs`, `src/expr/validation.rs`, `src/expr/optimization/substitution.rs`, `src/expr_serialize/binary.rs` (TAG_75=Match, TAG_76=Pattern), `src/expr_serialize/sexpr.rs`, `src/expr_serialize/mod.rs`, `src/display.rs`, `src/pretty_print.rs`, `src/diff.rs`, `src/pattern.rs` (NEW), `src/lib.rs`. Compiler (~14): `src/compile/mod.rs`, `src/compile/pattern_match.rs` (NEW), `src/bytecode.rs`, `src/type_infer.rs`, `src/const_prop.rs`, `src/expr_diff.rs`, `src/complexity.rs`, `src/inline/substitute.rs`.
+    - **Prerequisites:** none. Substitution alpha-rename gap is a separate future plan item (irrelevant for design (A) which has no binders).
+    - **Tests:** `crates/tensorlogic-ir/tests/pattern_smoke.rs` (NEW): construct Match, validate exhaustiveness, round-trip binary serde, round-trip s-expression serde, display + pretty-print snapshots. `crates/tensorlogic-compiler/tests/pattern_lowering.rs` (NEW): Symbol equality, Number equality, wildcard fallback, three-arm cascade.
+    - **Risk:** ~28-file cascade is tedious — mitigation: stub-all-then-implement keeps every intermediate state compilable.
+  - **Refinement (2026-04-17):** Audit confirms implementation is complete across all sites. Only the two integration test files remain. No production-code changes needed.
+    - Create `crates/tensorlogic-ir/tests/pattern_smoke.rs`: construct `match_expr` instances, assert validation rejects no-arms and non-Wildcard tail, binary serde round-trip, s-expr serde round-trip, Display + pretty_print golden strings.
+    - Create `crates/tensorlogic-compiler/tests/pattern_lowering.rs`: compile and execute several scrutinee/arm combinations (ConstSymbol + Wildcard, multi-arm Symbol cascade, ConstNumber + Wildcard, three-arm cascade), assert returned `VmValue` matches correct arm. Test wildcard fallthrough. Test binary serde round-trip of the lowered IR.
 - [x] Aggregations - INFRASTRUCTURE READY (temporarily disabled)
   - [x] AggregateOp enum (Count, Sum, Average, Max, Min, Product, Any, All)
   - [x] Aggregate variant with group-by support
@@ -343,7 +341,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [x] Area computation with trapezoidal rule
 - [x] 14 comprehensive tests for defuzzification
 
-## Effect System - PRODUCTION READY (v0.1.0-rc.1)
+## Effect System - PRODUCTION READY (v0.1.0)
 - [x] Effect types (Computational, Memory, Probabilistic, Differentiable, etc.)
 - [x] EffectSet for tracking multiple effects
 - [x] Effect combination (union, intersection, subset checking)
@@ -355,7 +353,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [x] 19 comprehensive tests for effect system
 - [x] Complete example (08_effect_system.rs)
 
-## Parametric Types System - PRODUCTION READY (v0.1.0-rc.1)
+## Parametric Types System - PRODUCTION READY (v0.1.0)
 - [x] Kind system for type constructors (*, * -> *, * -> * -> *)
 - [x] Type constructors (List, Option, Tuple, Function, Array, Set, Map, Custom)
 - [x] Parametric types with type variables and type application
@@ -369,20 +367,20 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [x] 7 integration tests with PredicateSignature
 - [x] Complete example (07_parametric_types.rs)
 
-## Advanced Types - ALL COMPLETE (v0.1.0-rc.1)
+## Advanced Types - ALL COMPLETE (v0.1.0)
 - [x] Parametric types (List<T>)
 - [x] Effect system
 - [x] Dependent types (Vec<n, T> where n is runtime)
 - [x] Linear types (multiplicity tracking, resource capabilities)
 - [x] Refinement types (logical predicates, liquid type inference)
 
-## Advanced Operators - ALL COMPLETE (v0.1.0-rc.1)
+## Advanced Operators - ALL COMPLETE (v0.1.0)
 - [x] Probabilistic operators with bounds propagation
 - [x] Fuzzy logic operators with defuzzification
 - [x] Extended temporal logic (LTL/CTL properties, classification, model checking utilities)
 - [x] Modal logic axiom systems (K, T, S4, S5, D, B with verification)
 
-## Optimization - ALL COMPLETE (v0.1.0-rc.1)
+## Optimization - ALL COMPLETE (v0.1.0)
 - [x] Distributive law transformations
 - [x] Cost model annotations
 - [x] Automatic optimization pass ordering
@@ -390,10 +388,10 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [x] Advanced algebraic rewriting with term rewriting systems
 - [x] Profile-guided optimization (PGO) based on runtime metrics
 
-## Testing & Quality - COMPLETE (v0.1.0-rc.1)
+## Testing & Quality - COMPLETE (v0.1.0)
 - [x] Fuzzing with property-based testing (fuzzing.rs module with 7 comprehensive tests)
 
-## RC.1 Release - New Features (v0.1.0-rc.1, 2026-03-06)
+## 0.1.0 Release - New Features (v0.1.0, 2026-03-06)
 
 ### Advanced Type Systems
 
@@ -486,11 +484,12 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - Graph isomorphism detection
 - Examples: 15_advanced_graph_algorithms.rs
 
-### Status (v0.1.0-rc.1, 2026-03-06)
+### Status (v0.1.0, 2026-04-06)
 - All modules compile without warnings
-- **676 tests** passing (up from 535, +141 new tests)
+- **806 tests** passing (806 passing, 1 skipped)
 - **7 new examples** added (13-16 for theorem proving, plus enhancements)
 - **4 major new modules**: unification, resolution, sequent, enhanced CLP
+- **S-expression serialization** module (expr_serialize): to_sexpr/from_sexpr/to_binary/from_binary, expr_fingerprint, BatchStats
 - Full API documentation with examples
 - Integrated into lib.rs exports
 - Zero compiler/clippy warnings
@@ -526,6 +525,24 @@ See main [TODO.md](../../TODO.md) for overall project status.
 **Infrastructure Ready:**
 - Aggregation operations (temporarily disabled pending compiler integration)
 - Graph Transformation (Visitor patterns, subgraph extraction, merging - module disabled)
-**Test Coverage:** 676 tests total (676 passing)
-  - 632 unit tests (including comprehensive theorem proving tests)
+**Test Coverage:** 806 tests total (806 passing, 1 skipped)
+  - 762 unit tests (including comprehensive theorem proving and S-expression serialization tests)
   - 44 property tests (43 passing, 1 ignored)
+
+## v0.1.14 (2026-04-06)
+
+- [x] **to_sexpr** (`expr_serialize/`): Convert any `TLExpr` to a human-readable S-expression string covering all variants including modal, temporal, fuzzy, set, and counting operators
+- [x] **from_sexpr** (`expr_serialize/`): Parse S-expression strings back into `TLExpr` with full round-trip fidelity for all supported expression types
+- [x] **to_binary** (`expr_serialize/`): Compact tag-based binary encoding of `TLExpr` trees for efficient storage and network transfer
+- [x] **from_binary** (`expr_serialize/`): Deserialize binary-encoded expressions back into `TLExpr` with validation
+- [x] **graph_to_binary** (`expr_serialize/`): Serialize a full `EinsumGraph` (nodes, edges, metadata) into a single binary blob
+- [x] **expr_fingerprint** (`expr_serialize/`): SHA-256 structural hash of an expression tree for deduplication and caching
+- [x] **Batch serialization** (`expr_serialize/`): `BatchStats` computing sexpr/binary byte sizes, compression ratio, node count, and max depth for expression batches
+
+## v0.2.0 / Future Work
+
+- Advanced type refinement / dependent-type annotations.
+- DSL macro sugar for common rule patterns.
+- Graph diffing for incremental re-compilation.
+- First-class soft constraints (weighted rules).
+- [x] ~~Split `src/resolution.rs` (1,712 L) into a `resolution/` directory.~~ (completed 2026-04-15)

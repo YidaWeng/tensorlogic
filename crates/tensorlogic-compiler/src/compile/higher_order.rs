@@ -356,8 +356,8 @@ mod tests {
         // λx:Node. P(x)
         let body = TLExpr::pred("P", vec![Term::var("x")]);
 
-        let result =
-            compile_lambda("x", &Some("Node".to_string()), &body, &mut ctx, &mut graph).unwrap();
+        let result = compile_lambda("x", &Some("Node".to_string()), &body, &mut ctx, &mut graph)
+            .expect("unwrap");
 
         // Should have compiled the body with x bound
         assert!(!graph.tensors.is_empty());
@@ -376,7 +376,7 @@ mod tests {
         let lambda = TLExpr::lambda("x", Some("Node".to_string()), lambda_body);
         let argument = TLExpr::pred("a", vec![]);
 
-        let _result = compile_apply(&lambda, &argument, &mut ctx, &mut graph).unwrap();
+        let _result = compile_apply(&lambda, &argument, &mut ctx, &mut graph).expect("unwrap");
 
         // Should have reduced and compiled P(a)
         assert!(!graph.tensors.is_empty());
@@ -395,9 +395,9 @@ mod tests {
         let argument = TLExpr::pred("source", vec![]);
 
         // y should remain as a free variable
-        ctx.bind_var("y", "Node").unwrap();
+        ctx.bind_var("y", "Node").expect("unwrap");
 
-        let _result = compile_apply(&lambda, &argument, &mut ctx, &mut graph).unwrap();
+        let _result = compile_apply(&lambda, &argument, &mut ctx, &mut graph).expect("unwrap");
 
         // Should have successfully compiled with y still free
         assert!(!graph.tensors.is_empty());
@@ -427,7 +427,7 @@ mod tests {
         let function = TLExpr::pred("P", vec![]);
         let argument = TLExpr::pred("x", vec![]);
 
-        let _result = compile_apply(&function, &argument, &mut ctx, &mut graph).unwrap();
+        let _result = compile_apply(&function, &argument, &mut ctx, &mut graph).expect("unwrap");
 
         // Should compile both and combine them
         assert!(!graph.tensors.is_empty());
@@ -456,7 +456,7 @@ mod tests {
         // Second application
         let second_app = TLExpr::apply(first_app, arg_b);
 
-        let _result = compile_expr(&second_app, &mut ctx, &mut graph).unwrap();
+        let _result = compile_expr(&second_app, &mut ctx, &mut graph).expect("unwrap");
 
         // Should have successfully reduced to Connected(a, b)
         assert!(!graph.tensors.is_empty());

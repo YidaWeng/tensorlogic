@@ -215,10 +215,10 @@ mod tests {
         graph.add_variable("y".to_string(), "D2".to_string());
         graph
             .add_factor_from_predicate("P", &["x".to_string(), "y".to_string()])
-            .unwrap();
+            .expect("unwrap");
 
         let adjacent = graph.get_adjacent_factors("x");
         assert!(adjacent.is_some());
-        assert_eq!(adjacent.unwrap().len(), 1);
+        assert_eq!(adjacent.expect("unwrap").len(), 1);
     }
 }

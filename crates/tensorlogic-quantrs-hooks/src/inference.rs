@@ -163,7 +163,7 @@ mod tests {
         assert!(joint.is_ok());
 
         // Should be normalized
-        let sum: f64 = joint.unwrap().iter().sum();
+        let sum: f64 = joint.expect("unwrap").iter().sum();
         assert!((sum - 1.0).abs() < 1e-6);
     }
 
@@ -180,7 +180,7 @@ mod tests {
         assert!(joint.is_ok());
 
         // Should be normalized
-        let sum: f64 = joint.unwrap().iter().sum();
+        let sum: f64 = joint.expect("unwrap").iter().sum();
         assert!((sum - 1.0).abs() < 1e-6);
     }
 }

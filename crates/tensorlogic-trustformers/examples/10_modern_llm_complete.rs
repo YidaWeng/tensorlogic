@@ -282,7 +282,7 @@ fn build_component_graphs(config: &ModernLLMConfig) {
     // 1. GQA Configuration
     if config.n_kv_heads != config.n_heads {
         let gqa_config = GQAConfig::new(config.d_model, config.n_heads, config.n_kv_heads)
-            .unwrap()
+            .expect("valid GQA config parameters")
             .with_causal(true);
 
         let mut gqa_graph = EinsumGraph::new();
@@ -290,8 +290,11 @@ fn build_component_graphs(config: &ModernLLMConfig) {
         gqa_graph.add_tensor("K");
         gqa_graph.add_tensor("V");
 
-        let gqa = tensorlogic_trustformers::GroupedQueryAttention::new(gqa_config).unwrap();
-        let outputs = gqa.build_gqa_graph(&mut gqa_graph).unwrap();
+        let gqa = tensorlogic_trustformers::GroupedQueryAttention::new(gqa_config)
+            .expect("valid GQA config should construct attention");
+        let outputs = gqa
+            .build_gqa_graph(&mut gqa_graph)
+            .expect("GQA graph construction should succeed");
         println!(
             "  GQA graph: {} nodes, {} outputs",
             gqa_graph.node_count(),
@@ -302,7 +305,7 @@ fn build_component_graphs(config: &ModernLLMConfig) {
     // 2. Flash Attention
     if config.use_flash_attention {
         let flash_config = FlashAttentionConfig::new(config.d_model, config.n_heads)
-            .unwrap()
+            .expect("valid flash attention config parameters")
             .with_causal(true);
 
         let mut flash_graph = EinsumGraph::new();
@@ -310,8 +313,11 @@ fn build_component_graphs(config: &ModernLLMConfig) {
         flash_graph.add_tensor("K");
         flash_graph.add_tensor("V");
 
-        let flash = tensorlogic_trustformers::FlashAttention::new(flash_config).unwrap();
-        let outputs = flash.build_flash_graph(&mut flash_graph).unwrap();
+        let flash = tensorlogic_trustformers::FlashAttention::new(flash_config)
+            .expect("valid flash attention config should construct");
+        let outputs = flash
+            .build_flash_graph(&mut flash_graph)
+            .expect("flash attention graph construction should succeed");
         println!(
             "  Flash Attention graph: {} nodes, {} outputs",
             flash_graph.node_count(),
@@ -323,7 +329,7 @@ fn build_component_graphs(config: &ModernLLMConfig) {
     if config.use_sliding_window {
         let swa_config =
             SlidingWindowConfig::new(config.d_model, config.n_heads, config.window_size)
-                .unwrap()
+                .expect("valid sliding window config parameters")
                 .with_causal(true);
 
         let mut swa_graph = EinsumGraph::new();
@@ -331,8 +337,11 @@ fn build_component_graphs(config: &ModernLLMConfig) {
         swa_graph.add_tensor("K");
         swa_graph.add_tensor("V");
 
-        let swa = tensorlogic_trustformers::SlidingWindowAttention::new(swa_config).unwrap();
-        let outputs = swa.build_swa_graph(&mut swa_graph).unwrap();
+        let swa = tensorlogic_trustformers::SlidingWindowAttention::new(swa_config)
+            .expect("valid sliding window config should construct");
+        let outputs = swa
+            .build_swa_graph(&mut swa_graph)
+            .expect("sliding window graph construction should succeed");
         println!(
             "  Sliding Window graph: {} nodes, {} outputs",
             swa_graph.node_count(),
@@ -354,8 +363,10 @@ fn build_component_graphs(config: &ModernLLMConfig) {
             config.n_heads,
             lora_config,
         )
-        .unwrap();
-        let outputs = lora.build_lora_attention_graph(&mut lora_graph).unwrap();
+        .expect("valid LoRA config should construct attention");
+        let outputs = lora
+            .build_lora_attention_graph(&mut lora_graph)
+            .expect("LoRA attention graph construction should succeed");
         println!(
             "  LoRA Attention graph: {} nodes, {} outputs",
             lora_graph.node_count(),
@@ -366,13 +377,17 @@ fn build_component_graphs(config: &ModernLLMConfig) {
     // 5. MoE
     if config.use_moe {
         let moe_config =
-            MoeConfig::new(config.n_experts, config.d_model, config.d_ff, config.top_k).unwrap();
+            MoeConfig::new(config.n_experts, config.d_model, config.d_ff, config.top_k)
+                .expect("valid MoE config parameters");
 
         let mut moe_graph = EinsumGraph::new();
         moe_graph.add_tensor("x");
 
-        let moe = tensorlogic_trustformers::MoeLayer::new(moe_config).unwrap();
-        let outputs = moe.build_moe_graph(&mut moe_graph).unwrap();
+        let moe = tensorlogic_trustformers::MoeLayer::new(moe_config)
+            .expect("valid MoE config should construct layer");
+        let outputs = moe
+            .build_moe_graph(&mut moe_graph)
+            .expect("MoE graph construction should succeed");
         println!(
             "  MoE graph: {} nodes, {} outputs",
             moe_graph.node_count(),
@@ -388,8 +403,11 @@ fn build_component_graphs(config: &ModernLLMConfig) {
         rope_graph.add_tensor("x");
         rope_graph.add_tensor("freqs");
 
-        let rope = tensorlogic_trustformers::RotaryPositionEncoding::new(rope_config).unwrap();
-        let outputs = rope.build_encoding_graph(&mut rope_graph).unwrap();
+        let rope = tensorlogic_trustformers::RotaryPositionEncoding::new(rope_config)
+            .expect("valid RoPE config should construct encoding");
+        let outputs = rope
+            .build_encoding_graph(&mut rope_graph)
+            .expect("RoPE graph construction should succeed");
         println!(
             "  RoPE graph: {} nodes, {} outputs",
             rope_graph.node_count(),
@@ -433,7 +451,7 @@ fn main() {
         GQAPreset::Llama2_70B,
         GQAPreset::Mistral7B,
     ] {
-        let config = preset.config().unwrap();
+        let config = preset.config().expect("preset should produce valid config");
         println!(
             "  {:15} - {} heads, {} KV heads, ratio: {:.2}x",
             preset.name(),
@@ -449,7 +467,9 @@ fn main() {
         FlashAttentionPreset::Standard,
         FlashAttentionPreset::LargeBlocks,
     ] {
-        let config = preset.config(512, 8).unwrap();
+        let config = preset
+            .config(512, 8)
+            .expect("preset should produce valid config");
         println!(
             "  {:15} - {} blocks, d_model: {}",
             preset.name(),
@@ -464,7 +484,7 @@ fn main() {
         SlidingWindowPreset::LongformerBase,
         SlidingWindowPreset::BigBirdBase,
     ] {
-        let config = preset.config().unwrap();
+        let config = preset.config().expect("preset should produce valid config");
         println!(
             "  {:15} - window: {}, d_model: {}",
             preset.name(),
@@ -494,7 +514,9 @@ fn main() {
         MoePreset::Switch,
         MoePreset::ExpertChoice,
     ] {
-        let config = preset.config(4096, 14336).unwrap();
+        let config = preset
+            .config(4096, 14336)
+            .expect("preset should produce valid config");
         println!(
             "  {:15} - {} experts, top-{}",
             preset.name(),

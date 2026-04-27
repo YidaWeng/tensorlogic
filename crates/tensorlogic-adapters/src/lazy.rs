@@ -260,10 +260,13 @@ impl LazySymbolTable {
     pub fn get_domain(&self, name: &str) -> Result<Option<DomainInfo>> {
         // Check if already loaded
         {
-            let loaded_set = self.loaded_domains.read().unwrap();
+            let loaded_set = self
+                .loaded_domains
+                .read()
+                .expect("lock should not be poisoned");
             if loaded_set.contains(name) {
-                let table = self.loaded.read().unwrap();
-                let mut stats = self.stats.write().unwrap();
+                let table = self.loaded.read().expect("lock should not be poisoned");
+                let mut stats = self.stats.write().expect("lock should not be poisoned");
                 stats.cache_hits += 1;
                 return Ok(table.get_domain(name).cloned());
             }
@@ -271,7 +274,7 @@ impl LazySymbolTable {
 
         // Check if domain exists
         if !self.loader.has_domain(name) {
-            let mut stats = self.stats.write().unwrap();
+            let mut stats = self.stats.write().expect("lock should not be poisoned");
             stats.cache_misses += 1;
             return Ok(None);
         }
@@ -279,7 +282,7 @@ impl LazySymbolTable {
         // Load domain
         self.load_domain_internal(name)?;
 
-        let table = self.loaded.read().unwrap();
+        let table = self.loaded.read().expect("lock should not be poisoned");
         Ok(table.get_domain(name).cloned())
     }
 
@@ -287,10 +290,13 @@ impl LazySymbolTable {
     pub fn get_predicate(&self, name: &str) -> Result<Option<PredicateInfo>> {
         // Check if already loaded
         {
-            let loaded_set = self.loaded_predicates.read().unwrap();
+            let loaded_set = self
+                .loaded_predicates
+                .read()
+                .expect("lock should not be poisoned");
             if loaded_set.contains(name) {
-                let table = self.loaded.read().unwrap();
-                let mut stats = self.stats.write().unwrap();
+                let table = self.loaded.read().expect("lock should not be poisoned");
+                let mut stats = self.stats.write().expect("lock should not be poisoned");
                 stats.cache_hits += 1;
                 return Ok(table.get_predicate(name).cloned());
             }
@@ -298,7 +304,7 @@ impl LazySymbolTable {
 
         // Check if predicate exists
         if !self.loader.has_predicate(name) {
-            let mut stats = self.stats.write().unwrap();
+            let mut stats = self.stats.write().expect("lock should not be poisoned");
             stats.cache_misses += 1;
             return Ok(None);
         }
@@ -306,7 +312,7 @@ impl LazySymbolTable {
         // Load predicate
         self.load_predicate_internal(name)?;
 
-        let table = self.loaded.read().unwrap();
+        let table = self.loaded.read().expect("lock should not be poisoned");
         Ok(table.get_predicate(name).cloned())
     }
 
@@ -323,9 +329,12 @@ impl LazySymbolTable {
     /// Preload a batch of domains.
     pub fn preload_domains(&self, names: &[String]) -> Result<()> {
         let domains = self.loader.load_domains_batch(names)?;
-        let mut table = self.loaded.write().unwrap();
-        let mut loaded_set = self.loaded_domains.write().unwrap();
-        let mut stats = self.stats.write().unwrap();
+        let mut table = self.loaded.write().expect("lock should not be poisoned");
+        let mut loaded_set = self
+            .loaded_domains
+            .write()
+            .expect("lock should not be poisoned");
+        let mut stats = self.stats.write().expect("lock should not be poisoned");
 
         for domain in domains {
             let name = domain.name.clone();
@@ -341,9 +350,12 @@ impl LazySymbolTable {
     /// Preload a batch of predicates.
     pub fn preload_predicates(&self, names: &[String]) -> Result<()> {
         let predicates = self.loader.load_predicates_batch(names)?;
-        let mut table = self.loaded.write().unwrap();
-        let mut loaded_set = self.loaded_predicates.write().unwrap();
-        let mut stats = self.stats.write().unwrap();
+        let mut table = self.loaded.write().expect("lock should not be poisoned");
+        let mut loaded_set = self
+            .loaded_predicates
+            .write()
+            .expect("lock should not be poisoned");
+        let mut stats = self.stats.write().expect("lock should not be poisoned");
 
         for predicate in predicates {
             let name = predicate.name.clone();
@@ -360,26 +372,44 @@ impl LazySymbolTable {
 
     /// Get loading statistics.
     pub fn stats(&self) -> LazyLoadStats {
-        self.stats.read().unwrap().clone()
+        self.stats
+            .read()
+            .expect("lock should not be poisoned")
+            .clone()
     }
 
     /// Clear the cache and force reload.
     pub fn clear_cache(&self) {
-        let mut table = self.loaded.write().unwrap();
+        let mut table = self.loaded.write().expect("lock should not be poisoned");
         *table = SymbolTable::new();
-        self.loaded_domains.write().unwrap().clear();
-        self.loaded_predicates.write().unwrap().clear();
-        self.access_counts.write().unwrap().clear();
+        self.loaded_domains
+            .write()
+            .expect("lock should not be poisoned")
+            .clear();
+        self.loaded_predicates
+            .write()
+            .expect("lock should not be poisoned")
+            .clear();
+        self.access_counts
+            .write()
+            .expect("lock should not be poisoned")
+            .clear();
     }
 
     /// Get the number of loaded domains.
     pub fn loaded_domain_count(&self) -> usize {
-        self.loaded_domains.read().unwrap().len()
+        self.loaded_domains
+            .read()
+            .expect("lock should not be poisoned")
+            .len()
     }
 
     /// Get the number of loaded predicates.
     pub fn loaded_predicate_count(&self) -> usize {
-        self.loaded_predicates.read().unwrap().len()
+        self.loaded_predicates
+            .read()
+            .expect("lock should not be poisoned")
+            .len()
     }
 
     /// Get a read-only reference to the loaded symbol table.
@@ -391,9 +421,12 @@ impl LazySymbolTable {
 
     fn load_domain_internal(&self, name: &str) -> Result<()> {
         let domain = self.loader.load_domain(name)?;
-        let mut table = self.loaded.write().unwrap();
-        let mut loaded_set = self.loaded_domains.write().unwrap();
-        let mut stats = self.stats.write().unwrap();
+        let mut table = self.loaded.write().expect("lock should not be poisoned");
+        let mut loaded_set = self
+            .loaded_domains
+            .write()
+            .expect("lock should not be poisoned");
+        let mut stats = self.stats.write().expect("lock should not be poisoned");
 
         table.add_domain(domain).map_err(|e| anyhow::anyhow!(e))?;
         loaded_set.insert(name.to_string());
@@ -402,7 +435,10 @@ impl LazySymbolTable {
 
         // Track access for predictive loading
         {
-            let mut counts = self.access_counts.write().unwrap();
+            let mut counts = self
+                .access_counts
+                .write()
+                .expect("lock should not be poisoned");
             *counts.entry(name.to_string()).or_insert(0) += 1;
         }
 
@@ -411,9 +447,12 @@ impl LazySymbolTable {
 
     fn load_predicate_internal(&self, name: &str) -> Result<()> {
         let predicate = self.loader.load_predicate(name)?;
-        let mut table = self.loaded.write().unwrap();
-        let mut loaded_set = self.loaded_predicates.write().unwrap();
-        let mut stats = self.stats.write().unwrap();
+        let mut table = self.loaded.write().expect("lock should not be poisoned");
+        let mut loaded_set = self
+            .loaded_predicates
+            .write()
+            .expect("lock should not be poisoned");
+        let mut stats = self.stats.write().expect("lock should not be poisoned");
 
         table
             .add_predicate(predicate)
@@ -424,7 +463,10 @@ impl LazySymbolTable {
 
         // Track access for predictive loading
         {
-            let mut counts = self.access_counts.write().unwrap();
+            let mut counts = self
+                .access_counts
+                .write()
+                .expect("lock should not be poisoned");
             *counts.entry(name.to_string()).or_insert(0) += 1;
         }
 
@@ -499,9 +541,9 @@ mod tests {
         let loader = Arc::new(MockLoader::new());
         let lazy_table = LazySymbolTable::new(loader);
 
-        let domain = lazy_table.get_domain("Person").unwrap();
+        let domain = lazy_table.get_domain("Person").expect("unwrap");
         assert!(domain.is_some());
-        assert_eq!(domain.unwrap().name, "Person");
+        assert_eq!(domain.expect("unwrap").name, "Person");
     }
 
     #[test]
@@ -510,12 +552,12 @@ mod tests {
         let lazy_table = LazySymbolTable::new(loader);
 
         // First load predicates' domains
-        lazy_table.get_domain("Person").unwrap();
-        lazy_table.get_domain("Location").unwrap();
+        lazy_table.get_domain("Person").expect("unwrap");
+        lazy_table.get_domain("Location").expect("unwrap");
 
-        let predicate = lazy_table.get_predicate("at").unwrap();
+        let predicate = lazy_table.get_predicate("at").expect("unwrap");
         assert!(predicate.is_some());
-        assert_eq!(predicate.unwrap().name, "at");
+        assert_eq!(predicate.expect("unwrap").name, "at");
     }
 
     #[test]
@@ -524,10 +566,10 @@ mod tests {
         let lazy_table = LazySymbolTable::new(loader);
 
         // First access (miss)
-        lazy_table.get_domain("Person").unwrap();
+        lazy_table.get_domain("Person").expect("unwrap");
 
         // Second access (hit)
-        lazy_table.get_domain("Person").unwrap();
+        lazy_table.get_domain("Person").expect("unwrap");
 
         let stats = lazy_table.stats();
         assert_eq!(stats.cache_hits, 1);
@@ -539,7 +581,7 @@ mod tests {
         let loader = Arc::new(MockLoader::new());
         let lazy_table = LazySymbolTable::new(loader);
 
-        let domains = lazy_table.list_domains().unwrap();
+        let domains = lazy_table.list_domains().expect("unwrap");
         assert_eq!(domains.len(), 2);
         assert!(domains.contains(&"Person".to_string()));
         assert!(domains.contains(&"Location".to_string()));
@@ -551,7 +593,7 @@ mod tests {
         let lazy_table = LazySymbolTable::new(loader);
 
         let names = vec!["Person".to_string(), "Location".to_string()];
-        lazy_table.preload_domains(&names).unwrap();
+        lazy_table.preload_domains(&names).expect("unwrap");
 
         assert_eq!(lazy_table.loaded_domain_count(), 2);
 
@@ -564,7 +606,7 @@ mod tests {
         let loader = Arc::new(MockLoader::new());
         let lazy_table = LazySymbolTable::new(loader);
 
-        lazy_table.get_domain("Person").unwrap();
+        lazy_table.get_domain("Person").expect("unwrap");
         assert_eq!(lazy_table.loaded_domain_count(), 1);
 
         lazy_table.clear_cache();
@@ -579,7 +621,7 @@ mod tests {
         };
         let lazy_table = LazySymbolTable::with_strategy(loader, strategy);
 
-        lazy_table.get_domain("Person").unwrap();
+        lazy_table.get_domain("Person").expect("unwrap");
         assert_eq!(lazy_table.loaded_domain_count(), 1);
     }
 

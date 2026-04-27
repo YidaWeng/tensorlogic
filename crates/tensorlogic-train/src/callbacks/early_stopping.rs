@@ -146,22 +146,22 @@ mod tests {
 
         // First epoch - improvement
         state.val_loss = Some(1.0);
-        callback.on_epoch_end(0, &state).unwrap();
+        callback.on_epoch_end(0, &state).expect("unwrap");
         assert!(!callback.should_stop());
 
         // Second epoch - improvement
         state.val_loss = Some(0.8);
-        callback.on_epoch_end(1, &state).unwrap();
+        callback.on_epoch_end(1, &state).expect("unwrap");
         assert!(!callback.should_stop());
 
         // Third epoch - no improvement
         state.val_loss = Some(0.81);
-        callback.on_epoch_end(2, &state).unwrap();
+        callback.on_epoch_end(2, &state).expect("unwrap");
         assert!(!callback.should_stop());
 
         // Fourth epoch - no improvement (exceeds patience)
         state.val_loss = Some(0.82);
-        callback.on_epoch_end(3, &state).unwrap();
+        callback.on_epoch_end(3, &state).expect("unwrap");
         assert!(callback.should_stop());
     }
 }

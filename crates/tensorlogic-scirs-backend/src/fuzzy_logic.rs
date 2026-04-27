@@ -540,7 +540,8 @@ mod tests {
     use super::*;
 
     fn arr(values: Vec<f64>) -> ArrayD<f64> {
-        ArrayD::from_shape_vec(IxDyn(&[values.len()]), values).unwrap()
+        ArrayD::from_shape_vec(IxDyn(&[values.len()]), values)
+            .expect("test helper: valid shape and values")
     }
 
     #[test]
@@ -568,80 +569,86 @@ mod tests {
     }
 
     #[test]
-    fn test_godel_and() {
-        let fuzzy = FuzzyLogic::new(FuzzyConfig::godel()).unwrap();
+    fn test_godel_and() -> Result<(), Box<dyn std::error::Error>> {
+        let fuzzy = FuzzyLogic::new(FuzzyConfig::godel())?;
         let a = arr(vec![0.3, 0.8, 0.5]);
         let b = arr(vec![0.7, 0.2, 0.5]);
 
-        let result = fuzzy.and(&a, &b).unwrap();
+        let result = fuzzy.and(&a, &b)?;
 
         assert!((result[[0]] - 0.3).abs() < 1e-10);
         assert!((result[[1]] - 0.2).abs() < 1e-10);
         assert!((result[[2]] - 0.5).abs() < 1e-10);
+        Ok(())
     }
 
     #[test]
-    fn test_godel_or() {
-        let fuzzy = FuzzyLogic::new(FuzzyConfig::godel()).unwrap();
+    fn test_godel_or() -> Result<(), Box<dyn std::error::Error>> {
+        let fuzzy = FuzzyLogic::new(FuzzyConfig::godel())?;
         let a = arr(vec![0.3, 0.8, 0.5]);
         let b = arr(vec![0.7, 0.2, 0.5]);
 
-        let result = fuzzy.or(&a, &b).unwrap();
+        let result = fuzzy.or(&a, &b)?;
 
         assert!((result[[0]] - 0.7).abs() < 1e-10);
         assert!((result[[1]] - 0.8).abs() < 1e-10);
         assert!((result[[2]] - 0.5).abs() < 1e-10);
+        Ok(())
     }
 
     #[test]
-    fn test_product_and() {
-        let fuzzy = FuzzyLogic::new(FuzzyConfig::product()).unwrap();
+    fn test_product_and() -> Result<(), Box<dyn std::error::Error>> {
+        let fuzzy = FuzzyLogic::new(FuzzyConfig::product())?;
         let a = arr(vec![0.5, 0.8]);
         let b = arr(vec![0.6, 0.5]);
 
-        let result = fuzzy.and(&a, &b).unwrap();
+        let result = fuzzy.and(&a, &b)?;
 
         assert!((result[[0]] - 0.3).abs() < 1e-10); // 0.5 * 0.6
         assert!((result[[1]] - 0.4).abs() < 1e-10); // 0.8 * 0.5
+        Ok(())
     }
 
     #[test]
-    fn test_product_or() {
-        let fuzzy = FuzzyLogic::new(FuzzyConfig::product()).unwrap();
+    fn test_product_or() -> Result<(), Box<dyn std::error::Error>> {
+        let fuzzy = FuzzyLogic::new(FuzzyConfig::product())?;
         let a = arr(vec![0.5, 0.8]);
         let b = arr(vec![0.6, 0.5]);
 
-        let result = fuzzy.or(&a, &b).unwrap();
+        let result = fuzzy.or(&a, &b)?;
 
         // a + b - ab
         assert!((result[[0]] - 0.8).abs() < 1e-10); // 0.5 + 0.6 - 0.3
         assert!((result[[1]] - 0.9).abs() < 1e-10); // 0.8 + 0.5 - 0.4
+        Ok(())
     }
 
     #[test]
-    fn test_lukasiewicz_and() {
-        let fuzzy = FuzzyLogic::new(FuzzyConfig::lukasiewicz()).unwrap();
+    fn test_lukasiewicz_and() -> Result<(), Box<dyn std::error::Error>> {
+        let fuzzy = FuzzyLogic::new(FuzzyConfig::lukasiewicz())?;
         let a = arr(vec![0.8, 0.3]);
         let b = arr(vec![0.7, 0.4]);
 
-        let result = fuzzy.and(&a, &b).unwrap();
+        let result = fuzzy.and(&a, &b)?;
 
         // max(0, a + b - 1)
         assert!((result[[0]] - 0.5).abs() < 1e-10); // max(0, 0.8 + 0.7 - 1) = 0.5
         assert!((result[[1]] - 0.0).abs() < 1e-10); // max(0, 0.3 + 0.4 - 1) = 0
+        Ok(())
     }
 
     #[test]
-    fn test_lukasiewicz_or() {
-        let fuzzy = FuzzyLogic::new(FuzzyConfig::lukasiewicz()).unwrap();
+    fn test_lukasiewicz_or() -> Result<(), Box<dyn std::error::Error>> {
+        let fuzzy = FuzzyLogic::new(FuzzyConfig::lukasiewicz())?;
         let a = arr(vec![0.8, 0.3]);
         let b = arr(vec![0.7, 0.4]);
 
-        let result = fuzzy.or(&a, &b).unwrap();
+        let result = fuzzy.or(&a, &b)?;
 
         // min(1, a + b)
         assert!((result[[0]] - 1.0).abs() < 1e-10); // min(1, 0.8 + 0.7) = 1
         assert!((result[[1]] - 0.7).abs() < 1e-10); // min(1, 0.3 + 0.4) = 0.7
+        Ok(())
     }
 
     #[test]
@@ -673,28 +680,29 @@ mod tests {
     }
 
     #[test]
-    fn test_fuzzy_xor() {
-        let fuzzy = FuzzyLogic::new(FuzzyConfig::product()).unwrap();
+    fn test_fuzzy_xor() -> Result<(), Box<dyn std::error::Error>> {
+        let fuzzy = FuzzyLogic::new(FuzzyConfig::product())?;
         let a = arr(vec![0.0, 1.0, 0.0, 1.0]);
         let b = arr(vec![0.0, 0.0, 1.0, 1.0]);
 
-        let result = fuzzy.xor(&a, &b).unwrap();
+        let result = fuzzy.xor(&a, &b)?;
 
         // XOR truth table (fuzzy approximation)
         assert!(result[[0]] < 0.1); // 0 XOR 0 = 0
         assert!(result[[1]] > 0.9); // 1 XOR 0 = 1
         assert!(result[[2]] > 0.9); // 0 XOR 1 = 1
         assert!(result[[3]] < 0.1); // 1 XOR 1 = 0
+        Ok(())
     }
 
     #[test]
-    fn test_fuzzy_nand_nor() {
-        let fuzzy = FuzzyLogic::new(FuzzyConfig::godel()).unwrap();
+    fn test_fuzzy_nand_nor() -> Result<(), Box<dyn std::error::Error>> {
+        let fuzzy = FuzzyLogic::new(FuzzyConfig::godel())?;
         let a = arr(vec![0.8, 0.3]);
         let b = arr(vec![0.6, 0.4]);
 
-        let nand_result = fuzzy.nand(&a, &b).unwrap();
-        let nor_result = fuzzy.nor(&a, &b).unwrap();
+        let nand_result = fuzzy.nand(&a, &b)?;
+        let nor_result = fuzzy.nor(&a, &b)?;
 
         // NAND = NOT(AND)
         assert!((nand_result[[0]] - 0.4).abs() < 1e-10); // 1 - min(0.8, 0.6) = 0.4
@@ -703,32 +711,35 @@ mod tests {
         // NOR = NOT(OR)
         assert!((nor_result[[0]] - 0.2).abs() < 1e-10); // 1 - max(0.8, 0.6) = 0.2
         assert!((nor_result[[1]] - 0.6).abs() < 1e-10); // 1 - max(0.3, 0.4) = 0.6
+        Ok(())
     }
 
     #[test]
-    fn test_and_many() {
-        let fuzzy = FuzzyLogic::new(FuzzyConfig::godel()).unwrap();
+    fn test_and_many() -> Result<(), Box<dyn std::error::Error>> {
+        let fuzzy = FuzzyLogic::new(FuzzyConfig::godel())?;
         let a = arr(vec![0.8, 0.5]);
         let b = arr(vec![0.6, 0.7]);
         let c = arr(vec![0.4, 0.3]);
 
-        let result = fuzzy.and_many(&[&a, &b, &c]).unwrap();
+        let result = fuzzy.and_many(&[&a, &b, &c])?;
 
         assert!((result[[0]] - 0.4).abs() < 1e-10); // min(0.8, 0.6, 0.4)
         assert!((result[[1]] - 0.3).abs() < 1e-10); // min(0.5, 0.7, 0.3)
+        Ok(())
     }
 
     #[test]
-    fn test_or_many() {
-        let fuzzy = FuzzyLogic::new(FuzzyConfig::godel()).unwrap();
+    fn test_or_many() -> Result<(), Box<dyn std::error::Error>> {
+        let fuzzy = FuzzyLogic::new(FuzzyConfig::godel())?;
         let a = arr(vec![0.2, 0.5]);
         let b = arr(vec![0.6, 0.3]);
         let c = arr(vec![0.4, 0.7]);
 
-        let result = fuzzy.or_many(&[&a, &b, &c]).unwrap();
+        let result = fuzzy.or_many(&[&a, &b, &c])?;
 
         assert!((result[[0]] - 0.6).abs() < 1e-10); // max(0.2, 0.6, 0.4)
         assert!((result[[1]] - 0.7).abs() < 1e-10); // max(0.5, 0.3, 0.7)
+        Ok(())
     }
 
     #[test]

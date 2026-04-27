@@ -556,14 +556,14 @@ mod tests {
         g2.add_edge(0, 1, "edge".to_string());
         g2.add_edge(0, 2, "edge".to_string());
 
-        let sim = kernel.compute_graphs(&g1, &g2).unwrap();
+        let sim = kernel.compute_graphs(&g1, &g2).expect("unwrap");
         assert!(sim >= 0.0);
     }
 
     #[test]
     fn test_random_walk_kernel() {
         let config = WalkKernelConfig::new().with_max_length(3);
-        let kernel = RandomWalkKernel::new(config).unwrap();
+        let kernel = RandomWalkKernel::new(config).expect("unwrap");
 
         let mut g1 = Graph::new(3);
         g1.add_edge(0, 1, "edge".to_string());
@@ -573,7 +573,7 @@ mod tests {
         g2.add_edge(0, 1, "edge".to_string());
         g2.add_edge(1, 2, "edge".to_string());
 
-        let sim = kernel.compute_graphs(&g1, &g2).unwrap();
+        let sim = kernel.compute_graphs(&g1, &g2).expect("unwrap");
         assert!(sim > 0.0);
     }
 
@@ -607,7 +607,7 @@ mod tests {
         g2.add_edge(1, 2, "edge".to_string());
         g2.add_edge(2, 3, "edge".to_string());
 
-        let sim = kernel.compute_graphs(&g1, &g2).unwrap();
+        let sim = kernel.compute_graphs(&g1, &g2).expect("unwrap");
         assert!(sim > 0.0);
     }
 
@@ -620,7 +620,7 @@ mod tests {
         graph.add_edge(0, 1, "edge".to_string());
         graph.add_edge(1, 2, "edge".to_string());
 
-        let sim = kernel.compute_graphs(&graph, &graph).unwrap();
+        let sim = kernel.compute_graphs(&graph, &graph).expect("unwrap");
         assert!(sim > 0.0);
     }
 

@@ -481,7 +481,7 @@ mod tests {
     #[test]
     fn test_gradient_unscaling() {
         let mut gradients =
-            Array2::from_shape_vec((2, 2), vec![100.0, 200.0, 300.0, 400.0]).unwrap();
+            Array2::from_shape_vec((2, 2), vec![100.0, 200.0, 300.0, 400.0]).expect("unwrap");
         let scaler = LossScaler::static_scale(10.0);
 
         scaler.unscale_gradients(&mut gradients);
@@ -507,8 +507,8 @@ mod tests {
     fn test_fp16_simulation() {
         let trainer = MixedPrecisionTrainer::new(PrecisionMode::FP16, LossScaler::None);
 
-        let weights =
-            Array2::from_shape_vec((2, 2), vec![1.234_567, 100000.0, -100000.0, 0.0001]).unwrap();
+        let weights = Array2::from_shape_vec((2, 2), vec![1.234_567, 100000.0, -100000.0, 0.0001])
+            .expect("unwrap");
         let fp16_weights = trainer.cast_to_working_precision(&weights);
 
         // Should be quantized
@@ -525,7 +525,7 @@ mod tests {
         let trainer = MixedPrecisionTrainer::new(PrecisionMode::BF16, LossScaler::None);
 
         let weights =
-            Array2::from_shape_vec((2, 2), vec![1.234_567, 100.5, -50.25, 0.125]).unwrap();
+            Array2::from_shape_vec((2, 2), vec![1.234_567, 100.5, -50.25, 0.125]).expect("unwrap");
         let bf16_weights = trainer.cast_to_working_precision(&weights);
 
         // Should have reduced mantissa precision
@@ -540,10 +540,12 @@ mod tests {
         let mut gradients = HashMap::new();
         gradients.insert(
             "layer1".to_string(),
-            Array2::from_shape_vec((2, 2), vec![f32::INFINITY, 1.0, 2.0, 3.0]).unwrap(),
+            Array2::from_shape_vec((2, 2), vec![f32::INFINITY, 1.0, 2.0, 3.0]).expect("unwrap"),
         );
 
-        let (should_step, overflow) = trainer.unscale_and_check_gradients(&mut gradients).unwrap();
+        let (should_step, overflow) = trainer
+            .unscale_and_check_gradients(&mut gradients)
+            .expect("unwrap");
 
         assert!(!should_step);
         assert!(overflow);
@@ -558,7 +560,7 @@ mod tests {
         let scaled = scaler.scale(loss);
         assert!(scaled > loss); // Should be scaled
 
-        let mut grads = Array2::from_shape_vec((2, 2), vec![1000.0; 4]).unwrap();
+        let mut grads = Array2::from_shape_vec((2, 2), vec![1000.0; 4]).expect("unwrap");
         scaler.unscale(&mut grads);
         assert!(grads[[0, 0]] < 1000.0); // Should be unscaled
     }
@@ -569,7 +571,7 @@ mod tests {
         assert!(ctx.is_enabled());
         assert_eq!(ctx.mode(), PrecisionMode::FP16);
 
-        let tensor = Array2::from_shape_vec((2, 2), vec![1.234_567; 4]).unwrap();
+        let tensor = Array2::from_shape_vec((2, 2), vec![1.234_567; 4]).expect("unwrap");
         let casted = ctx.cast(&tensor);
 
         // Should have reduced precision
@@ -581,7 +583,7 @@ mod tests {
         let ctx = AutocastContext::new(false, PrecisionMode::FP16);
         assert!(!ctx.is_enabled());
 
-        let tensor = Array2::from_shape_vec((2, 2), vec![1.234_567; 4]).unwrap();
+        let tensor = Array2::from_shape_vec((2, 2), vec![1.234_567; 4]).expect("unwrap");
         let casted = ctx.cast(&tensor);
 
         // Should be unchanged
@@ -592,13 +594,13 @@ mod tests {
     fn test_master_weights_update() {
         let mut trainer = MixedPrecisionTrainer::new(PrecisionMode::FP16, LossScaler::None);
 
-        let weights = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let weights = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("unwrap");
         trainer.register_weights("layer1".to_string(), weights.clone());
 
         let mut updates = HashMap::new();
         updates.insert(
             "layer1".to_string(),
-            Array2::from_shape_vec((2, 2), vec![0.1, 0.1, 0.1, 0.1]).unwrap(),
+            Array2::from_shape_vec((2, 2), vec![0.1, 0.1, 0.1, 0.1]).expect("unwrap"),
         );
 
         trainer.update_master_weights(&updates);

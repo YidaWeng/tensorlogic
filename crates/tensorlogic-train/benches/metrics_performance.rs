@@ -34,7 +34,7 @@ fn benchmark_basic_metrics(c: &mut Criterion) {
         b.iter(|| {
             let result = metric
                 .compute(&predictions.view(), &targets.view())
-                .unwrap();
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -44,7 +44,7 @@ fn benchmark_basic_metrics(c: &mut Criterion) {
         b.iter(|| {
             let result = metric
                 .compute(&predictions.view(), &targets.view())
-                .unwrap();
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -54,7 +54,7 @@ fn benchmark_basic_metrics(c: &mut Criterion) {
         b.iter(|| {
             let result = metric
                 .compute(&predictions.view(), &targets.view())
-                .unwrap();
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -64,7 +64,7 @@ fn benchmark_basic_metrics(c: &mut Criterion) {
         b.iter(|| {
             let result = metric
                 .compute(&predictions.view(), &targets.view())
-                .unwrap();
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -74,7 +74,7 @@ fn benchmark_basic_metrics(c: &mut Criterion) {
         b.iter(|| {
             let result = metric
                 .compute(&predictions.view(), &targets.view())
-                .unwrap();
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -93,8 +93,8 @@ fn benchmark_confusion_matrix(c: &mut Criterion) {
                 let (predictions, targets) = generate_classification_data(1000, n);
 
                 b.iter(|| {
-                    let result =
-                        ConfusionMatrix::compute(&predictions.view(), &targets.view()).unwrap();
+                    let result = ConfusionMatrix::compute(&predictions.view(), &targets.view())
+                        .expect("unwrap");
                     black_box(result);
                 });
             },
@@ -114,7 +114,7 @@ fn benchmark_advanced_metrics(c: &mut Criterion) {
         b.iter(|| {
             let result = metric
                 .compute(&predictions.view(), &targets.view())
-                .unwrap();
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -124,14 +124,15 @@ fn benchmark_advanced_metrics(c: &mut Criterion) {
         b.iter(|| {
             let result = metric
                 .compute(&predictions.view(), &targets.view())
-                .unwrap();
+                .expect("unwrap");
             black_box(result);
         });
     });
 
     group.bench_function("per_class_metrics", |b| {
         b.iter(|| {
-            let result = PerClassMetrics::compute(&predictions.view(), &targets.view()).unwrap();
+            let result =
+                PerClassMetrics::compute(&predictions.view(), &targets.view()).expect("unwrap");
             black_box(result);
         });
     });
@@ -148,7 +149,9 @@ fn benchmark_top_k_accuracy(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(k), &k, |b, &k_val| {
             b.iter(|| {
                 let metric = TopKAccuracy::new(k_val);
-                let result = metric.compute(&probs.view(), &targets.view()).unwrap();
+                let result = metric
+                    .compute(&probs.view(), &targets.view())
+                    .expect("unwrap");
                 black_box(result);
             });
         });
@@ -169,7 +172,7 @@ fn benchmark_roc_curve(c: &mut Criterion) {
                 let targets: Vec<bool> = (0..n).map(|i| i % 2 == 0).collect();
 
                 b.iter(|| {
-                    let result = RocCurve::compute(&scores, &targets).unwrap();
+                    let result = RocCurve::compute(&scores, &targets).expect("unwrap");
                     black_box(result);
                 });
             },
@@ -193,14 +196,16 @@ fn benchmark_metric_computation_batch(c: &mut Criterion) {
 
             let acc_val = accuracy
                 .compute(&predictions.view(), &targets.view())
-                .unwrap();
+                .expect("unwrap");
             let prec_val = precision
                 .compute(&predictions.view(), &targets.view())
-                .unwrap();
+                .expect("unwrap");
             let rec_val = recall
                 .compute(&predictions.view(), &targets.view())
-                .unwrap();
-            let f1_val = f1.compute(&predictions.view(), &targets.view()).unwrap();
+                .expect("unwrap");
+            let f1_val = f1
+                .compute(&predictions.view(), &targets.view())
+                .expect("unwrap");
 
             black_box((acc_val, prec_val, rec_val, f1_val));
         });
@@ -223,7 +228,7 @@ fn benchmark_metric_data_scaling(c: &mut Criterion) {
                     let metric = Accuracy::default();
                     let result = metric
                         .compute(&predictions.view(), &targets.view())
-                        .unwrap();
+                        .expect("unwrap");
                     black_box(result);
                 });
             },

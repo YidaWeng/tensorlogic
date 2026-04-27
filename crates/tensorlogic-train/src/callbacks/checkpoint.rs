@@ -2,12 +2,9 @@
 
 use crate::callbacks::core::Callback;
 use crate::{TrainError, TrainResult, TrainingState};
-use flate2::read::GzDecoder;
-use flate2::write::GzEncoder;
-use flate2::Compression;
 use std::collections::HashMap;
 use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Read;
 use std::path::PathBuf;
 
 /// Compression method for checkpoints.
@@ -113,7 +110,7 @@ impl TrainingCheckpoint {
     /// checkpoint.save_with_compression(
     ///     &PathBuf::from("/tmp/checkpoint.json.gz"),
     ///     CheckpointCompression::Gzip
-    /// ).unwrap();
+    /// ).expect("unwrap");
     /// ```
     pub fn save_with_compression(
         &self,
@@ -137,39 +134,42 @@ impl TrainingCheckpoint {
                 })?;
             }
             CheckpointCompression::Gzip => {
-                let file = File::create(path).map_err(|e| {
-                    TrainError::CheckpointError(format!("Failed to create checkpoint file: {}", e))
-                })?;
-                let mut encoder = GzEncoder::new(file, Compression::default());
-                encoder.write_all(json.as_bytes()).map_err(|e| {
-                    TrainError::CheckpointError(format!("Failed to compress checkpoint: {}", e))
-                })?;
-                encoder.finish().map_err(|e| {
-                    TrainError::CheckpointError(format!("Failed to finish compression: {}", e))
+                // Level 6: balanced speed/ratio (matches flate2 Compression::default())
+                let compressed =
+                    oxiarc_deflate::gzip_compress(json.as_bytes(), 6).map_err(|e| {
+                        TrainError::CheckpointError(format!(
+                            "Failed to gzip-compress checkpoint: {}",
+                            e
+                        ))
+                    })?;
+                std::fs::write(path, compressed).map_err(|e| {
+                    TrainError::CheckpointError(format!("Failed to write checkpoint: {}", e))
                 })?;
             }
             CheckpointCompression::GzipFast => {
-                let file = File::create(path).map_err(|e| {
-                    TrainError::CheckpointError(format!("Failed to create checkpoint file: {}", e))
-                })?;
-                let mut encoder = GzEncoder::new(file, Compression::fast());
-                encoder.write_all(json.as_bytes()).map_err(|e| {
-                    TrainError::CheckpointError(format!("Failed to compress checkpoint: {}", e))
-                })?;
-                encoder.finish().map_err(|e| {
-                    TrainError::CheckpointError(format!("Failed to finish compression: {}", e))
+                // Level 1: fastest compression (matches flate2 Compression::fast())
+                let compressed =
+                    oxiarc_deflate::gzip_compress(json.as_bytes(), 1).map_err(|e| {
+                        TrainError::CheckpointError(format!(
+                            "Failed to gzip-compress checkpoint (fast): {}",
+                            e
+                        ))
+                    })?;
+                std::fs::write(path, compressed).map_err(|e| {
+                    TrainError::CheckpointError(format!("Failed to write checkpoint: {}", e))
                 })?;
             }
             CheckpointCompression::GzipBest => {
-                let file = File::create(path).map_err(|e| {
-                    TrainError::CheckpointError(format!("Failed to create checkpoint file: {}", e))
-                })?;
-                let mut encoder = GzEncoder::new(file, Compression::best());
-                encoder.write_all(json.as_bytes()).map_err(|e| {
-                    TrainError::CheckpointError(format!("Failed to compress checkpoint: {}", e))
-                })?;
-                encoder.finish().map_err(|e| {
-                    TrainError::CheckpointError(format!("Failed to finish compression: {}", e))
+                // Level 9: best compression (matches flate2 Compression::best())
+                let compressed =
+                    oxiarc_deflate::gzip_compress(json.as_bytes(), 9).map_err(|e| {
+                        TrainError::CheckpointError(format!(
+                            "Failed to gzip-compress checkpoint (best): {}",
+                            e
+                        ))
+                    })?;
+                std::fs::write(path, compressed).map_err(|e| {
+                    TrainError::CheckpointError(format!("Failed to write checkpoint: {}", e))
                 })?;
             }
         }
@@ -202,14 +202,24 @@ impl TrainingCheckpoint {
 
     /// Load compressed checkpoint from a file.
     pub fn load_compressed(path: &PathBuf) -> TrainResult<Self> {
-        let file = File::open(path).map_err(|e| {
+        let mut file = File::open(path).map_err(|e| {
             TrainError::CheckpointError(format!("Failed to open checkpoint file: {}", e))
         })?;
 
-        let mut decoder = GzDecoder::new(file);
-        let mut json = String::new();
-        decoder.read_to_string(&mut json).map_err(|e| {
+        let mut compressed = Vec::new();
+        file.read_to_end(&mut compressed).map_err(|e| {
+            TrainError::CheckpointError(format!("Failed to read checkpoint file: {}", e))
+        })?;
+
+        let decompressed = oxiarc_deflate::gzip_decompress(&compressed).map_err(|e| {
             TrainError::CheckpointError(format!("Failed to decompress checkpoint: {}", e))
+        })?;
+
+        let json = String::from_utf8(decompressed).map_err(|e| {
+            TrainError::CheckpointError(format!(
+                "Decompressed checkpoint is not valid UTF-8: {}",
+                e
+            ))
         })?;
 
         let checkpoint: Self = serde_json::from_str(&json).map_err(|e| {
@@ -474,7 +484,7 @@ mod tests {
         let mut callback = CheckpointCallback::new(checkpoint_dir.clone(), 1, false);
         let state = create_test_state();
 
-        callback.on_epoch_end(0, &state).unwrap();
+        callback.on_epoch_end(0, &state).expect("unwrap");
 
         // Verify checkpoint was created
         let checkpoint_path = checkpoint_dir.join("checkpoint_epoch_0.json");
@@ -525,13 +535,13 @@ mod tests {
 
         // Save checkpoint
         let checkpoint_path = temp_dir().join("test_training_checkpoint.json");
-        checkpoint.save(&checkpoint_path).unwrap();
+        checkpoint.save(&checkpoint_path).expect("unwrap");
 
         // Verify file exists
         assert!(checkpoint_path.exists());
 
         // Load checkpoint
-        let loaded = TrainingCheckpoint::load(&checkpoint_path).unwrap();
+        let loaded = TrainingCheckpoint::load(&checkpoint_path).expect("unwrap");
 
         // Verify data
         assert_eq!(loaded.epoch, 5);
@@ -581,9 +591,9 @@ mod tests {
         );
 
         let checkpoint_path = temp_dir().join("test_checkpoint_with_metrics.json");
-        checkpoint.save(&checkpoint_path).unwrap();
+        checkpoint.save(&checkpoint_path).expect("unwrap");
 
-        let loaded = TrainingCheckpoint::load(&checkpoint_path).unwrap();
+        let loaded = TrainingCheckpoint::load(&checkpoint_path).expect("unwrap");
 
         // Verify metrics
         assert_eq!(loaded.metrics_history.len(), 2);
@@ -618,13 +628,13 @@ mod tests {
         let compressed_path = temp_dir().join("test_checkpoint_compressed.json.gz");
         checkpoint
             .save_with_compression(&compressed_path, CheckpointCompression::Gzip)
-            .unwrap();
+            .expect("unwrap");
 
         // Verify compressed file exists
         assert!(compressed_path.exists());
 
         // Load compressed checkpoint
-        let loaded = TrainingCheckpoint::load(&compressed_path).unwrap();
+        let loaded = TrainingCheckpoint::load(&compressed_path).expect("unwrap");
 
         // Verify data
         assert_eq!(loaded.epoch, 10);
@@ -633,10 +643,10 @@ mod tests {
 
         // Compare file sizes
         let uncompressed_path = temp_dir().join("test_checkpoint_uncompressed.json");
-        checkpoint.save(&uncompressed_path).unwrap();
+        checkpoint.save(&uncompressed_path).expect("unwrap");
 
-        let compressed_size = std::fs::metadata(&compressed_path).unwrap().len();
-        let uncompressed_size = std::fs::metadata(&uncompressed_path).unwrap().len();
+        let compressed_size = std::fs::metadata(&compressed_path).expect("unwrap").len();
+        let uncompressed_size = std::fs::metadata(&uncompressed_path).expect("unwrap").len();
 
         // Compressed should be smaller
         assert!(
@@ -675,17 +685,17 @@ mod tests {
         let fast_path = temp_dir().join("test_checkpoint_fast.json.gz");
         checkpoint
             .save_with_compression(&fast_path, CheckpointCompression::GzipFast)
-            .unwrap();
+            .expect("unwrap");
 
         // Save with best compression
         let best_path = temp_dir().join("test_checkpoint_best.json.gz");
         checkpoint
             .save_with_compression(&best_path, CheckpointCompression::GzipBest)
-            .unwrap();
+            .expect("unwrap");
 
         // Both should be loadable
-        let loaded_fast = TrainingCheckpoint::load(&fast_path).unwrap();
-        let loaded_best = TrainingCheckpoint::load(&best_path).unwrap();
+        let loaded_fast = TrainingCheckpoint::load(&fast_path).expect("unwrap");
+        let loaded_best = TrainingCheckpoint::load(&best_path).expect("unwrap");
 
         assert_eq!(loaded_fast.epoch, 5);
         assert_eq!(loaded_best.epoch, 5);
@@ -752,17 +762,17 @@ mod tests {
 
         // Save uncompressed
         let uncompressed_path = temp_dir().join("test_auto_detect.json");
-        checkpoint.save(&uncompressed_path).unwrap();
+        checkpoint.save(&uncompressed_path).expect("unwrap");
 
         // Save compressed
         let compressed_path = temp_dir().join("test_auto_detect.json.gz");
         checkpoint
             .save_with_compression(&compressed_path, CheckpointCompression::Gzip)
-            .unwrap();
+            .expect("unwrap");
 
         // Load both using auto-detection
-        let loaded_uncompressed = TrainingCheckpoint::load(&uncompressed_path).unwrap();
-        let loaded_compressed = TrainingCheckpoint::load(&compressed_path).unwrap();
+        let loaded_uncompressed = TrainingCheckpoint::load(&uncompressed_path).expect("unwrap");
+        let loaded_compressed = TrainingCheckpoint::load(&compressed_path).expect("unwrap");
 
         assert_eq!(loaded_uncompressed.epoch, loaded_compressed.epoch);
         assert_eq!(loaded_uncompressed.parameters, loaded_compressed.parameters);
@@ -786,7 +796,7 @@ mod tests {
         for (epoch, &val_loss) in val_losses.iter().enumerate() {
             let mut state = create_test_state();
             state.val_loss = Some(val_loss);
-            callback.save_checkpoint(epoch, &state).unwrap();
+            callback.save_checkpoint(epoch, &state).expect("unwrap");
         }
 
         // Should only have 3 checkpoints remaining (top 3 best)
@@ -816,7 +826,7 @@ mod tests {
         // Save 5 checkpoints
         for epoch in 0..5 {
             let state = create_test_state();
-            callback.save_checkpoint(epoch, &state).unwrap();
+            callback.save_checkpoint(epoch, &state).expect("unwrap");
         }
 
         // All 5 checkpoints should still exist
@@ -842,14 +852,14 @@ mod tests {
         for (epoch, &val_loss) in val_losses.iter().enumerate() {
             let mut state = create_test_state();
             state.val_loss = Some(val_loss);
-            callback.save_checkpoint(epoch, &state).unwrap();
+            callback.save_checkpoint(epoch, &state).expect("unwrap");
         }
 
         // Should have only top 2
         assert_eq!(callback.num_saved_checkpoints(), 2);
 
         // Manually trigger cleanup (should do nothing since we're already at top-2)
-        let deleted = callback.cleanup_checkpoints().unwrap();
+        let deleted = callback.cleanup_checkpoints().expect("unwrap");
         assert_eq!(deleted, 0);
         assert_eq!(callback.num_saved_checkpoints(), 2);
 
@@ -869,7 +879,7 @@ mod tests {
         for epoch in 0..4 {
             let mut state = create_test_state();
             state.val_loss = None; // No validation loss
-            callback.save_checkpoint(epoch, &state).unwrap();
+            callback.save_checkpoint(epoch, &state).expect("unwrap");
         }
 
         // Should keep top 2 (most recent by epoch)
@@ -897,7 +907,7 @@ mod tests {
         for (epoch, &val_loss) in val_losses.iter().enumerate() {
             let mut state = create_test_state();
             state.val_loss = Some(val_loss);
-            callback.on_epoch_end(epoch, &state).unwrap();
+            callback.on_epoch_end(epoch, &state).expect("unwrap");
         }
 
         // Should only have saved the improving checkpoints (0.9, 0.7, 0.6), then cleaned up to top-2

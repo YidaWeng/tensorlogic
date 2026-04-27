@@ -204,7 +204,7 @@ impl Checkpoint {
         })?;
         let mut writer = BufWriter::new(file);
 
-        // Serialize to JSON (could use bincode for better performance)
+        // Serialize to JSON (could use oxicode for better performance)
         let checkpoint_data = CheckpointData {
             metadata: self.metadata.clone(),
             tensors: self.tensors.clone(),
@@ -545,10 +545,10 @@ mod tests {
     fn test_checkpoint_from_executor() {
         let mut executor = Scirs2Exec::new();
         let tensor =
-            ArrayD::from_shape_vec(vec![2, 3], vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).unwrap();
+            ArrayD::from_shape_vec(vec![2, 3], vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0]).expect("unwrap");
         executor.add_tensor("test_tensor", tensor);
 
-        let checkpoint = Checkpoint::from_executor(&executor, 1).unwrap();
+        let checkpoint = Checkpoint::from_executor(&executor, 1).expect("unwrap");
 
         assert_eq!(checkpoint.metadata.iteration, 1);
         assert_eq!(checkpoint.metadata.tensor_count, 1);
@@ -558,16 +558,16 @@ mod tests {
     #[test]
     fn test_checkpoint_save_and_load() {
         let mut executor = Scirs2Exec::new();
-        let tensor = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).unwrap();
+        let tensor = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).expect("unwrap");
         executor.add_tensor("weights", tensor);
 
         // Save checkpoint
-        let checkpoint = Checkpoint::from_executor(&executor, 5).unwrap();
+        let checkpoint = Checkpoint::from_executor(&executor, 5).expect("unwrap");
         let temp_path = std::env::temp_dir().join("test_checkpoint.json");
-        checkpoint.save(&temp_path).unwrap();
+        checkpoint.save(&temp_path).expect("unwrap");
 
         // Load checkpoint
-        let loaded = Checkpoint::load(&temp_path).unwrap();
+        let loaded = Checkpoint::load(&temp_path).expect("unwrap");
         assert_eq!(loaded.metadata.iteration, 5);
         assert_eq!(loaded.metadata.tensor_count, 1);
 
@@ -578,15 +578,15 @@ mod tests {
     #[test]
     fn test_checkpoint_restore() {
         let mut executor = Scirs2Exec::new();
-        let tensor = ArrayD::from_shape_vec(vec![2], vec![10.0, 20.0]).unwrap();
+        let tensor = ArrayD::from_shape_vec(vec![2], vec![10.0, 20.0]).expect("unwrap");
         executor.add_tensor("params", tensor.clone());
 
         // Create and restore checkpoint
-        let checkpoint = Checkpoint::from_executor(&executor, 1).unwrap();
-        let restored_executor = checkpoint.restore().unwrap();
+        let checkpoint = Checkpoint::from_executor(&executor, 1).expect("unwrap");
+        let restored_executor = checkpoint.restore().expect("unwrap");
 
         // Verify restored tensor
-        let restored_tensor = restored_executor.get_tensor("params").unwrap();
+        let restored_tensor = restored_executor.get_tensor("params").expect("unwrap");
         assert_eq!(restored_tensor.shape(), tensor.shape());
         assert_eq!(restored_tensor[[0]], 10.0);
         assert_eq!(restored_tensor[[1]], 20.0);
@@ -595,10 +595,10 @@ mod tests {
     #[test]
     fn test_checkpoint_metadata() {
         let mut executor = Scirs2Exec::new();
-        let tensor = ArrayD::from_shape_vec(vec![1], vec![1.0]).unwrap();
+        let tensor = ArrayD::from_shape_vec(vec![1], vec![1.0]).expect("unwrap");
         executor.add_tensor("x", tensor);
 
-        let mut checkpoint = Checkpoint::from_executor(&executor, 10).unwrap();
+        let mut checkpoint = Checkpoint::from_executor(&executor, 10).expect("unwrap");
         checkpoint.add_metadata("learning_rate".to_string(), "0.001".to_string());
         checkpoint.add_metadata("optimizer".to_string(), "adam".to_string());
 
@@ -616,10 +616,10 @@ mod tests {
     #[test]
     fn test_checkpoint_size_human_readable() {
         let mut executor = Scirs2Exec::new();
-        let tensor = ArrayD::from_shape_vec(vec![1000], vec![1.0; 1000]).unwrap();
+        let tensor = ArrayD::from_shape_vec(vec![1000], vec![1.0; 1000]).expect("unwrap");
         executor.add_tensor("big_tensor", tensor);
 
-        let checkpoint = Checkpoint::from_executor(&executor, 1).unwrap();
+        let checkpoint = Checkpoint::from_executor(&executor, 1).expect("unwrap");
         let size_str = checkpoint.size_human_readable();
 
         // 1000 floats * 8 bytes = 8000 bytes = ~7.81 KB
@@ -629,18 +629,18 @@ mod tests {
     #[test]
     fn test_checkpoint_manager() {
         let temp_dir = std::env::temp_dir().join("test_checkpoints");
-        let manager = CheckpointManager::new(&temp_dir).unwrap();
+        let manager = CheckpointManager::new(&temp_dir).expect("unwrap");
 
         let mut executor = Scirs2Exec::new();
-        let tensor = ArrayD::from_shape_vec(vec![2], vec![1.0, 2.0]).unwrap();
+        let tensor = ArrayD::from_shape_vec(vec![2], vec![1.0, 2.0]).expect("unwrap");
         executor.add_tensor("data", tensor);
 
         // Save checkpoint
-        let path = manager.save_checkpoint(&executor, 1).unwrap();
+        let path = manager.save_checkpoint(&executor, 1).expect("unwrap");
         assert!(path.exists());
 
         // List checkpoints
-        let checkpoints = manager.list_checkpoints().unwrap();
+        let checkpoints = manager.list_checkpoints().expect("unwrap");
         assert_eq!(checkpoints.len(), 1);
 
         // Cleanup
@@ -650,20 +650,20 @@ mod tests {
     #[test]
     fn test_checkpoint_manager_cleanup() {
         let temp_dir = std::env::temp_dir().join("test_checkpoints_cleanup");
-        let mut manager = CheckpointManager::new(&temp_dir).unwrap();
+        let mut manager = CheckpointManager::new(&temp_dir).expect("unwrap");
         manager.set_max_checkpoints(Some(3));
 
         let mut executor = Scirs2Exec::new();
-        let tensor = ArrayD::from_shape_vec(vec![1], vec![1.0]).unwrap();
+        let tensor = ArrayD::from_shape_vec(vec![1], vec![1.0]).expect("unwrap");
         executor.add_tensor("x", tensor);
 
         // Save 5 checkpoints
         for i in 1..=5 {
-            manager.save_checkpoint(&executor, i).unwrap();
+            manager.save_checkpoint(&executor, i).expect("unwrap");
         }
 
         // Should keep only last 3
-        let checkpoints = manager.list_checkpoints().unwrap();
+        let checkpoints = manager.list_checkpoints().expect("unwrap");
         assert!(checkpoints.len() <= 3);
 
         // Cleanup
@@ -673,7 +673,7 @@ mod tests {
     #[test]
     fn test_checkpoint_checksum_verification() {
         let mut executor = Scirs2Exec::new();
-        let tensor = ArrayD::from_shape_vec(vec![2], vec![1.0, 2.0]).unwrap();
+        let tensor = ArrayD::from_shape_vec(vec![2], vec![1.0, 2.0]).expect("unwrap");
         executor.add_tensor("data", tensor);
 
         let config = CheckpointConfig {
@@ -681,14 +681,15 @@ mod tests {
             ..Default::default()
         };
 
-        let checkpoint = Checkpoint::from_executor_with_config(&executor, 1, &config).unwrap();
+        let checkpoint =
+            Checkpoint::from_executor_with_config(&executor, 1, &config).expect("unwrap");
         assert!(checkpoint.metadata.checksum.is_some());
 
         let temp_path = std::env::temp_dir().join("test_checksum.json");
-        checkpoint.save(&temp_path).unwrap();
+        checkpoint.save(&temp_path).expect("unwrap");
 
         // Load with verification
-        let loaded = Checkpoint::load_with_config(&temp_path, &config).unwrap();
+        let loaded = Checkpoint::load_with_config(&temp_path, &config).expect("unwrap");
         assert_eq!(loaded.metadata.checksum, checkpoint.metadata.checksum);
 
         // Cleanup

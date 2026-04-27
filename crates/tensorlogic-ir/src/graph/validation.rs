@@ -126,7 +126,7 @@ impl ValidationReport {
 /// graph.outputs = vec![t1];
 ///
 /// let node = EinsumNode::elem_unary("relu", t0, t1);
-/// graph.add_node(node).unwrap();
+/// graph.add_node(node).expect("unwrap");
 ///
 /// let report = validate_graph(&graph);
 /// assert!(report.is_valid());
@@ -494,7 +494,7 @@ mod tests {
         graph.outputs = vec![t1];
 
         let node = EinsumNode::elem_unary("relu", t0, t1);
-        graph.add_node(node).unwrap();
+        graph.add_node(node).expect("unwrap");
 
         let report = validate_graph(&graph);
         assert!(report.is_valid());
@@ -533,10 +533,10 @@ mod tests {
         // t1 is produced but never used
         graph
             .add_node(EinsumNode::elem_unary("relu", t0, t1))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("sigmoid", t0, t2))
-            .unwrap();
+            .expect("unwrap");
 
         let report = validate_graph(&graph);
         assert!(report.is_valid()); // No errors, just warnings
@@ -605,10 +605,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("relu", t0, t1))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_binary("add", t1, t2, t3))
-            .unwrap();
+            .expect("unwrap");
 
         let report = validate_graph(&graph);
         assert_eq!(report.stats.elem_unary_operations, 1);

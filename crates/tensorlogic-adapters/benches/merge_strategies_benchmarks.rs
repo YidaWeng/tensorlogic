@@ -26,7 +26,7 @@ fn create_symbol_table(
                 format!("{}Domain{}", name_prefix, i),
                 100 + i,
             ))
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Add predicates
@@ -40,7 +40,7 @@ fn create_symbol_table(
                 format!("{}Pred{}", name_prefix, i),
                 domains,
             ))
-            .unwrap();
+            .expect("unwrap");
     }
 
     table
@@ -61,21 +61,21 @@ fn create_overlapping_tables(
     // Add overlapping domains to both
     for i in 0..overlap_domains {
         let domain = DomainInfo::new(format!("Domain{}", i), 100);
-        base.add_domain(domain.clone()).unwrap();
-        incoming.add_domain(domain).unwrap();
+        base.add_domain(domain.clone()).expect("unwrap");
+        incoming.add_domain(domain).expect("unwrap");
     }
 
     // Add unique domains to base
     for i in overlap_domains..num_domains {
         base.add_domain(DomainInfo::new(format!("BaseDomain{}", i), 100))
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Add unique domains to incoming
     for i in overlap_domains..num_domains {
         incoming
             .add_domain(DomainInfo::new(format!("IncomingDomain{}", i), 100))
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Add overlapping predicates
@@ -86,8 +86,8 @@ fn create_overlapping_tables(
             0
         };
         let pred = PredicateInfo::new(format!("Pred{}", i), vec![format!("Domain{}", domain_idx)]);
-        base.add_predicate(pred.clone()).unwrap();
-        incoming.add_predicate(pred).unwrap();
+        base.add_predicate(pred.clone()).expect("unwrap");
+        incoming.add_predicate(pred).expect("unwrap");
     }
 
     // Add unique predicates to base
@@ -104,7 +104,7 @@ fn create_overlapping_tables(
             format!("BasePred{}", i),
             vec![domain_name],
         ))
-        .unwrap();
+        .expect("unwrap");
     }
 
     // Add unique predicates to incoming
@@ -122,7 +122,7 @@ fn create_overlapping_tables(
                 format!("IncomingPred{}", i),
                 vec![domain_name],
             ))
-            .unwrap();
+            .expect("unwrap");
     }
 
     (base, incoming)
@@ -156,7 +156,7 @@ fn bench_merge_no_conflicts(c: &mut Criterion) {
                     b.iter(|| {
                         let result = merger
                             .merge(std_black_box(base), std_black_box(incoming))
-                            .unwrap();
+                            .expect("unwrap");
                         std_black_box(result);
                     });
                 },
@@ -194,7 +194,7 @@ fn bench_merge_with_conflicts(c: &mut Criterion) {
                     b.iter(|| {
                         let result = merger
                             .merge(std_black_box(base), std_black_box(incoming))
-                            .unwrap();
+                            .expect("unwrap");
                         std_black_box(result);
                     });
                 },
@@ -221,7 +221,7 @@ fn bench_keep_first_scaling(c: &mut Criterion) {
                 b.iter(|| {
                     let result = merger
                         .merge(std_black_box(base), std_black_box(incoming))
-                        .unwrap();
+                        .expect("unwrap");
                     std_black_box(result);
                 });
             },
@@ -247,7 +247,7 @@ fn bench_union_strategy(c: &mut Criterion) {
                 b.iter(|| {
                     let result = merger
                         .merge(std_black_box(base), std_black_box(incoming))
-                        .unwrap();
+                        .expect("unwrap");
                     std_black_box(result);
                 });
             },
@@ -273,7 +273,7 @@ fn bench_intersection_strategy(c: &mut Criterion) {
                 b.iter(|| {
                     let result = merger
                         .merge(std_black_box(base), std_black_box(incoming))
-                        .unwrap();
+                        .expect("unwrap");
                     std_black_box(result);
                 });
             },
@@ -294,7 +294,7 @@ fn bench_merge_report_generation(c: &mut Criterion) {
         b.iter(|| {
             let result = merger
                 .merge(std_black_box(&base), std_black_box(&incoming))
-                .unwrap();
+                .expect("unwrap");
             // Access report to ensure it's generated
             std_black_box(&result.report);
         });
@@ -315,19 +315,19 @@ fn bench_conflict_detection(c: &mut Criterion) {
         // Add conflicting domains (same name, different cardinality)
         for i in 0..*num_conflicts {
             base.add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-                .unwrap();
+                .expect("unwrap");
             incoming
                 .add_domain(DomainInfo::new(format!("Domain{}", i), 200))
-                .unwrap();
+                .expect("unwrap");
         }
 
         // Add some non-conflicting items
         for i in 0..50 {
             base.add_domain(DomainInfo::new(format!("BaseOnly{}", i), 100))
-                .unwrap();
+                .expect("unwrap");
             incoming
                 .add_domain(DomainInfo::new(format!("IncomingOnly{}", i), 100))
-                .unwrap();
+                .expect("unwrap");
         }
 
         group.throughput(Throughput::Elements(*num_conflicts as u64));
@@ -339,7 +339,7 @@ fn bench_conflict_detection(c: &mut Criterion) {
                 b.iter(|| {
                     let result = merger
                         .merge(std_black_box(base), std_black_box(incoming))
-                        .unwrap();
+                        .expect("unwrap");
                     std_black_box(result);
                 });
             },
@@ -359,10 +359,10 @@ fn bench_predicate_compatibility(c: &mut Criterion) {
 
         // Add shared domain
         base.add_domain(DomainInfo::new("SharedDomain", 100))
-            .unwrap();
+            .expect("unwrap");
         incoming
             .add_domain(DomainInfo::new("SharedDomain", 100))
-            .unwrap();
+            .expect("unwrap");
 
         // Add predicates with same signature (compatible)
         for i in 0..*num_predicates {
@@ -370,8 +370,8 @@ fn bench_predicate_compatibility(c: &mut Criterion) {
                 format!("Pred{}", i),
                 vec!["SharedDomain".to_string(), "SharedDomain".to_string()],
             );
-            base.add_predicate(pred.clone()).unwrap();
-            incoming.add_predicate(pred).unwrap();
+            base.add_predicate(pred.clone()).expect("unwrap");
+            incoming.add_predicate(pred).expect("unwrap");
         }
 
         group.throughput(Throughput::Elements(*num_predicates as u64));
@@ -383,7 +383,7 @@ fn bench_predicate_compatibility(c: &mut Criterion) {
                 b.iter(|| {
                     let result = merger
                         .merge(std_black_box(base), std_black_box(incoming))
-                        .unwrap();
+                        .expect("unwrap");
                     std_black_box(result);
                 });
             },
@@ -410,7 +410,7 @@ fn bench_large_scale_merge(c: &mut Criterion) {
                 b.iter(|| {
                     let result = merger
                         .merge(std_black_box(base), std_black_box(incoming))
-                        .unwrap();
+                        .expect("unwrap");
                     std_black_box(result);
                 });
             },

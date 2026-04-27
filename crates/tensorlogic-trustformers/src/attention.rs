@@ -229,8 +229,8 @@ mod tests {
 
     #[test]
     fn test_self_attention_creation() {
-        let config = AttentionConfig::new(512, 8).unwrap();
-        let attn = SelfAttention::new(config).unwrap();
+        let config = AttentionConfig::new(512, 8).expect("unwrap");
+        let attn = SelfAttention::new(config).expect("unwrap");
         assert_eq!(attn.config.d_model, 512);
         assert_eq!(attn.config.n_heads, 8);
         assert_eq!(attn.config.d_k, 64);
@@ -238,16 +238,16 @@ mod tests {
 
     #[test]
     fn test_self_attention_scale_factor() {
-        let config = AttentionConfig::new(512, 8).unwrap();
-        let attn = SelfAttention::new(config).unwrap();
+        let config = AttentionConfig::new(512, 8).expect("unwrap");
+        let attn = SelfAttention::new(config).expect("unwrap");
         let scale = attn.get_scale_factor();
         assert!((scale - 8.0).abs() < 1e-10); // sqrt(64) = 8.0
     }
 
     #[test]
     fn test_self_attention_graph_building() {
-        let config = AttentionConfig::new(512, 8).unwrap();
-        let attn = SelfAttention::new(config).unwrap();
+        let config = AttentionConfig::new(512, 8).expect("unwrap");
+        let attn = SelfAttention::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         // Add input tensors
@@ -255,23 +255,23 @@ mod tests {
         graph.add_tensor("K");
         graph.add_tensor("V");
 
-        let outputs = attn.build_attention_graph(&mut graph).unwrap();
+        let outputs = attn.build_attention_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
 
     #[test]
     fn test_multi_head_attention_creation() {
-        let config = AttentionConfig::new(512, 8).unwrap();
-        let mha = MultiHeadAttention::new(config).unwrap();
+        let config = AttentionConfig::new(512, 8).expect("unwrap");
+        let mha = MultiHeadAttention::new(config).expect("unwrap");
         assert_eq!(mha.num_heads(), 8);
         assert_eq!(mha.head_dim(), 64);
     }
 
     #[test]
     fn test_multi_head_attention_graph_building() {
-        let config = AttentionConfig::new(512, 8).unwrap();
-        let mha = MultiHeadAttention::new(config).unwrap();
+        let config = AttentionConfig::new(512, 8).expect("unwrap");
+        let mha = MultiHeadAttention::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         // Add input tensors
@@ -279,7 +279,7 @@ mod tests {
         graph.add_tensor("K");
         graph.add_tensor("V");
 
-        let outputs = mha.build_mha_graph(&mut graph).unwrap();
+        let outputs = mha.build_mha_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }

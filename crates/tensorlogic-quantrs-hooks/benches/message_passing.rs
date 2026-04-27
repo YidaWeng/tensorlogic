@@ -29,15 +29,17 @@ fn create_chain_graph(card: usize) -> FactorGraph {
         .collect();
     let shape_xy = vec![card, card];
     let array_xy = Array::from_shape_vec(shape_xy, values_xy)
-        .unwrap()
+        .expect("array construction from shape and values should succeed")
         .into_dyn();
     let f_xy = Factor::new(
         "P(X,Y)".to_string(),
         vec!["X".to_string(), "Y".to_string()],
         array_xy,
     )
-    .unwrap();
-    graph.add_factor(f_xy).unwrap();
+    .expect("factor construction should succeed");
+    graph
+        .add_factor(f_xy)
+        .expect("adding factor to graph should succeed");
 
     let size_yz = card * card;
     let values_yz: Vec<f64> = (0..size_yz)
@@ -45,15 +47,17 @@ fn create_chain_graph(card: usize) -> FactorGraph {
         .collect();
     let shape_yz = vec![card, card];
     let array_yz = Array::from_shape_vec(shape_yz, values_yz)
-        .unwrap()
+        .expect("array construction from shape and values should succeed")
         .into_dyn();
     let f_yz = Factor::new(
         "P(Y,Z)".to_string(),
         vec!["Y".to_string(), "Z".to_string()],
         array_yz,
     )
-    .unwrap();
-    graph.add_factor(f_yz).unwrap();
+    .expect("factor construction should succeed");
+    graph
+        .add_factor(f_yz)
+        .expect("adding factor to graph should succeed");
 
     graph
 }
@@ -78,15 +82,17 @@ fn create_grid_graph(rows: usize, cols: usize, card: usize) -> FactorGraph {
     for i in 0..rows {
         for j in 0..(cols - 1) {
             let array = Array::from_shape_vec(shape.clone(), values.clone())
-                .unwrap()
+                .expect("array construction from shape and values should succeed")
                 .into_dyn();
             let factor = Factor::new(
                 format!("edge_{}_{}_{}_{}", i, j, i, j + 1),
                 vec![format!("X_{}_{}", i, j), format!("X_{}_{}", i, j + 1)],
                 array,
             )
-            .unwrap();
-            graph.add_factor(factor).unwrap();
+            .expect("factor construction should succeed");
+            graph
+                .add_factor(factor)
+                .expect("adding factor to graph should succeed");
         }
     }
 
@@ -94,15 +100,17 @@ fn create_grid_graph(rows: usize, cols: usize, card: usize) -> FactorGraph {
     for i in 0..(rows - 1) {
         for j in 0..cols {
             let array = Array::from_shape_vec(shape.clone(), values.clone())
-                .unwrap()
+                .expect("array construction from shape and values should succeed")
                 .into_dyn();
             let factor = Factor::new(
                 format!("edge_{}_{}_{}_{}", i, j, i + 1, j),
                 vec![format!("X_{}_{}", i, j), format!("X_{}_{}", i + 1, j)],
                 array,
             )
-            .unwrap();
-            graph.add_factor(factor).unwrap();
+            .expect("factor construction should succeed");
+            graph
+                .add_factor(factor)
+                .expect("adding factor to graph should succeed");
         }
     }
 
@@ -126,15 +134,17 @@ fn create_star_graph(num_leaves: usize, card: usize) -> FactorGraph {
         graph.add_variable_with_card(leaf_name.clone(), "Domain".to_string(), card);
 
         let array = Array::from_shape_vec(shape.clone(), values.clone())
-            .unwrap()
+            .expect("array construction from shape and values should succeed")
             .into_dyn();
         let factor = Factor::new(
             format!("edge_center_{}", i),
             vec!["Center".to_string(), leaf_name],
             array,
         )
-        .unwrap();
-        graph.add_factor(factor).unwrap();
+        .expect("factor construction should succeed");
+        graph
+            .add_factor(factor)
+            .expect("adding factor to graph should succeed");
     }
 
     graph
@@ -151,7 +161,11 @@ fn bench_sum_product_chain(c: &mut Criterion) {
         group.throughput(Throughput::Elements(3)); // 3 variables
         group.bench_with_input(BenchmarkId::new("card", card), &graph, |b, g| {
             b.iter(|| {
-                black_box(algorithm.run(g).unwrap());
+                black_box(
+                    algorithm
+                        .run(g)
+                        .expect("sum-product algorithm should succeed"),
+                );
             });
         });
     }
@@ -174,7 +188,11 @@ fn bench_sum_product_grid(c: &mut Criterion) {
             &graph,
             |b, g| {
                 b.iter(|| {
-                    black_box(algorithm.run(g).unwrap());
+                    black_box(
+                        algorithm
+                            .run(g)
+                            .expect("sum-product algorithm should succeed"),
+                    );
                 });
             },
         );
@@ -197,7 +215,11 @@ fn bench_sum_product_damping(c: &mut Criterion) {
             &graph,
             |b, g| {
                 b.iter(|| {
-                    black_box(algorithm.run(g).unwrap());
+                    black_box(
+                        algorithm
+                            .run(g)
+                            .expect("sum-product algorithm should succeed"),
+                    );
                 });
             },
         );
@@ -217,7 +239,11 @@ fn bench_max_product(c: &mut Criterion) {
         group.throughput(Throughput::Elements(3));
         group.bench_with_input(BenchmarkId::new("card", card), &graph, |b, g| {
             b.iter(|| {
-                black_box(algorithm.run(g).unwrap());
+                black_box(
+                    algorithm
+                        .run(g)
+                        .expect("max-product algorithm should succeed"),
+                );
             });
         });
     }
@@ -240,7 +266,11 @@ fn bench_max_product_grid(c: &mut Criterion) {
             &graph,
             |b, g| {
                 b.iter(|| {
-                    black_box(algorithm.run(g).unwrap());
+                    black_box(
+                        algorithm
+                            .run(g)
+                            .expect("max-product algorithm should succeed"),
+                    );
                 });
             },
         );
@@ -263,7 +293,11 @@ fn bench_convergence_iterations(c: &mut Criterion) {
             &graph,
             |b, g| {
                 b.iter(|| {
-                    black_box(algorithm.run(g).unwrap());
+                    black_box(
+                        algorithm
+                            .run(g)
+                            .expect("sum-product algorithm should succeed"),
+                    );
                 });
             },
         );
@@ -286,7 +320,11 @@ fn bench_star_topology(c: &mut Criterion) {
             &graph,
             |b, g| {
                 b.iter(|| {
-                    black_box(algorithm.run(g).unwrap());
+                    black_box(
+                        algorithm
+                            .run(g)
+                            .expect("sum-product algorithm should succeed"),
+                    );
                 });
             },
         );

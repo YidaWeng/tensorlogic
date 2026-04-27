@@ -1,6 +1,6 @@
 //! TensorLogic CLI Library
 //!
-//! **Version**: 0.1.0-rc.1 | **Status**: Production Ready
+//! **Version**: 0.1.0 | **Status**: Production Ready
 //!
 //! This library provides programmatic access to the TensorLogic CLI functionality,
 //! allowing you to use the parser, executor, optimizer, and other components
@@ -105,6 +105,7 @@ pub mod output;
 pub mod parser;
 pub mod simplify;
 pub mod snapshot;
+pub mod visualization;
 
 // Re-export config types (but keep internal config logic private)
 pub use config::{CacheConfig, Config, ReplConfig, WatchConfig};
@@ -154,13 +155,14 @@ mod tests {
 
     #[test]
     fn test_parse_and_compile() {
-        let expr = parser::parse_expression("pred(x, y)").unwrap();
+        let expr = parser::parse_expression("pred(x, y)")
+            .expect("simple predicate expression should parse");
         assert!(matches!(expr, TLExpr::Pred { .. }));
     }
 
     #[test]
     fn test_format_conversion() {
-        let expr = parser::parse_expression("AND(a, b)").unwrap();
+        let expr = parser::parse_expression("AND(a, b)").expect("AND expression should parse");
         let formatted = conversion::format_expression(&expr, false);
         assert!(formatted.contains("AND"));
     }

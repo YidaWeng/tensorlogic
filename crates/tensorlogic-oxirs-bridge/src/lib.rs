@@ -1,6 +1,6 @@
 //! OxiRS Bridge: RDF*/SHACL/GraphQL → TensorLogic Integration
 //!
-//! **Version**: 0.1.0-rc.1 | **Status**: Production Ready
+//! **Version**: 0.1.0 | **Status**: Production Ready
 //!
 //! This crate provides comprehensive bidirectional integration between RDF knowledge graphs
 //! and TensorLogic's tensor-based logical reasoning system. It enables semantic web data
@@ -241,33 +241,65 @@
 //! This is a **lightweight implementation** using only `oxrdf` and `oxttl` for RDF parsing.
 //! For full SPARQL query execution, federation, and advanced RDF features, use the `oxirs-core` crate.
 
+pub mod blank_node;
 mod compilation;
 mod error;
+pub mod execute_validate;
+pub mod graph_stats;
 pub mod graphql;
+pub mod json_ld;
 pub mod knowledge_embeddings;
+pub mod ontology_diff;
 pub mod oxirs_executor;
 pub mod oxirs_graphql;
+pub mod property_path;
 mod provenance;
+pub mod quad_store;
+pub mod rdf_bulk_io;
 pub mod rdfstar;
 pub mod schema;
 pub mod shacl;
 pub mod sparql;
+pub mod sparql_builder;
+pub mod sparql_gen;
+pub mod turtle_export;
+pub mod validation_warnings;
 
 #[cfg(test)]
 mod rdfstar_tests;
 #[cfg(test)]
 mod tests;
 
+pub use blank_node::BlankNodeManager;
 pub use compilation::compile_rules;
 pub use error::{BridgeError, ParseLocation};
+pub use execute_validate::{
+    ExecutionResult, ExecutionStats, ExecutionTensor, ValidationExecutor, ValidationExecutorConfig,
+    ValidationExecutorError,
+};
+pub use graph_stats::{
+    connected_components, predicate_statistics, DegreeDistribution, GraphStats, PredicateStats,
+};
 pub use graphql::{DirectiveValue, GraphQLConverter, GraphQLDirective};
+pub use json_ld::{
+    build_entity_node, context_from_expr, context_from_predicates, expr_to_json_ld_node,
+    standard_prefixes_context, validate_document, ContextTerm as TlContextTerm,
+    JsonLdError as TlJsonLdError, JsonLdValue, TlJsonLdContext, TlJsonLdDocument, TlJsonLdNode,
+};
 pub use knowledge_embeddings::{
     cosine_similarity, euclidean_distance, EmbeddingConfig, EmbeddingModel, KGTriple,
     KnowledgeEmbeddings,
 };
+pub use ontology_diff::{compare_symbol_tables, DiffEntry, OntologyDiff};
 pub use oxirs_executor::{OxirsSparqlExecutor, QueryResults, QueryValue, TripleResult};
 pub use oxirs_graphql::{GraphQLField, GraphQLObjectType, GraphQLType, OxirsGraphQLBridge};
+pub use property_path::{PathError, PropertyPath, PropertyPathExpander, TripleStore};
 pub use provenance::ProvenanceTracker;
+pub use quad_store::QuadStore;
+pub use rdf_bulk_io::{
+    BulkFormat, BulkIoError, BulkIoStats, NamespaceRegistry, RdfBulkExporter, RdfBulkImporter,
+    RdfTriple,
+};
 pub use rdfstar::{
     MetadataBuilder, ProvenanceStats, QuotedTriple, RdfStarProvenanceStore, StatementMetadata,
 };
@@ -284,9 +316,22 @@ pub use schema::{
 };
 pub use shacl::{
     validation::{ShaclValidator, ValidationReport, ValidationResult, ValidationSeverity},
-    ShaclConverter,
+    ReportExportError, ShaclConverter, ShaclReportExporter, ShaclReportFormat,
 };
 pub use sparql::{
-    AggregateFunction, FilterCondition, PatternElement, SelectElement, SparqlCompiler, SparqlQuery,
-    TriplePattern,
+    AggregateFunction, BindExpr, FilterCondition, GraphPattern, PatternElement, SelectElement,
+    SparqlCompiler, SparqlQuery, TriplePattern,
 };
+pub use sparql_builder::{
+    validate_variable_name, AskQuery, BuilderTriplePattern, OrderDirection, SelectQuery,
+    SparqlBuilderError, SparqlFilter, SparqlLiteral, SparqlTerm, WhereClause, WhereClauseItem,
+};
+pub use sparql_gen::{
+    expr_to_sparql, render_filter as sparql_gen_render_filter,
+    render_pattern as sparql_gen_render_pattern, GraphPattern as SparqlGenGraphPattern,
+    SparqlExpr as SparqlGenExpr, SparqlFilter as SparqlGenFilter, SparqlGenConfig, SparqlGenError,
+    SparqlQuery as SparqlGenQuery, SparqlTerm as SparqlGenTerm,
+    TriplePattern as SparqlGenTriplePattern,
+};
+pub use turtle_export::TurtleExporter;
+pub use validation_warnings::{SchemaWarning, SchemaWarningAnalyzer, SchemaWarningKind};

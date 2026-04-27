@@ -113,12 +113,18 @@ impl TlExecutor for Scirs2Exec {
         let (x_broadcast, y_broadcast);
         let (x_ref, y_ref) = if x_is_scalar && !y_is_scalar {
             // x is scalar, broadcast to y's shape
-            let scalar_value = x.iter().next().unwrap();
+            let scalar_value = x
+                .iter()
+                .next()
+                .expect("scalar tensor has at least one element");
             x_broadcast = scirs2_core::ndarray::Array::from_elem(y.raw_dim(), *scalar_value);
             (&x_broadcast.view(), &y.view())
         } else if y_is_scalar && !x_is_scalar {
             // y is scalar, broadcast to x's shape
-            let scalar_value = y.iter().next().unwrap();
+            let scalar_value = y
+                .iter()
+                .next()
+                .expect("scalar tensor has at least one element");
             y_broadcast = scirs2_core::ndarray::Array::from_elem(x.raw_dim(), *scalar_value);
             (&x.view(), &y_broadcast.view())
         } else if x.shape() != y.shape() {
@@ -217,7 +223,9 @@ impl TlExecutor for Scirs2Exec {
                 ReduceOp::Sum => result.sum_axis(Axis(axis)),
                 ReduceOp::Max => result.fold_axis(Axis(axis), f64::NEG_INFINITY, |&a, &b| a.max(b)),
                 ReduceOp::Min => result.fold_axis(Axis(axis), f64::INFINITY, |&a, &b| a.min(b)),
-                ReduceOp::Mean => result.mean_axis(Axis(axis)).unwrap(),
+                ReduceOp::Mean => result
+                    .mean_axis(Axis(axis))
+                    .expect("axis is valid as validated earlier"),
                 ReduceOp::Product => result.fold_axis(Axis(axis), 1.0, |&a, &b| a * b),
             };
         }

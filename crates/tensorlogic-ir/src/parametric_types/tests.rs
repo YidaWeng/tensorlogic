@@ -117,41 +117,50 @@ fn test_substitution() {
 }
 
 #[test]
-fn test_unify_concrete_types() {
+fn test_unify_concrete_types() -> Result<(), Box<dyn std::error::Error>> {
     let int1 = ParametricType::concrete("Int");
     let int2 = ParametricType::concrete("Int");
     let string = ParametricType::concrete("String");
 
     // Int = Int
-    let subst = unify(&int1, &int2).unwrap();
+    let subst = unify(&int1, &int2)?;
     assert!(subst.is_empty());
 
     // Int ≠ String
     assert!(unify(&int1, &string).is_err());
+    Ok(())
 }
 
 #[test]
-fn test_unify_variable_with_concrete() {
+fn test_unify_variable_with_concrete() -> Result<(), Box<dyn std::error::Error>> {
     let t = ParametricType::variable("T");
     let int_type = ParametricType::concrete("Int");
 
-    let subst = unify(&t, &int_type).unwrap();
-    assert_eq!(subst.get("T").unwrap(), &int_type);
+    let subst = unify(&t, &int_type)?;
+    assert_eq!(
+        subst.get("T").unwrap_or_else(|| panic!("expected T in substitution")),
+        &int_type
+    );
+    Ok(())
 }
 
 #[test]
-fn test_unify_parametric_types() {
+fn test_unify_parametric_types() -> Result<(), Box<dyn std::error::Error>> {
     let t = ParametricType::variable("T");
     let int_type = ParametricType::concrete("Int");
     let list_t = ParametricType::list(t.clone());
     let list_int = ParametricType::list(int_type.clone());
 
-    let subst = unify(&list_t, &list_int).unwrap();
-    assert_eq!(subst.get("T").unwrap(), &int_type);
+    let subst = unify(&list_t, &list_int)?;
+    assert_eq!(
+        subst.get("T").unwrap_or_else(|| panic!("expected T in substitution")),
+        &int_type
+    );
+    Ok(())
 }
 
 #[test]
-fn test_unify_multiple_variables() {
+fn test_unify_multiple_variables() -> Result<(), Box<dyn std::error::Error>> {
     let t = ParametricType::variable("T");
     let u = ParametricType::variable("U");
     let int_type = ParametricType::concrete("Int");
@@ -160,9 +169,16 @@ fn test_unify_multiple_variables() {
     let tuple_tu = ParametricType::tuple(vec![t.clone(), u.clone()]);
     let tuple_int_int = ParametricType::tuple(vec![int_type.clone(), int_type.clone()]);
 
-    let subst = unify(&tuple_tu, &tuple_int_int).unwrap();
-    assert_eq!(subst.get("T").unwrap(), &int_type);
-    assert_eq!(subst.get("U").unwrap(), &int_type);
+    let subst = unify(&tuple_tu, &tuple_int_int)?;
+    assert_eq!(
+        subst.get("T").unwrap_or_else(|| panic!("expected T in substitution")),
+        &int_type
+    );
+    assert_eq!(
+        subst.get("U").unwrap_or_else(|| panic!("expected U in substitution")),
+        &int_type
+    );
+    Ok(())
 }
 
 #[test]
@@ -196,8 +212,14 @@ fn test_compose_substitutions() {
     subst2.insert("U".to_string(), int_type.clone());
 
     let composed = compose_substitutions(&subst1, &subst2);
-    assert_eq!(composed.get("T").unwrap(), &int_type);
-    assert_eq!(composed.get("U").unwrap(), &int_type);
+    assert_eq!(
+        composed.get("T").unwrap_or_else(|| panic!("expected T in composed substitution")),
+        &int_type
+    );
+    assert_eq!(
+        composed.get("U").unwrap_or_else(|| panic!("expected U in composed substitution")),
+        &int_type
+    );
 }
 
 #[test]
@@ -353,7 +375,7 @@ fn test_either_type() {
 }
 
 #[test]
-fn test_unify_n_ary_tuples() {
+fn test_unify_n_ary_tuples() -> Result<(), Box<dyn std::error::Error>> {
     let t = ParametricType::variable("T");
     let u = ParametricType::variable("U");
     let v = ParametricType::variable("V");
@@ -366,14 +388,24 @@ fn test_unify_n_ary_tuples() {
     let tuple_isb =
         ParametricType::triple(int_type.clone(), string_type.clone(), bool_type.clone());
 
-    let subst = unify(&tuple_tuv, &tuple_isb).unwrap();
-    assert_eq!(subst.get("T").unwrap(), &int_type);
-    assert_eq!(subst.get("U").unwrap(), &string_type);
-    assert_eq!(subst.get("V").unwrap(), &bool_type);
+    let subst = unify(&tuple_tuv, &tuple_isb)?;
+    assert_eq!(
+        subst.get("T").unwrap_or_else(|| panic!("expected T in substitution")),
+        &int_type
+    );
+    assert_eq!(
+        subst.get("U").unwrap_or_else(|| panic!("expected U in substitution")),
+        &string_type
+    );
+    assert_eq!(
+        subst.get("V").unwrap_or_else(|| panic!("expected V in substitution")),
+        &bool_type
+    );
+    Ok(())
 }
 
 #[test]
-fn test_unify_result_types() {
+fn test_unify_result_types() -> Result<(), Box<dyn std::error::Error>> {
     let t = ParametricType::variable("T");
     let e = ParametricType::variable("E");
     let int_type = ParametricType::concrete("Int");
@@ -382,9 +414,16 @@ fn test_unify_result_types() {
     let result_te = ParametricType::result(t.clone(), e.clone());
     let result_is = ParametricType::result(int_type.clone(), string_type.clone());
 
-    let subst = unify(&result_te, &result_is).unwrap();
-    assert_eq!(subst.get("T").unwrap(), &int_type);
-    assert_eq!(subst.get("E").unwrap(), &string_type);
+    let subst = unify(&result_te, &result_is)?;
+    assert_eq!(
+        subst.get("T").unwrap_or_else(|| panic!("expected T in substitution")),
+        &int_type
+    );
+    assert_eq!(
+        subst.get("E").unwrap_or_else(|| panic!("expected E in substitution")),
+        &string_type
+    );
+    Ok(())
 }
 
 #[test]
@@ -530,14 +569,15 @@ fn test_recursive_type_creation() {
 }
 
 #[test]
-fn test_recursive_type_unfold() {
+fn test_recursive_type_unfold() -> Result<(), Box<dyn std::error::Error>> {
     let n = ParametricType::variable("N");
     let option_n = ParametricType::option(n.clone());
     let nat = ParametricType::recursive("N", option_n);
 
-    let unfolded = nat.unfold().unwrap();
+    let unfolded = nat.unfold().unwrap_or_else(|| panic!("recursive type should unfold successfully"));
     // Unfolding substitutes N with the whole recursive type
     assert_eq!(unfolded.to_string(), "Option<μN. Option<N>>");
+    Ok(())
 }
 
 #[test]
@@ -716,7 +756,7 @@ fn test_record_type_creation() {
     assert!(record.is_record());
     assert!(record.is_well_kinded());
 
-    let row = record.as_row().unwrap();
+    let row = record.as_row().unwrap_or_else(|| panic!("record type should expose row"));
     assert!(row.is_closed());
     assert_eq!(row.fields.len(), 2);
 }
@@ -727,7 +767,7 @@ fn test_extensible_record_type() {
 
     let record = ParametricType::extensible_record(vec![("x".to_string(), int_type)], "rest");
 
-    let row = record.as_row().unwrap();
+    let row = record.as_row().unwrap_or_else(|| panic!("extensible record type should expose row"));
     assert!(!row.is_closed());
     assert_eq!(row.rest, Some("rest".to_string()));
 }
@@ -743,8 +783,11 @@ fn test_record_type_substitute() {
     subst.insert("T".to_string(), int_type.clone());
 
     let result = record.substitute(&subst);
-    let row = result.as_row().unwrap();
-    assert_eq!(row.get_field("value").unwrap(), &int_type);
+    let row = result.as_row().unwrap_or_else(|| panic!("substituted record should expose row"));
+    assert_eq!(
+        row.get_field("value").unwrap_or_else(|| panic!("field 'value' should exist in row")),
+        &int_type
+    );
 }
 
 #[test]

@@ -101,8 +101,14 @@ impl Optimizer for RAdamOptimizer {
                 self.m.insert(name.clone(), Array::zeros(param.raw_dim()));
                 self.v.insert(name.clone(), Array::zeros(param.raw_dim()));
             }
-            let m = self.m.get_mut(name).unwrap();
-            let v = self.v.get_mut(name).unwrap();
+            let m = self
+                .m
+                .get_mut(name)
+                .expect("m initialized for all parameters");
+            let v = self
+                .v
+                .get_mut(name)
+                .expect("v initialized for all parameters");
             *m = &*m * beta1 + &(grad * (1.0 - beta1));
             let grad_squared = grad.mapv(|g| g * g);
             *v = &*v * beta2 + &(grad_squared * (1.0 - beta2));
@@ -182,9 +188,9 @@ mod tests {
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), array![[0.1, 0.1], [0.1, 0.1]]);
         for _ in 0..10 {
-            optimizer.step(&mut params, &grads).unwrap();
+            optimizer.step(&mut params, &grads).expect("unwrap");
         }
-        let w = params.get("w").unwrap();
+        let w = params.get("w").expect("unwrap");
         assert!(w[[0, 0]] < 1.0);
         assert!(w[[0, 1]] < 2.0);
         let state = optimizer.state_dict();

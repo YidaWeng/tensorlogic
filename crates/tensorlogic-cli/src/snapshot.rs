@@ -371,8 +371,8 @@ mod tests {
         let expr = create_test_expr();
         let context = create_test_context();
 
-        let snapshot =
-            CompilationSnapshot::create(&expr, &context, "knows(x, y) AND likes(y, z)").unwrap();
+        let snapshot = CompilationSnapshot::create(&expr, &context, "knows(x, y) AND likes(y, z)")
+            .expect("snapshot creation should succeed");
 
         assert_eq!(snapshot.expression, "knows(x, y) AND likes(y, z)");
         assert!(snapshot.tensor_count > 0);
@@ -385,14 +385,14 @@ mod tests {
     fn test_snapshot_save_load() {
         let expr = create_test_expr();
         let context = create_test_context();
-        let snapshot =
-            CompilationSnapshot::create(&expr, &context, "knows(x, y) AND likes(y, z)").unwrap();
+        let snapshot = CompilationSnapshot::create(&expr, &context, "knows(x, y) AND likes(y, z)")
+            .expect("snapshot creation should succeed");
 
         let temp_dir = std::env::temp_dir();
         let path = temp_dir.join("test_snapshot.json");
 
-        snapshot.save(&path).unwrap();
-        let loaded = CompilationSnapshot::load(&path).unwrap();
+        snapshot.save(&path).expect("snapshot save should succeed");
+        let loaded = CompilationSnapshot::load(&path).expect("snapshot load should succeed");
 
         assert_eq!(snapshot.expression, loaded.expression);
         assert_eq!(snapshot.tensor_count, loaded.tensor_count);
@@ -407,10 +407,10 @@ mod tests {
         let expr = create_test_expr();
         let context = create_test_context();
 
-        let snapshot1 =
-            CompilationSnapshot::create(&expr, &context, "knows(x, y) AND likes(y, z)").unwrap();
-        let snapshot2 =
-            CompilationSnapshot::create(&expr, &context, "knows(x, y) AND likes(y, z)").unwrap();
+        let snapshot1 = CompilationSnapshot::create(&expr, &context, "knows(x, y) AND likes(y, z)")
+            .expect("snapshot1 creation should succeed");
+        let snapshot2 = CompilationSnapshot::create(&expr, &context, "knows(x, y) AND likes(y, z)")
+            .expect("snapshot2 creation should succeed");
 
         // Skip strict DOT comparison since identical compilations might have
         // different internal orderings (e.g., HashMap iteration order)
@@ -436,8 +436,10 @@ mod tests {
         let context = create_test_context();
 
         let snapshot1 =
-            CompilationSnapshot::create(&expr1, &context, "knows(x, y) AND likes(y, z)").unwrap();
-        let snapshot2 = CompilationSnapshot::create(&expr2, &context, "knows(x, y)").unwrap();
+            CompilationSnapshot::create(&expr1, &context, "knows(x, y) AND likes(y, z)")
+                .expect("snapshot1 creation should succeed");
+        let snapshot2 = CompilationSnapshot::create(&expr2, &context, "knows(x, y)")
+            .expect("snapshot2 creation should succeed");
 
         let diff = snapshot1.compare(&snapshot2);
         assert!(!diff.is_match());
@@ -455,20 +457,22 @@ mod tests {
         // Record a snapshot
         suite
             .record("test1", &expr, &context, "knows(x, y) AND likes(y, z)")
-            .unwrap();
+            .expect("snapshot record should succeed");
 
         // Verify against the snapshot (skip strict DOT comparison)
         // Since we're comparing identical inputs, use non-strict comparison
-        let current =
-            CompilationSnapshot::create(&expr, &context, "knows(x, y) AND likes(y, z)").unwrap();
+        let current = CompilationSnapshot::create(&expr, &context, "knows(x, y) AND likes(y, z)")
+            .expect("snapshot creation should succeed");
         let path = suite.snapshot_path("test1");
-        let recorded = CompilationSnapshot::load(&path).unwrap();
+        let recorded = CompilationSnapshot::load(&path).expect("snapshot load should succeed");
         let diff = recorded.compare_with_options(&current, false);
 
         assert!(diff.is_match());
 
         // List snapshots
-        let snapshots = suite.list_snapshots().unwrap();
+        let snapshots = suite
+            .list_snapshots()
+            .expect("list_snapshots should succeed");
         assert!(snapshots.contains(&"test1".to_string()));
 
         // Cleanup

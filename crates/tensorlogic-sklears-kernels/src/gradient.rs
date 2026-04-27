@@ -24,14 +24,14 @@
 //! use tensorlogic_sklears_kernels::{RbfKernel, RbfKernelConfig};
 //! use tensorlogic_sklears_kernels::gradient::{KernelGradientMatrix, compute_rbf_gradient_matrix};
 //!
-//! let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+//! let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
 //! let data = vec![
 //!     vec![1.0, 2.0],
 //!     vec![3.0, 4.0],
 //!     vec![5.0, 6.0],
 //! ];
 //!
-//! let grad_result = compute_rbf_gradient_matrix(&kernel, &data).unwrap();
+//! let grad_result = compute_rbf_gradient_matrix(&kernel, &data).expect("unwrap");
 //! // grad_result.kernel_matrix is the N×N kernel matrix K
 //! // grad_result.gradient_gamma is dK/dγ (N×N matrix)
 //! // grad_result.gradient_length_scale is dK/dl (N×N matrix)
@@ -112,9 +112,9 @@ pub struct RbfGradientResult {
 /// use tensorlogic_sklears_kernels::{RbfKernel, RbfKernelConfig};
 /// use tensorlogic_sklears_kernels::gradient::compute_rbf_gradient_matrix;
 ///
-/// let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+/// let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
 /// let data = vec![vec![1.0, 2.0], vec![3.0, 4.0]];
-/// let result = compute_rbf_gradient_matrix(&kernel, &data).unwrap();
+/// let result = compute_rbf_gradient_matrix(&kernel, &data).expect("unwrap");
 /// ```
 pub fn compute_rbf_gradient_matrix(
     kernel: &RbfKernel,
@@ -462,10 +462,10 @@ mod tests {
 
     #[test]
     fn test_rbf_gradient_matrix() {
-        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
         let data = vec![vec![1.0, 2.0], vec![3.0, 4.0], vec![5.0, 6.0]];
 
-        let result = compute_rbf_gradient_matrix(&kernel, &data).unwrap();
+        let result = compute_rbf_gradient_matrix(&kernel, &data).expect("unwrap");
 
         // Check dimensions
         assert_eq!(result.kernel_matrix.len(), 3);
@@ -490,10 +490,10 @@ mod tests {
 
     #[test]
     fn test_polynomial_gradient_matrix() {
-        let kernel = PolynomialKernel::new(2, 1.0).unwrap();
+        let kernel = PolynomialKernel::new(2, 1.0).expect("unwrap");
         let data = vec![vec![1.0, 2.0], vec![2.0, 3.0]];
 
-        let result = compute_polynomial_gradient_matrix(&kernel, &data).unwrap();
+        let result = compute_polynomial_gradient_matrix(&kernel, &data).expect("unwrap");
 
         assert_eq!(result.kernel_matrix.len(), 2);
         assert!(is_symmetric(&result.kernel_matrix, 1e-10));
@@ -502,10 +502,10 @@ mod tests {
 
     #[test]
     fn test_matern_gradient_matrix() {
-        let kernel = MaternKernel::nu_3_2(1.0).unwrap();
+        let kernel = MaternKernel::nu_3_2(1.0).expect("unwrap");
         let data = vec![vec![1.0, 2.0], vec![3.0, 4.0]];
 
-        let result = compute_matern_gradient_matrix(&kernel, &data).unwrap();
+        let result = compute_matern_gradient_matrix(&kernel, &data).expect("unwrap");
 
         assert_eq!(result.kernel_matrix.len(), 2);
         assert!(is_symmetric(&result.kernel_matrix, 1e-10));
@@ -514,10 +514,10 @@ mod tests {
 
     #[test]
     fn test_laplacian_gradient_matrix() {
-        let kernel = LaplacianKernel::new(0.5).unwrap();
+        let kernel = LaplacianKernel::new(0.5).expect("unwrap");
         let data = vec![vec![1.0, 2.0], vec![3.0, 4.0]];
 
-        let result = compute_laplacian_gradient_matrix(&kernel, &data).unwrap();
+        let result = compute_laplacian_gradient_matrix(&kernel, &data).expect("unwrap");
 
         assert_eq!(result.kernel_matrix.len(), 2);
         assert!(is_symmetric(&result.kernel_matrix, 1e-10));
@@ -527,10 +527,10 @@ mod tests {
 
     #[test]
     fn test_rational_quadratic_gradient_matrix() {
-        let kernel = RationalQuadraticKernel::new(1.0, 2.0).unwrap();
+        let kernel = RationalQuadraticKernel::new(1.0, 2.0).expect("unwrap");
         let data = vec![vec![1.0, 2.0], vec![3.0, 4.0]];
 
-        let result = compute_rational_quadratic_gradient_matrix(&kernel, &data).unwrap();
+        let result = compute_rational_quadratic_gradient_matrix(&kernel, &data).expect("unwrap");
 
         assert_eq!(result.kernel_matrix.len(), 2);
         assert!(is_symmetric(&result.kernel_matrix, 1e-10));
@@ -543,7 +543,7 @@ mod tests {
         let a = vec![vec![1.0, 2.0], vec![3.0, 4.0]];
         let b = vec![vec![5.0, 6.0], vec![7.0, 8.0]];
 
-        let trace = trace_product(&a, &b).unwrap();
+        let trace = trace_product(&a, &b).expect("unwrap");
 
         // A * B = [[19, 22], [43, 50]]
         // trace = 19 + 50 = 69
@@ -572,10 +572,10 @@ mod tests {
 
     #[test]
     fn test_kernel_gradient_matrix_accessors() {
-        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
         let data = vec![vec![1.0, 2.0], vec![3.0, 4.0]];
 
-        let rbf_result = compute_rbf_gradient_matrix(&kernel, &data).unwrap();
+        let rbf_result = compute_rbf_gradient_matrix(&kernel, &data).expect("unwrap");
 
         // Convert to generic format
         let gradients = vec![
@@ -599,7 +599,7 @@ mod tests {
 
     #[test]
     fn test_empty_data() {
-        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
         let data: Vec<Vec<f64>> = vec![];
 
         let result = compute_rbf_gradient_matrix(&kernel, &data);
@@ -608,10 +608,10 @@ mod tests {
 
     #[test]
     fn test_single_point() {
-        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
         let data = vec![vec![1.0, 2.0]];
 
-        let result = compute_rbf_gradient_matrix(&kernel, &data).unwrap();
+        let result = compute_rbf_gradient_matrix(&kernel, &data).expect("unwrap");
 
         // Single point: K = [[1.0]], gradients = [[0.0]]
         assert_eq!(result.kernel_matrix.len(), 1);
@@ -622,15 +622,17 @@ mod tests {
     #[test]
     fn test_gradient_consistency_with_element_wise() {
         // Verify matrix gradients match element-wise computation
-        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
         let data = vec![vec![1.0, 2.0], vec![3.0, 4.0]];
 
-        let result = compute_rbf_gradient_matrix(&kernel, &data).unwrap();
+        let result = compute_rbf_gradient_matrix(&kernel, &data).expect("unwrap");
 
         // Check each element
         for i in 0..2 {
             for j in 0..2 {
-                let (k, grad_g) = kernel.compute_with_gradient(&data[i], &data[j]).unwrap();
+                let (k, grad_g) = kernel
+                    .compute_with_gradient(&data[i], &data[j])
+                    .expect("unwrap");
                 assert!(
                     (result.kernel_matrix[i][j] - k).abs() < 1e-10,
                     "K[{},{}] mismatch",

@@ -92,7 +92,7 @@ fn event_creation_benchmarks(c: &mut Criterion) {
     // Benchmark: Event with serialized data
     group.bench_function("with_data", |b| {
         let domain = DomainInfo::new("TestDomain", 100);
-        let data = serde_json::to_string(&domain).unwrap();
+        let data = serde_json::to_string(&domain).expect("unwrap");
 
         b.iter(|| {
             SyncEvent::new(
@@ -122,7 +122,7 @@ fn add_domain_benchmarks(c: &mut Criterion) {
             },
             |mut mgr| {
                 mgr.add_domain(black_box(DomainInfo::new("Person", 100)))
-                    .unwrap();
+                    .expect("unwrap");
             },
             criterion::BatchSize::SmallInput,
         );
@@ -141,7 +141,7 @@ fn add_domain_benchmarks(c: &mut Criterion) {
                 |mut mgr| {
                     for i in 0..count {
                         mgr.add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-                            .unwrap();
+                            .expect("unwrap");
                     }
                 },
                 criterion::BatchSize::SmallInput,
@@ -164,7 +164,8 @@ fn apply_event_benchmarks(c: &mut Criterion) {
         b.iter_batched(
             || {
                 let mut mgr1 = SynchronizationManager::new(node1.clone(), SymbolTable::new());
-                mgr1.add_domain(DomainInfo::new("Person", 100)).unwrap();
+                mgr1.add_domain(DomainInfo::new("Person", 100))
+                    .expect("unwrap");
                 let events = mgr1.pending_events();
 
                 let mgr2 = SynchronizationManager::new(node2.clone(), SymbolTable::new());
@@ -172,7 +173,8 @@ fn apply_event_benchmarks(c: &mut Criterion) {
                 (mgr2, events)
             },
             |(mut mgr2, events)| {
-                mgr2.apply_event(black_box(events[0].clone())).unwrap();
+                mgr2.apply_event(black_box(events[0].clone()))
+                    .expect("unwrap");
             },
             criterion::BatchSize::SmallInput,
         );
@@ -187,7 +189,7 @@ fn apply_event_benchmarks(c: &mut Criterion) {
                     let mut mgr1 = SynchronizationManager::new(node1.clone(), SymbolTable::new());
                     for i in 0..count {
                         mgr1.add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-                            .unwrap();
+                            .expect("unwrap");
                     }
                     let events = mgr1.pending_events();
 
@@ -197,7 +199,7 @@ fn apply_event_benchmarks(c: &mut Criterion) {
                 },
                 |(mut mgr2, events)| {
                     for event in events {
-                        mgr2.apply_event(event).unwrap();
+                        mgr2.apply_event(event).expect("unwrap");
                     }
                 },
                 criterion::BatchSize::SmallInput,
@@ -230,12 +232,14 @@ fn conflict_resolution_benchmarks(c: &mut Criterion) {
                         let mut mgr =
                             SynchronizationManager::new(node2.clone(), SymbolTable::new());
                         mgr.set_resolution_strategy(strategy);
-                        mgr.add_domain(DomainInfo::new("Product", 100)).unwrap();
+                        mgr.add_domain(DomainInfo::new("Product", 100))
+                            .expect("unwrap");
 
                         // Create conflicting event from node1
                         let mut mgr1 =
                             SynchronizationManager::new(node1.clone(), SymbolTable::new());
-                        mgr1.add_domain(DomainInfo::new("Product", 200)).unwrap();
+                        mgr1.add_domain(DomainInfo::new("Product", 200))
+                            .expect("unwrap");
                         let events = mgr1.pending_events();
 
                         (mgr, events[0].clone())
@@ -265,13 +269,14 @@ fn predicate_sync_benchmarks(c: &mut Criterion) {
         let mut mgr2 = SynchronizationManager::new(node2.clone(), SymbolTable::new());
 
         // Add domains to both
-        mgr1.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        mgr1.add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
         mgr1.add_domain(DomainInfo::new("Organization", 50))
-            .unwrap();
+            .expect("unwrap");
 
         let events = mgr1.pending_events();
         for event in events {
-            mgr2.apply_event(event).unwrap();
+            mgr2.apply_event(event).expect("unwrap");
         }
 
         (mgr1, mgr2)
@@ -286,11 +291,11 @@ fn predicate_sync_benchmarks(c: &mut Criterion) {
                     "worksAt",
                     vec!["Person".to_string(), "Organization".to_string()],
                 ))
-                .unwrap();
+                .expect("unwrap");
 
                 let events = mgr1.pending_events();
                 for event in events {
-                    mgr2.apply_event(event).unwrap();
+                    mgr2.apply_event(event).expect("unwrap");
                 }
             },
             criterion::BatchSize::SmallInput,
@@ -306,21 +311,21 @@ fn predicate_sync_benchmarks(c: &mut Criterion) {
                     "worksAt",
                     vec!["Person".to_string(), "Organization".to_string()],
                 ))
-                .unwrap();
+                .expect("unwrap");
                 mgr1.add_predicate(PredicateInfo::new(
                     "manages",
                     vec!["Person".to_string(), "Person".to_string()],
                 ))
-                .unwrap();
+                .expect("unwrap");
                 mgr1.add_predicate(PredicateInfo::new(
                     "founded",
                     vec!["Person".to_string(), "Organization".to_string()],
                 ))
-                .unwrap();
+                .expect("unwrap");
 
                 let events = mgr1.pending_events();
                 for event in events {
-                    mgr2.apply_event(event).unwrap();
+                    mgr2.apply_event(event).expect("unwrap");
                 }
             },
             criterion::BatchSize::SmallInput,

@@ -15,14 +15,14 @@
 //! use tensorlogic_compiler::import::prolog::parse_prolog;
 //!
 //! // Parse Prolog-style rule
-//! let expr = parse_prolog("mortal(X) :- human(X).").unwrap();
+//! let expr = parse_prolog("mortal(X) :- human(X).").expect("unwrap");
 //! ```
 //!
 //! ```no_run
 //! use tensorlogic_compiler::import::sexpr::parse_sexpr;
 //!
 //! // Parse S-expression
-//! let expr = parse_sexpr("(forall x (=> (human x) (mortal x)))").unwrap();
+//! let expr = parse_sexpr("(forall x (=> (human x) (mortal x)))").expect("unwrap");
 //! ```
 
 pub mod prolog;
@@ -46,10 +46,10 @@ use anyhow::{anyhow, Result};
 /// use tensorlogic_compiler::import::parse_auto;
 ///
 /// // Prolog format
-/// let expr1 = parse_auto("mortal(socrates).").unwrap();
+/// let expr1 = parse_auto("mortal(socrates).").expect("unwrap");
 ///
 /// // S-expression format
-/// let expr2 = parse_auto("(and (P x) (Q x))").unwrap();
+/// let expr2 = parse_auto("(and (P x) (Q x))").expect("unwrap");
 /// ```
 pub fn parse_auto(input: &str) -> Result<tensorlogic_ir::TLExpr> {
     let trimmed = input.trim();
@@ -79,13 +79,13 @@ mod tests {
 
     #[test]
     fn test_auto_detect_sexpr() {
-        let expr = parse_auto("(and (P x) (Q x))").unwrap();
+        let expr = parse_auto("(and (P x) (Q x))").expect("unwrap");
         assert!(matches!(expr, TLExpr::And(_, _)));
     }
 
     #[test]
     fn test_auto_detect_prolog() {
-        let expr = parse_auto("mortal(X).").unwrap();
+        let expr = parse_auto("mortal(X).").expect("unwrap");
         assert!(matches!(expr, TLExpr::Pred { .. }));
     }
 

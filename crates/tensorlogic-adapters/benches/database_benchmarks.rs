@@ -21,7 +21,7 @@ fn create_small_schema() -> SymbolTable {
         let name = format!("Domain{}", i);
         table
             .add_domain(DomainInfo::new(&name, 100 + i * 10))
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Add 10 predicates
@@ -32,14 +32,16 @@ fn create_small_schema() -> SymbolTable {
                 &pred_name,
                 vec![format!("Domain{}", i % 5), format!("Domain{}", (i + 1) % 5)],
             ))
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Add 5 variables
     for i in 0..5 {
         let var_name = format!("var{}", i);
         let domain_name = format!("Domain{}", i);
-        table.bind_variable(&var_name, &domain_name).unwrap();
+        table
+            .bind_variable(&var_name, &domain_name)
+            .expect("unwrap");
     }
 
     table
@@ -57,7 +59,7 @@ fn create_medium_schema() -> SymbolTable {
                 DomainInfo::new(&name, 100 + i * 10)
                     .with_description(format!("Description for domain {}", i)),
             )
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Add 50 predicates
@@ -75,14 +77,16 @@ fn create_medium_schema() -> SymbolTable {
                 )
                 .with_description(format!("Predicate {}", i)),
             )
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Add 20 variables
     for i in 0..20 {
         let var_name = format!("variable{}", i);
         let domain_name = format!("Domain{}", i);
-        table.bind_variable(&var_name, &domain_name).unwrap();
+        table
+            .bind_variable(&var_name, &domain_name)
+            .expect("unwrap");
     }
 
     table
@@ -100,7 +104,7 @@ fn create_large_schema() -> SymbolTable {
                 DomainInfo::new(&name, 100 + i * 10)
                     .with_description(format!("Description for domain {}", i)),
             )
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Add 200 predicates
@@ -115,14 +119,16 @@ fn create_large_schema() -> SymbolTable {
             .add_predicate(
                 PredicateInfo::new(&pred_name, args).with_description(format!("Predicate {}", i)),
             )
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Add 50 variables
     for i in 0..50 {
         let var_name = format!("variable{}", i);
         let domain_name = format!("Domain{}", i * 2);
-        table.bind_variable(&var_name, &domain_name).unwrap();
+        table
+            .bind_variable(&var_name, &domain_name)
+            .expect("unwrap");
     }
 
     table
@@ -146,7 +152,7 @@ fn bench_memory_store(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(size), &schema, |b, schema| {
             b.iter(|| {
                 let mut db = MemoryDatabase::new();
-                black_box(db.store_schema("test", schema).unwrap())
+                black_box(db.store_schema("test", schema).expect("unwrap"))
             });
         });
     }
@@ -166,10 +172,10 @@ fn bench_memory_load(c: &mut Criterion) {
         };
 
         let mut db = MemoryDatabase::new();
-        let id = db.store_schema("test", &schema).unwrap();
+        let id = db.store_schema("test", &schema).expect("unwrap");
 
         group.bench_with_input(BenchmarkId::from_parameter(size), &id, |b, id| {
-            b.iter(|| black_box(db.load_schema(*id).unwrap()));
+            b.iter(|| black_box(db.load_schema(*id).expect("unwrap")));
         });
     }
 
@@ -185,12 +191,12 @@ fn bench_memory_list_schemas(c: &mut Criterion) {
 
         for i in 0..count {
             let name = format!("schema{}", i);
-            db.store_schema(&name, &schema).unwrap();
+            db.store_schema(&name, &schema).expect("unwrap");
         }
 
         group.throughput(Throughput::Elements(count as u64));
         group.bench_with_input(BenchmarkId::from_parameter(count), &db, |b, db| {
-            b.iter(|| black_box(db.list_schemas().unwrap()));
+            b.iter(|| black_box(db.list_schemas().expect("unwrap")));
         });
     }
 
@@ -206,11 +212,11 @@ fn bench_memory_search(c: &mut Criterion) {
     // Create 100 schemas with different names
     for i in 0..100 {
         let name = format!("test_schema_{}", i);
-        db.store_schema(&name, &schema).unwrap();
+        db.store_schema(&name, &schema).expect("unwrap");
     }
 
     group.bench_function("pattern_match", |b| {
-        b.iter(|| black_box(db.search_schemas("test").unwrap()));
+        b.iter(|| black_box(db.search_schemas("test").expect("unwrap")));
     });
 
     group.finish();
@@ -234,8 +240,8 @@ fn bench_sqlite_store(c: &mut Criterion) {
 
         group.bench_with_input(BenchmarkId::from_parameter(size), &schema, |b, schema| {
             b.iter(|| {
-                let mut db = SQLiteDatabase::new(":memory:").unwrap();
-                black_box(db.store_schema("test", schema).unwrap())
+                let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
+                black_box(db.store_schema("test", schema).expect("unwrap"))
             });
         });
     }
@@ -255,11 +261,11 @@ fn bench_sqlite_load(c: &mut Criterion) {
             _ => unreachable!(),
         };
 
-        let mut db = SQLiteDatabase::new(":memory:").unwrap();
-        let id = db.store_schema("test", &schema).unwrap();
+        let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
+        let id = db.store_schema("test", &schema).expect("unwrap");
 
         group.bench_with_input(BenchmarkId::from_parameter(size), &id, |b, id| {
-            b.iter(|| black_box(db.load_schema(*id).unwrap()));
+            b.iter(|| black_box(db.load_schema(*id).expect("unwrap")));
         });
     }
 
@@ -271,17 +277,17 @@ fn bench_sqlite_list_schemas(c: &mut Criterion) {
     let mut group = c.benchmark_group("sqlite_list_schemas");
 
     for &count in &[10, 50, 100] {
-        let mut db = SQLiteDatabase::new(":memory:").unwrap();
+        let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
         let schema = create_small_schema();
 
         for i in 0..count {
             let name = format!("schema{}", i);
-            db.store_schema(&name, &schema).unwrap();
+            db.store_schema(&name, &schema).expect("unwrap");
         }
 
         group.throughput(Throughput::Elements(count as u64));
         group.bench_with_input(BenchmarkId::from_parameter(count), &db, |b, db| {
-            b.iter(|| black_box(db.list_schemas().unwrap()));
+            b.iter(|| black_box(db.list_schemas().expect("unwrap")));
         });
     }
 
@@ -297,14 +303,14 @@ fn bench_sqlite_vs_memory(c: &mut Criterion) {
     group.bench_function("memory_store", |b| {
         b.iter(|| {
             let mut db = MemoryDatabase::new();
-            black_box(db.store_schema("test", &schema).unwrap())
+            black_box(db.store_schema("test", &schema).expect("unwrap"))
         });
     });
 
     group.bench_function("sqlite_store", |b| {
         b.iter(|| {
-            let mut db = SQLiteDatabase::new(":memory:").unwrap();
-            black_box(db.store_schema("test", &schema).unwrap())
+            let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
+            black_box(db.store_schema("test", &schema).expect("unwrap"))
         });
     });
 
@@ -322,8 +328,8 @@ fn bench_sqlite_persistence(c: &mut Criterion) {
 
     group.bench_function("file_store", |b| {
         b.iter(|| {
-            let mut db = SQLiteDatabase::new(db_path.to_str().unwrap()).unwrap();
-            black_box(db.store_schema("test", &schema).unwrap())
+            let mut db = SQLiteDatabase::new(db_path.to_str().expect("unwrap")).expect("unwrap");
+            black_box(db.store_schema("test", &schema).expect("unwrap"))
         });
     });
 

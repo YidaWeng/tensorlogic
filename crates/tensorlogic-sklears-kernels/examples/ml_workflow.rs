@@ -110,9 +110,9 @@ fn main() -> anyhow::Result<()> {
 
     let sparse_builder = SparseKernelMatrixBuilder::new()
         .with_threshold(0.5) // Only keep similarities > 0.5
-        .unwrap()
+        .expect("sparse kernel matrix builder threshold should be valid")
         .with_max_entries_per_row(10) // Max 10 neighbors per document
-        .unwrap();
+        .expect("sparse kernel matrix builder max entries per row should be valid");
 
     let sparse_matrix = sparse_builder.build(&text_features, &text_kernel2)?;
 

@@ -960,7 +960,7 @@ mod tests {
         assert!(registry.contains("FloatVector"));
         assert_eq!(registry.len(), 1);
 
-        let ty = registry.get("FloatVector").unwrap();
+        let ty = registry.get("FloatVector").expect("unwrap");
         assert_eq!(ty.base_type, "Vector");
     }
 

@@ -204,7 +204,7 @@ impl JitCache {
 
     /// Insert a compiled graph into the cache.
     pub fn insert(&self, key: JitKey, compiled: CompiledGraph, is_specialized: bool) {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("lock should not be poisoned");
 
         // Evict old entries if cache is full
         if cache.len() >= self.config.cache_size {
@@ -222,13 +222,13 @@ impl JitCache {
 
     /// Retrieve a compiled graph from the cache.
     pub fn get(&self, key: &JitKey) -> Option<CompiledGraph> {
-        let cache = self.cache.read().unwrap();
+        let cache = self.cache.read().expect("lock should not be poisoned");
         cache.get(key).map(|entry| entry.compiled.clone())
     }
 
     /// Record an execution of a cached graph.
     pub fn record_execution(&self, key: &JitKey, duration: Duration) {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("lock should not be poisoned");
         if let Some(entry) = cache.get_mut(key) {
             entry.stats.record_execution(duration);
         }
@@ -236,13 +236,13 @@ impl JitCache {
 
     /// Get statistics for a cached entry.
     pub fn get_stats(&self, key: &JitKey) -> Option<JitEntryStats> {
-        let cache = self.cache.read().unwrap();
+        let cache = self.cache.read().expect("lock should not be poisoned");
         cache.get(key).map(|entry| entry.stats.clone())
     }
 
     /// Get all hot paths (frequently executed graphs).
     pub fn get_hot_paths(&self) -> Vec<(JitKey, JitEntryStats)> {
-        let cache = self.cache.read().unwrap();
+        let cache = self.cache.read().expect("lock should not be poisoned");
         cache
             .iter()
             .filter(|(_, entry)| entry.stats.is_hot(self.config.hot_path_threshold))
@@ -252,7 +252,7 @@ impl JitCache {
 
     /// Get all cold paths (rarely executed graphs).
     pub fn get_cold_paths(&self) -> Vec<(JitKey, JitEntryStats)> {
-        let cache = self.cache.read().unwrap();
+        let cache = self.cache.read().expect("lock should not be poisoned");
         let window = Duration::from_secs(300); // 5 minutes
         cache
             .iter()
@@ -278,13 +278,13 @@ impl JitCache {
 
     /// Clear the cache.
     pub fn clear(&self) {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("lock should not be poisoned");
         cache.clear();
     }
 
     /// Get cache statistics.
     pub fn cache_stats(&self) -> JitCacheStats {
-        let cache = self.cache.read().unwrap();
+        let cache = self.cache.read().expect("lock should not be poisoned");
         let total_entries = cache.len();
         let hot_entries = cache
             .values()
@@ -401,7 +401,12 @@ impl AdaptiveOptimizer {
 
         // Recompile hot paths with aggressive optimization
         for (key, opt_level) in plan.recompile {
-            if let Some(entry) = cache.cache.read().unwrap().get(&key) {
+            if let Some(entry) = cache
+                .cache
+                .read()
+                .expect("lock should not be poisoned")
+                .get(&key)
+            {
                 let graph = &entry.compiled.graph;
                 let mut config = entry.compiled.config.clone();
                 config.optimization_level = opt_level;
@@ -410,14 +415,24 @@ impl AdaptiveOptimizer {
                 let recompiled = new_compiler.compile(graph)?;
 
                 // Update cache with recompiled version
-                cache.cache.write().unwrap().get_mut(&key).unwrap().compiled = recompiled;
+                cache
+                    .cache
+                    .write()
+                    .expect("lock should not be poisoned")
+                    .get_mut(&key)
+                    .expect("key just retrieved from cache")
+                    .compiled = recompiled;
                 optimized_count += 1;
             }
         }
 
         // Deoptimize cold paths (remove from cache or downgrade)
         for key in plan.deoptimize {
-            cache.cache.write().unwrap().remove(&key);
+            cache
+                .cache
+                .write()
+                .expect("lock should not be poisoned")
+                .remove(&key);
         }
 
         Ok(optimized_count)

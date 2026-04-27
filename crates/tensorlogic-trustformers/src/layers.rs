@@ -486,7 +486,7 @@ mod tests {
 
     #[test]
     fn test_encoder_layer_config_creation() {
-        let config = EncoderLayerConfig::new(512, 8, 2048).unwrap();
+        let config = EncoderLayerConfig::new(512, 8, 2048).expect("unwrap");
         assert_eq!(config.attention.d_model, 512);
         assert_eq!(config.attention.n_heads, 8);
         assert_eq!(config.feed_forward.d_ff, 2048);
@@ -497,7 +497,7 @@ mod tests {
     #[test]
     fn test_encoder_layer_config_with_dropout() {
         let config = EncoderLayerConfig::new(512, 8, 2048)
-            .unwrap()
+            .expect("unwrap")
             .with_dropout(0.1);
         assert!((config.attention.dropout - 0.1).abs() < 1e-10);
         assert!((config.feed_forward.dropout - 0.1).abs() < 1e-10);
@@ -505,27 +505,27 @@ mod tests {
 
     #[test]
     fn test_encoder_layer_creation() {
-        let config = EncoderLayerConfig::new(512, 8, 2048).unwrap();
-        let layer = EncoderLayer::new(config).unwrap();
+        let config = EncoderLayerConfig::new(512, 8, 2048).expect("unwrap");
+        let layer = EncoderLayer::new(config).expect("unwrap");
         assert_eq!(layer.config.attention.d_model, 512);
     }
 
     #[test]
     fn test_encoder_layer_graph_building() {
-        let config = EncoderLayerConfig::new(512, 8, 2048).unwrap();
-        let layer = EncoderLayer::new(config).unwrap();
+        let config = EncoderLayerConfig::new(512, 8, 2048).expect("unwrap");
+        let layer = EncoderLayer::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("x");
 
-        let outputs = layer.build_encoder_layer_graph(&mut graph).unwrap();
+        let outputs = layer.build_encoder_layer_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
 
     #[test]
     fn test_decoder_layer_config_creation() {
-        let config = DecoderLayerConfig::new(512, 8, 2048).unwrap();
+        let config = DecoderLayerConfig::new(512, 8, 2048).expect("unwrap");
         assert_eq!(config.self_attention.d_model, 512);
         assert_eq!(config.cross_attention.d_model, 512);
         assert!(config.self_attention.causal);
@@ -535,21 +535,21 @@ mod tests {
 
     #[test]
     fn test_decoder_layer_creation() {
-        let config = DecoderLayerConfig::new(512, 8, 2048).unwrap();
-        let layer = DecoderLayer::new(config).unwrap();
+        let config = DecoderLayerConfig::new(512, 8, 2048).expect("unwrap");
+        let layer = DecoderLayer::new(config).expect("unwrap");
         assert_eq!(layer.config.self_attention.d_model, 512);
     }
 
     #[test]
     fn test_decoder_layer_graph_building() {
-        let config = DecoderLayerConfig::new(512, 8, 2048).unwrap();
-        let layer = DecoderLayer::new(config).unwrap();
+        let config = DecoderLayerConfig::new(512, 8, 2048).expect("unwrap");
+        let layer = DecoderLayer::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("decoder_input");
         graph.add_tensor("encoder_output");
 
-        let outputs = layer.build_decoder_layer_graph(&mut graph).unwrap();
+        let outputs = layer.build_decoder_layer_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }

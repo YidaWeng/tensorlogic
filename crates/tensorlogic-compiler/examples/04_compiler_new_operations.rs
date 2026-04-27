@@ -16,7 +16,7 @@ fn main() {
     let a = TLExpr::pred("a", vec![Term::var("x")]);
     let two = TLExpr::Constant(2.0);
     let pow_expr = TLExpr::Pow(Box::new(a.clone()), Box::new(two));
-    let graph = compile_to_einsum(&pow_expr).unwrap();
+    let graph = compile_to_einsum(&pow_expr).expect("unwrap");
     println!(
         "   Nodes: {}, Tensors: {}\n",
         graph.nodes.len(),
@@ -28,7 +28,7 @@ fn main() {
     let a = TLExpr::pred("a", vec![Term::var("x")]);
     let ten = TLExpr::Constant(10.0);
     let mod_expr = TLExpr::Mod(Box::new(a), Box::new(ten));
-    let graph = compile_to_einsum(&mod_expr).unwrap();
+    let graph = compile_to_einsum(&mod_expr).expect("unwrap");
     println!(
         "   Nodes: {}, Tensors: {}\n",
         graph.nodes.len(),
@@ -45,8 +45,8 @@ fn main() {
     let d = TLExpr::pred("d", vec![Term::var("x")]);
     let max_expr = TLExpr::Max(Box::new(c), Box::new(d));
 
-    let graph1 = compile_to_einsum(&min_expr).unwrap();
-    let graph2 = compile_to_einsum(&max_expr).unwrap();
+    let graph1 = compile_to_einsum(&min_expr).expect("unwrap");
+    let graph2 = compile_to_einsum(&max_expr).expect("unwrap");
     println!(
         "   Min nodes: {}, Max nodes: {}\n",
         graph1.nodes.len(),
@@ -67,10 +67,10 @@ fn main() {
     let d = TLExpr::pred("d", vec![Term::var("x")]);
     let round_expr = TLExpr::Round(Box::new(d));
 
-    let _ = compile_to_einsum(&abs_expr).unwrap();
-    let _ = compile_to_einsum(&floor_expr).unwrap();
-    let _ = compile_to_einsum(&ceil_expr).unwrap();
-    let _ = compile_to_einsum(&round_expr).unwrap();
+    let _ = compile_to_einsum(&abs_expr).expect("unwrap");
+    let _ = compile_to_einsum(&floor_expr).expect("unwrap");
+    let _ = compile_to_einsum(&ceil_expr).expect("unwrap");
+    let _ = compile_to_einsum(&round_expr).expect("unwrap");
     println!("   All rounding operations compiled successfully\n");
 
     // 5. Square root and exponential operations
@@ -84,9 +84,9 @@ fn main() {
     let c = TLExpr::pred("c", vec![Term::var("x")]);
     let log_expr = TLExpr::Log(Box::new(c));
 
-    let _ = compile_to_einsum(&sqrt_expr).unwrap();
-    let _ = compile_to_einsum(&exp_expr).unwrap();
-    let _ = compile_to_einsum(&log_expr).unwrap();
+    let _ = compile_to_einsum(&sqrt_expr).expect("unwrap");
+    let _ = compile_to_einsum(&exp_expr).expect("unwrap");
+    let _ = compile_to_einsum(&log_expr).expect("unwrap");
     println!("   All exponential operations compiled successfully\n");
 
     // 6. Trigonometric operations
@@ -96,9 +96,9 @@ fn main() {
     let cos_expr = TLExpr::Cos(Box::new(x.clone()));
     let tan_expr = TLExpr::Tan(Box::new(x));
 
-    let _ = compile_to_einsum(&sin_expr).unwrap();
-    let _ = compile_to_einsum(&cos_expr).unwrap();
-    let _ = compile_to_einsum(&tan_expr).unwrap();
+    let _ = compile_to_einsum(&sin_expr).expect("unwrap");
+    let _ = compile_to_einsum(&cos_expr).expect("unwrap");
+    let _ = compile_to_einsum(&tan_expr).expect("unwrap");
     println!("   All trigonometric operations compiled successfully\n");
 
     // 7. Complex nested expression
@@ -113,7 +113,7 @@ fn main() {
     let abs_sum = TLExpr::Abs(Box::new(sum));
     let magnitude = TLExpr::Sqrt(Box::new(abs_sum));
 
-    let graph = compile_to_einsum(&magnitude).unwrap();
+    let graph = compile_to_einsum(&magnitude).expect("unwrap");
     println!(
         "   Nodes: {}, Tensors: {}",
         graph.nodes.len(),
@@ -132,7 +132,7 @@ fn main() {
     let cos_squared = TLExpr::Pow(Box::new(cos_x), Box::new(two));
     let identity = TLExpr::Add(Box::new(sin_squared), Box::new(cos_squared));
 
-    let graph = compile_to_einsum(&identity).unwrap();
+    let graph = compile_to_einsum(&identity).expect("unwrap");
     println!(
         "   Nodes: {}, Tensors: {}",
         graph.nodes.len(),
@@ -158,7 +158,7 @@ fn main() {
         body: Box::new(product),
     };
 
-    let graph = compile_to_einsum_with_context(&let_expr, &mut ctx).unwrap();
+    let graph = compile_to_einsum_with_context(&let_expr, &mut ctx).expect("unwrap");
     println!(
         "   Nodes: {}, Tensors: {}",
         graph.nodes.len(),
@@ -175,7 +175,7 @@ fn main() {
     let scaled = TLExpr::Div(Box::new(x), Box::new(temperature));
     let exp_scaled = TLExpr::Exp(Box::new(scaled));
 
-    let graph = compile_to_einsum(&exp_scaled).unwrap();
+    let graph = compile_to_einsum(&exp_scaled).expect("unwrap");
     println!(
         "   Nodes: {}, Tensors: {}",
         graph.nodes.len(),

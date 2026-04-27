@@ -34,6 +34,7 @@
 //! .with_priority(RulePriority::High);
 //! ```
 
+use std::cmp::Reverse;
 use std::collections::{HashMap, HashSet};
 use std::hash::{Hash, Hasher};
 
@@ -274,7 +275,7 @@ impl AdvancedRewriteSystem {
     pub fn add_rule(mut self, rule: ConditionalRule) -> Self {
         self.rules.push(rule);
         // Sort by priority (highest first)
-        self.rules.sort_by(|a, b| b.priority.cmp(&a.priority));
+        self.rules.sort_by_key(|r| Reverse(r.priority));
         self
     }
 
@@ -632,7 +633,7 @@ mod tests {
         );
 
         let expr = TLExpr::negate(TLExpr::negate(TLExpr::pred("P", vec![Term::var("x")])));
-        let result = rule.apply(&expr).unwrap();
+        let result = rule.apply(&expr).expect("unwrap");
 
         assert!(matches!(result, TLExpr::Pred { .. }));
         assert_eq!(rule.application_count(), 1);

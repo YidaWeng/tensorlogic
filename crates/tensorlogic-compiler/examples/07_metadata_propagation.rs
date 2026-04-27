@@ -53,7 +53,7 @@ fn main() {
         TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]),
     );
 
-    let mut graph = compile_to_einsum_with_context(&rule, &mut ctx).unwrap();
+    let mut graph = compile_to_einsum_with_context(&rule, &mut ctx).expect("unwrap");
 
     // Add metadata to the graph
     let mut metadata_builder = MetadataBuilder::new().with_source_file("social_network.tl");

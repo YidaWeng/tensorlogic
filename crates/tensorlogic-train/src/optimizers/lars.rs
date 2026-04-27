@@ -106,7 +106,10 @@ impl Optimizer for LarsOptimizer {
                 self.velocity
                     .insert(name.clone(), Array::zeros(param.raw_dim()));
             }
-            let velocity = self.velocity.get_mut(name).unwrap();
+            let velocity = self
+                .velocity
+                .get_mut(name)
+                .expect("velocity initialized for all parameters");
             velocity.mapv_inplace(|v| self.config.momentum * v);
             *velocity = &*velocity + &(effective_grad * adaptive_lr);
             *param = &*param - &*velocity;
@@ -178,8 +181,8 @@ mod tests {
         params.insert("w".to_string(), array![[1.0, 2.0], [3.0, 4.0]]);
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), array![[0.1, 0.1], [0.1, 0.1]]);
-        optimizer.step(&mut params, &grads).unwrap();
-        let w = params.get("w").unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
+        let w = params.get("w").expect("unwrap");
         assert!(w[[0, 0]] < 1.0);
         assert!(w[[1, 1]] < 4.0);
         let state = optimizer.state_dict();
@@ -202,9 +205,9 @@ mod tests {
         let mut grads = HashMap::new();
         grads.insert("weights".to_string(), array![[0.1, 0.1]]);
         grads.insert("bias".to_string(), array![[0.1, 0.1]]);
-        optimizer.step(&mut params, &grads).unwrap();
-        let weights = params.get("weights").unwrap();
-        let bias = params.get("bias").unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
+        let weights = params.get("weights").expect("unwrap");
+        let bias = params.get("bias").expect("unwrap");
         assert!(weights[[0, 0]] < 1.0);
         assert!(bias[[0, 0]] < 1.0);
     }

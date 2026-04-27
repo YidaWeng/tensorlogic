@@ -121,6 +121,18 @@ The `tensorlogic-adapters` crate provides the bridge between logical expressions
 - **CompatibilityReport**: Detailed backward/forward compatibility analysis
 - **VersionBump**: Semantic versioning guidance (major/minor/patch)
 
+### Schema Linting
+- **SchemaLinter**: 6 built-in lint rules (UnusedDomain, OrphanPredicate, DomainNaming, PredicateNaming, EmptyDomain, ZeroArity)
+- **LintResult**: Findings with severity filtering (Error, Warning, Info)
+- **LinterConfig**: Enable/disable individual rules
+- **schema_lint feature**: Integrated into schema validation pipeline
+
+### Incremental Datalog Query Evaluation
+- **SemiNaiveEvaluator**: Bottom-up fixpoint evaluation with per-predicate delta sets
+- **IncrementalEvaluator**: Propagate only consequences of newly added fact batches
+- **Term/Atom/Fact/Rule**: First-order logic primitives for Datalog-style reasoning
+- **incremental_query feature**: Transitive closure, multi-predicate joins, constant-filtering rules
+
 ### Schema Merge Strategies
 - **SchemaMerger**: Core merging engine with 5 strategies
 - **MergeStrategy**: KeepFirst, KeepSecond, FailOnConflict, Union, Intersection
@@ -177,7 +189,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tensorlogic-adapters = "0.1.0-rc.1"
+tensorlogic-adapters = "0.1.0"
 ```
 
 ## Quick Start
@@ -416,6 +428,7 @@ tensorlogic-adapters/src/
 ├── computed.rs           # Computed/virtual domains
 ├── constraint.rs         # Predicate constraints and properties
 ├── database.rs           # Database backends (Memory, SQLite, PostgreSQL)
+├── database_tests.rs     # Database integration tests
 ├── dependent.rs          # Dependent type system
 ├── diff.rs               # Schema diff and compatibility
 ├── domain.rs             # Domain information and management
@@ -424,6 +437,8 @@ tensorlogic-adapters/src/
 ├── error.rs              # Error types
 ├── evolution.rs          # Schema evolution and breaking change detection
 ├── hierarchy.rs          # Domain hierarchy and subtyping
+├── hierarchy_viz.rs      # ASCII/DOT hierarchy visualization
+├── incremental_query.rs  # Semi-naive incremental Datalog evaluation
 ├── incremental_validation.rs # Incremental validation with change tracking
 ├── lazy.rs               # Lazy loading for large schemas
 ├── learning.rs           # Schema learning from data
@@ -440,7 +455,10 @@ tensorlogic-adapters/src/
 ├── query_planner.rs      # Cost-based query optimization
 ├── recommendation.rs     # Schema recommendation system
 ├── refinement.rs         # Refinement type system
+├── rule_deps.rs          # Rule dependency graph & Datalog stratification
 ├── schema_analysis.rs    # Schema statistics and analysis
+├── schema_lint.rs        # Schema linting with 6 built-in rules
+├── schema_migration.rs   # SchemaChange, SchemaMigrationPlan, SchemaSnapshot
 ├── signature_matcher.rs  # Fast predicate lookups
 ├── symbol_table.rs       # Central symbol table
 ├── synchronization.rs    # Distributed schema synchronization
@@ -596,8 +614,8 @@ Run the test suite:
 cargo nextest run -p tensorlogic-adapters
 ```
 
-**Current Test Stats**: 490 tests (all passing, zero warnings)
-**Lines of Code**: ~31,500 (26,300+ code, 1,250+ comments, 70 Rust files)
+**Current Test Stats**: 602 tests (all passing, zero warnings)
+**Lines of Code**: ~31,500+ (70+ Rust files)
 **Examples**: 26 complete examples in `examples/`
 **Benchmarks**: 33 comprehensive benchmark groups
 
@@ -627,10 +645,10 @@ Licensed under the Apache License, Version 2.0. See [LICENSE](../../LICENSE) for
 
 ---
 
-**Status**: Production Ready (v0.1.0-rc.1)
-**Last Updated**: 2026-03-06
-**Tests**: 490/490 passing (100%)
-**Lines of Code**: ~31,500 (70 Rust files)
+**Status**: Stable (v0.1.0)
+**Last Updated**: 2026-04-06
+**Tests**: 602/602 passing (100%)
+**Lines of Code**: ~31,500+ (70+ Rust files)
 **Examples**: 26 comprehensive examples
 **Benchmarks**: 33 comprehensive benchmark groups
 **Completion**: 100%

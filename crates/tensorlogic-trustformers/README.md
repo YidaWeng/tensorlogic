@@ -4,8 +4,8 @@
 
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic--trustformers-orange)](https://crates.io/crates/tensorlogic-trustformers)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-trustformers)
-[![Tests](https://img.shields.io/badge/tests-306%2F306-brightgreen)](#)
-[![Production](https://img.shields.io/badge/status-production_ready-success)](#)
+[![Tests](https://img.shields.io/badge/tests-346%2F346-brightgreen)](#)
+[![Production](https://img.shields.io/badge/status-stable-success)](#)
 
 This crate provides implementations of transformer components (self-attention, multi-head attention, feed-forward networks) as einsum operations that compile to TensorLogic IR and execute on any TensorLogic backend.
 
@@ -36,7 +36,7 @@ This crate provides implementations of transformer components (self-attention, m
 - **Type-Safe Configuration** - Builder pattern with validation
 - **Einsum-Native** - All operations expressed as einsum for maximum flexibility
 - **Zero Warnings** - Strict code quality enforcement
-- **306 Tests** - Comprehensive test coverage (100% passing)
+- **346 Tests** - Comprehensive test coverage (100% passing)
 
 ## Quick Start
 
@@ -369,7 +369,7 @@ See the [examples directory](examples/) for 10 complete examples:
 
 ```bash
 cargo nextest run -p tensorlogic-trustformers
-# 306 tests, all passing, zero warnings
+# 346 tests, all passing, zero warnings
 ```
 
 ## Benchmarking
@@ -402,9 +402,9 @@ Apache-2.0
 
 ---
 
-**Status**: Production Ready (v0.1.0-rc.1)
-**Last Updated**: 2026-03-06
-**Tests**: 306/306 passing (100%)
+**Status**: Stable (v0.1.0)
+**Last Updated**: 2026-04-06
+**Tests**: 346/346 passing (100%)
 **Examples**: 10 comprehensive examples
 **Benchmarks**: Criterion suite with HTML reports
 **Features**: Complete transformer implementation with modern LLM optimizations

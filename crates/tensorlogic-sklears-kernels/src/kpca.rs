@@ -27,7 +27,7 @@
 //! use tensorlogic_sklears_kernels::kpca::{KernelPCA, KernelPCAConfig};
 //! use tensorlogic_sklears_kernels::{RbfKernel, RbfKernelConfig};
 //!
-//! let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+//! let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
 //! let data = vec![
 //!     vec![1.0, 2.0],
 //!     vec![3.0, 4.0],
@@ -36,10 +36,10 @@
 //! ];
 //!
 //! let config = KernelPCAConfig::new(2); // 2 components
-//! let kpca = KernelPCA::fit(&data, &kernel, config).unwrap();
+//! let kpca = KernelPCA::fit(&data, &kernel, config).expect("unwrap");
 //!
 //! // Transform new data
-//! let transformed = kpca.transform(&data, &kernel).unwrap();
+//! let transformed = kpca.transform(&data, &kernel).expect("unwrap");
 //! ```
 
 use crate::error::{KernelError, Result};
@@ -456,19 +456,19 @@ mod tests {
         ];
 
         let config = KernelPCAConfig::new(2);
-        let kpca = KernelPCA::fit(&data, &kernel, config).unwrap();
+        let kpca = KernelPCA::fit(&data, &kernel, config).expect("unwrap");
 
         assert_eq!(kpca.n_components(), 2);
         assert_eq!(kpca.n_samples(), 4);
 
-        let transformed = kpca.transform(&data, &kernel).unwrap();
+        let transformed = kpca.transform(&data, &kernel).expect("unwrap");
         assert_eq!(transformed.len(), 4);
         assert_eq!(transformed[0].len(), 2);
     }
 
     #[test]
     fn test_kpca_rbf_kernel() {
-        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
         let data = vec![
             vec![0.0, 0.0],
             vec![1.0, 0.0],
@@ -477,9 +477,9 @@ mod tests {
         ];
 
         let config = KernelPCAConfig::new(2);
-        let kpca = KernelPCA::fit(&data, &kernel, config).unwrap();
+        let kpca = KernelPCA::fit(&data, &kernel, config).expect("unwrap");
 
-        let transformed = kpca.transform(&data, &kernel).unwrap();
+        let transformed = kpca.transform(&data, &kernel).expect("unwrap");
         assert_eq!(transformed.len(), 4);
 
         // Check that eigenvalues are non-negative and sorted
@@ -499,7 +499,7 @@ mod tests {
         ];
 
         let config = KernelPCAConfig::new(3);
-        let kpca = KernelPCA::fit(&data, &kernel, config).unwrap();
+        let kpca = KernelPCA::fit(&data, &kernel, config).expect("unwrap");
 
         let ratios = kpca.explained_variance_ratio();
         let total: f64 = ratios.iter().sum();
@@ -578,7 +578,7 @@ mod tests {
 
     #[test]
     fn test_kpca_transform_new_data() {
-        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
         let train_data = vec![
             vec![0.0, 0.0],
             vec![1.0, 0.0],
@@ -587,11 +587,11 @@ mod tests {
         ];
 
         let config = KernelPCAConfig::new(2);
-        let kpca = KernelPCA::fit(&train_data, &kernel, config).unwrap();
+        let kpca = KernelPCA::fit(&train_data, &kernel, config).expect("unwrap");
 
         // Transform new data point
         let new_data = vec![vec![0.5, 0.5]];
-        let transformed = kpca.transform(&new_data, &kernel).unwrap();
+        let transformed = kpca.transform(&new_data, &kernel).expect("unwrap");
 
         assert_eq!(transformed.len(), 1);
         assert_eq!(transformed[0].len(), 2);
@@ -603,9 +603,9 @@ mod tests {
         let data = vec![vec![1.0, 2.0], vec![3.0, 4.0], vec![5.0, 6.0]];
 
         let config = KernelPCAConfig::new(2).with_center(false);
-        let kpca = KernelPCA::fit(&data, &kernel, config).unwrap();
+        let kpca = KernelPCA::fit(&data, &kernel, config).expect("unwrap");
 
-        let transformed = kpca.transform(&data, &kernel).unwrap();
+        let transformed = kpca.transform(&data, &kernel).expect("unwrap");
         assert_eq!(transformed.len(), 3);
     }
 }

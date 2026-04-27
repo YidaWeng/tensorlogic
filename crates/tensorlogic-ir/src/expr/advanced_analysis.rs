@@ -287,6 +287,16 @@ impl OperatorCounts {
                 self.control_flow += 1;
                 self.count_recursive(formula);
             }
+            TLExpr::SymbolLiteral(_) => {
+                self.predicates += 1;
+            }
+            TLExpr::Match { scrutinee, arms } => {
+                self.control_flow += 1;
+                self.count_recursive(scrutinee);
+                for (_, body) in arms {
+                    self.count_recursive(body);
+                }
+            }
         }
     }
 }
@@ -811,9 +821,36 @@ impl ComplexityMetrics {
             TLExpr::EmptySet
             | TLExpr::Nominal { .. }
             | TLExpr::AllDifferent { .. }
-            | TLExpr::Abducible { .. } => {
+            | TLExpr::Abducible { .. }
+            | TLExpr::SymbolLiteral(_) => {
                 self.leaf_count += 1;
                 *depth_sum += depth;
+            }
+            TLExpr::Match { scrutinee, arms } => {
+                *non_leaf_count += 1;
+                *child_count += 1 + arms.len();
+                self.compute_recursive(
+                    scrutinee,
+                    depth + 1,
+                    depth_sum,
+                    non_leaf_count,
+                    child_count,
+                    quantifier_depth,
+                    modal_depth,
+                    temporal_depth,
+                );
+                for (_, body) in arms {
+                    self.compute_recursive(
+                        body,
+                        depth + 1,
+                        depth_sum,
+                        non_leaf_count,
+                        child_count,
+                        quantifier_depth,
+                        modal_depth,
+                        temporal_depth,
+                    );
+                }
             }
         }
     }
@@ -1094,7 +1131,15 @@ impl PatternAnalysis {
             TLExpr::EmptySet
             | TLExpr::Nominal { .. }
             | TLExpr::AllDifferent { .. }
-            | TLExpr::Abducible { .. } => {}
+            | TLExpr::Abducible { .. }
+            | TLExpr::SymbolLiteral(_) => {}
+
+            TLExpr::Match { scrutinee, arms } => {
+                self.detect_recursive(scrutinee, _context);
+                for (_, body) in arms {
+                    self.detect_recursive(body, _context);
+                }
+            }
 
             // Leaves
             TLExpr::Pred { .. } | TLExpr::Constant(_) => {}

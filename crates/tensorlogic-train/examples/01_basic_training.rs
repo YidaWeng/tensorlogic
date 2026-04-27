@@ -92,8 +92,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     parameters.insert("bias".to_string(), Array2::zeros((1, 1)));
 
     println!("Initial parameters:");
-    println!("  weights: {:?}", parameters.get("weights").unwrap());
-    println!("  bias: {:?}\n", parameters.get("bias").unwrap());
+    println!(
+        "  weights: {:?}",
+        parameters.get("weights").expect("unwrap")
+    );
+    println!("  bias: {:?}\n", parameters.get("bias").expect("unwrap"));
 
     // Train the model
     println!("Starting training...\n");
@@ -108,8 +111,11 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Print final results
     println!("\n=== Training Complete ===\n");
     println!("Final parameters:");
-    println!("  weights: {:?}", parameters.get("weights").unwrap());
-    println!("  bias: {:?}\n", parameters.get("bias").unwrap());
+    println!(
+        "  weights: {:?}",
+        parameters.get("weights").expect("unwrap")
+    );
+    println!("  bias: {:?}\n", parameters.get("bias").expect("unwrap"));
 
     println!("Training history:");
     println!("  Epochs: {}", history.train_loss.len());

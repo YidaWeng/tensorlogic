@@ -284,7 +284,12 @@ impl PyRuleBuilder {
         }
 
         if vars.len() == 1 {
-            let var = Py::new(py, vars.into_iter().next().unwrap())?;
+            let var = Py::new(
+                py,
+                vars.into_iter()
+                    .next()
+                    .ok_or_else(|| pyo3::exceptions::PyValueError::new_err("no variables"))?,
+            )?;
             Ok(var.into())
         } else {
             let py_vars: Vec<Py<PyVar>> = vars

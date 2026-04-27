@@ -42,7 +42,7 @@ fn test_predicate_with_constraints() {
 
     assert_eq!(pred.arity, 2);
     assert!(pred.constraints.is_some());
-    let c = pred.constraints.unwrap();
+    let c = pred.constraints.expect("unwrap");
     assert!(c.is_symmetric());
     assert!(c.is_transitive());
 }
@@ -68,20 +68,24 @@ fn test_axis_metadata() {
 fn test_symbol_table() {
     let mut table = SymbolTable::new();
 
-    table.add_domain(DomainInfo::new("Person", 10)).unwrap();
-    table.add_domain(DomainInfo::new("City", 5)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 10))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("City", 5))
+        .expect("unwrap");
 
     table
         .add_predicate(PredicateInfo::new(
             "LivesIn",
             vec!["Person".into(), "City".into()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     assert_eq!(table.domains.len(), 2);
     assert_eq!(table.predicates.len(), 1);
 
-    table.bind_variable("x", "Person").unwrap();
+    table.bind_variable("x", "Person").expect("unwrap");
     assert_eq!(table.get_variable_domain("x"), Some("Person"));
 }
 
@@ -111,32 +115,42 @@ fn test_domain_mask() {
 #[test]
 fn test_symbol_table_json() {
     let mut table = SymbolTable::new();
-    table.add_domain(DomainInfo::new("Person", 10)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 10))
+        .expect("unwrap");
 
-    let json = table.to_json().unwrap();
-    let restored = SymbolTable::from_json(&json).unwrap();
+    let json = table.to_json().expect("unwrap");
+    let restored = SymbolTable::from_json(&json).expect("unwrap");
 
     assert_eq!(restored.domains.len(), 1);
-    assert_eq!(restored.domains.get("Person").unwrap().cardinality, 10);
+    assert_eq!(
+        restored.domains.get("Person").expect("unwrap").cardinality,
+        10
+    );
 }
 
 #[test]
 fn test_symbol_table_yaml() {
     let mut table = SymbolTable::new();
-    table.add_domain(DomainInfo::new("Person", 10)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 10))
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new(
             "Parent",
             vec!["Person".into(), "Person".into()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
-    let yaml = table.to_yaml().unwrap();
-    let restored = SymbolTable::from_yaml(&yaml).unwrap();
+    let yaml = table.to_yaml().expect("unwrap");
+    let restored = SymbolTable::from_yaml(&yaml).expect("unwrap");
 
     assert_eq!(restored.domains.len(), 1);
     assert_eq!(restored.predicates.len(), 1);
-    assert_eq!(restored.domains.get("Person").unwrap().cardinality, 10);
+    assert_eq!(
+        restored.domains.get("Person").expect("unwrap").cardinality,
+        10
+    );
 }
 
 #[test]
@@ -146,7 +160,7 @@ fn test_infer_from_expr() {
     let pred = TLExpr::pred("Parent", vec![Term::var("x"), Term::var("y")]);
     let expr = TLExpr::exists("x", "Person", pred);
 
-    table.infer_from_expr(&expr).unwrap();
+    table.infer_from_expr(&expr).expect("unwrap");
 
     assert!(table.domains.contains_key("Person"));
     assert!(table.predicates.contains_key("Parent"));
@@ -174,16 +188,18 @@ fn test_domain_hierarchy() {
 #[test]
 fn test_schema_validation_complete() {
     let mut table = SymbolTable::new();
-    table.add_domain(DomainInfo::new("Person", 10)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 10))
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new(
             "Parent",
             vec!["Person".into(), "Person".into()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     let validator = SchemaValidator::new(&table);
-    let report = validator.validate().unwrap();
+    let report = validator.validate().expect("unwrap");
 
     assert!(report.is_valid());
 }
@@ -191,14 +207,18 @@ fn test_schema_validation_complete() {
 #[test]
 fn test_schema_validation_with_hierarchy() {
     let mut table = SymbolTable::new();
-    table.add_domain(DomainInfo::new("Person", 10)).unwrap();
-    table.add_domain(DomainInfo::new("Student", 5)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 10))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Student", 5))
+        .expect("unwrap");
 
     let mut hierarchy = DomainHierarchy::new();
     hierarchy.add_subtype("Student", "Person");
 
     let validator = SchemaValidator::new(&table).with_hierarchy(&hierarchy);
-    let report = validator.validate().unwrap();
+    let report = validator.validate().expect("unwrap");
 
     assert!(report.is_valid());
 }
@@ -234,7 +254,7 @@ fn test_infer_arithmetic_expr() {
     let pred2 = TLExpr::pred("Bonus", vec![Term::var("x")]);
     let expr = TLExpr::add(pred1, pred2);
 
-    table.infer_from_expr(&expr).unwrap();
+    table.infer_from_expr(&expr).expect("unwrap");
 
     assert!(table.predicates.contains_key("Score"));
     assert!(table.predicates.contains_key("Bonus"));
@@ -249,7 +269,7 @@ fn test_infer_comparison_expr() {
     let pred2 = TLExpr::constant(18.0);
     let expr = TLExpr::gte(pred1, pred2);
 
-    table.infer_from_expr(&expr).unwrap();
+    table.infer_from_expr(&expr).expect("unwrap");
 
     assert!(table.predicates.contains_key("Age"));
 }
@@ -264,7 +284,7 @@ fn test_infer_conditional_expr() {
     let else_branch = TLExpr::pred("CannotVote", vec![Term::var("x")]);
     let expr = TLExpr::if_then_else(cond, then_branch, else_branch);
 
-    table.infer_from_expr(&expr).unwrap();
+    table.infer_from_expr(&expr).expect("unwrap");
 
     assert!(table.predicates.contains_key("IsAdult"));
     assert!(table.predicates.contains_key("CanVote"));

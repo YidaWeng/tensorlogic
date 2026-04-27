@@ -165,13 +165,13 @@ impl SchemaMerger {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, SchemaMerger, MergeStrategy};
     ///
     /// let mut base = SymbolTable::new();
-    /// base.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    /// base.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
     ///
     /// let mut incoming = SymbolTable::new();
-    /// incoming.add_domain(DomainInfo::new("Organization", 50)).unwrap();
+    /// incoming.add_domain(DomainInfo::new("Organization", 50)).expect("unwrap");
     ///
     /// let merger = SchemaMerger::new(MergeStrategy::Union);
-    /// let result = merger.merge(&base, &incoming).unwrap();
+    /// let result = merger.merge(&base, &incoming).expect("unwrap");
     ///
     /// assert_eq!(result.merged.domains.len(), 2);
     /// ```
@@ -203,22 +203,34 @@ impl SchemaMerger {
 
         // Domains only in base
         for key in base_keys.difference(&incoming_keys) {
-            let domain = base.domains.get(*key).unwrap();
+            let domain = base
+                .domains
+                .get(*key)
+                .expect("key from HashMap iteration is always present");
             merged.add_domain(domain.clone())?;
             report.base_domains.push(key.to_string());
         }
 
         // Domains only in incoming
         for key in incoming_keys.difference(&base_keys) {
-            let domain = incoming.domains.get(*key).unwrap();
+            let domain = incoming
+                .domains
+                .get(*key)
+                .expect("key from HashMap iteration is always present");
             merged.add_domain(domain.clone())?;
             report.incoming_domains.push(key.to_string());
         }
 
         // Domains in both (conflicts)
         for key in base_keys.intersection(&incoming_keys) {
-            let base_domain = base.domains.get(*key).unwrap();
-            let incoming_domain = incoming.domains.get(*key).unwrap();
+            let base_domain = base
+                .domains
+                .get(*key)
+                .expect("key from HashMap iteration is always present");
+            let incoming_domain = incoming
+                .domains
+                .get(*key)
+                .expect("key from HashMap iteration is always present");
 
             let (domain, resolution) =
                 self.resolve_domain_conflict(base_domain, incoming_domain)?;
@@ -250,22 +262,34 @@ impl SchemaMerger {
 
         // Predicates only in base
         for key in base_keys.difference(&incoming_keys) {
-            let predicate = base.predicates.get(*key).unwrap();
+            let predicate = base
+                .predicates
+                .get(*key)
+                .expect("key from HashMap iteration is always present");
             merged.add_predicate(predicate.clone())?;
             report.base_predicates.push(key.to_string());
         }
 
         // Predicates only in incoming
         for key in incoming_keys.difference(&base_keys) {
-            let predicate = incoming.predicates.get(*key).unwrap();
+            let predicate = incoming
+                .predicates
+                .get(*key)
+                .expect("key from HashMap iteration is always present");
             merged.add_predicate(predicate.clone())?;
             report.incoming_predicates.push(key.to_string());
         }
 
         // Predicates in both (conflicts)
         for key in base_keys.intersection(&incoming_keys) {
-            let base_pred = base.predicates.get(*key).unwrap();
-            let incoming_pred = incoming.predicates.get(*key).unwrap();
+            let base_pred = base
+                .predicates
+                .get(*key)
+                .expect("key from HashMap iteration is always present");
+            let incoming_pred = incoming
+                .predicates
+                .get(*key)
+                .expect("key from HashMap iteration is always present");
 
             let (predicate, resolution) =
                 self.resolve_predicate_conflict(base_pred, incoming_pred)?;
@@ -297,22 +321,34 @@ impl SchemaMerger {
 
         // Variables only in base
         for key in base_keys.difference(&incoming_keys) {
-            let domain = base.variables.get(*key).unwrap();
+            let domain = base
+                .variables
+                .get(*key)
+                .expect("key from HashMap iteration is always present");
             merged.bind_variable(key.to_string(), domain.clone())?;
             report.merged_variables.push(key.to_string());
         }
 
         // Variables only in incoming
         for key in incoming_keys.difference(&base_keys) {
-            let domain = incoming.variables.get(*key).unwrap();
+            let domain = incoming
+                .variables
+                .get(*key)
+                .expect("key from HashMap iteration is always present");
             merged.bind_variable(key.to_string(), domain.clone())?;
             report.merged_variables.push(key.to_string());
         }
 
         // Variables in both (conflicts)
         for key in base_keys.intersection(&incoming_keys) {
-            let base_domain = base.variables.get(*key).unwrap();
-            let incoming_domain = incoming.variables.get(*key).unwrap();
+            let base_domain = base
+                .variables
+                .get(*key)
+                .expect("key from HashMap iteration is always present");
+            let incoming_domain = incoming
+                .variables
+                .get(*key)
+                .expect("key from HashMap iteration is always present");
 
             let (domain, resolution) =
                 self.resolve_variable_conflict(base_domain, incoming_domain)?;
@@ -464,26 +500,30 @@ mod tests {
 
     fn create_base_table() -> SymbolTable {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new(
                 "knows",
                 vec!["Person".to_string(), "Person".to_string()],
             ))
-            .unwrap();
-        table.bind_variable("x", "Person").unwrap();
+            .expect("unwrap");
+        table.bind_variable("x", "Person").expect("unwrap");
         table
     }
 
     fn create_incoming_table() -> SymbolTable {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 150)).unwrap(); // Different cardinality
+        table
+            .add_domain(DomainInfo::new("Person", 150))
+            .expect("unwrap"); // Different cardinality
         table
             .add_domain(DomainInfo::new("Organization", 50))
-            .unwrap();
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("age", vec!["Person".to_string()]))
-            .unwrap();
+            .expect("unwrap");
         table
     }
 
@@ -493,7 +533,7 @@ mod tests {
         let incoming = create_incoming_table();
 
         let merger = SchemaMerger::new(MergeStrategy::Union);
-        let result = merger.merge(&base, &incoming).unwrap();
+        let result = merger.merge(&base, &incoming).expect("unwrap");
 
         assert_eq!(result.merged.domains.len(), 2); // Person (larger card.) + Organization
         assert_eq!(result.merged.predicates.len(), 2); // knows + age
@@ -504,17 +544,25 @@ mod tests {
     #[test]
     fn test_merge_with_domain_conflict() {
         let mut base = SymbolTable::new();
-        base.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        base.add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let mut incoming = SymbolTable::new();
-        incoming.add_domain(DomainInfo::new("Person", 200)).unwrap();
+        incoming
+            .add_domain(DomainInfo::new("Person", 200))
+            .expect("unwrap");
 
         let merger = SchemaMerger::new(MergeStrategy::KeepFirst);
-        let result = merger.merge(&base, &incoming).unwrap();
+        let result = merger.merge(&base, &incoming).expect("unwrap");
 
         assert_eq!(result.merged.domains.len(), 1);
         assert_eq!(
-            result.merged.domains.get("Person").unwrap().cardinality,
+            result
+                .merged
+                .domains
+                .get("Person")
+                .expect("unwrap")
+                .cardinality,
             100
         );
         assert!(result.report.has_conflicts());
@@ -523,16 +571,24 @@ mod tests {
     #[test]
     fn test_merge_keep_second() {
         let mut base = SymbolTable::new();
-        base.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        base.add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let mut incoming = SymbolTable::new();
-        incoming.add_domain(DomainInfo::new("Person", 200)).unwrap();
+        incoming
+            .add_domain(DomainInfo::new("Person", 200))
+            .expect("unwrap");
 
         let merger = SchemaMerger::new(MergeStrategy::KeepSecond);
-        let result = merger.merge(&base, &incoming).unwrap();
+        let result = merger.merge(&base, &incoming).expect("unwrap");
 
         assert_eq!(
-            result.merged.domains.get("Person").unwrap().cardinality,
+            result
+                .merged
+                .domains
+                .get("Person")
+                .expect("unwrap")
+                .cardinality,
             200
         );
     }
@@ -540,10 +596,13 @@ mod tests {
     #[test]
     fn test_merge_fail_on_conflict() {
         let mut base = SymbolTable::new();
-        base.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        base.add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let mut incoming = SymbolTable::new();
-        incoming.add_domain(DomainInfo::new("Person", 200)).unwrap();
+        incoming
+            .add_domain(DomainInfo::new("Person", 200))
+            .expect("unwrap");
 
         let merger = SchemaMerger::new(MergeStrategy::FailOnConflict);
         let result = merger.merge(&base, &incoming);
@@ -557,7 +616,7 @@ mod tests {
         let incoming = create_incoming_table();
 
         let merger = SchemaMerger::new(MergeStrategy::Union);
-        let result = merger.merge(&base, &incoming).unwrap();
+        let result = merger.merge(&base, &incoming).expect("unwrap");
 
         let report = &result.report;
         // Base has Person (no unique domains after merge since incoming also has Person)
@@ -572,18 +631,21 @@ mod tests {
     #[test]
     fn test_predicate_conflict_compatible() {
         let mut base = SymbolTable::new();
-        base.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        base.add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
         base.add_predicate(PredicateInfo::new("age", vec!["Person".to_string()]))
-            .unwrap();
+            .expect("unwrap");
 
         let mut incoming = SymbolTable::new();
-        incoming.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        incoming
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
         incoming
             .add_predicate(PredicateInfo::new("age", vec!["Person".to_string()]))
-            .unwrap();
+            .expect("unwrap");
 
         let merger = SchemaMerger::new(MergeStrategy::Union);
-        let result = merger.merge(&base, &incoming).unwrap();
+        let result = merger.merge(&base, &incoming).expect("unwrap");
 
         assert_eq!(result.merged.predicates.len(), 1);
         assert_eq!(result.report.conflicting_predicates.len(), 0);
@@ -592,19 +654,25 @@ mod tests {
     #[test]
     fn test_variable_conflict() {
         let mut base = SymbolTable::new();
-        base.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        base.add_domain(DomainInfo::new("Agent", 50)).unwrap();
-        base.bind_variable("x", "Person").unwrap();
+        base.add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        base.add_domain(DomainInfo::new("Agent", 50))
+            .expect("unwrap");
+        base.bind_variable("x", "Person").expect("unwrap");
 
         let mut incoming = SymbolTable::new();
-        incoming.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        incoming.add_domain(DomainInfo::new("Agent", 50)).unwrap();
-        incoming.bind_variable("x", "Agent").unwrap();
+        incoming
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        incoming
+            .add_domain(DomainInfo::new("Agent", 50))
+            .expect("unwrap");
+        incoming.bind_variable("x", "Agent").expect("unwrap");
 
         let merger = SchemaMerger::new(MergeStrategy::KeepFirst);
-        let result = merger.merge(&base, &incoming).unwrap();
+        let result = merger.merge(&base, &incoming).expect("unwrap");
 
-        assert_eq!(result.merged.variables.get("x").unwrap(), "Person");
+        assert_eq!(result.merged.variables.get("x").expect("unwrap"), "Person");
         assert_eq!(result.report.conflicting_variables.len(), 1);
     }
 }

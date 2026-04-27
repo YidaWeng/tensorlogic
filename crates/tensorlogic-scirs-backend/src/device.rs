@@ -144,9 +144,13 @@ impl fmt::Display for Device {
     }
 }
 
-/// Device manager for querying available devices.
+/// System device manager for querying available hardware devices.
+///
+/// This type enumerates and tracks all compute devices available on the current
+/// system (CPU, CUDA GPUs, etc.).  For operation-level device *selection* based
+/// on tensor shape and op kind, see [`crate::device_manager::DeviceManager`].
 #[derive(Debug, Clone)]
-pub struct DeviceManager {
+pub struct SystemDeviceManager {
     /// List of available devices
     available_devices: Vec<Device>,
 
@@ -154,8 +158,8 @@ pub struct DeviceManager {
     default_device: Device,
 }
 
-impl DeviceManager {
-    /// Create a new device manager.
+impl SystemDeviceManager {
+    /// Create a new system device manager.
     ///
     /// This queries the system for available devices, including CUDA GPUs
     /// if available via nvidia-smi.
@@ -224,7 +228,7 @@ impl DeviceManager {
     }
 }
 
-impl Default for DeviceManager {
+impl Default for SystemDeviceManager {
     fn default() -> Self {
         Self::new()
     }
@@ -303,14 +307,14 @@ mod tests {
 
     #[test]
     fn test_device_manager_creation() {
-        let manager = DeviceManager::new();
+        let manager = SystemDeviceManager::new();
         assert!(!manager.available_devices().is_empty());
         assert!(manager.default_device().is_cpu());
     }
 
     #[test]
     fn test_device_manager_queries() {
-        let manager = DeviceManager::new();
+        let manager = SystemDeviceManager::new();
 
         // CPU should always be available
         assert!(manager.is_available(&Device::cpu()));
@@ -322,7 +326,7 @@ mod tests {
 
     #[test]
     fn test_device_manager_set_default() {
-        let mut manager = DeviceManager::new();
+        let mut manager = SystemDeviceManager::new();
         let cpu = Device::cpu();
 
         // Setting to an available device should succeed
@@ -336,12 +340,12 @@ mod tests {
 
     #[test]
     fn test_device_manager_get_device() {
-        let manager = DeviceManager::new();
+        let manager = SystemDeviceManager::new();
 
         // Should find CPU
         let cpu = manager.get_device(DeviceType::Cpu, 0);
         assert!(cpu.is_some());
-        assert_eq!(cpu.unwrap(), &Device::cpu());
+        assert_eq!(cpu.expect("cpu device expected"), &Device::cpu());
 
         // Should not find non-existent devices
         let cuda = manager.get_device(DeviceType::Cuda, 0);

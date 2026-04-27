@@ -263,7 +263,7 @@ mod tests {
     fn test_linear_model_forward() {
         let model = LinearModel::new(3, 2);
         let input = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]);
-        let output = model.forward(&input.view()).unwrap();
+        let output = model.forward(&input.view()).expect("unwrap");
         assert_eq!(output.shape(), &[2, 2]);
     }
 
@@ -273,7 +273,9 @@ mod tests {
         let input = arr2(&[[1.0, 2.0, 3.0], [4.0, 5.0, 6.0]]);
         let grad_output = arr2(&[[1.0, 1.0], [1.0, 1.0]]);
 
-        let gradients = model.backward(&input.view(), &grad_output.view()).unwrap();
+        let gradients = model
+            .backward(&input.view(), &grad_output.view())
+            .expect("unwrap");
 
         assert!(gradients.contains_key("weight"));
         assert!(gradients.contains_key("bias"));
@@ -296,13 +298,16 @@ mod tests {
         let state = model.state_dict();
 
         // Modify parameters
-        model.parameters_mut().get_mut("weight").unwrap()[[0, 0]] = 99.0;
+        model.parameters_mut().get_mut("weight").expect("unwrap")[[0, 0]] = 99.0;
 
         // Load original state
-        model.load_state_dict(state.clone()).unwrap();
+        model.load_state_dict(state.clone()).expect("unwrap");
 
         // Verify state was restored
-        assert_eq!(model.parameters().get("weight").unwrap()[[0, 0]], 0.0);
+        assert_eq!(
+            model.parameters().get("weight").expect("unwrap")[[0, 0]],
+            0.0
+        );
     }
 
     #[test]

@@ -15,10 +15,11 @@ fn test_chain_graph() {
 
     // Add factor P(X)
     let px_values = Array::from_shape_vec(vec![2], vec![0.6, 0.4])
-        .unwrap()
+        .expect("Failed to create px array")
         .into_dyn();
-    let px = Factor::new("P(X)".to_string(), vec!["x".to_string()], px_values).unwrap();
-    graph.add_factor(px).unwrap();
+    let px = Factor::new("P(X)".to_string(), vec!["x".to_string()], px_values)
+        .expect("Failed to create P(X) factor");
+    graph.add_factor(px).expect("Failed to add P(X) to graph");
 
     // Add factor P(Y|X)
     let py_given_x_values = Array::from_shape_vec(
@@ -28,15 +29,17 @@ fn test_chain_graph() {
             0.3, 0.7, // P(Y|X=1)
         ],
     )
-    .unwrap()
+    .expect("Failed to create P(Y|X) array")
     .into_dyn();
     let py_given_x = Factor::new(
         "P(Y|X)".to_string(),
         vec!["x".to_string(), "y".to_string()],
         py_given_x_values,
     )
-    .unwrap();
-    graph.add_factor(py_given_x).unwrap();
+    .expect("Failed to create P(Y|X) factor");
+    graph
+        .add_factor(py_given_x)
+        .expect("Failed to add P(Y|X) to graph");
 
     // Run inference
     let algorithm = Box::new(SumProductAlgorithm::default());
@@ -49,7 +52,7 @@ fn test_chain_graph() {
     let marginal_x = engine.marginalize(&query_x);
     assert!(marginal_x.is_ok());
 
-    let marginal_x_values = marginal_x.unwrap();
+    let marginal_x_values = marginal_x.expect("Failed to compute marginal for x");
     let sum: f64 = marginal_x_values.iter().sum();
     assert_abs_diff_eq!(sum, 1.0, epsilon = 1e-6);
 }
@@ -58,16 +61,18 @@ fn test_chain_graph() {
 #[test]
 fn test_factor_product_integration() {
     let f1_values = Array::from_shape_vec(vec![2], vec![0.6, 0.4])
-        .unwrap()
+        .expect("Failed to create f1 array")
         .into_dyn();
-    let f1 = Factor::new("f1".to_string(), vec!["x".to_string()], f1_values).unwrap();
+    let f1 = Factor::new("f1".to_string(), vec!["x".to_string()], f1_values)
+        .expect("Failed to create f1 factor");
 
     let f2_values = Array::from_shape_vec(vec![2], vec![0.7, 0.3])
-        .unwrap()
+        .expect("Failed to create f2 array")
         .into_dyn();
-    let f2 = Factor::new("f2".to_string(), vec!["y".to_string()], f2_values).unwrap();
+    let f2 = Factor::new("f2".to_string(), vec!["y".to_string()], f2_values)
+        .expect("Failed to create f2 factor");
 
-    let product = f1.product(&f2).unwrap();
+    let product = f1.product(&f2).expect("Failed to compute factor product");
 
     assert_eq!(product.variables.len(), 2);
     assert_eq!(product.values.shape(), &[2, 2]);
@@ -90,17 +95,19 @@ fn test_factor_marginalization_integration() {
             0.56, 0.14, // X=1: Y=0, Y=1
         ],
     )
-    .unwrap()
+    .expect("Failed to create joint array")
     .into_dyn();
     let joint = Factor::new(
         "P(X,Y)".to_string(),
         vec!["x".to_string(), "y".to_string()],
         joint_values,
     )
-    .unwrap();
+    .expect("Failed to create joint factor");
 
     // Marginalize out Y to get P(X)
-    let marginal_x = joint.marginalize_out("y").unwrap();
+    let marginal_x = joint
+        .marginalize_out("y")
+        .expect("Failed to marginalize out y");
 
     assert_eq!(marginal_x.variables.len(), 1);
     assert_eq!(marginal_x.variables[0], "x");
@@ -121,17 +128,17 @@ fn test_factor_reduce_integration() {
             0.56, 0.14, // X=1
         ],
     )
-    .unwrap()
+    .expect("Failed to create joint array")
     .into_dyn();
     let joint = Factor::new(
         "P(X,Y)".to_string(),
         vec!["x".to_string(), "y".to_string()],
         joint_values,
     )
-    .unwrap();
+    .expect("Failed to create joint factor");
 
     // Reduce with evidence Y=0
-    let reduced = joint.reduce("y", 0).unwrap();
+    let reduced = joint.reduce("y", 0).expect("Failed to reduce with Y=0");
 
     assert_eq!(reduced.variables.len(), 1);
     assert_eq!(reduced.variables[0], "x");
@@ -156,7 +163,7 @@ fn test_message_passing_convergence() {
     let result = engine.marginalize(&query);
 
     assert!(result.is_ok());
-    let marginal = result.unwrap();
+    let marginal = result.expect("Failed to compute marginal for convergence test");
 
     // Should be uniform for single variable with no factors
     assert_abs_diff_eq!(marginal[[0]], 0.5, epsilon = 1e-6);
@@ -177,7 +184,7 @@ fn test_tlexpr_to_factor_graph() {
     let graph = tensorlogic_quantrs_hooks::expr_to_factor_graph(&expr);
     assert!(graph.is_ok());
 
-    let graph = graph.unwrap();
+    let graph = graph.expect("Failed to convert TLExpr to factor graph");
     assert_eq!(graph.num_variables(), 2);
     assert_eq!(graph.num_factors(), 2);
 }
@@ -193,7 +200,7 @@ fn test_tlexpr_with_exists() {
     let graph = tensorlogic_quantrs_hooks::expr_to_factor_graph(&expr);
     assert!(graph.is_ok());
 
-    let graph = graph.unwrap();
+    let graph = graph.expect("Failed to convert existential TLExpr to factor graph");
     assert!(graph.num_variables() > 0);
 }
 
@@ -209,11 +216,12 @@ fn test_marginalization_lib_function() {
             0.25, 0.25, // X=1
         ],
     )
-    .unwrap()
+    .expect("Failed to create joint array")
     .into_dyn();
 
     // Marginalize out Y (axis 1)
-    let marginal = tensorlogic_quantrs_hooks::marginalize(&joint, 0, &[0, 1]).unwrap();
+    let marginal = tensorlogic_quantrs_hooks::marginalize(&joint, 0, &[0, 1])
+        .expect("Failed to marginalize joint distribution");
 
     assert_eq!(marginal.ndim(), 1);
     let sum: f64 = marginal.iter().sum();
@@ -233,13 +241,14 @@ fn test_conditioning_lib_function() {
             0.4, 0.1, // X=1
         ],
     )
-    .unwrap()
+    .expect("Failed to create joint array")
     .into_dyn();
 
     let mut evidence = HashMap::new();
     evidence.insert(1, 0); // Y=0
 
-    let conditional = tensorlogic_quantrs_hooks::condition(&joint, &evidence).unwrap();
+    let conditional = tensorlogic_quantrs_hooks::condition(&joint, &evidence)
+        .expect("Failed to condition on Y=0");
 
     // Should have one dimension less
     assert_eq!(conditional.ndim(), 1);
@@ -266,7 +275,7 @@ fn test_joint_computation() {
     let joint = engine.joint();
     assert!(joint.is_ok());
 
-    let joint_dist = joint.unwrap();
+    let joint_dist = joint.expect("Failed to compute joint distribution");
     let sum: f64 = joint_dist.iter().sum();
     assert_abs_diff_eq!(sum, 1.0, epsilon = 1e-6);
 }
@@ -293,16 +302,18 @@ fn test_loopy_bp_with_damping() {
 #[test]
 fn test_factor_division() {
     let f1_values = Array::from_shape_vec(vec![2], vec![0.6, 0.8])
-        .unwrap()
+        .expect("Failed to create f1 array")
         .into_dyn();
-    let f1 = Factor::new("f1".to_string(), vec!["x".to_string()], f1_values).unwrap();
+    let f1 = Factor::new("f1".to_string(), vec!["x".to_string()], f1_values)
+        .expect("Failed to create f1 factor");
 
     let f2_values = Array::from_shape_vec(vec![2], vec![0.3, 0.4])
-        .unwrap()
+        .expect("Failed to create f2 array")
         .into_dyn();
-    let f2 = Factor::new("f2".to_string(), vec!["x".to_string()], f2_values).unwrap();
+    let f2 = Factor::new("f2".to_string(), vec!["x".to_string()], f2_values)
+        .expect("Failed to create f2 factor");
 
-    let result = f1.divide(&f2).unwrap();
+    let result = f1.divide(&f2).expect("Failed to divide factors");
 
     assert_abs_diff_eq!(result.values[[0]], 2.0, epsilon = 1e-10);
     assert_abs_diff_eq!(result.values[[1]], 2.0, epsilon = 1e-10);
@@ -316,21 +327,23 @@ fn test_message_passing_with_factors() {
 
     // Add a factor
     let factor_values = Array::from_shape_vec(vec![2], vec![0.7, 0.3])
-        .unwrap()
+        .expect("Failed to create factor_values array")
         .into_dyn();
     let factor = Factor::new(
         "factor_0".to_string(),
         vec!["var_0".to_string()],
         factor_values,
     )
-    .unwrap();
-    graph.add_factor(factor).unwrap();
+    .expect("Failed to create factor_0");
+    graph
+        .add_factor(factor)
+        .expect("Failed to add factor_0 to graph");
 
     let algorithm = SumProductAlgorithm::default();
     let result = algorithm.run(&graph);
 
     assert!(result.is_ok());
-    let beliefs = result.unwrap();
+    let beliefs = result.expect("Failed to run sum-product algorithm");
 
     if let Some(belief) = beliefs.get("var_0") {
         let sum: f64 = belief.iter().sum();

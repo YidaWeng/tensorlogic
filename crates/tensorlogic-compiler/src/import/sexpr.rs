@@ -18,10 +18,10 @@
 //! use tensorlogic_compiler::import::sexpr::parse_sexpr;
 //!
 //! // Conjunction
-//! let expr = parse_sexpr("(and (human socrates) (mortal socrates))").unwrap();
+//! let expr = parse_sexpr("(and (human socrates) (mortal socrates))").expect("unwrap");
 //!
 //! // Universal quantification
-//! let expr = parse_sexpr("(forall (x Person) (=> (human x) (mortal x)))").unwrap();
+//! let expr = parse_sexpr("(forall (x Person) (=> (human x) (mortal x)))").expect("unwrap");
 //! ```
 
 use anyhow::{anyhow, Result};
@@ -159,7 +159,10 @@ where
         return Err(anyhow!("Empty chain not allowed"));
     }
 
-    let result = exprs.into_iter().reduce(op).unwrap();
+    let result = exprs
+        .into_iter()
+        .reduce(op)
+        .expect("exprs non-empty after is_empty check above");
 
     Ok((result, pos + 1))
 }
@@ -265,62 +268,62 @@ mod tests {
 
     #[test]
     fn test_simple_predicate() {
-        let expr = parse_sexpr("(mortal socrates)").unwrap();
+        let expr = parse_sexpr("(mortal socrates)").expect("unwrap");
         assert!(matches!(expr, TLExpr::Pred { .. }));
     }
 
     #[test]
     fn test_conjunction() {
-        let expr = parse_sexpr("(and (human x) (mortal x))").unwrap();
+        let expr = parse_sexpr("(and (human x) (mortal x))").expect("unwrap");
         assert!(matches!(expr, TLExpr::And(_, _)));
     }
 
     #[test]
     fn test_disjunction() {
-        let expr = parse_sexpr("(or (human x) (god x))").unwrap();
+        let expr = parse_sexpr("(or (human x) (god x))").expect("unwrap");
         assert!(matches!(expr, TLExpr::Or(_, _)));
     }
 
     #[test]
     fn test_negation() {
-        let expr = parse_sexpr("(not (mortal x))").unwrap();
+        let expr = parse_sexpr("(not (mortal x))").expect("unwrap");
         assert!(matches!(expr, TLExpr::Not(_)));
     }
 
     #[test]
     fn test_implication() {
-        let expr = parse_sexpr("(=> (human x) (mortal x))").unwrap();
+        let expr = parse_sexpr("(=> (human x) (mortal x))").expect("unwrap");
         assert!(matches!(expr, TLExpr::Imply { .. }));
     }
 
     #[test]
     fn test_exists() {
-        let expr = parse_sexpr("(exists (x Person) (mortal x))").unwrap();
+        let expr = parse_sexpr("(exists (x Person) (mortal x))").expect("unwrap");
         assert!(matches!(expr, TLExpr::Exists { .. }));
     }
 
     #[test]
     fn test_forall() {
-        let expr = parse_sexpr("(forall (x Person) (mortal x))").unwrap();
+        let expr = parse_sexpr("(forall (x Person) (mortal x))").expect("unwrap");
         assert!(matches!(expr, TLExpr::ForAll { .. }));
     }
 
     #[test]
     fn test_complex_expression() {
         let expr = parse_sexpr("(forall (x Person) (=> (and (human x) (not (god x))) (mortal x)))")
-            .unwrap();
+            .expect("unwrap");
         assert!(matches!(expr, TLExpr::ForAll { .. }));
     }
 
     #[test]
     fn test_multiple_conjunction() {
-        let expr = parse_sexpr("(and (P x) (Q x) (R x))").unwrap();
+        let expr = parse_sexpr("(and (P x) (Q x) (R x))").expect("unwrap");
         assert!(matches!(expr, TLExpr::And(_, _)));
     }
 
     #[test]
     fn test_predicate_no_args() {
-        let expr = parse_sexpr("alive").unwrap();
+        let expr = parse_sexpr("alive").expect("unwrap");
         assert!(matches!(expr, TLExpr::Pred { .. }));
     }
 }

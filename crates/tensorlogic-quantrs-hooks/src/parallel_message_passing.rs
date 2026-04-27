@@ -52,7 +52,10 @@ impl ParallelSumProduct {
 
         // Iterative message passing
         for iteration in 0..self.max_iterations {
-            let old_messages = messages.lock().unwrap().clone();
+            let old_messages = messages
+                .lock()
+                .expect("lock should not be poisoned")
+                .clone();
 
             // Parallel computation of variable-to-factor messages
             let var_factor_updates: Vec<_> = graph
@@ -112,7 +115,7 @@ impl ParallelSumProduct {
 
             // Update messages with damping
             {
-                let mut messages_guard = messages.lock().unwrap();
+                let mut messages_guard = messages.lock().expect("lock should not be poisoned");
                 for (key, new_msg) in var_factor_updates.into_iter().chain(factor_var_updates) {
                     if let Some(old_msg) = messages_guard.get(&key) {
                         if self.damping > 0.0 {
@@ -129,7 +132,10 @@ impl ParallelSumProduct {
             }
 
             // Check convergence
-            let converged = self.check_convergence(&old_messages, &messages.lock().unwrap());
+            let converged = self.check_convergence(
+                &old_messages,
+                &messages.lock().expect("lock should not be poisoned"),
+            );
             if converged {
                 break;
             }
@@ -147,7 +153,11 @@ impl ParallelSumProduct {
             .variable_names()
             .par_bridge()
             .filter_map(|var_name| {
-                match self.compute_marginal(graph, &messages.lock().unwrap(), var_name) {
+                match self.compute_marginal(
+                    graph,
+                    &messages.lock().expect("lock should not be poisoned"),
+                    var_name,
+                ) {
                     Ok(marginal) => Some((var_name.to_string(), marginal)),
                     Err(_) => None,
                 }
@@ -431,12 +441,12 @@ mod tests {
             "f_xy".to_string(),
             vec!["X".to_string(), "Y".to_string()],
             Array::from_shape_vec(vec![2, 2], vec![0.1, 0.2, 0.3, 0.4])
-                .unwrap()
+                .expect("unwrap")
                 .into_dyn(),
         )
-        .unwrap();
+        .expect("unwrap");
 
-        graph.add_factor(f_xy).unwrap();
+        graph.add_factor(f_xy).expect("unwrap");
 
         graph
     }
@@ -446,7 +456,7 @@ mod tests {
         let graph = create_simple_chain();
         let parallel_bp = ParallelSumProduct::default();
 
-        let marginals = parallel_bp.run_parallel(&graph).unwrap();
+        let marginals = parallel_bp.run_parallel(&graph).expect("unwrap");
 
         assert_eq!(marginals.len(), 2);
 
@@ -462,7 +472,7 @@ mod tests {
         let graph = create_simple_chain();
         let parallel_bp = ParallelSumProduct::new(100, 1e-6, 0.5);
 
-        let marginals = parallel_bp.run_parallel(&graph).unwrap();
+        let marginals = parallel_bp.run_parallel(&graph).expect("unwrap");
 
         assert_eq!(marginals.len(), 2);
     }
@@ -472,7 +482,7 @@ mod tests {
         let graph = create_simple_chain();
         let parallel_mp = ParallelMaxProduct::default();
 
-        let marginals = parallel_mp.run_parallel(&graph).unwrap();
+        let marginals = parallel_mp.run_parallel(&graph).expect("unwrap");
 
         assert_eq!(marginals.len(), 2);
     }

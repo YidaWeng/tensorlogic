@@ -139,11 +139,11 @@ impl ProductDomain {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, ProductDomain};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("A", 10)).unwrap();
-    /// table.add_domain(DomainInfo::new("B", 20)).unwrap();
+    /// table.add_domain(DomainInfo::new("A", 10)).expect("unwrap");
+    /// table.add_domain(DomainInfo::new("B", 20)).expect("unwrap");
     ///
     /// let product = ProductDomain::binary("A", "B");
-    /// assert_eq!(product.cardinality(&table).unwrap(), 200);
+    /// assert_eq!(product.cardinality(&table).expect("unwrap"), 200);
     /// ```
     pub fn cardinality(&self, table: &SymbolTable) -> Result<usize, AdapterError> {
         let mut result = 1_usize;
@@ -169,8 +169,8 @@ impl ProductDomain {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, ProductDomain};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("A", 10)).unwrap();
-    /// table.add_domain(DomainInfo::new("B", 20)).unwrap();
+    /// table.add_domain(DomainInfo::new("A", 10)).expect("unwrap");
+    /// table.add_domain(DomainInfo::new("B", 20)).expect("unwrap");
     ///
     /// let product = ProductDomain::binary("A", "B");
     /// assert!(product.validate(&table).is_ok());
@@ -221,7 +221,7 @@ impl ProductDomain {
     /// ]);
     ///
     /// // Get middle two components (B × C)
-    /// let sub = product.slice(1, 3).unwrap();
+    /// let sub = product.slice(1, 3).expect("unwrap");
     /// assert_eq!(sub.components(), &["B", "C"]);
     /// ```
     pub fn slice(&self, start: usize, end: usize) -> Result<ProductDomain, AdapterError> {
@@ -277,13 +277,13 @@ pub trait ProductDomainExt {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, ProductDomain, ProductDomainExt};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    /// table.add_domain(DomainInfo::new("Location", 50)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+    /// table.add_domain(DomainInfo::new("Location", 50)).expect("unwrap");
     ///
     /// let product = ProductDomain::binary("Person", "Location");
-    /// table.add_product_domain("PersonAtLocation", product).unwrap();
+    /// table.add_product_domain("PersonAtLocation", product).expect("unwrap");
     ///
-    /// let domain = table.get_domain("PersonAtLocation").unwrap();
+    /// let domain = table.get_domain("PersonAtLocation").expect("unwrap");
     /// assert_eq!(domain.cardinality, 5000);
     /// ```
     fn add_product_domain(
@@ -371,19 +371,19 @@ mod tests {
     #[test]
     fn test_cardinality() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("A", 10)).unwrap();
-        table.add_domain(DomainInfo::new("B", 20)).unwrap();
-        table.add_domain(DomainInfo::new("C", 5)).unwrap();
+        table.add_domain(DomainInfo::new("A", 10)).expect("unwrap");
+        table.add_domain(DomainInfo::new("B", 20)).expect("unwrap");
+        table.add_domain(DomainInfo::new("C", 5)).expect("unwrap");
 
         let product = ProductDomain::ternary("A", "B", "C");
-        assert_eq!(product.cardinality(&table).unwrap(), 1000);
+        assert_eq!(product.cardinality(&table).expect("unwrap"), 1000);
     }
 
     #[test]
     fn test_validate_success() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("A", 10)).unwrap();
-        table.add_domain(DomainInfo::new("B", 20)).unwrap();
+        table.add_domain(DomainInfo::new("A", 10)).expect("unwrap");
+        table.add_domain(DomainInfo::new("B", 20)).expect("unwrap");
 
         let product = ProductDomain::binary("A", "B");
         assert!(product.validate(&table).is_ok());
@@ -392,7 +392,7 @@ mod tests {
     #[test]
     fn test_validate_unknown_domain() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("A", 10)).unwrap();
+        table.add_domain(DomainInfo::new("A", 10)).expect("unwrap");
 
         let product = ProductDomain::binary("A", "Unknown");
         assert!(product.validate(&table).is_err());
@@ -416,7 +416,7 @@ mod tests {
             "D".to_string(),
         ]);
 
-        let sub = product.slice(1, 3).unwrap();
+        let sub = product.slice(1, 3).expect("unwrap");
         assert_eq!(sub.components(), &["B", "C"]);
         assert_eq!(sub.to_string(), "B × C");
     }
@@ -439,20 +439,24 @@ mod tests {
     #[test]
     fn test_add_product_domain() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.add_domain(DomainInfo::new("Location", 50)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Location", 50))
+            .expect("unwrap");
 
         let product = ProductDomain::binary("Person", "Location");
         table
             .add_product_domain("PersonAtLocation", product)
-            .unwrap();
+            .expect("unwrap");
 
-        let domain = table.get_domain("PersonAtLocation").unwrap();
+        let domain = table.get_domain("PersonAtLocation").expect("unwrap");
         assert_eq!(domain.cardinality, 5000);
         assert!(domain
             .description
             .as_ref()
-            .unwrap()
+            .expect("unwrap")
             .contains("Product domain"));
     }
 
@@ -465,17 +469,17 @@ mod tests {
     #[test]
     fn test_nested_product() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("A", 10)).unwrap();
-        table.add_domain(DomainInfo::new("B", 20)).unwrap();
-        table.add_domain(DomainInfo::new("C", 5)).unwrap();
+        table.add_domain(DomainInfo::new("A", 10)).expect("unwrap");
+        table.add_domain(DomainInfo::new("B", 20)).expect("unwrap");
+        table.add_domain(DomainInfo::new("C", 5)).expect("unwrap");
 
         // Create (A × B)
         let ab = ProductDomain::binary("A", "B");
-        table.add_product_domain("AB", ab).unwrap();
+        table.add_product_domain("AB", ab).expect("unwrap");
 
         // Create (AB × C)
         let abc = ProductDomain::binary("AB", "C");
-        assert_eq!(abc.cardinality(&table).unwrap(), 1000);
+        assert_eq!(abc.cardinality(&table).expect("unwrap"), 1000);
     }
 
     #[test]

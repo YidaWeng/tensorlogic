@@ -379,7 +379,7 @@ mod tests {
     fn test_analyze_einsum_for_tiling() {
         let strategy = analyze_einsum_for_tiling("ik,kj->ij");
         assert!(strategy.is_some());
-        let s = strategy.unwrap();
+        let s = strategy.expect("unwrap");
         assert_eq!(s.tiles.len(), 3);
 
         let strategy_reduction = analyze_einsum_for_tiling("ijk->ij");
@@ -395,10 +395,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::einsum("ik,kj->ij", vec![a, b], vec![c]))
-            .unwrap();
+            .expect("unwrap");
 
         let strategy = TilingStrategy::for_matmul(64, 64, 64);
-        let result = apply_tiling(&mut graph, &strategy).unwrap();
+        let result = apply_tiling(&mut graph, &strategy).expect("unwrap");
 
         assert_eq!(result.nodes_tiled, 1);
         assert!(result.estimated_speedup >= 1.0);
@@ -413,9 +413,9 @@ mod tests {
 
         graph
             .add_node(EinsumNode::einsum("ik,kj->ij", vec![a, b], vec![c]))
-            .unwrap();
+            .expect("unwrap");
 
-        let result = apply_register_tiling(&mut graph).unwrap();
+        let result = apply_register_tiling(&mut graph).expect("unwrap");
         assert_eq!(result.nodes_tiled, 1);
         assert!(result.loops_unrolled > 0);
     }
@@ -429,13 +429,14 @@ mod tests {
 
         graph
             .add_node(EinsumNode::einsum("ik,kj->ij", vec![a, b], vec![c]))
-            .unwrap();
+            .expect("unwrap");
 
         let l1_tiles = vec![8, 8, 8];
         let l2_tiles = vec![32, 32, 32];
         let l3_tiles = vec![128, 128, 128];
 
-        let result = apply_multilevel_tiling(&mut graph, &l1_tiles, &l2_tiles, &l3_tiles).unwrap();
+        let result =
+            apply_multilevel_tiling(&mut graph, &l1_tiles, &l2_tiles, &l3_tiles).expect("unwrap");
         assert!(result.nodes_tiled > 0);
         assert!(result.estimated_speedup > 1.0);
     }
@@ -451,12 +452,12 @@ mod tests {
         // Matrix multiplication
         graph
             .add_node(EinsumNode::einsum("ik,kj->ij", vec![a, b], vec![c]))
-            .unwrap();
+            .expect("unwrap");
 
         // Element-wise operation (should not be tiled)
         graph
             .add_node(EinsumNode::elem_unary("relu", c, d))
-            .unwrap();
+            .expect("unwrap");
 
         let recommendations = recommend_tiling_strategy(&graph);
         assert_eq!(recommendations.len(), 1); // Only matmul should have recommendation
@@ -495,10 +496,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::einsum("ik,kj->ij", vec![a, b], vec![c]))
-            .unwrap();
+            .expect("unwrap");
 
         let strategy = TilingStrategy::for_matmul(64, 64, 64);
-        apply_tiling(&mut graph, &strategy).unwrap();
+        apply_tiling(&mut graph, &strategy).expect("unwrap");
 
         // Check that metadata was added
         let node = &graph.nodes[0];

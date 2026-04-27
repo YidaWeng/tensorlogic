@@ -393,15 +393,21 @@ mod tests {
         ];
 
         assert_eq!(
-            LangString::preferred(&items, Some("fr")).unwrap().value,
+            LangString::preferred(&items, Some("fr"))
+                .expect("unwrap")
+                .value,
             "Bonjour"
         );
         assert_eq!(
-            LangString::preferred(&items, Some("en")).unwrap().value,
+            LangString::preferred(&items, Some("en"))
+                .expect("unwrap")
+                .value,
             "Hello"
         );
         assert_eq!(
-            LangString::preferred(&items, Some("de")).unwrap().value,
+            LangString::preferred(&items, Some("de"))
+                .expect("unwrap")
+                .value,
             "Hello"
         ); // Fallback to English
     }
@@ -417,7 +423,10 @@ mod tests {
         assert_eq!(meta.get_label(Some("en")), Some("Person"));
         assert_eq!(meta.get_label(Some("fr")), Some("Personne"));
         assert_eq!(meta.get_comment(Some("en")), Some("A human being"));
-        assert_eq!(meta.get_annotation("creator").unwrap()[0], "John Doe");
+        assert_eq!(
+            meta.get_annotation("creator").expect("unwrap")[0],
+            "John Doe"
+        );
     }
 
     #[test]
@@ -450,13 +459,13 @@ mod tests {
         let mut graph = Graph::new();
         let parser = TurtleParser::new().for_slice(turtle.as_bytes());
         for triple in parser {
-            graph.insert(&triple.unwrap());
+            graph.insert(&triple.expect("unwrap"));
         }
 
         let mut store = MetadataStore::new();
-        store.extract_from_graph(&graph).unwrap();
+        store.extract_from_graph(&graph).expect("unwrap");
 
-        let person = store.get("http://example.org/Person").unwrap();
+        let person = store.get("http://example.org/Person").expect("unwrap");
         assert_eq!(person.labels.len(), 2);
         assert_eq!(person.get_label(Some("en")), Some("Person"));
         assert_eq!(person.get_label(Some("fr")), Some("Personne"));
@@ -519,11 +528,11 @@ mod tests {
         meta.add_label("Person", Some("en".to_string()));
         meta.add_comment("A human being", Some("en".to_string()));
 
-        let json = store.to_json().unwrap();
-        let loaded = MetadataStore::from_json(&json).unwrap();
+        let json = store.to_json().expect("unwrap");
+        let loaded = MetadataStore::from_json(&json).expect("unwrap");
 
         assert_eq!(loaded.all_entities().len(), 1);
-        let person = loaded.get("http://example.org/Person").unwrap();
+        let person = loaded.get("http://example.org/Person").expect("unwrap");
         assert_eq!(person.get_label(Some("en")), Some("Person"));
     }
 }

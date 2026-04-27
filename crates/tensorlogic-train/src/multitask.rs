@@ -321,7 +321,7 @@ mod tests {
         let losses: Vec<Box<dyn Loss>> = vec![Box::new(MseLoss), Box::new(MseLoss)];
         let weights = vec![0.7, 0.3];
 
-        let mut mt_loss = MultiTaskLoss::new_fixed(losses, weights).unwrap();
+        let mut mt_loss = MultiTaskLoss::new_fixed(losses, weights).expect("unwrap");
 
         let predictions = array![[1.0, 2.0, 3.0, 4.0]];
         let targets = array![[1.5, 2.5, 2.5, 3.5]];
@@ -329,7 +329,7 @@ mod tests {
 
         let loss = mt_loss
             .compute_multi_task(&predictions.view(), &targets.view(), &task_splits)
-            .unwrap();
+            .expect("unwrap");
 
         assert!(loss > 0.0);
         assert_eq!(mt_loss.get_weights(), &[0.7, 0.3]);
@@ -344,7 +344,7 @@ mod tests {
             TaskWeightingStrategy::DynamicTaskPrioritization,
             0.01,
         )
-        .unwrap();
+        .expect("unwrap");
 
         let predictions = array![[1.0, 2.0, 10.0, 11.0]]; // Second task has higher error
         let targets = array![[1.5, 2.5, 2.0, 3.0]];
@@ -352,7 +352,7 @@ mod tests {
 
         let _loss = mt_loss
             .compute_multi_task(&predictions.view(), &targets.view(), &task_splits)
-            .unwrap();
+            .expect("unwrap");
 
         // DTP should give more weight to the task with higher loss
         let weights = mt_loss.get_weights();
@@ -369,8 +369,8 @@ mod tests {
         task_grads[0].insert("param".to_string(), grad1);
         task_grads[1].insert("param".to_string(), grad2);
 
-        let result = PCGrad::apply(&task_grads).unwrap();
-        let combined = result.get("param").unwrap();
+        let result = PCGrad::apply(&task_grads).expect("unwrap");
+        let combined = result.get("param").expect("unwrap");
 
         // Should be the average
         assert!((combined[[0, 0]] - 1.0).abs() < 1e-6);
@@ -387,8 +387,8 @@ mod tests {
         task_grads[0].insert("param".to_string(), grad1);
         task_grads[1].insert("param".to_string(), grad2);
 
-        let result = PCGrad::apply(&task_grads).unwrap();
-        let combined = result.get("param").unwrap();
+        let result = PCGrad::apply(&task_grads).expect("unwrap");
+        let combined = result.get("param").expect("unwrap");
 
         // Conflicting gradients should be projected
         assert!(combined[[0, 0]].abs() < 1.0); // Should be reduced
@@ -397,7 +397,7 @@ mod tests {
     #[test]
     fn test_multitask_invalid_splits() {
         let losses: Vec<Box<dyn Loss>> = vec![Box::new(MseLoss), Box::new(MseLoss)];
-        let mut mt_loss = MultiTaskLoss::new_fixed(losses, vec![0.5, 0.5]).unwrap();
+        let mut mt_loss = MultiTaskLoss::new_fixed(losses, vec![0.5, 0.5]).expect("unwrap");
 
         let predictions = array![[1.0, 2.0]];
         let targets = array![[1.5, 2.5]];

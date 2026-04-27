@@ -681,17 +681,18 @@ mod tests {
     }
 
     #[test]
-    fn test_provenance_tracker_json() {
+    fn test_provenance_tracker_json() -> Result<(), Box<dyn std::error::Error>> {
         let mut tracker = PyProvenanceTracker::new(false);
         tracker.track_entity("http://example.org/alice".to_string(), 0);
 
-        let json = tracker.to_json().unwrap();
+        let json = tracker.to_json()?;
         assert!(json.contains("alice"));
 
-        let restored = PyProvenanceTracker::from_json(&json).unwrap();
+        let restored = PyProvenanceTracker::from_json(&json)?;
         assert_eq!(
             restored.get_entity(0),
             Some("http://example.org/alice".to_string())
         );
+        Ok(())
     }
 }

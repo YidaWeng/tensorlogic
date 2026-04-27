@@ -494,7 +494,7 @@ mod tests {
 
         report.add_result(result);
 
-        let json = report.to_json().unwrap();
+        let json = report.to_json().expect("unwrap");
         assert!(json.contains("conforms"));
         assert!(json.contains("results"));
     }

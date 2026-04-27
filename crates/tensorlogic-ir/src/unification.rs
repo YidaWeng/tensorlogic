@@ -21,7 +21,7 @@
 //!
 //! let result = unify_terms(&term1, &term2);
 //! assert!(result.is_ok());
-//! let subst = result.unwrap();
+//! let subst = result.expect("unwrap");
 //! assert_eq!(subst.apply(&term1), term2);
 //! ```
 //!
@@ -216,7 +216,7 @@ fn occurs_check(var: &str, term: &Term) -> bool {
 /// let x = Term::var("x");
 /// let a = Term::constant("a");
 ///
-/// let mgu = unify_terms(&x, &a).unwrap();
+/// let mgu = unify_terms(&x, &a).expect("unwrap");
 /// assert_eq!(mgu.apply(&x), a);
 /// ```
 pub fn unify_terms(term1: &Term, term2: &Term) -> Result<Substitution, IrError> {
@@ -315,7 +315,7 @@ fn unify_impl(
 ///     (Term::var("y"), Term::constant("b")),
 /// ];
 ///
-/// let mgu = unify_term_list(&pairs).unwrap();
+/// let mgu = unify_term_list(&pairs).expect("unwrap");
 /// assert_eq!(mgu.len(), 2);
 /// ```
 pub fn unify_term_list(pairs: &[(Term, Term)]) -> Result<Substitution, IrError> {
@@ -526,14 +526,14 @@ mod tests {
         let x = Term::var("x");
         let a = Term::constant("a");
 
-        let mgu = unify_terms(&x, &a).unwrap();
+        let mgu = unify_terms(&x, &a).expect("unwrap");
         assert_eq!(mgu.apply(&x), a);
     }
 
     #[test]
     fn test_unify_same_variable() {
         let x = Term::var("x");
-        let mgu = unify_terms(&x, &x).unwrap();
+        let mgu = unify_terms(&x, &x).expect("unwrap");
         assert!(mgu.is_empty());
     }
 
@@ -549,7 +549,7 @@ mod tests {
     #[test]
     fn test_unify_same_constant() {
         let a = Term::constant("a");
-        let mgu = unify_terms(&a, &a).unwrap();
+        let mgu = unify_terms(&a, &a).expect("unwrap");
         assert!(mgu.is_empty());
     }
 
@@ -585,7 +585,7 @@ mod tests {
             (Term::var("z"), Term::var("x")),
         ];
 
-        let mgu = unify_term_list(&pairs).unwrap();
+        let mgu = unify_term_list(&pairs).expect("unwrap");
         assert_eq!(mgu.len(), 3);
         assert_eq!(mgu.apply(&Term::var("x")), Term::constant("a"));
         assert_eq!(mgu.apply(&Term::var("y")), Term::constant("b"));
@@ -640,7 +640,7 @@ mod tests {
             type_annotation: TypeAnnotation::new("Int"),
         };
 
-        let mgu = unify_terms(&x, &a).unwrap();
+        let mgu = unify_terms(&x, &a).expect("unwrap");
         assert_eq!(mgu.len(), 1);
     }
 

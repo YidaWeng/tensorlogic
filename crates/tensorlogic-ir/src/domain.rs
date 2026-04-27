@@ -337,7 +337,7 @@ mod tests {
         let mut registry = DomainRegistry::new();
         let domain = DomainInfo::finite("Color", 3);
 
-        registry.register(domain.clone()).unwrap();
+        registry.register(domain.clone()).expect("unwrap");
         assert!(registry.contains("Color"));
         assert_eq!(registry.get("Color"), Some(&domain));
     }
@@ -352,7 +352,7 @@ mod tests {
         assert!(registry.contains("Nat"));
         assert!(registry.contains("Probability"));
 
-        let prob = registry.get("Probability").unwrap();
+        let prob = registry.get("Probability").expect("unwrap");
         assert_eq!(prob.metadata.get("min"), Some(&"0.0".to_string()));
         assert_eq!(prob.metadata.get("max"), Some(&"1.0".to_string()));
     }
@@ -360,22 +360,26 @@ mod tests {
     #[test]
     fn test_registry_compatibility_check() {
         let mut registry = DomainRegistry::new();
-        registry.register(DomainInfo::integer("Int1")).unwrap();
-        registry.register(DomainInfo::integer("Int2")).unwrap();
-        registry.register(DomainInfo::real("Real")).unwrap();
+        registry
+            .register(DomainInfo::integer("Int1"))
+            .expect("unwrap");
+        registry
+            .register(DomainInfo::integer("Int2"))
+            .expect("unwrap");
+        registry.register(DomainInfo::real("Real")).expect("unwrap");
 
-        assert!(registry.are_compatible("Int1", "Int2").unwrap());
-        assert!(!registry.are_compatible("Int1", "Real").unwrap());
+        assert!(registry.are_compatible("Int1", "Int2").expect("unwrap"));
+        assert!(!registry.are_compatible("Int1", "Real").expect("unwrap"));
     }
 
     #[test]
     fn test_registry_casting() {
         let registry = DomainRegistry::with_builtins();
 
-        assert!(registry.can_cast("Bool", "Int").unwrap());
-        assert!(registry.can_cast("Bool", "Real").unwrap());
-        assert!(registry.can_cast("Int", "Real").unwrap());
-        assert!(!registry.can_cast("Real", "Int").unwrap());
+        assert!(registry.can_cast("Bool", "Int").expect("unwrap"));
+        assert!(registry.can_cast("Bool", "Real").expect("unwrap"));
+        assert!(registry.can_cast("Int", "Real").expect("unwrap"));
+        assert!(!registry.can_cast("Real", "Int").expect("unwrap"));
     }
 
     #[test]

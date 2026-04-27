@@ -53,7 +53,7 @@ fn benchmark_no_callbacks(c: &mut Criterion) {
                     None,
                     &mut parameters,
                 )
-                .unwrap();
+                .expect("unwrap");
 
             black_box(parameters);
         });
@@ -98,7 +98,7 @@ fn benchmark_single_callback_overhead(c: &mut Criterion) {
                     None,
                     &mut parameters,
                 )
-                .unwrap();
+                .expect("unwrap");
 
             black_box(parameters);
         });
@@ -137,7 +137,7 @@ fn benchmark_single_callback_overhead(c: &mut Criterion) {
                     Some(&train_targets.view()),
                     &mut parameters,
                 )
-                .unwrap();
+                .expect("unwrap");
 
             black_box(parameters);
         });
@@ -176,7 +176,7 @@ fn benchmark_single_callback_overhead(c: &mut Criterion) {
                     Some(&train_targets.view()),
                     &mut parameters,
                 )
-                .unwrap();
+                .expect("unwrap");
 
             black_box(parameters);
         });
@@ -215,7 +215,7 @@ fn benchmark_single_callback_overhead(c: &mut Criterion) {
                     None,
                     &mut parameters,
                 )
-                .unwrap();
+                .expect("unwrap");
 
             black_box(parameters);
         });
@@ -270,7 +270,7 @@ fn benchmark_multiple_callbacks(c: &mut Criterion) {
                             None,
                             &mut parameters,
                         )
-                        .unwrap();
+                        .expect("unwrap");
 
                     black_box(parameters);
                 });
@@ -319,7 +319,7 @@ fn benchmark_heavy_callbacks(c: &mut Criterion) {
                     None,
                     &mut parameters,
                 )
-                .unwrap();
+                .expect("unwrap");
 
             black_box(parameters);
         });
@@ -358,7 +358,7 @@ fn benchmark_heavy_callbacks(c: &mut Criterion) {
                     None,
                     &mut parameters,
                 )
-                .unwrap();
+                .expect("unwrap");
 
             black_box(parameters);
         });
@@ -397,7 +397,7 @@ fn benchmark_heavy_callbacks(c: &mut Criterion) {
                     None,
                     &mut parameters,
                 )
-                .unwrap();
+                .expect("unwrap");
 
             black_box(parameters);
         });

@@ -156,7 +156,11 @@ impl ExprGenerator {
 
     /// Generate a random variable term
     pub fn gen_var(&mut self) -> Term {
-        let name = self.rng.choose(&self.var_names).unwrap().clone();
+        let name = self
+            .rng
+            .choose(&self.var_names)
+            .expect("non-empty var_names slice must have a chooseable element")
+            .clone();
         Term::var(name)
     }
 
@@ -177,7 +181,11 @@ impl ExprGenerator {
 
     /// Generate a random predicate expression
     pub fn gen_predicate(&mut self) -> TLExpr {
-        let name = self.rng.choose(&self.pred_names).unwrap().clone();
+        let name = self
+            .rng
+            .choose(&self.pred_names)
+            .expect("non-empty pred_names slice must have a chooseable element")
+            .clone();
         let arity = self.rng.gen_range(self.config.max_arity) + 1;
         let args: Vec<Term> = (0..arity).map(|_| self.gen_term()).collect();
         TLExpr::pred(name, args)
@@ -202,13 +210,29 @@ impl ExprGenerator {
                 3 => TLExpr::or(self.gen_expr(depth - 1), self.gen_expr(depth - 1)),
                 4 => TLExpr::imply(self.gen_expr(depth - 1), self.gen_expr(depth - 1)),
                 5 if self.rng.gen_bool(self.config.quantifier_probability) => {
-                    let var = self.rng.choose(&self.var_names).unwrap().clone();
-                    let domain = self.rng.choose(&self.config.domains).unwrap().clone();
+                    let var = self
+                        .rng
+                        .choose(&self.var_names)
+                        .expect("non-empty var_names slice must have a chooseable element")
+                        .clone();
+                    let domain = self
+                        .rng
+                        .choose(&self.config.domains)
+                        .expect("non-empty domains slice must have a chooseable element")
+                        .clone();
                     TLExpr::exists(var, domain, self.gen_expr(depth - 1))
                 }
                 6 if self.rng.gen_bool(self.config.quantifier_probability) => {
-                    let var = self.rng.choose(&self.var_names).unwrap().clone();
-                    let domain = self.rng.choose(&self.config.domains).unwrap().clone();
+                    let var = self
+                        .rng
+                        .choose(&self.var_names)
+                        .expect("non-empty var_names slice must have a chooseable element")
+                        .clone();
+                    let domain = self
+                        .rng
+                        .choose(&self.config.domains)
+                        .expect("non-empty domains slice must have a chooseable element")
+                        .clone();
                     TLExpr::forall(var, domain, self.gen_expr(depth - 1))
                 }
                 7 if self.rng.gen_bool(self.config.arithmetic_probability) => {
@@ -291,7 +315,9 @@ pub fn random_mutation(expr: &TLExpr, rng: &mut SimpleRng) -> TLExpr {
         MutationKind::OrWith,
         MutationKind::Duplicate,
     ];
-    let mutation = *rng.choose(&mutations).unwrap();
+    let mutation = *rng
+        .choose(&mutations)
+        .expect("non-empty mutations slice must have a chooseable element");
     mutate_expr(expr, mutation, rng)
 }
 
@@ -362,7 +388,9 @@ pub fn gen_random_graph(config: &GraphGenConfig, rng: &mut SimpleRng) -> EinsumG
             let idx = rng.gen_range(tensors.len());
             let out = graph.add_tensor(format!("out_{}", graph.tensor_count()));
             let ops = ["neg", "exp", "log", "relu"];
-            let op = *rng.choose(&ops).unwrap();
+            let op = *rng
+                .choose(&ops)
+                .expect("non-empty ops slice must have a chooseable element");
             let _ = graph.add_node(EinsumNode::elem_unary(op, tensors[idx], out));
             tensors.push(out);
         }
@@ -487,8 +515,9 @@ pub fn fuzz_expression_operations(expr: &TLExpr) -> FuzzStats {
 
     // Test serialization (serde is always enabled)
     if std::panic::catch_unwind(|| {
-        let json = serde_json::to_string(expr).unwrap();
-        let _deserialized: TLExpr = serde_json::from_str(&json).unwrap();
+        let json = serde_json::to_string(expr).expect("serialization of TLExpr should succeed");
+        let _deserialized: TLExpr = serde_json::from_str(&json)
+            .expect("deserialization of just-serialized TLExpr should succeed");
     })
     .is_ok()
     {
@@ -1061,7 +1090,7 @@ mod tests {
         // Choose many times
         let mut seen = HashSet::new();
         for _ in 0..100 {
-            let item = rng.choose(&items).unwrap();
+            let item = rng.choose(&items).expect("unwrap");
             seen.insert(*item);
         }
 

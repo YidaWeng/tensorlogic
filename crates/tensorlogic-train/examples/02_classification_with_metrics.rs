@@ -119,8 +119,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("\n=== Training Results ===\n");
 
     // Compute final predictions for analysis
-    let weights = parameters.get("weights").unwrap();
-    let bias = parameters.get("bias").unwrap();
+    let weights = parameters.get("weights").expect("unwrap");
+    let bias = parameters.get("bias").expect("unwrap");
     let val_predictions = val_data.dot(weights) + bias;
 
     // Compute confusion matrix

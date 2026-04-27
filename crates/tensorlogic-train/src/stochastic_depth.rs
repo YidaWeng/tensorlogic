@@ -33,7 +33,7 @@
 
 use crate::{TrainError, TrainResult};
 use scirs2_core::ndarray::{Array2, ArrayView2};
-use scirs2_core::random::{Rng, StdRng};
+use scirs2_core::random::{RngExt, StdRng};
 
 /// DropPath (Stochastic Depth) regularization.
 ///
@@ -47,16 +47,16 @@ use scirs2_core::random::{Rng, StdRng};
 /// use scirs2_core::ndarray::Array2;
 /// use scirs2_core::random::{StdRng, SeedableRng};
 ///
-/// let drop_path = DropPath::new(0.1).unwrap(); // 10% drop probability
+/// let drop_path = DropPath::new(0.1).expect("unwrap"); // 10% drop probability
 /// let mut rng = StdRng::seed_from_u64(42);
 ///
 /// let residual = Array2::ones((4, 8));
 ///
 /// // Training mode: randomly drop
-/// let output = drop_path.apply(&residual.view(), true, &mut rng).unwrap();
+/// let output = drop_path.apply(&residual.view(), true, &mut rng).expect("unwrap");
 ///
 /// // Inference mode: scale by keep probability
-/// let output_test = drop_path.apply(&residual.view(), false, &mut rng).unwrap();
+/// let output_test = drop_path.apply(&residual.view(), false, &mut rng).expect("unwrap");
 /// ```
 #[derive(Debug, Clone)]
 pub struct DropPath {
@@ -206,7 +206,7 @@ impl DropPath {
 /// use tensorlogic_train::LinearStochasticDepth;
 ///
 /// // 10 layers, drop_prob from 0.0 to 0.3
-/// let scheduler = LinearStochasticDepth::new(10, 0.0, 0.3).unwrap();
+/// let scheduler = LinearStochasticDepth::new(10, 0.0, 0.3).expect("unwrap");
 ///
 /// // Get drop probability for layer 5
 /// let drop_prob_5 = scheduler.get_drop_prob(5);
@@ -389,7 +389,7 @@ mod tests {
 
     #[test]
     fn test_drop_path_creation() {
-        let dp = DropPath::new(0.2).unwrap();
+        let dp = DropPath::new(0.2).expect("unwrap");
         assert_eq!(dp.drop_prob, 0.2);
         assert!((dp.keep_prob - 0.8).abs() < 1e-10);
     }
@@ -402,43 +402,43 @@ mod tests {
 
     #[test]
     fn test_drop_path_zero_prob() {
-        let dp = DropPath::new(0.0).unwrap();
+        let dp = DropPath::new(0.0).expect("unwrap");
         let mut rng = create_test_rng();
 
         let path = array![[1.0, 2.0], [3.0, 4.0]];
 
         // With 0% drop prob, path should be unchanged
-        let output = dp.apply(&path.view(), true, &mut rng).unwrap();
+        let output = dp.apply(&path.view(), true, &mut rng).expect("unwrap");
         assert_eq!(output, path);
     }
 
     #[test]
     fn test_drop_path_full_prob() {
-        let dp = DropPath::new(1.0).unwrap();
+        let dp = DropPath::new(1.0).expect("unwrap");
         let mut rng = create_test_rng();
 
         let path = array![[1.0, 2.0], [3.0, 4.0]];
 
         // With 100% drop prob, should return zeros
-        let output = dp.apply(&path.view(), true, &mut rng).unwrap();
+        let output = dp.apply(&path.view(), true, &mut rng).expect("unwrap");
         assert_eq!(output, Array2::<f64>::zeros((2, 2)));
     }
 
     #[test]
     fn test_drop_path_inference_mode() {
-        let dp = DropPath::new(0.5).unwrap();
+        let dp = DropPath::new(0.5).expect("unwrap");
         let mut rng = create_test_rng();
 
         let path = array![[1.0, 2.0], [3.0, 4.0]];
 
         // In inference mode (training=false), path should be unchanged
-        let output = dp.apply(&path.view(), false, &mut rng).unwrap();
+        let output = dp.apply(&path.view(), false, &mut rng).expect("unwrap");
         assert_eq!(output, path);
     }
 
     #[test]
     fn test_drop_path_training_mode() {
-        let dp = DropPath::new(0.5).unwrap();
+        let dp = DropPath::new(0.5).expect("unwrap");
         let mut rng = create_test_rng();
 
         let path = array![[1.0, 2.0]];
@@ -448,7 +448,7 @@ mod tests {
         let mut kept_count = 0;
 
         for _ in 0..100 {
-            let output = dp.apply(&path.view(), true, &mut rng).unwrap();
+            let output = dp.apply(&path.view(), true, &mut rng).expect("unwrap");
 
             if output[[0, 0]] == 0.0 {
                 dropped_count += 1;
@@ -466,12 +466,14 @@ mod tests {
 
     #[test]
     fn test_drop_path_batch() {
-        let dp = DropPath::new(0.5).unwrap();
+        let dp = DropPath::new(0.5).expect("unwrap");
         let mut rng = create_test_rng();
 
         let paths = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
 
-        let output = dp.apply_batch(&paths.view(), true, &mut rng).unwrap();
+        let output = dp
+            .apply_batch(&paths.view(), true, &mut rng)
+            .expect("unwrap");
 
         // Shape should be preserved
         assert_eq!(output.shape(), paths.shape());
@@ -490,10 +492,10 @@ mod tests {
 
     #[test]
     fn test_drop_path_set_prob() {
-        let mut dp = DropPath::new(0.2).unwrap();
+        let mut dp = DropPath::new(0.2).expect("unwrap");
         assert_eq!(dp.drop_prob, 0.2);
 
-        dp.set_drop_prob(0.5).unwrap();
+        dp.set_drop_prob(0.5).expect("unwrap");
         assert_eq!(dp.drop_prob, 0.5);
         assert!((dp.keep_prob - 0.5).abs() < 1e-10);
 
@@ -503,7 +505,7 @@ mod tests {
 
     #[test]
     fn test_linear_stochastic_depth_creation() {
-        let scheduler = LinearStochasticDepth::new(10, 0.0, 0.5).unwrap();
+        let scheduler = LinearStochasticDepth::new(10, 0.0, 0.5).expect("unwrap");
         assert_eq!(scheduler.num_layers, 10);
         assert_eq!(scheduler.drop_prob_min, 0.0);
         assert_eq!(scheduler.drop_prob_max, 0.5);
@@ -519,7 +521,7 @@ mod tests {
 
     #[test]
     fn test_linear_stochastic_depth_interpolation() {
-        let scheduler = LinearStochasticDepth::new(10, 0.0, 0.9).unwrap();
+        let scheduler = LinearStochasticDepth::new(10, 0.0, 0.9).expect("unwrap");
 
         // First layer: min drop prob
         assert!((scheduler.get_drop_prob(0) - 0.0).abs() < 1e-10);
@@ -533,8 +535,8 @@ mod tests {
 
     #[test]
     fn test_linear_stochastic_depth_create_paths() {
-        let scheduler = LinearStochasticDepth::new(5, 0.0, 0.4).unwrap();
-        let paths = scheduler.create_drop_paths().unwrap();
+        let scheduler = LinearStochasticDepth::new(5, 0.0, 0.4).expect("unwrap");
+        let paths = scheduler.create_drop_paths().expect("unwrap");
 
         assert_eq!(paths.len(), 5);
 
@@ -546,7 +548,7 @@ mod tests {
 
     #[test]
     fn test_exponential_stochastic_depth() {
-        let scheduler = ExponentialStochasticDepth::new(10, 0.0, 0.8).unwrap();
+        let scheduler = ExponentialStochasticDepth::new(10, 0.0, 0.8).expect("unwrap");
 
         // First layer: min drop prob
         assert!((scheduler.get_drop_prob(0) - 0.0).abs() < 1e-10);
@@ -564,8 +566,8 @@ mod tests {
 
     #[test]
     fn test_exponential_create_paths() {
-        let scheduler = ExponentialStochasticDepth::new(5, 0.0, 0.4).unwrap();
-        let paths = scheduler.create_drop_paths().unwrap();
+        let scheduler = ExponentialStochasticDepth::new(5, 0.0, 0.4).expect("unwrap");
+        let paths = scheduler.create_drop_paths().expect("unwrap");
 
         assert_eq!(paths.len(), 5);
 

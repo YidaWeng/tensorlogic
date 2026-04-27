@@ -20,7 +20,7 @@
 //! use tensorlogic_sklears_kernels::{RbfKernel, RbfKernelConfig, LinearKernel, Kernel};
 //!
 //! // Create kernels to compare
-//! let rbf = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+//! let rbf = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
 //! let linear = LinearKernel::new();
 //!
 //! // Sample data
@@ -34,8 +34,8 @@
 //!
 //! // Compare using Kernel Target Alignment
 //! let selector = KernelSelector::new();
-//! let rbf_kta = selector.kernel_target_alignment(&rbf, &data, &targets).unwrap();
-//! let linear_kta = selector.kernel_target_alignment(&linear, &data, &targets).unwrap();
+//! let rbf_kta = selector.kernel_target_alignment(&rbf, &data, &targets).expect("unwrap");
+//! let linear_kta = selector.kernel_target_alignment(&linear, &data, &targets).expect("unwrap");
 //! ```
 
 use crate::error::{KernelError, Result};
@@ -748,7 +748,7 @@ mod tests {
 
         let kta = selector.kernel_target_alignment(&kernel, &data, &targets);
         assert!(kta.is_ok());
-        let kta_val = kta.unwrap();
+        let kta_val = kta.expect("unwrap");
         // For perfectly correlated data, KTA should be high
         assert!(kta_val > 0.5);
     }
@@ -790,7 +790,7 @@ mod tests {
     fn test_compare_kernels_kta() {
         let selector = KernelSelector::new();
         let linear = LinearKernel::new();
-        let rbf = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let rbf = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
 
         let data = vec![vec![1.0], vec![2.0], vec![3.0], vec![4.0]];
         let targets = vec![1.0, 2.0, 3.0, 4.0];
@@ -800,7 +800,7 @@ mod tests {
         let comparison = selector.compare_kernels_kta(&kernels, &data, &targets);
         assert!(comparison.is_ok());
 
-        let comp = comparison.unwrap();
+        let comp = comparison.expect("unwrap");
         assert_eq!(comp.kernel_names.len(), 2);
         assert_eq!(comp.scores.len(), 2);
     }
@@ -815,7 +815,7 @@ mod tests {
 
         let result = selector.loo_error_estimate(&kernel, &data, &targets);
         assert!(result.is_ok());
-        let error = result.unwrap();
+        let error = result.expect("unwrap");
         // Error should be finite and non-negative
         assert!(error >= 0.0);
         assert!(error.is_finite());
@@ -840,7 +840,7 @@ mod tests {
         let result = selector.k_fold_cv(&kernel, &data, &targets, &config);
         assert!(result.is_ok());
 
-        let cv_result = result.unwrap();
+        let cv_result = result.expect("unwrap");
         assert_eq!(cv_result.fold_scores.len(), 3);
         assert!(cv_result.mean_score.is_finite());
     }
@@ -876,7 +876,7 @@ mod tests {
         let result = selector.grid_search_rbf_gamma(&data, &targets, &gammas);
         assert!(result.is_ok());
 
-        let search_result = result.unwrap();
+        let search_result = result.expect("unwrap");
         assert!(gammas.contains(&search_result.best_gamma));
         assert_eq!(search_result.all_scores.len(), gammas.len());
     }
@@ -904,7 +904,7 @@ mod tests {
     fn test_matrix_inversion() {
         let matrix = vec![vec![4.0, 7.0], vec![2.0, 6.0]];
 
-        let inv = invert_matrix(&matrix).unwrap();
+        let inv = invert_matrix(&matrix).expect("unwrap");
 
         // Check A * A^{-1} = I
         let n = matrix.len();

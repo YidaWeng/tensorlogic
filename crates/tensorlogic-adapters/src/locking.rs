@@ -32,13 +32,13 @@
 //!
 //! // Wait for readers
 //! for handle in handles {
-//!     handle.join().unwrap();
+//!     handle.join().expect("unwrap");
 //! }
 //!
 //! // Single writer
 //! {
 //!     let mut guard = table.write();
-//!     guard.add_domain(DomainInfo::new("User", 100)).unwrap();
+//!     guard.add_domain(DomainInfo::new("User", 100)).expect("unwrap");
 //! }
 //! ```
 
@@ -155,7 +155,7 @@ impl LockedSymbolTable {
     /// can hold locks simultaneously.
     pub fn read(&self) -> RwLockReadGuard<'_, SymbolTable> {
         let start = Instant::now();
-        let guard = self.table.read().unwrap();
+        let guard = self.table.read().expect("lock should not be poisoned");
         let elapsed = start.elapsed().as_millis();
 
         if let Ok(mut stats) = self.stats.write() {
@@ -193,7 +193,7 @@ impl LockedSymbolTable {
     /// can hold a lock at a time, and no readers can be active.
     pub fn write(&self) -> RwLockWriteGuard<'_, SymbolTable> {
         let start = Instant::now();
-        let guard = self.table.write().unwrap();
+        let guard = self.table.write().expect("lock should not be poisoned");
         let elapsed = start.elapsed().as_millis();
 
         if let Ok(mut stats) = self.stats.write() {
@@ -227,12 +227,15 @@ impl LockedSymbolTable {
 
     /// Get current lock statistics.
     pub fn stats(&self) -> LockStats {
-        self.stats.read().unwrap().clone()
+        self.stats
+            .read()
+            .expect("lock should not be poisoned")
+            .clone()
     }
 
     /// Reset lock statistics.
     pub fn reset_stats(&self) {
-        *self.stats.write().unwrap() = LockStats::new();
+        *self.stats.write().expect("lock should not be poisoned") = LockStats::new();
     }
 
     /// Start a new transaction.
@@ -382,7 +385,9 @@ mod tests {
         // Write
         {
             let mut guard = table.write();
-            guard.add_domain(DomainInfo::new("User", 100)).unwrap();
+            guard
+                .add_domain(DomainInfo::new("User", 100))
+                .expect("unwrap");
         }
 
         // Read
@@ -400,7 +405,9 @@ mod tests {
         // Add some data
         {
             let mut guard = table.write();
-            guard.add_domain(DomainInfo::new("User", 100)).unwrap();
+            guard
+                .add_domain(DomainInfo::new("User", 100))
+                .expect("unwrap");
         }
 
         // Spawn multiple readers
@@ -414,7 +421,7 @@ mod tests {
         }
 
         for handle in handles {
-            handle.join().unwrap();
+            handle.join().expect("unwrap");
         }
     }
 
@@ -449,7 +456,7 @@ mod tests {
             assert!(guard.is_none());
         });
 
-        handle.join().unwrap();
+        handle.join().expect("unwrap");
 
         // Check contention stats
         let stats = table.stats();
@@ -463,11 +470,11 @@ mod tests {
         {
             let mut txn = table.begin_transaction();
             txn.execute(|t| {
-                t.add_domain(DomainInfo::new("User", 100)).unwrap();
-                t.add_domain(DomainInfo::new("Post", 1000)).unwrap();
+                t.add_domain(DomainInfo::new("User", 100)).expect("unwrap");
+                t.add_domain(DomainInfo::new("Post", 1000)).expect("unwrap");
                 Ok(())
             })
-            .unwrap();
+            .expect("unwrap");
             txn.commit();
         }
 
@@ -485,16 +492,18 @@ mod tests {
         // Add initial domain
         {
             let mut guard = table.write();
-            guard.add_domain(DomainInfo::new("User", 100)).unwrap();
+            guard
+                .add_domain(DomainInfo::new("User", 100))
+                .expect("unwrap");
         }
 
         {
             let mut txn = table.begin_transaction();
             txn.execute(|t| {
-                t.add_domain(DomainInfo::new("Post", 1000)).unwrap();
+                t.add_domain(DomainInfo::new("Post", 1000)).expect("unwrap");
                 Ok(())
             })
-            .unwrap();
+            .expect("unwrap");
             txn.rollback();
         }
 
@@ -513,10 +522,10 @@ mod tests {
         {
             let mut txn = table.begin_transaction();
             txn.execute(|t| {
-                t.add_domain(DomainInfo::new("User", 100)).unwrap();
+                t.add_domain(DomainInfo::new("User", 100)).expect("unwrap");
                 Ok(())
             })
-            .unwrap();
+            .expect("unwrap");
             // Drop without commit (auto-rollback)
         }
 
@@ -579,7 +588,7 @@ mod tests {
             assert!(guard.is_none());
         });
 
-        handle.join().unwrap();
+        handle.join().expect("unwrap");
     }
 
     #[test]
@@ -589,7 +598,9 @@ mod tests {
         // Initialize with data
         {
             let mut guard = table.write();
-            guard.add_domain(DomainInfo::new("User", 100)).unwrap();
+            guard
+                .add_domain(DomainInfo::new("User", 100))
+                .expect("unwrap");
         }
 
         let mut handles = vec![];
@@ -615,14 +626,14 @@ mod tests {
                     let domain_name = format!("Domain_{}_{}", i, j);
                     guard
                         .add_domain(DomainInfo::new(&domain_name, 100))
-                        .unwrap();
+                        .expect("unwrap");
                     thread::sleep(Duration::from_millis(2));
                 }
             }));
         }
 
         for handle in handles {
-            handle.join().unwrap();
+            handle.join().expect("unwrap");
         }
 
         // Verify final state
@@ -661,7 +672,7 @@ mod tests {
         let result: Result<(), AdapterError> = {
             let mut txn = table.begin_transaction();
             txn.execute(|t| {
-                t.add_domain(DomainInfo::new("User", 100)).unwrap();
+                t.add_domain(DomainInfo::new("User", 100)).expect("unwrap");
                 // Simulate error
                 Err(AdapterError::DuplicateDomain("User".to_string()))
             })
@@ -677,7 +688,9 @@ mod tests {
     #[test]
     fn test_from_table() {
         let mut original = SymbolTable::new();
-        original.add_domain(DomainInfo::new("User", 100)).unwrap();
+        original
+            .add_domain(DomainInfo::new("User", 100))
+            .expect("unwrap");
 
         let locked = LockedSymbolTable::from_table(original);
 

@@ -315,7 +315,9 @@ impl WorkStealingScheduler {
         let worker_idx = self.select_worker(&task);
 
         // Add task to worker queue
-        let mut worker = self.workers[worker_idx].lock().unwrap();
+        let mut worker = self.workers[worker_idx]
+            .lock()
+            .expect("lock should not be poisoned");
         if worker.len() >= self.config.max_queue_size {
             return Err(ParallelError::QueueFull);
         }
@@ -339,7 +341,7 @@ impl WorkStealingScheduler {
 
         // Simplified execution model (in a real implementation, this would use a thread pool)
         for worker in &self.workers {
-            let mut worker = worker.lock().unwrap();
+            let mut worker = worker.lock().expect("lock should not be poisoned");
             while let Some(task) = worker.pop() {
                 // Check if dependencies are satisfied
                 if self.dependencies_satisfied(&task)? {
@@ -351,14 +353,14 @@ impl WorkStealingScheduler {
                     // Mark as completed
                     self.completed_tasks
                         .lock()
-                        .unwrap()
+                        .expect("lock should not be poisoned")
                         .insert(task.id.clone(), execution_time);
 
                     completed.push(task.id);
 
                     // Update stats
                     if self.config.enable_stats {
-                        let mut stats = self.stats.lock().unwrap();
+                        let mut stats = self.stats.lock().expect("lock should not be poisoned");
                         stats.tasks_executed += 1;
                         stats.total_execution_time_us += execution_time;
                     }
@@ -374,21 +376,27 @@ impl WorkStealingScheduler {
 
     /// Get scheduler statistics.
     pub fn stats(&self) -> SchedulerStats {
-        self.stats.lock().unwrap().clone()
+        self.stats
+            .lock()
+            .expect("lock should not be poisoned")
+            .clone()
     }
 
     /// Reset the scheduler.
     pub fn reset(&self) {
         for worker in &self.workers {
-            let mut worker = worker.lock().unwrap();
+            let mut worker = worker.lock().expect("lock should not be poisoned");
             worker.queue.clear();
             worker.steal_count = 0;
             worker.tasks_executed = 0;
             worker.total_execution_time_us = 0;
         }
 
-        self.completed_tasks.lock().unwrap().clear();
-        *self.stats.lock().unwrap() = SchedulerStats::default();
+        self.completed_tasks
+            .lock()
+            .expect("lock should not be poisoned")
+            .clear();
+        *self.stats.lock().expect("lock should not be poisoned") = SchedulerStats::default();
     }
 
     // Helper methods
@@ -420,7 +428,10 @@ impl WorkStealingScheduler {
     }
 
     fn dependencies_satisfied(&self, task: &Task) -> Result<bool, ParallelError> {
-        let completed = self.completed_tasks.lock().unwrap();
+        let completed = self
+            .completed_tasks
+            .lock()
+            .expect("lock should not be poisoned");
         Ok(task
             .dependencies
             .iter()
@@ -438,7 +449,7 @@ impl WorkStealingScheduler {
         let mut selected = 0;
 
         for (idx, worker) in self.workers.iter().enumerate() {
-            let worker = worker.lock().unwrap();
+            let worker = worker.lock().expect("lock should not be poisoned");
             let load = worker.len();
             if load < min_load {
                 min_load = load;
@@ -462,11 +473,13 @@ impl WorkStealingScheduler {
             return None;
         }
 
-        let mut victim = self.workers[victim_idx].lock().unwrap();
+        let mut victim = self.workers[victim_idx]
+            .lock()
+            .expect("lock should not be poisoned");
         let stolen = victim.steal();
 
         if stolen.is_some() && self.config.enable_stats {
-            let mut stats = self.stats.lock().unwrap();
+            let mut stats = self.stats.lock().expect("lock should not be poisoned");
             stats.steal_count += 1;
         }
 
@@ -488,7 +501,7 @@ impl WorkStealingScheduler {
                     if idx == thief_idx {
                         continue;
                     }
-                    let worker = worker.lock().unwrap();
+                    let worker = worker.lock().expect("lock should not be poisoned");
                     let load = worker.len();
                     if load > max_load {
                         max_load = load;
@@ -511,7 +524,7 @@ impl WorkStealingScheduler {
         let mut total_tasks = 0;
 
         for worker in &self.workers {
-            let worker = worker.lock().unwrap();
+            let worker = worker.lock().expect("lock should not be poisoned");
             let load = worker.tasks_executed;
             worker_loads.push(load);
             total_tasks += load;
@@ -668,7 +681,7 @@ mod tests {
     #[test]
     fn test_parallel_config_builder() {
         let config = ParallelConfig::new(4)
-            .unwrap()
+            .expect("unwrap")
             .with_steal_strategy(StealStrategy::MaxLoad)
             .with_numa_strategy(NumaStrategy::LocalPreferred)
             .with_priority(true);
@@ -694,7 +707,7 @@ mod tests {
 
     #[test]
     fn test_scheduler_creation() {
-        let config = ParallelConfig::new(4).unwrap();
+        let config = ParallelConfig::new(4).expect("unwrap");
         let scheduler = WorkStealingScheduler::new(config);
 
         assert_eq!(scheduler.workers.len(), 4);
@@ -702,7 +715,7 @@ mod tests {
 
     #[test]
     fn test_scheduler_submit() {
-        let config = ParallelConfig::new(2).unwrap();
+        let config = ParallelConfig::new(2).expect("unwrap");
         let scheduler = WorkStealingScheduler::new(config);
 
         let task = Task::new("task1".to_string());
@@ -711,45 +724,45 @@ mod tests {
 
     #[test]
     fn test_scheduler_execute_simple() {
-        let config = ParallelConfig::new(2).unwrap();
+        let config = ParallelConfig::new(2).expect("unwrap");
         let scheduler = WorkStealingScheduler::new(config);
 
         let task1 = Task::new("task1".to_string()).with_estimated_time(100);
         let task2 = Task::new("task2".to_string()).with_estimated_time(200);
 
-        scheduler.submit(task1).unwrap();
-        scheduler.submit(task2).unwrap();
+        scheduler.submit(task1).expect("unwrap");
+        scheduler.submit(task2).expect("unwrap");
 
-        let completed = scheduler.execute_all().unwrap();
+        let completed = scheduler.execute_all().expect("unwrap");
         assert_eq!(completed.len(), 2);
     }
 
     #[test]
     fn test_scheduler_dependencies() {
-        let config = ParallelConfig::new(2).unwrap();
+        let config = ParallelConfig::new(2).expect("unwrap");
         let scheduler = WorkStealingScheduler::new(config);
 
         let task1 = Task::new("task1".to_string());
         let task2 = Task::new("task2".to_string()).with_dependency("task1".to_string());
 
-        scheduler.submit(task1).unwrap();
-        scheduler.submit(task2).unwrap();
+        scheduler.submit(task1).expect("unwrap");
+        scheduler.submit(task2).expect("unwrap");
 
-        let completed = scheduler.execute_all().unwrap();
+        let completed = scheduler.execute_all().expect("unwrap");
         assert!(completed.contains(&"task1".to_string()));
     }
 
     #[test]
     fn test_scheduler_stats() {
-        let config = ParallelConfig::new(2).unwrap();
+        let config = ParallelConfig::new(2).expect("unwrap");
         let scheduler = WorkStealingScheduler::new(config);
 
         let task1 = Task::new("task1".to_string()).with_estimated_time(1000);
         let task2 = Task::new("task2".to_string()).with_estimated_time(2000);
 
-        scheduler.submit(task1).unwrap();
-        scheduler.submit(task2).unwrap();
-        scheduler.execute_all().unwrap();
+        scheduler.submit(task1).expect("unwrap");
+        scheduler.submit(task2).expect("unwrap");
+        scheduler.execute_all().expect("unwrap");
 
         let stats = scheduler.stats();
         assert_eq!(stats.tasks_executed, 2);
@@ -758,16 +771,16 @@ mod tests {
 
     #[test]
     fn test_load_balance_stats() {
-        let config = ParallelConfig::new(4).unwrap();
+        let config = ParallelConfig::new(4).expect("unwrap");
         let scheduler = WorkStealingScheduler::new(config);
 
         // Submit tasks
         for i in 0..8 {
             let task = Task::new(format!("task{}", i)).with_estimated_time(100);
-            scheduler.submit(task).unwrap();
+            scheduler.submit(task).expect("unwrap");
         }
 
-        scheduler.execute_all().unwrap();
+        scheduler.execute_all().expect("unwrap");
 
         let stats = scheduler.load_balance_stats();
         assert!((stats.avg_load - 2.0).abs() < 0.1); // 8 tasks / 4 workers = 2
@@ -775,12 +788,12 @@ mod tests {
 
     #[test]
     fn test_scheduler_reset() {
-        let config = ParallelConfig::new(2).unwrap();
+        let config = ParallelConfig::new(2).expect("unwrap");
         let scheduler = WorkStealingScheduler::new(config);
 
         let task = Task::new("task1".to_string());
-        scheduler.submit(task).unwrap();
-        scheduler.execute_all().unwrap();
+        scheduler.submit(task).expect("unwrap");
+        scheduler.execute_all().expect("unwrap");
 
         let stats_before = scheduler.stats();
         assert_eq!(stats_before.tasks_executed, 1);

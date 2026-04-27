@@ -297,7 +297,7 @@ fn train_and_evaluate<O: Optimizer>(
         let gradients = compute_gradients(params, x, y);
 
         // Update parameters
-        optimizer.step(params, &gradients).unwrap();
+        optimizer.step(params, &gradients).expect("unwrap");
 
         // Print progress
         if epoch % 10 == 0 || epoch == epochs - 1 {

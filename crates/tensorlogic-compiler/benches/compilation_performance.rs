@@ -21,7 +21,7 @@ fn bench_simple_predicate(c: &mut Criterion) {
 
     group.bench_function("compile", |b| {
         b.iter(|| {
-            let graph = compile_to_einsum(black_box(&expr)).unwrap();
+            let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
             black_box(graph);
         });
     });
@@ -38,7 +38,7 @@ fn bench_simple_and(c: &mut Criterion) {
 
     group.bench_function("compile", |b| {
         b.iter(|| {
-            let graph = compile_to_einsum(black_box(&expr)).unwrap();
+            let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
             black_box(graph);
         });
     });
@@ -55,7 +55,7 @@ fn bench_simple_or(c: &mut Criterion) {
 
     group.bench_function("compile", |b| {
         b.iter(|| {
-            let graph = compile_to_einsum(black_box(&expr)).unwrap();
+            let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
             black_box(graph);
         });
     });
@@ -81,7 +81,7 @@ fn bench_nested_and_or(c: &mut Criterion) {
 
     group.bench_function("compile", |b| {
         b.iter(|| {
-            let graph = compile_to_einsum(black_box(&expr)).unwrap();
+            let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
             black_box(graph);
         });
     });
@@ -102,7 +102,7 @@ fn bench_deep_nesting(c: &mut Criterion) {
             }
 
             b.iter(|| {
-                let graph = compile_to_einsum(black_box(&expr)).unwrap();
+                let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
                 black_box(graph);
             });
         });
@@ -124,7 +124,7 @@ fn bench_wide_expression(c: &mut Criterion) {
             }
 
             b.iter(|| {
-                let graph = compile_to_einsum(black_box(&expr)).unwrap();
+                let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
                 black_box(graph);
             });
         });
@@ -147,7 +147,7 @@ fn bench_exists_quantifier(c: &mut Criterion) {
         b.iter(|| {
             let mut ctx = CompilerContext::new();
             ctx.add_domain("D", 100);
-            let graph = compile_to_einsum_with_context(black_box(&expr), &mut ctx).unwrap();
+            let graph = compile_to_einsum_with_context(black_box(&expr), &mut ctx).expect("unwrap");
             black_box(graph);
         });
     });
@@ -171,7 +171,7 @@ fn bench_nested_quantifiers(c: &mut Criterion) {
         b.iter(|| {
             let mut ctx = CompilerContext::new();
             ctx.add_domain("D", 100);
-            let graph = compile_to_einsum_with_context(black_box(&expr), &mut ctx).unwrap();
+            let graph = compile_to_einsum_with_context(black_box(&expr), &mut ctx).expect("unwrap");
             black_box(graph);
         });
     });
@@ -205,7 +205,8 @@ fn bench_strategy_comparison_and(c: &mut Criterion) {
     for (name, config) in strategies {
         group.bench_with_input(BenchmarkId::new("compile", name), &config, |b, config| {
             b.iter(|| {
-                let graph = compile_to_einsum_with_config(black_box(&expr), config).unwrap();
+                let graph =
+                    compile_to_einsum_with_config(black_box(&expr), config).expect("unwrap");
                 black_box(graph);
             });
         });
@@ -241,7 +242,8 @@ fn bench_strategy_comparison_complex(c: &mut Criterion) {
     for (name, config) in strategies {
         group.bench_with_input(BenchmarkId::new("compile", name), &config, |b, config| {
             b.iter(|| {
-                let graph = compile_to_einsum_with_config(black_box(&expr), config).unwrap();
+                let graph =
+                    compile_to_einsum_with_config(black_box(&expr), config).expect("unwrap");
                 black_box(graph);
             });
         });
@@ -264,7 +266,7 @@ fn bench_multi_arity_predicates(c: &mut Criterion) {
             let expr = TLExpr::pred("relation", args);
 
             b.iter(|| {
-                let graph = compile_to_einsum(black_box(&expr)).unwrap();
+                let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
                 black_box(graph);
             });
         });
@@ -285,7 +287,7 @@ fn bench_negation(c: &mut Criterion) {
 
     group.bench_function("compile", |b| {
         b.iter(|| {
-            let graph = compile_to_einsum(black_box(&expr)).unwrap();
+            let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
             black_box(graph);
         });
     });
@@ -302,7 +304,7 @@ fn bench_double_negation(c: &mut Criterion) {
 
     group.bench_function("compile", |b| {
         b.iter(|| {
-            let graph = compile_to_einsum(black_box(&expr)).unwrap();
+            let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
             black_box(graph);
         });
     });
@@ -334,7 +336,7 @@ fn bench_tnorms(c: &mut Criterion) {
         group.bench_function(name, |b| {
             let expr = TLExpr::tnorm(kind, left.clone(), right.clone());
             b.iter(|| {
-                let graph = compile_to_einsum(black_box(&expr)).unwrap();
+                let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
                 black_box(graph);
             });
         });
@@ -363,7 +365,7 @@ fn bench_tconorms(c: &mut Criterion) {
         group.bench_function(name, |b| {
             let expr = TLExpr::tconorm(kind, left.clone(), right.clone());
             b.iter(|| {
-                let graph = compile_to_einsum(black_box(&expr)).unwrap();
+                let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
                 black_box(graph);
             });
         });
@@ -389,7 +391,7 @@ fn bench_fuzzy_negations(c: &mut Criterion) {
         group.bench_function(name, |b| {
             let expr = TLExpr::fuzzy_not(kind, expr_input.clone());
             b.iter(|| {
-                let graph = compile_to_einsum(black_box(&expr)).unwrap();
+                let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
                 black_box(graph);
             });
         });
@@ -419,7 +421,7 @@ fn bench_fuzzy_implications(c: &mut Criterion) {
         group.bench_function(name, |b| {
             let expr = TLExpr::fuzzy_imply(kind, premise.clone(), conclusion.clone());
             b.iter(|| {
-                let graph = compile_to_einsum(black_box(&expr)).unwrap();
+                let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
                 black_box(graph);
             });
         });
@@ -444,7 +446,7 @@ fn bench_complex_fuzzy_expression(c: &mut Criterion) {
 
     group.bench_function("product_max_not", |b| {
         b.iter(|| {
-            let graph = compile_to_einsum(black_box(&expr)).unwrap();
+            let graph = compile_to_einsum(black_box(&expr)).expect("unwrap");
             black_box(graph);
         });
     });

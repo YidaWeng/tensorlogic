@@ -725,12 +725,12 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("w".to_string(), array![[1.0, -2.0], [3.0, -4.0]]);
 
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         // Expected: 0.1 * (1 + 2 + 3 + 4) = 1.0
         assert!((penalty - 1.0).abs() < 1e-6);
 
-        let gradients = regularizer.compute_gradient(&params).unwrap();
-        let grad_w = gradients.get("w").unwrap();
+        let gradients = regularizer.compute_gradient(&params).expect("unwrap");
+        let grad_w = gradients.get("w").expect("unwrap");
 
         // Gradient should be λ * sign(w)
         assert_eq!(grad_w[[0, 0]], 0.1); // sign(1.0) = 1.0
@@ -746,12 +746,12 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("w".to_string(), array![[1.0, 2.0], [3.0, 4.0]]);
 
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         // Expected: 0.5 * 0.1 * (1 + 4 + 9 + 16) = 1.5
         assert!((penalty - 1.5).abs() < 1e-6);
 
-        let gradients = regularizer.compute_gradient(&params).unwrap();
-        let grad_w = gradients.get("w").unwrap();
+        let gradients = regularizer.compute_gradient(&params).expect("unwrap");
+        let grad_w = gradients.get("w").expect("unwrap");
 
         // Gradient should be λ * w
         assert!((grad_w[[0, 0]] - 0.1).abs() < 1e-10); // 0.1 * 1.0
@@ -762,16 +762,16 @@ mod tests {
 
     #[test]
     fn test_elastic_net_regularization() {
-        let regularizer = ElasticNetRegularization::new(0.1, 0.5).unwrap();
+        let regularizer = ElasticNetRegularization::new(0.1, 0.5).expect("unwrap");
 
         let mut params = HashMap::new();
         params.insert("w".to_string(), array![[1.0, 2.0]]);
 
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         assert!(penalty > 0.0);
 
-        let gradients = regularizer.compute_gradient(&params).unwrap();
-        let grad_w = gradients.get("w").unwrap();
+        let gradients = regularizer.compute_gradient(&params).expect("unwrap");
+        let grad_w = gradients.get("w").expect("unwrap");
         assert_eq!(grad_w.shape(), &[1, 2]);
     }
 
@@ -793,14 +793,14 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("w".to_string(), array![[1.0, 2.0]]);
 
-        let penalty = composite.compute_penalty(&params).unwrap();
+        let penalty = composite.compute_penalty(&params).expect("unwrap");
         // L1: 0.1 * (1 + 2) = 0.3
         // L2: 0.5 * 0.1 * (1 + 4) = 0.25
         // Total: 0.55
         assert!((penalty - 0.55).abs() < 1e-6);
 
-        let gradients = composite.compute_gradient(&params).unwrap();
-        let grad_w = gradients.get("w").unwrap();
+        let gradients = composite.compute_gradient(&params).expect("unwrap");
+        let grad_w = gradients.get("w").expect("unwrap");
         assert_eq!(grad_w.shape(), &[1, 2]);
 
         // Gradient should combine both L1 and L2
@@ -817,7 +817,7 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("w".to_string(), array![[1.0]]);
 
-        let penalty = composite.compute_penalty(&params).unwrap();
+        let penalty = composite.compute_penalty(&params).expect("unwrap");
         assert_eq!(penalty, 0.0);
     }
 
@@ -829,11 +829,11 @@ mod tests {
         params.insert("w1".to_string(), array![[1.0, 2.0]]);
         params.insert("w2".to_string(), array![[3.0]]);
 
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         // Expected: 0.5 * 0.1 * (1 + 4 + 9) = 0.7
         assert!((penalty - 0.7).abs() < 1e-6);
 
-        let gradients = regularizer.compute_gradient(&params).unwrap();
+        let gradients = regularizer.compute_gradient(&params).expect("unwrap");
         assert_eq!(gradients.len(), 2);
         assert!(gradients.contains_key("w1"));
         assert!(gradients.contains_key("w2"));
@@ -846,11 +846,11 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("w".to_string(), array![[100.0, 200.0]]);
 
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         assert_eq!(penalty, 0.0);
 
-        let gradients = regularizer.compute_gradient(&params).unwrap();
-        let grad_w = gradients.get("w").unwrap();
+        let gradients = regularizer.compute_gradient(&params).expect("unwrap");
+        let grad_w = gradients.get("w").expect("unwrap");
         assert_eq!(grad_w[[0, 0]], 0.0);
         assert_eq!(grad_w[[0, 1]], 0.0);
     }
@@ -862,12 +862,12 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("w".to_string(), array![[2.0, 0.0], [0.0, 1.0]]);
 
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         // Spectral norm of [[2,0],[0,1]] is 2.0
         // Penalty = 0.1 * (2.0 - 1.0)^2 = 0.1
         assert!((penalty - 0.1).abs() < 0.01);
 
-        let gradients = regularizer.compute_gradient(&params).unwrap();
+        let gradients = regularizer.compute_gradient(&params).expect("unwrap");
         assert!(gradients.contains_key("w"));
     }
 
@@ -881,13 +881,13 @@ mod tests {
             array![[3.0, 4.0], [0.1, 0.1]], // First row has norm 5.0 > 1.0
         );
 
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         // First row: norm = 5.0, exceeds max_norm = 1.0
         // Penalty = 0.1 * (5.0 - 1.0)^2 = 1.6
         assert!((penalty - 1.6).abs() < 0.1);
 
-        let gradients = regularizer.compute_gradient(&params).unwrap();
-        let grad_w = gradients.get("w").unwrap();
+        let gradients = regularizer.compute_gradient(&params).expect("unwrap");
+        let grad_w = gradients.get("w").expect("unwrap");
         // First row should have non-zero gradient
         assert!(grad_w[[0, 0]].abs() > 0.0);
         // Second row should have zero gradient (norm below max_norm)
@@ -902,15 +902,15 @@ mod tests {
         // Identity matrix should have zero penalty
         params.insert("w".to_string(), array![[1.0, 0.0], [0.0, 1.0]]);
 
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         assert!(penalty.abs() < 1e-10);
 
         // Non-orthogonal matrix should have non-zero penalty
         params.insert("w".to_string(), array![[1.0, 1.0], [1.0, 1.0]]);
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         assert!(penalty > 0.0);
 
-        let gradients = regularizer.compute_gradient(&params).unwrap();
+        let gradients = regularizer.compute_gradient(&params).expect("unwrap");
         assert!(gradients.contains_key("w"));
     }
 
@@ -924,14 +924,14 @@ mod tests {
             array![[1.0, 2.0], [3.0, 4.0]], // Flatten to [1,2,3,4], groups [1,2] and [3,4]
         );
 
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         // Group 1: sqrt(1^2 + 2^2) = sqrt(5) ≈ 2.236
         // Group 2: sqrt(3^2 + 4^2) = sqrt(25) = 5.0
         // Total: 0.1 * (2.236 + 5.0) ≈ 0.7236
         assert!((penalty - 0.7236).abs() < 0.01);
 
-        let gradients = regularizer.compute_gradient(&params).unwrap();
-        let grad_w = gradients.get("w").unwrap();
+        let gradients = regularizer.compute_gradient(&params).expect("unwrap");
+        let grad_w = gradients.get("w").expect("unwrap");
         assert_eq!(grad_w.dim(), (2, 2));
     }
 
@@ -942,13 +942,13 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("w".to_string(), array![[0.0, 0.0], [0.0, 0.0]]);
 
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         // Spectral norm of zero matrix is 0
         // Penalty = 0.1 * (0 - 1.0)^2 = 0.1
         assert!((penalty - 0.1).abs() < 0.01);
 
-        let gradients = regularizer.compute_gradient(&params).unwrap();
-        let grad_w = gradients.get("w").unwrap();
+        let gradients = regularizer.compute_gradient(&params).expect("unwrap");
+        let grad_w = gradients.get("w").expect("unwrap");
         // Gradient should be zero for zero matrix
         assert!(grad_w.iter().all(|&x| x.abs() < 1e-10));
     }
@@ -960,12 +960,12 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("w".to_string(), array![[1.0, 2.0], [3.0, 4.0]]);
 
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         // All norms are below 10.0, so no penalty
         assert!(penalty.abs() < 1e-10);
 
-        let gradients = regularizer.compute_gradient(&params).unwrap();
-        let grad_w = gradients.get("w").unwrap();
+        let gradients = regularizer.compute_gradient(&params).expect("unwrap");
+        let grad_w = gradients.get("w").expect("unwrap");
         // All gradients should be zero
         assert!(grad_w.iter().all(|&x| x.abs() < 1e-10));
     }
@@ -978,10 +978,10 @@ mod tests {
         params.insert("w".to_string(), array![[1.0, 0.0, 0.0], [0.0, 1.0, 0.0]]);
 
         // Non-square matrix: W^T * W will be 3x3
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         assert!(penalty > 0.0); // Should have some penalty
 
-        let gradients = regularizer.compute_gradient(&params).unwrap();
+        let gradients = regularizer.compute_gradient(&params).expect("unwrap");
         assert!(gradients.contains_key("w"));
     }
 
@@ -992,13 +992,13 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("w".to_string(), array![[3.0, 4.0]]);
 
-        let penalty = regularizer.compute_penalty(&params).unwrap();
+        let penalty = regularizer.compute_penalty(&params).expect("unwrap");
         // Single group: sqrt(3^2 + 4^2) = 5.0
         // Penalty = 0.1 * 5.0 = 0.5
         assert!((penalty - 0.5).abs() < 0.01);
 
-        let gradients = regularizer.compute_gradient(&params).unwrap();
-        let grad_w = gradients.get("w").unwrap();
+        let gradients = regularizer.compute_gradient(&params).expect("unwrap");
+        let grad_w = gradients.get("w").expect("unwrap");
         assert_eq!(grad_w.dim(), (1, 2));
     }
 }

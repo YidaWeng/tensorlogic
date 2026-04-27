@@ -43,11 +43,11 @@ impl SchemaStatistics {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, PredicateInfo, SchemaStatistics};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
     /// table.add_predicate(PredicateInfo::new(
     ///     "knows",
     ///     vec!["Person".to_string(), "Person".to_string()]
-    /// )).unwrap();
+    /// )).expect("unwrap");
     ///
     /// let stats = SchemaStatistics::compute(&table);
     /// assert_eq!(stats.domain_count, 1);
@@ -244,7 +244,7 @@ impl SchemaAnalyzer {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, SchemaAnalyzer};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 0)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 0)).expect("unwrap");
     ///
     /// let recommendations = SchemaAnalyzer::analyze(&table);
     /// assert!(!recommendations.issues.is_empty());
@@ -348,20 +348,24 @@ mod tests {
     #[test]
     fn test_statistics_with_data() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.add_domain(DomainInfo::new("Location", 50)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Location", 50))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new(
                 "knows",
                 vec!["Person".into(), "Person".into()],
             ))
-            .unwrap();
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new(
                 "at",
                 vec!["Person".into(), "Location".into()],
             ))
-            .unwrap();
+            .expect("unwrap");
 
         let stats = SchemaStatistics::compute(&table);
 
@@ -381,11 +385,15 @@ mod tests {
     #[test]
     fn test_unused_domains() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.add_domain(DomainInfo::new("Unused", 50)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Unused", 50))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("age", vec!["Person".into()]))
-            .unwrap();
+            .expect("unwrap");
 
         let stats = SchemaStatistics::compute(&table);
         assert_eq!(stats.unused_domains, vec!["Unused"]);
@@ -394,16 +402,16 @@ mod tests {
     #[test]
     fn test_arity_distribution() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("D", 10)).unwrap();
+        table.add_domain(DomainInfo::new("D", 10)).expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("p1", vec!["D".into()]))
-            .unwrap();
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("p2", vec!["D".into(), "D".into()]))
-            .unwrap();
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("p3", vec!["D".into(), "D".into()]))
-            .unwrap();
+            .expect("unwrap");
 
         let stats = SchemaStatistics::compute(&table);
         assert_eq!(stats.arity_distribution.get(&1), Some(&1));
@@ -422,7 +430,9 @@ mod tests {
     #[test]
     fn test_analyzer_zero_cardinality() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 0)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 0))
+            .expect("unwrap");
 
         let recs = SchemaAnalyzer::analyze(&table);
         assert!(recs
@@ -433,11 +443,15 @@ mod tests {
     #[test]
     fn test_analyzer_unused_domain() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Used", 10)).unwrap();
-        table.add_domain(DomainInfo::new("Unused", 10)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Used", 10))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Unused", 10))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("p", vec!["Used".into()]))
-            .unwrap();
+            .expect("unwrap");
 
         let recs = SchemaAnalyzer::analyze(&table);
         assert!(recs
@@ -448,11 +462,11 @@ mod tests {
     #[test]
     fn test_analyzer_high_arity() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("D", 10)).unwrap();
+        table.add_domain(DomainInfo::new("D", 10)).expect("unwrap");
         let args = vec!["D".to_string(); 10]; // 10-arity predicate
         table
             .add_predicate(PredicateInfo::new("complex", args))
-            .unwrap();
+            .expect("unwrap");
 
         let recs = SchemaAnalyzer::analyze(&table);
         assert!(recs
@@ -464,10 +478,12 @@ mod tests {
     #[test]
     fn test_complexity_score() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("p", vec!["Person".into()]))
-            .unwrap();
+            .expect("unwrap");
 
         let stats = SchemaStatistics::compute(&table);
         let score = stats.complexity_score();
@@ -477,14 +493,14 @@ mod tests {
     #[test]
     fn test_most_used_domains() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("A", 10)).unwrap();
-        table.add_domain(DomainInfo::new("B", 10)).unwrap();
+        table.add_domain(DomainInfo::new("A", 10)).expect("unwrap");
+        table.add_domain(DomainInfo::new("B", 10)).expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("p1", vec!["A".into(), "A".into()]))
-            .unwrap();
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("p2", vec!["B".into()]))
-            .unwrap();
+            .expect("unwrap");
 
         let stats = SchemaStatistics::compute(&table);
         let most_used = stats.most_used_domains(1);

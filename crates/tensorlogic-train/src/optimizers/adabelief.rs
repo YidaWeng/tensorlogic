@@ -89,8 +89,14 @@ impl Optimizer for AdaBeliefOptimizer {
                 self.m.insert(name.clone(), Array::zeros(param.raw_dim()));
                 self.s.insert(name.clone(), Array::zeros(param.raw_dim()));
             }
-            let m = self.m.get_mut(name).unwrap();
-            let s = self.s.get_mut(name).unwrap();
+            let m = self
+                .m
+                .get_mut(name)
+                .expect("m initialized for all parameters");
+            let s = self
+                .s
+                .get_mut(name)
+                .expect("s initialized for all parameters");
             *m = &*m * beta1 + &(grad * (1.0 - beta1));
             let grad_diff = grad - &*m;
             let grad_diff_squared = grad_diff.mapv(|g| g * g);
@@ -170,9 +176,9 @@ mod tests {
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), array![[0.1, 0.2], [0.3, 0.4]]);
         for _ in 0..5 {
-            optimizer.step(&mut params, &grads).unwrap();
+            optimizer.step(&mut params, &grads).expect("unwrap");
         }
-        let w = params.get("w").unwrap();
+        let w = params.get("w").expect("unwrap");
         assert!(w[[0, 0]] < 1.0);
         assert!(w[[1, 1]] < 4.0);
         let state = optimizer.state_dict();

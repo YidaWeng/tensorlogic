@@ -98,7 +98,11 @@ fn bench_subgraph_matching(c: &mut Criterion) {
                 &(depth, max_size),
                 |b, _| {
                     b.iter(|| {
-                        black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+                        black_box(
+                            kernel
+                                .compute_graphs(&graph1, &graph2)
+                                .expect("subgraph matching kernel compute should succeed"),
+                        );
                     });
                 },
             );
@@ -122,14 +126,19 @@ fn bench_random_walk(c: &mut Criterion) {
             let config = WalkKernelConfig::new()
                 .with_max_length(*max_length)
                 .with_decay(0.8);
-            let kernel = RandomWalkKernel::new(config).unwrap();
+            let kernel = RandomWalkKernel::new(config)
+                .expect("random walk kernel construction should succeed");
 
             group.bench_with_input(
                 BenchmarkId::from_parameter(format!("depth_{}_maxlen_{}", depth, max_length)),
                 &(depth, max_length),
                 |b, _| {
                     b.iter(|| {
-                        black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+                        black_box(
+                            kernel
+                                .compute_graphs(&graph1, &graph2)
+                                .expect("random walk kernel compute should succeed"),
+                        );
                     });
                 },
             );
@@ -158,7 +167,11 @@ fn bench_weisfeiler_lehman(c: &mut Criterion) {
                 &(depth, iterations),
                 |b, _| {
                     b.iter(|| {
-                        black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+                        black_box(
+                            kernel
+                                .compute_graphs(&graph1, &graph2)
+                                .expect("WL kernel compute should succeed"),
+                        );
                     });
                 },
             );
@@ -183,16 +196,25 @@ fn bench_graph_kernel_comparison(c: &mut Criterion) {
         let config = SubgraphMatchingConfig::new().with_max_size(3);
         let kernel = SubgraphMatchingKernel::new(config);
         b.iter(|| {
-            black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+            black_box(
+                kernel
+                    .compute_graphs(&graph1, &graph2)
+                    .expect("subgraph matching kernel compute should succeed"),
+            );
         });
     });
 
     // Random walk
     group.bench_function("random_walk", |b| {
         let config = WalkKernelConfig::new().with_max_length(4).with_decay(0.8);
-        let kernel = RandomWalkKernel::new(config).unwrap();
+        let kernel =
+            RandomWalkKernel::new(config).expect("random walk kernel construction should succeed");
         b.iter(|| {
-            black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+            black_box(
+                kernel
+                    .compute_graphs(&graph1, &graph2)
+                    .expect("random walk kernel compute should succeed"),
+            );
         });
     });
 
@@ -201,7 +223,11 @@ fn bench_graph_kernel_comparison(c: &mut Criterion) {
         let config = WeisfeilerLehmanConfig::new().with_iterations(3);
         let kernel = WeisfeilerLehmanKernel::new(config);
         b.iter(|| {
-            black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+            black_box(
+                kernel
+                    .compute_graphs(&graph1, &graph2)
+                    .expect("WL kernel compute should succeed"),
+            );
         });
     });
 
@@ -227,7 +253,11 @@ fn bench_graph_structure_complexity(c: &mut Criterion) {
             depth,
             |b, _| {
                 b.iter(|| {
-                    black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+                    black_box(
+                        kernel
+                            .compute_graphs(&graph1, &graph2)
+                            .expect("WL kernel compute should succeed"),
+                    );
                 });
             },
         );
@@ -245,7 +275,11 @@ fn bench_graph_structure_complexity(c: &mut Criterion) {
             depth,
             |b, _| {
                 b.iter(|| {
-                    black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+                    black_box(
+                        kernel
+                            .compute_graphs(&graph1, &graph2)
+                            .expect("WL kernel compute should succeed"),
+                    );
                 });
             },
         );
@@ -263,7 +297,11 @@ fn bench_graph_structure_complexity(c: &mut Criterion) {
             depth,
             |b, _| {
                 b.iter(|| {
-                    black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+                    black_box(
+                        kernel
+                            .compute_graphs(&graph1, &graph2)
+                            .expect("WL kernel compute should succeed"),
+                    );
                 });
             },
         );
@@ -286,7 +324,11 @@ fn bench_graph_similarity_levels(c: &mut Criterion) {
     group.bench_function("identical", |b| {
         let graph2 = Graph::from_tlexpr(&base_expr);
         b.iter(|| {
-            black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+            black_box(
+                kernel
+                    .compute_graphs(&graph1, &graph2)
+                    .expect("WL kernel compute should succeed"),
+            );
         });
     });
 
@@ -295,7 +337,11 @@ fn bench_graph_similarity_levels(c: &mut Criterion) {
         let expr2 = TLExpr::and(generate_linear_expr(9), TLExpr::pred("different", vec![]));
         let graph2 = Graph::from_tlexpr(&expr2);
         b.iter(|| {
-            black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+            black_box(
+                kernel
+                    .compute_graphs(&graph1, &graph2)
+                    .expect("WL kernel compute should succeed"),
+            );
         });
     });
 
@@ -304,7 +350,11 @@ fn bench_graph_similarity_levels(c: &mut Criterion) {
         let expr2 = generate_tree_expr(3);
         let graph2 = Graph::from_tlexpr(&expr2);
         b.iter(|| {
-            black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+            black_box(
+                kernel
+                    .compute_graphs(&graph1, &graph2)
+                    .expect("WL kernel compute should succeed"),
+            );
         });
     });
 
@@ -324,14 +374,19 @@ fn bench_walk_kernel_decay(c: &mut Criterion) {
         let config = WalkKernelConfig::new()
             .with_max_length(4)
             .with_decay(*decay);
-        let kernel = RandomWalkKernel::new(config).unwrap();
+        let kernel =
+            RandomWalkKernel::new(config).expect("random walk kernel construction should succeed");
 
         group.bench_with_input(
             BenchmarkId::from_parameter(format!("decay_{:.1}", decay)),
             decay,
             |b, _| {
                 b.iter(|| {
-                    black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+                    black_box(
+                        kernel
+                            .compute_graphs(&graph1, &graph2)
+                            .expect("random walk kernel compute should succeed"),
+                    );
                 });
             },
         );
@@ -356,7 +411,11 @@ fn bench_graph_scalability(c: &mut Criterion) {
         group.throughput(Throughput::Elements(*num_nodes as u64));
         group.bench_with_input(BenchmarkId::from_parameter(num_nodes), num_nodes, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute_graphs(&graph1, &graph2).unwrap());
+                black_box(
+                    kernel
+                        .compute_graphs(&graph1, &graph2)
+                        .expect("WL kernel compute should succeed"),
+                );
             });
         });
     }

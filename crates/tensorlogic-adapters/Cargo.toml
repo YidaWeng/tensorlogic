@@ -6,6 +6,7 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+documentation = "https://docs.rs/tensorlogic-adapters"
 readme = "README.md"
 keywords = ["tensor", "logic", "adapters", "import-export", "migration"]
 categories = ["science", "algorithms", "data-structures"]
@@ -21,9 +22,9 @@ anyhow.workspace = true
 oxicode.workspace = true
 
 # Optional database backends
-rusqlite = { version = "0.38", features = ["bundled"], optional = true }
+rusqlite = { version = "0.39", features = ["bundled"], optional = true }
 tokio-postgres = { version = "0.7", optional = true }
-tokio = { version = "1.50", features = ["full"], optional = true }
+tokio = { version = "1.52", features = ["full"], optional = true }
 async-trait = { version = "0.1", optional = true }
 
 [features]

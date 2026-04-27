@@ -2,7 +2,7 @@
 
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic--quantrs--hooks-orange)](https://crates.io/crates/tensorlogic-quantrs-hooks)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-quantrs-hooks)
-[![Tests](https://img.shields.io/badge/tests-193%2B-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/tests-276%2F276-brightgreen)](#)
 [![Benchmarks](https://img.shields.io/badge/benchmarks-50%2B-blue)](#)
 [![Production](https://img.shields.io/badge/status-production_ready-success)](#)
 
@@ -23,10 +23,14 @@ Bridge between logic-based reasoning and probabilistic inference through factor 
   - Junction tree algorithm for exact inference on arbitrary graphs
   - Variable elimination with 5 advanced ordering heuristics (MinDegree, MinFill, WeightedMinFill, MinWidth, MaxCardinalitySearch)
 - **Approximate Inference**:
-  - Loopy BP: Message passing for graphs with cycles, with damping and convergence detection
+  - Loopy BP: Message passing for graphs with cycles, with damping and convergence detection (`loopy_bp` module, v0.1.17)
   - Variational Inference: Mean-field, Bethe approximation, and tree-reweighted BP
   - Expectation Propagation (EP): Moment matching with site approximations for discrete and continuous variables
   - MCMC Sampling: Gibbs sampling for approximate posterior computation
+- **Convergence Monitoring** (`convergence` module, v0.1.6):
+  - `ConvergenceMonitor`: Residual tracking, patience-based convergence detection, divergence detection
+  - `DampingSchedule`: Fixed, Linear, Exponential, and Adaptive damping strategies
+  - `ConvergenceConfig` builder and `InferenceStats` for diagnostic reporting
 - **Importance Sampling and Particle Filters**:
   - ImportanceSampler with custom proposal distributions
   - Self-normalized importance sampling
@@ -88,8 +92,8 @@ Bridge between logic-based reasoning and probabilistic inference through factor 
 - **Quality Assurance**:
   - Property-based testing with proptest (14 property tests)
   - Comprehensive benchmark suite with criterion (50+ benchmarks across 3 suites)
-  - 193+ tests (100% pass rate for non-precision-limited tests)
-  - 4 tests ignored with documented precision investigation notes
+  - 276 tests (100% pass rate for non-precision-limited tests, 4 skipped)
+  - 4 tests skipped with documented precision investigation notes
 - **Full SciRS2 Integration**: All tensor operations use SciRS2 for performance and consistency
 
 ## Quick Start
@@ -307,7 +311,7 @@ streaming.process_batch(&batch, &algorithm)?;
 
 ```bash
 cargo nextest run -p tensorlogic-quantrs-hooks
-# 193+ tests, all applicable tests passing
+# 276 tests, all applicable tests passing (4 skipped)
 ```
 
 ## Benchmarking
@@ -376,9 +380,9 @@ Apache-2.0
 
 ---
 
-**Status**: Production Ready (v0.1.0-rc.1)
-**Last Updated**: 2026-03-06
-**Tests**: 193+ passing (100% pass rate for non-precision-limited tests)
+**Status**: Production Ready (v0.1.0 Stable)
+**Last Updated**: 2026-04-06
+**Tests**: 276 passing (100% pass rate for non-precision-limited tests, 4 skipped)
 **Benchmarks**: 3 suites, 50+ benchmarks
 **Examples**: 8 comprehensive examples
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

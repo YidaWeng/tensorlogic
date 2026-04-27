@@ -69,10 +69,10 @@ fn test_einsum_graph_builder() {
     assert_eq!(t2, 2);
 
     let node = EinsumNode::new("ij,jk->ik", vec![t0, t1], vec![t2]);
-    let node_idx = graph.add_node(node).unwrap();
+    let node_idx = graph.add_node(node).expect("unwrap");
     assert_eq!(node_idx, 0);
 
-    graph.add_output(t2).unwrap();
+    graph.add_output(t2).expect("unwrap");
     assert_eq!(graph.outputs, vec![2]);
 
     assert!(graph.validate().is_ok());
@@ -382,10 +382,10 @@ fn test_einsum_node_spec_parsing() {
     let node = EinsumNode::new("ij,jk->ik", vec![0, 1], vec![2]);
 
     // Parse and validate the spec
-    let spec_opt = node.parse_einsum_spec().unwrap();
+    let spec_opt = node.parse_einsum_spec().expect("unwrap");
     assert!(spec_opt.is_some());
 
-    let spec = spec_opt.unwrap();
+    let spec = spec_opt.expect("unwrap");
     assert_eq!(spec.num_inputs(), 2);
     assert_eq!(spec.output_ndim(), 2);
     assert!(spec.is_reduction());
@@ -413,7 +413,7 @@ fn test_non_einsum_node_operations() {
 
     let unary_node = EinsumNode::elem_unary("neg", 0, 1);
     assert_eq!(unary_node.operation_description(), "ElemUnary(neg)");
-    assert!(unary_node.parse_einsum_spec().unwrap().is_none());
+    assert!(unary_node.parse_einsum_spec().expect("unwrap").is_none());
 
     let binary_node = EinsumNode::elem_binary("add", 0, 1, 2);
     assert_eq!(binary_node.operation_description(), "ElemBinary(add)");

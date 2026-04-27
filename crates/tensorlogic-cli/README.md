@@ -4,22 +4,30 @@
 
 [![Crates.io](https://img.shields.io/crates/v/tensorlogic-cli.svg)](https://crates.io/crates/tensorlogic-cli)
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../LICENSE)
+[![Status](https://img.shields.io/badge/status-stable-success)](#)
+
+**Version**: 0.1.0 | **Status**: Stable | **Last Updated**: 2026-04-06
 
 A comprehensive command-line tool for compiling logical expressions to tensor graphs using TensorLogic.
 
 ## Features
 
-- 🚀 **Multiple Modes**: Interactive REPL, batch processing, watch mode
-- 📝 **Rich Input Formats**: Expression strings, JSON, YAML, stdin
-- 📊 **Multiple Output Formats**: Graph, DOT, JSON, statistics
-- ⚙️ **6 Compilation Strategies**: Differentiable, Boolean, fuzzy logic variants
-- 🎨 **Colored Output**: Beautiful terminal output with status indicators
-- 🔍 **Graph Analysis**: Complexity metrics, FLOP estimation, memory analysis
-- 📁 **Configuration Files**: Persistent settings via `.tensorlogicrc`
-- 🔄 **File Watching**: Auto-recompilation on file changes
-- 📦 **Batch Processing**: Process multiple expressions with progress bars
-- 🐚 **Shell Completion**: Bash, Zsh, Fish, PowerShell support
-- 🎯 **Enhanced Parser**: Arithmetic, comparisons, conditionals, Unicode operators
+- **Multiple Modes**: Interactive REPL, batch processing, watch mode
+- **Rich Input Formats**: Expression strings, JSON, YAML, stdin
+- **Multiple Output Formats**: Graph, DOT, JSON, statistics
+- **6 Compilation Strategies**: Differentiable, Boolean, fuzzy logic variants
+- **Colored Output**: Terminal output with status indicators
+- **Graph Analysis**: Complexity metrics, FLOP estimation, memory analysis
+- **Configuration Files**: Persistent settings via `.tensorlogicrc`
+- **File Watching**: Auto-recompilation on file changes
+- **Batch Processing**: Process multiple expressions with progress bars (parallel via rayon)
+- **Shell Completion**: Bash, Zsh, Fish, PowerShell support
+- **Enhanced Parser**: Arithmetic, comparisons, conditionals, Unicode operators
+- **Visualization** (v0.1.6): `DotExporter` for Graphviz DOT output, `AsciiRenderer` for terminal graph display
+- **Library Mode**: Use CLI functionality programmatically from Rust
+- **Macro System**: Define and reuse parameterized logical patterns
+- **FFI Bindings**: C/C++ and Python integration via FFI
+- **Persistent Cache**: LRU disk cache with analytics and compression
 
 ## Installation
 
@@ -41,7 +49,7 @@ cargo install --path crates/tensorlogic-cli
 
 ```bash
 cargo build -p tensorlogic-cli --release
-# Binary at target/release/tensorlogic
+# Binary at target/release/tensorlogic-cli
 ```
 
 ## Quick Start
@@ -49,13 +57,13 @@ cargo build -p tensorlogic-cli --release
 ### Basic Compilation
 
 ```bash
-tensorlogic "knows(x, y)"
+tensorlogic-cli "knows(x, y)"
 ```
 
 ### Interactive REPL
 
 ```bash
-tensorlogic repl
+tensorlogic-cli repl
 ```
 
 ```
@@ -71,13 +79,13 @@ tensorlogic> knows(x, y) AND likes(y, z)
 
 ```bash
 # expressions.txt contains one expression per line
-tensorlogic batch expressions.txt
+tensorlogic-cli batch expressions.txt
 ```
 
 ### Watch Mode
 
 ```bash
-tensorlogic watch my_expression.tl
+tensorlogic-cli watch my_expression.tl
 ```
 
 ## Usage
@@ -85,8 +93,8 @@ tensorlogic watch my_expression.tl
 ### Command Structure
 
 ```bash
-tensorlogic [OPTIONS] <INPUT>
-tensorlogic <SUBCOMMAND>
+tensorlogic-cli [OPTIONS] <INPUT>
+tensorlogic-cli <SUBCOMMAND>
 ```
 
 ### Main Options
@@ -112,7 +120,7 @@ tensorlogic <SUBCOMMAND>
 Start an interactive Read-Eval-Print Loop for exploring TensorLogic.
 
 ```bash
-tensorlogic repl
+tensorlogic-cli repl
 ```
 
 **REPL Commands:**
@@ -131,7 +139,7 @@ tensorlogic repl
 Process multiple expressions from files (one expression per line).
 
 ```bash
-tensorlogic batch file1.txt file2.txt
+tensorlogic-cli batch file1.txt file2.txt
 ```
 
 Features:
@@ -145,7 +153,7 @@ Features:
 Watch a file and recompile on changes.
 
 ```bash
-tensorlogic watch expression.tl
+tensorlogic-cli watch expression.tl
 ```
 
 Features:
@@ -160,16 +168,16 @@ Generate shell completion scripts.
 
 ```bash
 # Bash
-tensorlogic completion bash > /etc/bash_completion.d/tensorlogic
+tensorlogic-cli completion bash > /etc/bash_completion.d/tensorlogic-cli
 
 # Zsh
-tensorlogic completion zsh > ~/.zsh/completion/_tensorlogic
+tensorlogic-cli completion zsh > ~/.zsh/completion/_tensorlogic-cli
 
 # Fish
-tensorlogic completion fish > ~/.config/fish/completions/tensorlogic.fish
+tensorlogic-cli completion fish > ~/.config/fish/completions/tensorlogic-cli.fish
 
 # PowerShell
-tensorlogic completion powershell > tensorlogic.ps1
+tensorlogic-cli completion powershell > tensorlogic-cli.ps1
 ```
 
 #### `config` - Configuration Management
@@ -178,16 +186,16 @@ Manage configuration files.
 
 ```bash
 # Show current configuration
-tensorlogic config show
+tensorlogic-cli config show
 
 # Show config file path
-tensorlogic config path
+tensorlogic-cli config path
 
 # Initialize default config
-tensorlogic config init
+tensorlogic-cli config init
 
 # Edit configuration
-tensorlogic config edit
+tensorlogic-cli config edit
 ```
 
 ## Configuration File
@@ -233,7 +241,7 @@ show_timestamps = true
 ### Initialize Configuration
 
 ```bash
-tensorlogic config init
+tensorlogic-cli config init
 ```
 
 ## Input Formats
@@ -243,7 +251,7 @@ tensorlogic config init
 Direct expression input with enhanced syntax:
 
 ```bash
-tensorlogic "knows(x, y) AND likes(y, z)"
+tensorlogic-cli "knows(x, y) AND likes(y, z)"
 ```
 
 **Supported syntax:**
@@ -258,32 +266,32 @@ tensorlogic "knows(x, y) AND likes(y, z)"
 **Examples:**
 ```bash
 # Basic predicate
-tensorlogic "person(x)"
+tensorlogic-cli "person(x)"
 
 # Logical operations
-tensorlogic "p(x) AND q(y) OR r(z)"
+tensorlogic-cli "p(x) AND q(y) OR r(z)"
 
 # Quantifiers
-tensorlogic "EXISTS x IN Person. knows(x, alice)"
-tensorlogic "FORALL x IN Person. likes(x, pizza)"
+tensorlogic-cli "EXISTS x IN Person. knows(x, alice)"
+tensorlogic-cli "FORALL x IN Person. likes(x, pizza)"
 
 # Arithmetic
-tensorlogic "age(x) + 10"
+tensorlogic-cli "age(x) + 10"
 
 # Comparisons
-tensorlogic "age(x) > 18"
+tensorlogic-cli "age(x) > 18"
 
 # Conditional
-tensorlogic "IF age(x) >= 18 THEN adult(x) ELSE child(x)"
+tensorlogic-cli "IF age(x) >= 18 THEN adult(x) ELSE child(x)"
 
 # Complex expression
-tensorlogic "(p(x) OR q(y)) AND (r(z) -> s(w))"
+tensorlogic-cli "(p(x) OR q(y)) AND (r(z) -> s(w))"
 ```
 
 ### 2. JSON Input
 
 ```bash
-tensorlogic --input-format json expression.json
+tensorlogic-cli --input-format json expression.json
 ```
 
 ```json
@@ -308,7 +316,7 @@ tensorlogic --input-format json expression.json
 ### 3. YAML Input
 
 ```bash
-tensorlogic --input-format yaml expression.yaml
+tensorlogic-cli --input-format yaml expression.yaml
 ```
 
 ```yaml
@@ -330,7 +338,7 @@ And:
 ### 4. Stdin Input
 
 ```bash
-echo '{"Pred": {"name": "test", "args": []}}' | tensorlogic --input-format json -
+echo '{"Pred": {"name": "test", "args": []}}' | tensorlogic-cli --input-format json -
 ```
 
 ## Output Formats
@@ -340,7 +348,7 @@ echo '{"Pred": {"name": "test", "args": []}}' | tensorlogic --input-format json 
 Human-readable graph structure:
 
 ```bash
-tensorlogic "knows(x, y)" --output-format graph
+tensorlogic-cli "knows(x, y)" --output-format graph
 ```
 
 ### 2. DOT Format
@@ -348,7 +356,7 @@ tensorlogic "knows(x, y)" --output-format graph
 Generate Graphviz DOT for visualization:
 
 ```bash
-tensorlogic "knows(x, y)" --output-format dot > graph.dot
+tensorlogic-cli "knows(x, y)" --output-format dot > graph.dot
 dot -Tpng graph.dot -o graph.png
 ```
 
@@ -357,7 +365,7 @@ dot -Tpng graph.dot -o graph.png
 Machine-readable JSON output:
 
 ```bash
-tensorlogic "knows(x, y)" --output-format json
+tensorlogic-cli "knows(x, y)" --output-format json
 ```
 
 ### 4. Statistics
@@ -365,7 +373,7 @@ tensorlogic "knows(x, y)" --output-format json
 Graph statistics and metrics:
 
 ```bash
-tensorlogic "knows(x, y) AND likes(y, z)" --output-format stats
+tensorlogic-cli "knows(x, y) AND likes(y, z)" --output-format stats
 ```
 
 Output:
@@ -396,7 +404,7 @@ Choose from 6 preset strategies:
 For neural network training with smooth gradients:
 
 ```bash
-tensorlogic --strategy soft_differentiable "p AND q"
+tensorlogic-cli --strategy soft_differentiable "p AND q"
 ```
 
 - AND: Element-wise product
@@ -408,7 +416,7 @@ tensorlogic --strategy soft_differentiable "p AND q"
 For discrete Boolean logic:
 
 ```bash
-tensorlogic --strategy hard_boolean "p AND q"
+tensorlogic-cli --strategy hard_boolean "p AND q"
 ```
 
 - AND: Minimum
@@ -420,7 +428,7 @@ tensorlogic --strategy hard_boolean "p AND q"
 Gödel fuzzy logic (min/max operations):
 
 ```bash
-tensorlogic --strategy fuzzy_godel "p AND q"
+tensorlogic-cli --strategy fuzzy_godel "p AND q"
 ```
 
 ### 4. Fuzzy Product
@@ -428,7 +436,7 @@ tensorlogic --strategy fuzzy_godel "p AND q"
 Product fuzzy logic (probabilistic):
 
 ```bash
-tensorlogic --strategy fuzzy_product "p AND q"
+tensorlogic-cli --strategy fuzzy_product "p AND q"
 ```
 
 ### 5. Fuzzy Łukasiewicz
@@ -436,7 +444,7 @@ tensorlogic --strategy fuzzy_product "p AND q"
 Łukasiewicz fuzzy logic (bounded):
 
 ```bash
-tensorlogic --strategy fuzzy_lukasiewicz "p AND q"
+tensorlogic-cli --strategy fuzzy_lukasiewicz "p AND q"
 ```
 
 ### 6. Probabilistic
@@ -444,7 +452,7 @@ tensorlogic --strategy fuzzy_lukasiewicz "p AND q"
 Probabilistic interpretation:
 
 ```bash
-tensorlogic --strategy probabilistic "p AND q"
+tensorlogic-cli --strategy probabilistic "p AND q"
 ```
 
 ## Domain Definitions
@@ -452,13 +460,13 @@ tensorlogic --strategy probabilistic "p AND q"
 Define domains for variables:
 
 ```bash
-tensorlogic --domain Person:100 --domain City:50 "lives_in(x, c)"
+tensorlogic-cli --domain Person:100 --domain City:50 "lives_in(x, c)"
 ```
 
 Multiple domains:
 
 ```bash
-tensorlogic \
+tensorlogic-cli \
   --domain Person:100 \
   --domain Location:50 \
   --domain Event:20 \
@@ -470,7 +478,7 @@ tensorlogic \
 Enable detailed analysis with `--analyze`:
 
 ```bash
-tensorlogic "complex(expression)" --analyze
+tensorlogic-cli "complex(expression)" --analyze
 ```
 
 Output includes:
@@ -486,7 +494,7 @@ Output includes:
 Enable graph validation:
 
 ```bash
-tensorlogic "knows(x, y)" --validate
+tensorlogic-cli "knows(x, y)" --validate
 ```
 
 Checks:
@@ -500,7 +508,7 @@ Checks:
 Enable detailed debug output:
 
 ```bash
-tensorlogic "knows(x, y)" --debug
+tensorlogic-cli "knows(x, y)" --debug
 ```
 
 Shows:
@@ -515,43 +523,43 @@ Shows:
 ### Example 1: Simple Predicate
 
 ```bash
-tensorlogic "knows(alice, bob)"
+tensorlogic-cli "knows(alice, bob)"
 ```
 
 ### Example 2: Logical Conjunction
 
 ```bash
-tensorlogic "knows(x, y) AND likes(y, z)"
+tensorlogic-cli "knows(x, y) AND likes(y, z)"
 ```
 
 ### Example 3: Quantifier
 
 ```bash
-tensorlogic --domain Person:100 "EXISTS x IN Person. knows(x, bob)"
+tensorlogic-cli --domain Person:100 "EXISTS x IN Person. knows(x, bob)"
 ```
 
 ### Example 4: Implication
 
 ```bash
-tensorlogic "knows(x, y) -> likes(x, y)"
+tensorlogic-cli "knows(x, y) -> likes(x, y)"
 ```
 
 ### Example 5: Arithmetic and Comparison
 
 ```bash
-tensorlogic "age(x) + 10 > 30"
+tensorlogic-cli "age(x) + 10 > 30"
 ```
 
 ### Example 6: Conditional Expression
 
 ```bash
-tensorlogic "IF age(x) >= 18 THEN adult(x) ELSE child(x)"
+tensorlogic-cli "IF age(x) >= 18 THEN adult(x) ELSE child(x)"
 ```
 
 ### Example 7: Visualization
 
 ```bash
-tensorlogic "knows(x, y) AND likes(y, z)" \
+tensorlogic-cli "knows(x, y) AND likes(y, z)" \
   --output-format dot \
   --validate > graph.dot
 dot -Tpng graph.dot -o graph.png
@@ -560,7 +568,7 @@ dot -Tpng graph.dot -o graph.png
 ### Example 8: Complex Expression with Analysis
 
 ```bash
-tensorlogic \
+tensorlogic-cli \
   "FORALL x IN Person. (knows(x, y) -> likes(x, y))" \
   --domain Person:100 \
   --strategy fuzzy_godel \
@@ -580,13 +588,13 @@ EXISTS x. knows(x, bob)
 FORALL x. person(x) -> mortal(x)
 EOF
 
-tensorlogic batch expressions.txt
+tensorlogic-cli batch expressions.txt
 ```
 
 ### Example 10: Interactive REPL Session
 
 ```bash
-tensorlogic repl
+tensorlogic-cli repl
 ```
 
 ```
@@ -615,7 +623,7 @@ tensorlogic> .exit
 Generate PNG visualization:
 
 ```bash
-tensorlogic "knows(x, y)" --output-format dot | dot -Tpng -o graph.png
+tensorlogic-cli "knows(x, y)" --output-format dot | dot -Tpng -o graph.png
 ```
 
 ### With jq (JSON Processing)
@@ -623,7 +631,7 @@ tensorlogic "knows(x, y)" --output-format dot | dot -Tpng -o graph.png
 Extract tensor count:
 
 ```bash
-tensorlogic "knows(x, y)" --output-format json | jq '.tensors | length'
+tensorlogic-cli "knows(x, y)" --output-format json | jq '.tensors | length'
 ```
 
 ### In Scripts
@@ -632,7 +640,7 @@ tensorlogic "knows(x, y)" --output-format json | jq '.tensors | length'
 #!/bin/bash
 EXPR="knows(x, y) AND likes(y, z)"
 
-if tensorlogic "$EXPR" --output-format stats --validate --quiet; then
+if tensorlogic-cli "$EXPR" --output-format stats --validate --quiet; then
     echo "✓ Compilation successful"
 else
     echo "✗ Compilation failed"
@@ -646,10 +654,10 @@ fi
 .PHONY: compile watch
 
 compile:
-	tensorlogic expression.tl --validate --analyze
+	tensorlogic-cli expression.tl --validate --analyze
 
 watch:
-	tensorlogic watch expression.tl
+	tensorlogic-cli watch expression.tl
 ```
 
 ## Troubleshooting
@@ -667,7 +675,7 @@ export PATH="$HOME/.cargo/bin:$PATH"
 Use `--debug` to see detailed parsing information:
 
 ```bash
-tensorlogic "your expression" --debug
+tensorlogic-cli "your expression" --debug
 ```
 
 ### Validation Failures
@@ -675,7 +683,7 @@ tensorlogic "your expression" --debug
 Check free variables and domains:
 
 ```bash
-tensorlogic "EXISTS x. p(x, y)" \
+tensorlogic-cli "EXISTS x. p(x, y)" \
   --domain Domain:10 \
   --debug \
   --validate
@@ -686,19 +694,19 @@ tensorlogic "EXISTS x. p(x, y)" \
 Show current configuration:
 
 ```bash
-tensorlogic config show
+tensorlogic-cli config show
 ```
 
 Show config file path:
 
 ```bash
-tensorlogic config path
+tensorlogic-cli config path
 ```
 
 Reinitialize configuration:
 
 ```bash
-tensorlogic config init
+tensorlogic-cli config init
 ```
 
 ## Environment Variables
@@ -713,7 +721,7 @@ Example:
 ```bash
 export TENSORLOGIC_CONFIG=~/.config/tensorlogic.toml
 export EDITOR=nano
-tensorlogic config edit
+tensorlogic-cli config edit
 ```
 
 ## Performance Tips
@@ -735,7 +743,8 @@ cargo build -p tensorlogic-cli
 ### Testing
 
 ```bash
-cargo test -p tensorlogic-cli
+cargo nextest run -p tensorlogic-cli --all-features
+# 291 tests run: 291 passed (as of 2026-04-06)
 ```
 
 ### Running from Source
@@ -748,16 +757,29 @@ cargo run -p tensorlogic-cli -- --help
 
 ```
 src/
-├── main.rs       - Main entry point and command routing
-├── cli.rs        - Clap CLI definitions
-├── config.rs     - Configuration file support
-├── parser.rs     - Enhanced expression parser
-├── output.rs     - Colored output formatting
-├── analysis.rs   - Graph metrics and analysis
-├── repl.rs       - Interactive REPL mode
-├── batch.rs      - Batch processing
-├── watch.rs      - File watching
-└── completion.rs - Shell completion generation
+├── main.rs            - Main entry point and command routing
+├── cli.rs             - Clap CLI definitions
+├── config.rs          - Configuration file support
+├── parser.rs          - Enhanced expression parser
+├── output.rs          - Colored output formatting
+├── analysis.rs        - Graph metrics and analysis
+├── repl.rs            - Interactive REPL mode
+├── batch.rs           - Parallel batch processing (rayon)
+├── watch.rs           - File watching and auto-recompilation
+├── completion.rs      - Shell completion generation
+├── executor.rs        - Execution engine with backend selection
+├── optimize.rs        - Optimization pipeline with real passes
+├── benchmark.rs       - Performance benchmarking
+├── profile.rs         - Profiling with execution metrics
+├── cache.rs           - LRU cache with analytics, warmup, compression
+├── simplify.rs        - Expression simplification (constant folding, laws)
+├── macros.rs          - Macro system with expansion engine
+├── conversion.rs      - Format conversion and pretty-printing
+├── snapshot.rs        - Snapshot management
+├── ffi.rs             - FFI bindings for C/C++ integration
+├── error_suggestions.rs - Actionable error suggestions
+├── visualization.rs   - DotExporter and AsciiRenderer (v0.1.6)
+└── lib.rs             - Library API and public exports
 ```
 
 ## Contributing

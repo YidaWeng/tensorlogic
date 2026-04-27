@@ -223,9 +223,9 @@ pub fn propagate_probabilities(
 
         TLExpr::Constant(v) => {
             if *v >= 1.0 {
-                ProbabilityInterval::precise(1.0).unwrap()
+                ProbabilityInterval::precise(1.0).expect("1.0 is a valid probability")
             } else if *v <= 0.0 {
-                ProbabilityInterval::precise(0.0).unwrap()
+                ProbabilityInterval::precise(0.0).expect("0.0 is a valid probability")
             } else {
                 ProbabilityInterval::vacuous()
             }
@@ -433,7 +433,7 @@ mod tests {
 
     #[test]
     fn test_probability_interval_creation() {
-        let interval = ProbabilityInterval::new(0.3, 0.7).unwrap();
+        let interval = ProbabilityInterval::new(0.3, 0.7).expect("unwrap");
         assert!((interval.lower - 0.3).abs() < 1e-10);
         assert!((interval.upper - 0.7).abs() < 1e-10);
         assert!((interval.width() - 0.4).abs() < 1e-10);
@@ -446,7 +446,7 @@ mod tests {
 
     #[test]
     fn test_precise_probability() {
-        let precise = ProbabilityInterval::precise(0.5).unwrap();
+        let precise = ProbabilityInterval::precise(0.5).expect("unwrap");
         assert!(precise.is_precise());
         assert_eq!(precise.width(), 0.0);
     }
@@ -460,7 +460,7 @@ mod tests {
 
     #[test]
     fn test_complement() {
-        let interval = ProbabilityInterval::new(0.3, 0.7).unwrap();
+        let interval = ProbabilityInterval::new(0.3, 0.7).expect("unwrap");
         let complement = interval.complement();
         assert!((complement.lower - 0.3).abs() < 1e-10);
         assert!((complement.upper - 0.7).abs() < 1e-10);
@@ -468,8 +468,8 @@ mod tests {
 
     #[test]
     fn test_frechet_and() {
-        let p_a = ProbabilityInterval::new(0.4, 0.6).unwrap();
-        let p_b = ProbabilityInterval::new(0.5, 0.8).unwrap();
+        let p_a = ProbabilityInterval::new(0.4, 0.6).expect("unwrap");
+        let p_b = ProbabilityInterval::new(0.5, 0.8).expect("unwrap");
         let p_and = p_a.and(&p_b);
 
         // Lower: max(0, 0.4 + 0.5 - 1) = 0.0
@@ -480,8 +480,8 @@ mod tests {
 
     #[test]
     fn test_frechet_or() {
-        let p_a = ProbabilityInterval::new(0.4, 0.6).unwrap();
-        let p_b = ProbabilityInterval::new(0.5, 0.8).unwrap();
+        let p_a = ProbabilityInterval::new(0.4, 0.6).expect("unwrap");
+        let p_b = ProbabilityInterval::new(0.5, 0.8).expect("unwrap");
         let p_or = p_a.or(&p_b);
 
         // Lower: max(0.4, 0.5) = 0.5
@@ -492,8 +492,8 @@ mod tests {
 
     #[test]
     fn test_implication_bounds() {
-        let p_a = ProbabilityInterval::new(0.3, 0.5).unwrap();
-        let p_b = ProbabilityInterval::new(0.6, 0.9).unwrap();
+        let p_a = ProbabilityInterval::new(0.3, 0.5).expect("unwrap");
+        let p_b = ProbabilityInterval::new(0.6, 0.9).expect("unwrap");
         let p_implies = p_a.implies(&p_b);
 
         // A -> B ≡ ¬A ∨ B
@@ -506,10 +506,10 @@ mod tests {
 
     #[test]
     fn test_conditional_probability() {
-        let p_a = ProbabilityInterval::new(0.4, 0.6).unwrap();
-        let p_a_and_b = ProbabilityInterval::new(0.2, 0.3).unwrap();
+        let p_a = ProbabilityInterval::new(0.4, 0.6).expect("unwrap");
+        let p_a_and_b = ProbabilityInterval::new(0.2, 0.3).expect("unwrap");
 
-        let p_b_given_a = p_a.conditional(&p_a_and_b).unwrap();
+        let p_b_given_a = p_a.conditional(&p_a_and_b).expect("unwrap");
 
         // P(B|A) = P(A ∧ B) / P(A)
         // Lower: 0.2 / 0.6 = 0.333...
@@ -520,25 +520,25 @@ mod tests {
 
     #[test]
     fn test_interval_intersection() {
-        let i1 = ProbabilityInterval::new(0.2, 0.7).unwrap();
-        let i2 = ProbabilityInterval::new(0.5, 0.9).unwrap();
+        let i1 = ProbabilityInterval::new(0.2, 0.7).expect("unwrap");
+        let i2 = ProbabilityInterval::new(0.5, 0.9).expect("unwrap");
 
-        let intersection = i1.intersect(&i2).unwrap();
+        let intersection = i1.intersect(&i2).expect("unwrap");
         assert_eq!(intersection.lower, 0.5);
         assert_eq!(intersection.upper, 0.7);
 
         // No intersection
-        let i3 = ProbabilityInterval::new(0.1, 0.3).unwrap();
-        let i4 = ProbabilityInterval::new(0.6, 0.9).unwrap();
+        let i3 = ProbabilityInterval::new(0.1, 0.3).expect("unwrap");
+        let i4 = ProbabilityInterval::new(0.6, 0.9).expect("unwrap");
         assert!(i3.intersect(&i4).is_none());
     }
 
     #[test]
     fn test_convex_combination() {
-        let i1 = ProbabilityInterval::new(0.2, 0.4).unwrap();
-        let i2 = ProbabilityInterval::new(0.6, 0.8).unwrap();
+        let i1 = ProbabilityInterval::new(0.2, 0.4).expect("unwrap");
+        let i2 = ProbabilityInterval::new(0.6, 0.8).expect("unwrap");
 
-        let combo = i1.convex_combine(&i2, 0.5).unwrap();
+        let combo = i1.convex_combine(&i2, 0.5).expect("unwrap");
         assert!((combo.lower - 0.4).abs() < 1e-10); // 0.2 * 0.5 + 0.6 * 0.5
         assert!((combo.upper - 0.6).abs() < 1e-10); // 0.4 * 0.5 + 0.8 * 0.5
     }
@@ -546,8 +546,14 @@ mod tests {
     #[test]
     fn test_propagate_probabilities_and() {
         let mut prob_map = HashMap::new();
-        prob_map.insert("P".to_string(), ProbabilityInterval::new(0.4, 0.6).unwrap());
-        prob_map.insert("Q".to_string(), ProbabilityInterval::new(0.5, 0.8).unwrap());
+        prob_map.insert(
+            "P".to_string(),
+            ProbabilityInterval::new(0.4, 0.6).expect("unwrap"),
+        );
+        prob_map.insert(
+            "Q".to_string(),
+            ProbabilityInterval::new(0.5, 0.8).expect("unwrap"),
+        );
 
         let expr = TLExpr::and(TLExpr::pred("P", vec![]), TLExpr::pred("Q", vec![]));
 
@@ -559,8 +565,14 @@ mod tests {
     #[test]
     fn test_propagate_probabilities_or() {
         let mut prob_map = HashMap::new();
-        prob_map.insert("P".to_string(), ProbabilityInterval::new(0.4, 0.6).unwrap());
-        prob_map.insert("Q".to_string(), ProbabilityInterval::new(0.5, 0.8).unwrap());
+        prob_map.insert(
+            "P".to_string(),
+            ProbabilityInterval::new(0.4, 0.6).expect("unwrap"),
+        );
+        prob_map.insert(
+            "Q".to_string(),
+            ProbabilityInterval::new(0.5, 0.8).expect("unwrap"),
+        );
 
         let expr = TLExpr::or(TLExpr::pred("P", vec![]), TLExpr::pred("Q", vec![]));
 
@@ -572,7 +584,10 @@ mod tests {
     #[test]
     fn test_propagate_probabilities_not() {
         let mut prob_map = HashMap::new();
-        prob_map.insert("P".to_string(), ProbabilityInterval::new(0.3, 0.7).unwrap());
+        prob_map.insert(
+            "P".to_string(),
+            ProbabilityInterval::new(0.3, 0.7).expect("unwrap"),
+        );
 
         let expr = TLExpr::negate(TLExpr::pred("P", vec![]));
 
@@ -584,7 +599,10 @@ mod tests {
     #[test]
     fn test_weighted_rule_propagation() {
         let mut prob_map = HashMap::new();
-        prob_map.insert("P".to_string(), ProbabilityInterval::new(0.5, 0.8).unwrap());
+        prob_map.insert(
+            "P".to_string(),
+            ProbabilityInterval::new(0.5, 0.8).expect("unwrap"),
+        );
 
         let expr = TLExpr::weighted_rule(0.5, TLExpr::pred("P", vec![]));
 
@@ -596,8 +614,14 @@ mod tests {
     #[test]
     fn test_probabilistic_choice() {
         let mut prob_map = HashMap::new();
-        prob_map.insert("P".to_string(), ProbabilityInterval::precise(0.6).unwrap());
-        prob_map.insert("Q".to_string(), ProbabilityInterval::precise(0.4).unwrap());
+        prob_map.insert(
+            "P".to_string(),
+            ProbabilityInterval::precise(0.6).expect("unwrap"),
+        );
+        prob_map.insert(
+            "Q".to_string(),
+            ProbabilityInterval::precise(0.4).expect("unwrap"),
+        );
 
         let expr = TLExpr::probabilistic_choice(vec![
             (0.5, TLExpr::pred("P", vec![])),

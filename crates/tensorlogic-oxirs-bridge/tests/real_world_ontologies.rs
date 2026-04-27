@@ -81,8 +81,8 @@ fn test_foaf_ontology() {
     "#;
 
     let mut analyzer = SchemaAnalyzer::new();
-    analyzer.load_turtle(foaf).unwrap();
-    analyzer.analyze().unwrap();
+    analyzer.load_turtle(foaf).expect("unwrap");
+    analyzer.analyze().expect("unwrap");
 
     // Verify classes
     assert_eq!(analyzer.classes.len(), 6);
@@ -135,7 +135,7 @@ fn test_foaf_ontology() {
         .contains(&"http://xmlns.com/foaf/0.1/Person".to_string()));
 
     // Convert to SymbolTable
-    let symbol_table = analyzer.to_symbol_table().unwrap();
+    let symbol_table = analyzer.to_symbol_table().expect("unwrap");
     assert!(symbol_table.domains.contains_key("Person"));
     assert!(symbol_table.domains.contains_key("Organization"));
     assert!(symbol_table.predicates.contains_key("knows"));
@@ -226,8 +226,8 @@ fn test_dublin_core_ontology() {
     "#;
 
     let mut analyzer = SchemaAnalyzer::new();
-    analyzer.load_turtle(dc).unwrap();
-    analyzer.analyze().unwrap();
+    analyzer.load_turtle(dc).expect("unwrap");
+    analyzer.analyze().expect("unwrap");
 
     // Verify classes
     assert_eq!(analyzer.classes.len(), 6);
@@ -261,7 +261,7 @@ fn test_dublin_core_ontology() {
     assert_eq!(title.label, Some("Title".to_string()));
 
     // Convert to SymbolTable
-    let symbol_table = analyzer.to_symbol_table().unwrap();
+    let symbol_table = analyzer.to_symbol_table().expect("unwrap");
     assert!(symbol_table.domains.contains_key("Collection"));
     assert!(symbol_table.domains.contains_key("Dataset"));
     assert!(symbol_table.predicates.contains_key("title"));
@@ -351,8 +351,8 @@ fn test_skos_ontology() {
     "#;
 
     let mut analyzer = SchemaAnalyzer::new();
-    analyzer.load_turtle(skos).unwrap();
-    analyzer.analyze().unwrap();
+    analyzer.load_turtle(skos).expect("unwrap");
+    analyzer.analyze().expect("unwrap");
 
     // Verify classes
     assert_eq!(analyzer.classes.len(), 3);
@@ -391,7 +391,7 @@ fn test_skos_ontology() {
         .contains(&"http://www.w3.org/2004/02/skos/core#Concept".to_string()));
 
     // Convert to SymbolTable
-    let symbol_table = analyzer.to_symbol_table().unwrap();
+    let symbol_table = analyzer.to_symbol_table().expect("unwrap");
     assert!(symbol_table.domains.contains_key("Concept"));
     assert!(symbol_table.domains.contains_key("ConceptScheme"));
     assert!(symbol_table.predicates.contains_key("prefLabel"));
@@ -453,8 +453,8 @@ fn test_combined_ontologies() {
     "#;
 
     let mut analyzer = SchemaAnalyzer::new();
-    analyzer.load_turtle(combined).unwrap();
-    analyzer.analyze().unwrap();
+    analyzer.load_turtle(combined).expect("unwrap");
+    analyzer.analyze().expect("unwrap");
 
     // Verify classes from different namespaces
     assert_eq!(analyzer.classes.len(), 4);
@@ -481,7 +481,7 @@ fn test_combined_ontologies() {
         .contains(&"http://xmlns.com/foaf/0.1/Person".to_string()));
 
     // Convert to SymbolTable
-    let symbol_table = analyzer.to_symbol_table().unwrap();
+    let symbol_table = analyzer.to_symbol_table().expect("unwrap");
 
     // All domain names should be extracted correctly
     assert!(symbol_table.domains.contains_key("Person"));
@@ -560,8 +560,8 @@ fn test_schema_org_ontology() {
     "#;
 
     let mut analyzer = SchemaAnalyzer::new();
-    analyzer.load_turtle(schema).unwrap();
-    analyzer.analyze().unwrap();
+    analyzer.load_turtle(schema).expect("unwrap");
+    analyzer.analyze().expect("unwrap");
 
     // Verify class hierarchy
     let person = &analyzer.classes["http://schema.org/Person"];
@@ -575,7 +575,7 @@ fn test_schema_org_ontology() {
         .contains(&"http://schema.org/Thing".to_string()));
 
     // Convert to SymbolTable and verify
-    let symbol_table = analyzer.to_symbol_table().unwrap();
+    let symbol_table = analyzer.to_symbol_table().expect("unwrap");
 
     let works_for = &symbol_table.predicates["worksFor"];
     assert_eq!(works_for.arg_domains, vec!["Person", "Organization"]);

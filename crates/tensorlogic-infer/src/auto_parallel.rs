@@ -347,7 +347,9 @@ impl AutoParallelizer {
         // Initialize in-degree and node map
         for node in nodes {
             node_map.insert(node.id.clone(), node);
-            let deps = dep_graph.get(&node.id).unwrap();
+            let deps = dep_graph
+                .get(&node.id)
+                .expect("dep_graph built from same nodes");
             in_degree.insert(node.id.clone(), deps.len());
         }
 
@@ -485,13 +487,17 @@ impl AutoParallelizer {
                 .iter()
                 .map(|id| (id.clone(), 1.0)) // Simplified: assume uniform cost
                 .collect();
-            stage_nodes.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+            stage_nodes.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
             // Greedy assignment to least loaded worker
             for (node_id, cost) in stage_nodes {
                 let min_partition = partitions
                     .iter_mut()
-                    .min_by(|a, b| a.estimated_load.partial_cmp(&b.estimated_load).unwrap())
+                    .min_by(|a, b| {
+                        a.estimated_load
+                            .partial_cmp(&b.estimated_load)
+                            .unwrap_or(std::cmp::Ordering::Equal)
+                    })
                     .ok_or_else(|| {
                         AutoParallelError::PartitioningFailed("No partitions available".to_string())
                     })?;
@@ -596,7 +602,7 @@ mod tests {
         let parallelizer = AutoParallelizer::new();
         let nodes = create_test_nodes();
 
-        let graph = parallelizer.build_dependency_graph(&nodes).unwrap();
+        let graph = parallelizer.build_dependency_graph(&nodes).expect("unwrap");
 
         assert_eq!(graph.len(), 4);
         assert!(graph["b"].contains("a"));
@@ -638,7 +644,7 @@ mod tests {
         let parallelizer = AutoParallelizer::new();
         let nodes = create_test_nodes();
 
-        let analysis = parallelizer.analyze(&nodes).unwrap();
+        let analysis = parallelizer.analyze(&nodes).expect("unwrap");
 
         assert_eq!(analysis.num_stages, 3);
         assert_eq!(analysis.stages[0].nodes, vec!["a"]);
@@ -653,7 +659,7 @@ mod tests {
         let parallelizer = AutoParallelizer::new();
         let nodes = create_test_nodes();
 
-        let analysis = parallelizer.analyze(&nodes).unwrap();
+        let analysis = parallelizer.analyze(&nodes).expect("unwrap");
 
         // Critical path: a (10) -> max(b (20), c (15)) -> d (10) = 40
         assert_eq!(analysis.critical_path_length, 40.0);
@@ -664,7 +670,7 @@ mod tests {
         let parallelizer = AutoParallelizer::new();
         let nodes = create_test_nodes();
 
-        let analysis = parallelizer.analyze(&nodes).unwrap();
+        let analysis = parallelizer.analyze(&nodes).expect("unwrap");
 
         // Total work: 10 + 20 + 15 + 10 = 55
         // Critical path: 40
@@ -677,7 +683,7 @@ mod tests {
         let parallelizer = AutoParallelizer::new();
         let nodes = create_test_nodes();
 
-        let plan = parallelizer.generate_plan(&nodes).unwrap();
+        let plan = parallelizer.generate_plan(&nodes).expect("unwrap");
 
         assert_eq!(plan.stages.len(), 3);
         assert!(!plan.partitions.is_empty());
@@ -707,12 +713,12 @@ mod tests {
         let conservative = AutoParallelizer::new()
             .with_strategy(ParallelizationStrategy::Conservative)
             .analyze(&nodes)
-            .unwrap();
+            .expect("unwrap");
 
         let aggressive = AutoParallelizer::new()
             .with_strategy(ParallelizationStrategy::Aggressive)
             .analyze(&nodes)
-            .unwrap();
+            .expect("unwrap");
 
         // Aggressive should recommend more workers
         assert!(aggressive.recommended_workers >= conservative.recommended_workers);
@@ -742,7 +748,7 @@ mod tests {
             },
         ];
 
-        let analysis = parallelizer.analyze(&nodes).unwrap();
+        let analysis = parallelizer.analyze(&nodes).expect("unwrap");
 
         assert_eq!(analysis.num_stages, 2);
         assert_eq!(analysis.parallelism_factor, 1.0); // No parallelism
@@ -780,7 +786,7 @@ mod tests {
             },
         ];
 
-        let analysis = parallelizer.analyze(&nodes).unwrap();
+        let analysis = parallelizer.analyze(&nodes).expect("unwrap");
 
         assert_eq!(analysis.num_stages, 1);
         assert_eq!(analysis.parallelism_factor, 3.0); // Perfect parallelism
@@ -791,7 +797,7 @@ mod tests {
         let parallelizer = AutoParallelizer::new().with_max_workers(2);
         let nodes = create_test_nodes();
 
-        let plan = parallelizer.generate_plan(&nodes).unwrap();
+        let plan = parallelizer.generate_plan(&nodes).expect("unwrap");
 
         // Check that partitions exist and have reasonable balance
         assert!(plan.partitions.len() > 0);

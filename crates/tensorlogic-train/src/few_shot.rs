@@ -222,7 +222,9 @@ impl PrototypicalDistance {
         for class_id in 0..support.num_classes {
             let class_examples = support.get_class_examples(class_id);
             if class_examples.nrows() > 0 {
-                let prototype = class_examples.mean_axis(Axis(0)).unwrap();
+                let prototype = class_examples
+                    .mean_axis(Axis(0))
+                    .expect("mean_axis on non-empty class examples");
                 prototypes.row_mut(class_id).assign(&prototype);
             }
         }
@@ -527,22 +529,22 @@ mod tests {
 
     #[test]
     fn test_support_set_creation() {
-        let features =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        let features = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .expect("unwrap");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 
-        let support = SupportSet::new(features, labels).unwrap();
+        let support = SupportSet::new(features, labels).expect("unwrap");
         assert_eq!(support.size(), 4);
         assert_eq!(support.num_classes, 2);
     }
 
     #[test]
     fn test_support_set_get_class_examples() {
-        let features =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        let features = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .expect("unwrap");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
 
-        let support = SupportSet::new(features, labels).unwrap();
+        let support = SupportSet::new(features, labels).expect("unwrap");
         let class_0 = support.get_class_examples(0);
 
         assert_eq!(class_0.nrows(), 2);
@@ -552,32 +554,32 @@ mod tests {
 
     #[test]
     fn test_prototypical_distance() {
-        let features =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        let features = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .expect("unwrap");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
-        let support = SupportSet::new(features, labels).unwrap();
+        let support = SupportSet::new(features, labels).expect("unwrap");
 
         let mut proto = PrototypicalDistance::euclidean();
         proto.compute_prototypes(&support);
 
         let query = Array1::from_vec(vec![2.0, 3.0]);
-        let prediction = proto.predict(&query.view()).unwrap();
+        let prediction = proto.predict(&query.view()).expect("unwrap");
 
         assert_eq!(prediction, 0); // Closer to class 0
     }
 
     #[test]
     fn test_prototypical_predict_proba() {
-        let features =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        let features = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .expect("unwrap");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
-        let support = SupportSet::new(features, labels).unwrap();
+        let support = SupportSet::new(features, labels).expect("unwrap");
 
         let mut proto = PrototypicalDistance::euclidean();
         proto.compute_prototypes(&support);
 
         let query = Array1::from_vec(vec![2.0, 3.0]);
-        let probs = proto.predict_proba(&query.view(), 1.0).unwrap();
+        let probs = proto.predict_proba(&query.view(), 1.0).expect("unwrap");
 
         assert_eq!(probs.len(), 2);
         assert!(probs[0] > probs[1]); // Higher probability for class 0
@@ -595,32 +597,32 @@ mod tests {
 
     #[test]
     fn test_matching_network() {
-        let features =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        let features = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .expect("unwrap");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
-        let support = SupportSet::new(features, labels).unwrap();
+        let support = SupportSet::new(features, labels).expect("unwrap");
 
         let mut matcher = MatchingNetwork::new(DistanceMetric::Euclidean);
         matcher.set_support(support);
 
         let query = Array1::from_vec(vec![2.0, 3.0]);
-        let prediction = matcher.predict(&query.view()).unwrap();
+        let prediction = matcher.predict(&query.view()).expect("unwrap");
 
         assert_eq!(prediction, 0); // Should predict class 0
     }
 
     #[test]
     fn test_matching_network_attention() {
-        let features =
-            Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0]).unwrap();
+        let features = Array2::from_shape_vec((4, 2), vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0])
+            .expect("unwrap");
         let labels = Array1::from_vec(vec![0, 0, 1, 1]);
-        let support = SupportSet::new(features, labels).unwrap();
+        let support = SupportSet::new(features, labels).expect("unwrap");
 
         let mut matcher = MatchingNetwork::new(DistanceMetric::Euclidean);
         matcher.set_support(support);
 
         let query = Array1::from_vec(vec![2.0, 3.0]);
-        let attention = matcher.compute_attention(&query.view()).unwrap();
+        let attention = matcher.compute_attention(&query.view()).expect("unwrap");
 
         assert_eq!(attention.len(), 4);
         assert_relative_eq!(attention.sum(), 1.0, epsilon = 1e-10);

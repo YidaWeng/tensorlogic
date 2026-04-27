@@ -200,7 +200,7 @@ mod tests {
 
     #[test]
     fn test_attention_config_valid() {
-        let config = AttentionConfig::new(512, 8).unwrap();
+        let config = AttentionConfig::new(512, 8).expect("unwrap");
         assert_eq!(config.d_model, 512);
         assert_eq!(config.n_heads, 8);
         assert_eq!(config.d_k, 64);
@@ -215,13 +215,17 @@ mod tests {
 
     #[test]
     fn test_attention_config_with_causal() {
-        let config = AttentionConfig::new(512, 8).unwrap().with_causal(true);
+        let config = AttentionConfig::new(512, 8)
+            .expect("unwrap")
+            .with_causal(true);
         assert!(config.causal);
     }
 
     #[test]
     fn test_attention_config_with_dropout() {
-        let config = AttentionConfig::new(512, 8).unwrap().with_dropout(0.1);
+        let config = AttentionConfig::new(512, 8)
+            .expect("unwrap")
+            .with_dropout(0.1);
         assert!((config.dropout - 0.1).abs() < 1e-10);
     }
 
@@ -242,7 +246,7 @@ mod tests {
 
     #[test]
     fn test_transformer_layer_config() {
-        let config = TransformerLayerConfig::new(512, 8, 2048).unwrap();
+        let config = TransformerLayerConfig::new(512, 8, 2048).expect("unwrap");
         assert_eq!(config.attention.d_model, 512);
         assert_eq!(config.feed_forward.d_model, 512);
         assert!(config.pre_norm);
@@ -252,7 +256,7 @@ mod tests {
     #[test]
     fn test_transformer_layer_config_with_pre_norm() {
         let config = TransformerLayerConfig::new(512, 8, 2048)
-            .unwrap()
+            .expect("unwrap")
             .with_pre_norm(false);
         assert!(!config.pre_norm);
     }

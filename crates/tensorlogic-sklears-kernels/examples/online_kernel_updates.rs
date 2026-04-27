@@ -36,7 +36,8 @@ fn demo_online_kernel_matrix() {
     println!("1. Online Kernel Matrix - Incremental Updates");
     println!("{}", "-".repeat(50));
 
-    let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+    let kernel = RbfKernel::new(RbfKernelConfig::new(0.5))
+        .expect("demo_online_kernel_matrix: Failed to create RbfKernel");
     let mut online = OnlineKernelMatrix::new(Box::new(kernel));
 
     // Simulate streaming data
@@ -50,7 +51,9 @@ fn demo_online_kernel_matrix() {
 
     println!("Adding samples incrementally:");
     for (i, sample) in samples.into_iter().enumerate() {
-        online.add_sample(sample).unwrap();
+        online
+            .add_sample(sample)
+            .expect("demo_online_kernel_matrix: add_sample failed");
         let stats = online.stats();
         println!(
             "  Sample {}: {} samples, {} kernel computations",
@@ -76,7 +79,9 @@ fn demo_online_kernel_matrix() {
 
     // Query against all samples
     let query = vec![1.5, 0.5];
-    let similarities = online.compute_with_all(&query).unwrap();
+    let similarities = online
+        .compute_with_all(&query)
+        .expect("demo_online_kernel_matrix: compute_with_all failed");
     println!("\nQuery [1.5, 0.5] similarities:");
     for (i, sim) in similarities.iter().enumerate() {
         println!("  Sample {}: {:.4}", i, sim);
@@ -99,7 +104,9 @@ fn demo_windowed_kernel_matrix() {
     // Simulate time series data
     for i in 1..=6 {
         let sample = vec![i as f64];
-        let evicted = windowed.add_sample(sample).unwrap();
+        let evicted = windowed
+            .add_sample(sample)
+            .expect("demo_windowed_kernel_matrix: add_sample failed");
 
         print!("  Add [{}]: ", i);
         if let Some(ev) = evicted {
@@ -151,7 +158,9 @@ fn demo_forgetful_kernel_matrix() {
 
     // Add samples and show weight decay
     for i in 1..=5 {
-        forgetful.add_sample(vec![i as f64]).unwrap();
+        forgetful
+            .add_sample(vec![i as f64])
+            .expect("demo_forgetful_kernel_matrix: add_sample failed");
 
         let weights = forgetful.get_weights();
         let samples: Vec<_> = forgetful
@@ -210,7 +219,8 @@ fn demo_streaming_classification() {
     println!("{}", "-".repeat(50));
 
     // Scenario: Online anomaly detection with RBF kernel
-    let kernel = RbfKernel::new(RbfKernelConfig::new(1.0)).unwrap();
+    let kernel = RbfKernel::new(RbfKernelConfig::new(1.0))
+        .expect("demo_streaming_classification: Failed to create RbfKernel");
     let config = ForgetfulConfig {
         lambda: 0.95,
         removal_threshold: Some(0.1),
@@ -231,7 +241,9 @@ fn demo_streaming_classification() {
 
     println!("Training on normal samples around [5, 5]:");
     for sample in normal_samples {
-        detector.add_sample(sample.clone()).unwrap();
+        detector
+            .add_sample(sample.clone())
+            .expect("demo_streaming_classification: add_sample failed");
         println!("  Added {:?}", sample);
     }
 
@@ -245,7 +257,9 @@ fn demo_streaming_classification() {
 
     println!("\nTesting points (average similarity to training data):");
     for (query, expected) in test_points {
-        let similarities = detector.compute_weighted(&query).unwrap();
+        let similarities = detector
+            .compute_weighted(&query)
+            .expect("demo_streaming_classification: compute_weighted failed");
         let avg_sim: f64 = similarities.iter().sum::<f64>() / similarities.len() as f64;
 
         let detected = if avg_sim < 0.3 { "anomaly" } else { "normal" };

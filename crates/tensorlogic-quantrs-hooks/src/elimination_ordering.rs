@@ -373,22 +373,22 @@ mod tests {
             "f_xy".to_string(),
             vec!["X".to_string(), "Y".to_string()],
             Array::from_shape_vec(vec![2, 2], vec![0.1, 0.2, 0.3, 0.4])
-                .unwrap()
+                .expect("unwrap")
                 .into_dyn(),
         )
-        .unwrap();
+        .expect("unwrap");
 
         let f_yz = Factor::new(
             "f_yz".to_string(),
             vec!["Y".to_string(), "Z".to_string()],
             Array::from_shape_vec(vec![2, 2], vec![0.5, 0.6, 0.7, 0.8])
-                .unwrap()
+                .expect("unwrap")
                 .into_dyn(),
         )
-        .unwrap();
+        .expect("unwrap");
 
-        graph.add_factor(f_xy).unwrap();
-        graph.add_factor(f_yz).unwrap();
+        graph.add_factor(f_xy).expect("unwrap");
+        graph.add_factor(f_yz).expect("unwrap");
 
         graph
     }
@@ -399,7 +399,7 @@ mod tests {
         let vars = vec!["X".to_string(), "Y".to_string(), "Z".to_string()];
 
         let ordering = EliminationOrdering::new(EliminationStrategy::MinDegree);
-        let order = ordering.compute_order(&graph, &vars).unwrap();
+        let order = ordering.compute_order(&graph, &vars).expect("unwrap");
 
         assert_eq!(order.len(), 3);
         // X and Z have degree 1, Y has degree 2
@@ -412,7 +412,7 @@ mod tests {
         let vars = vec!["X".to_string(), "Y".to_string(), "Z".to_string()];
 
         let ordering = EliminationOrdering::new(EliminationStrategy::MinFill);
-        let order = ordering.compute_order(&graph, &vars).unwrap();
+        let order = ordering.compute_order(&graph, &vars).expect("unwrap");
 
         assert_eq!(order.len(), 3);
     }
@@ -423,7 +423,7 @@ mod tests {
         let vars = vec!["X".to_string(), "Y".to_string(), "Z".to_string()];
 
         let ordering = EliminationOrdering::new(EliminationStrategy::WeightedMinFill);
-        let order = ordering.compute_order(&graph, &vars).unwrap();
+        let order = ordering.compute_order(&graph, &vars).expect("unwrap");
 
         assert_eq!(order.len(), 3);
     }
@@ -434,7 +434,7 @@ mod tests {
         let vars = vec!["X".to_string(), "Y".to_string(), "Z".to_string()];
 
         let ordering = EliminationOrdering::new(EliminationStrategy::MaxCardinalitySearch);
-        let order = ordering.compute_order(&graph, &vars).unwrap();
+        let order = ordering.compute_order(&graph, &vars).expect("unwrap");
 
         assert_eq!(order.len(), 3);
     }

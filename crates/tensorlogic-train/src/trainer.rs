@@ -514,7 +514,7 @@ impl TrainingHistory {
         self.val_loss
             .iter()
             .enumerate()
-            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(idx, &loss)| (idx, loss))
     }
 
@@ -560,7 +560,7 @@ mod tests {
         history.val_loss.push(0.9);
         history.val_loss.push(0.7);
 
-        let (best_epoch, best_loss) = history.best_val_loss().unwrap();
+        let (best_epoch, best_loss) = history.best_val_loss().expect("unwrap");
         assert_eq!(best_epoch, 2);
         assert_eq!(best_loss, 0.7);
     }

@@ -338,9 +338,9 @@ mod tests {
 
     #[test]
     fn test_slice_spec_size() {
-        assert_eq!(SliceSpec::Full.size(100).unwrap(), 100);
-        assert_eq!(SliceSpec::Range(10..20).size(100).unwrap(), 10);
-        assert_eq!(SliceSpec::Index(5).size(100).unwrap(), 1);
+        assert_eq!(SliceSpec::Full.size(100).expect("unwrap"), 100);
+        assert_eq!(SliceSpec::Range(10..20).size(100).expect("unwrap"), 10);
+        assert_eq!(SliceSpec::Index(5).size(100).expect("unwrap"), 1);
         assert_eq!(
             SliceSpec::Strided {
                 start: 0,
@@ -348,7 +348,7 @@ mod tests {
                 stride: 10
             }
             .size(100)
-            .unwrap(),
+            .expect("unwrap"),
             10
         );
     }
@@ -357,7 +357,7 @@ mod tests {
     fn test_slice_spec_compose() {
         let s1 = SliceSpec::Range(10..30);
         let s2 = SliceSpec::Range(5..15);
-        let composed = s1.compose(&s2).unwrap();
+        let composed = s1.compose(&s2).expect("unwrap");
         assert_eq!(composed, SliceSpec::Range(15..25));
     }
 
@@ -365,7 +365,7 @@ mod tests {
     fn test_view_compose() {
         let view1 = TensorView::new(0, vec![SliceSpec::Range(0..100), SliceSpec::Full]);
         let view2 = TensorView::new(0, vec![SliceSpec::Range(10..50), SliceSpec::Range(0..64)]);
-        let composed = view1.compose(&view2).unwrap();
+        let composed = view1.compose(&view2).expect("unwrap");
         assert_eq!(composed.base_tensor_id, 0);
         assert_eq!(composed.rank(), 2);
     }
@@ -402,10 +402,10 @@ mod tests {
     #[test]
     fn test_strided_slice() {
         let spec = SliceSpec::strided(0, 100, 10);
-        assert_eq!(spec.size(100).unwrap(), 10);
+        assert_eq!(spec.size(100).expect("unwrap"), 10);
 
         let spec2 = SliceSpec::strided(5, 50, 5);
-        assert_eq!(spec2.size(100).unwrap(), 9);
+        assert_eq!(spec2.size(100).expect("unwrap"), 9);
     }
 
     #[test]

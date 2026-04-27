@@ -235,6 +235,14 @@ pub fn to_nnf(expr: &TLExpr) -> TLExpr {
         ),
         TLExpr::Abducible { .. } => expr.clone(),
         TLExpr::Explain { formula } => TLExpr::explain(to_nnf(formula)),
+        TLExpr::SymbolLiteral(_) => expr.clone(),
+        TLExpr::Match { scrutinee, arms } => TLExpr::Match {
+            scrutinee: Box::new(to_nnf(scrutinee)),
+            arms: arms
+                .iter()
+                .map(|(p, b)| (p.clone(), Box::new(to_nnf(b))))
+                .collect(),
+        },
     }
 }
 

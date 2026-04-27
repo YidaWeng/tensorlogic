@@ -293,16 +293,16 @@ mod tests {
         };
         let mut iter = BatchIterator::new(10, config);
 
-        let batch1 = iter.next_batch().unwrap();
+        let batch1 = iter.next_batch().expect("unwrap");
         assert_eq!(batch1.len(), 3);
 
-        let batch2 = iter.next_batch().unwrap();
+        let batch2 = iter.next_batch().expect("unwrap");
         assert_eq!(batch2.len(), 3);
 
-        let batch3 = iter.next_batch().unwrap();
+        let batch3 = iter.next_batch().expect("unwrap");
         assert_eq!(batch3.len(), 3);
 
-        let batch4 = iter.next_batch().unwrap();
+        let batch4 = iter.next_batch().expect("unwrap");
         assert_eq!(batch4.len(), 1); // Last batch with remaining samples
 
         assert!(iter.next_batch().is_none());
@@ -318,13 +318,13 @@ mod tests {
         };
         let mut iter = BatchIterator::new(10, config);
 
-        let batch1 = iter.next_batch().unwrap();
+        let batch1 = iter.next_batch().expect("unwrap");
         assert_eq!(batch1.len(), 3);
 
-        let batch2 = iter.next_batch().unwrap();
+        let batch2 = iter.next_batch().expect("unwrap");
         assert_eq!(batch2.len(), 3);
 
-        let batch3 = iter.next_batch().unwrap();
+        let batch3 = iter.next_batch().expect("unwrap");
         assert_eq!(batch3.len(), 3);
 
         assert!(iter.next_batch().is_none()); // Last incomplete batch is dropped
@@ -346,7 +346,7 @@ mod tests {
         let data = array![[1.0, 2.0], [3.0, 4.0], [5.0, 6.0], [7.0, 8.0]];
         let indices = vec![0, 2];
 
-        let batch = extract_batch(&data.view(), &indices).unwrap();
+        let batch = extract_batch(&data.view(), &indices).expect("unwrap");
         assert_eq!(batch.shape(), &[2, 2]);
         assert_eq!(batch[[0, 0]], 1.0);
         assert_eq!(batch[[0, 1]], 2.0);
@@ -357,9 +357,9 @@ mod tests {
     #[test]
     fn test_stratified_sampler() {
         let labels = vec![0, 0, 0, 1, 1, 1, 2, 2, 2];
-        let mut sampler = StratifiedSampler::new(labels, 6, Some(42)).unwrap();
+        let mut sampler = StratifiedSampler::new(labels, 6, Some(42)).expect("unwrap");
 
-        let batch = sampler.next_batch().unwrap();
+        let batch = sampler.next_batch().expect("unwrap");
         assert_eq!(batch.len(), 6);
 
         // Count class distribution in batch

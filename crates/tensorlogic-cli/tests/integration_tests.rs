@@ -12,7 +12,7 @@ use std::process::Command;
 
 /// Get the CLI binary command
 fn cli() -> Command {
-    Command::cargo_bin("tensorlogic").expect("Failed to find tensorlogic binary")
+    Command::cargo_bin("tensorlogic-cli").expect("Failed to find tensorlogic binary")
 }
 
 /// Create a temporary test file
@@ -286,7 +286,8 @@ fn test_output_to_file() {
         .assert()
         .success();
 
-    let content = fs::read_to_string(&output_file).unwrap();
+    let content =
+        fs::read_to_string(&output_file).expect("output file should be readable after write");
     assert!(content.contains("tensors") || content.contains("EinsumGraph"));
 
     fs::remove_file(output_file).ok();
@@ -413,7 +414,8 @@ fn test_convert_command() {
         .assert()
         .success();
 
-    let content = fs::read_to_string(&output_file).unwrap();
+    let content =
+        fs::read_to_string(&output_file).expect("output file should be readable after convert");
     assert!(content.contains("Pred"));
 
     fs::remove_file(expr_file).ok();

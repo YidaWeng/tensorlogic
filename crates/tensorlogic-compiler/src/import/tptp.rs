@@ -16,7 +16,7 @@
 //! use tensorlogic_compiler::import::tptp::parse_tptp;
 //!
 //! // FOF formula
-//! let expr = parse_tptp("fof(mortality, axiom, ![X]: (human(X) => mortal(X))).").unwrap();
+//! let expr = parse_tptp("fof(mortality, axiom, ![X]: (human(X) => mortal(X))).").expect("unwrap");
 //! ```
 
 use anyhow::{anyhow, Result};
@@ -266,63 +266,64 @@ mod tests {
 
     #[test]
     fn test_simple_fof() {
-        let expr = parse_tptp("fof(test, axiom, mortal(socrates)).").unwrap();
+        let expr = parse_tptp("fof(test, axiom, mortal(socrates)).").expect("unwrap");
         assert!(matches!(expr, TLExpr::Pred { .. }));
     }
 
     #[test]
     fn test_fof_with_implication() {
-        let expr =
-            parse_tptp("fof(mortality, axiom, human(socrates) => mortal(socrates)).").unwrap();
+        let expr = parse_tptp("fof(mortality, axiom, human(socrates) => mortal(socrates)).")
+            .expect("unwrap");
         assert!(matches!(expr, TLExpr::Imply { .. }));
     }
 
     #[test]
     fn test_fof_with_quantifier() {
-        let expr = parse_tptp("fof(all_mortal, axiom, ![X]: (human(X) => mortal(X))).").unwrap();
+        let expr =
+            parse_tptp("fof(all_mortal, axiom, ![X]: (human(X) => mortal(X))).").expect("unwrap");
         assert!(matches!(expr, TLExpr::ForAll { .. }));
     }
 
     #[test]
     fn test_exists_quantifier() {
-        let expr = parse_tptp("fof(some_mortal, axiom, ?[X]: mortal(X)).").unwrap();
+        let expr = parse_tptp("fof(some_mortal, axiom, ?[X]: mortal(X)).").expect("unwrap");
         assert!(matches!(expr, TLExpr::Exists { .. }));
     }
 
     #[test]
     fn test_conjunction() {
-        let expr = parse_tptp("fof(test, axiom, human(X) & mortal(X)).").unwrap();
+        let expr = parse_tptp("fof(test, axiom, human(X) & mortal(X)).").expect("unwrap");
         assert!(matches!(expr, TLExpr::And(_, _)));
     }
 
     #[test]
     fn test_disjunction() {
-        let expr = parse_tptp("fof(test, axiom, human(X) | god(X)).").unwrap();
+        let expr = parse_tptp("fof(test, axiom, human(X) | god(X)).").expect("unwrap");
         assert!(matches!(expr, TLExpr::Or(_, _)));
     }
 
     #[test]
     fn test_negation() {
-        let expr = parse_tptp("fof(test, axiom, ~mortal(X)).").unwrap();
+        let expr = parse_tptp("fof(test, axiom, ~mortal(X)).").expect("unwrap");
         assert!(matches!(expr, TLExpr::Not(_)));
     }
 
     #[test]
     fn test_multiple_quantifiers() {
-        let expr = parse_tptp("fof(test, axiom, ![X, Y]: knows(X, Y)).").unwrap();
+        let expr = parse_tptp("fof(test, axiom, ![X, Y]: knows(X, Y)).").expect("unwrap");
         assert!(matches!(expr, TLExpr::ForAll { .. }));
     }
 
     #[test]
     fn test_direct_formula() {
-        let expr = parse_tptp("human(X) => mortal(X)").unwrap();
+        let expr = parse_tptp("human(X) => mortal(X)").expect("unwrap");
         assert!(matches!(expr, TLExpr::Imply { .. }));
     }
 
     #[test]
     fn test_complex_nested() {
-        let expr =
-            parse_tptp("fof(test, axiom, ![X]: ((human(X) & ~god(X)) => mortal(X))).").unwrap();
+        let expr = parse_tptp("fof(test, axiom, ![X]: ((human(X) & ~god(X)) => mortal(X))).")
+            .expect("unwrap");
         assert!(matches!(expr, TLExpr::ForAll { .. }));
     }
 }

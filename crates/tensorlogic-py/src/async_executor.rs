@@ -91,10 +91,8 @@ impl PyAsyncResult {
         }
 
         // Check if thread has finished
-        if let Some(handle) = &self.thread_handle {
-            if handle.is_finished() {
-                // Take the handle and get result
-                let handle = self.thread_handle.take().unwrap();
+        if self.thread_handle.as_ref().map(|h| h.is_finished()).unwrap_or(false) {
+            if let Some(handle) = self.thread_handle.take() {
                 self.result = Some(handle.join().unwrap_or_else(|_| {
                     Err(pyo3::exceptions::PyRuntimeError::new_err(
                         "Thread panicked during execution",

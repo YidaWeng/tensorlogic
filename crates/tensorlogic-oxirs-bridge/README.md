@@ -1,7 +1,7 @@
 # tensorlogic-oxirs-bridge
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic-oxirs-bridge-orange)](https://crates.io/crates/tensorlogic-oxirs-bridge)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-oxirs-bridge)
-[![Tests](https://img.shields.io/badge/tests-167%2F167-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/tests-468%2F468-brightgreen)](#)
 [![Production](https://img.shields.io/badge/status-production_ready-success)](#)
 
 Lightweight RDF/SHACL → TensorLogic integration using oxrdf.
@@ -67,6 +67,8 @@ assert_eq!(table.predicates.len(), 1);
 - **Streaming RDF**: Memory-efficient large graph processing
 - **Triple Indexing**: SPO indexes for O(1) lookups
 - **Schema Caching**: In-memory and file-based caching with LRU eviction
+- **SPARQL Query Generation** (v0.1.19): `SparqlQuery` builder (SELECT/ASK/CONSTRUCT), `GraphPattern` variants (Triple/Optional/Union/Filter/Bind/Values), `expr_to_sparql()` translator from TLExpr
+- **JSON-LD Generation** (v0.1.21): `TlJsonLdContext`, `TlJsonLdNode`, `TlJsonLdDocument`, `context_from_expr()` for TLExpr scanning, standard prefix contexts
 - **9 Examples**: Comprehensive examples demonstrating all major features
 
 ## Architecture
@@ -277,7 +279,7 @@ For full SPARQL/federation/GraphQL support, use oxirs-core directly.
 
 ```bash
 cargo nextest run -p tensorlogic-oxirs-bridge
-# 167 tests, all passing, zero warnings
+# 468 tests, all passing, zero warnings
 ```
 
 Key test categories:
@@ -291,6 +293,8 @@ Key test categories:
 - **RDF* Tests** (18 tests): Provenance tracking, metadata, statistics
 - **OWL Tests** (18 tests): Class hierarchies, property characteristics, restrictions
 - **Inference Tests** (13 tests): RDFS reasoning, transitive closure
+- **SPARQL Gen Tests**: `SparqlQuery` builder, `GraphPattern` variants, `expr_to_sparql()` TLExpr translation
+- **JSON-LD Gen Tests**: `TlJsonLdContext`, `TlJsonLdDocument`, `context_from_expr()`, standard prefix contexts
 
 ## Examples
 
@@ -490,9 +494,9 @@ Apache-2.0
 
 ---
 
-**Status**: Production Ready (v0.1.0-rc.1)
-**Last Updated**: 2026-03-06
-**Tests**: 167/167 passing (100%)
+**Status**: Production Ready (v0.1.0 Stable)
+**Last Updated**: 2026-04-06
+**Tests**: 468/468 passing (100%)
 **Examples**: 9 comprehensive examples
 **Features**: Full SPARQL 1.1 query support (SELECT/ASK/DESCRIBE/CONSTRUCT + OPTIONAL/UNION + aggregates)
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

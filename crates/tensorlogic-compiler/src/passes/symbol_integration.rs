@@ -79,11 +79,11 @@ mod tests {
         let mut symbol_table = SymbolTable::new();
         symbol_table
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
-        symbol_table.bind_variable("x", "Person").unwrap();
+            .expect("unwrap");
+        symbol_table.bind_variable("x", "Person").expect("unwrap");
 
         let mut ctx = CompilerContext::new();
-        sync_context_with_symbol_table(&mut ctx, &symbol_table).unwrap();
+        sync_context_with_symbol_table(&mut ctx, &symbol_table).expect("unwrap");
 
         assert!(ctx.domains.contains_key("Person"));
         assert_eq!(ctx.domains["Person"].cardinality, 100);
@@ -95,15 +95,15 @@ mod tests {
         let mut symbol_table = SymbolTable::new();
         symbol_table
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let pred_info =
             PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()]);
-        symbol_table.add_predicate(pred_info).unwrap();
+        symbol_table.add_predicate(pred_info).expect("unwrap");
 
         let registry = build_signature_registry(&symbol_table);
 
-        let sig = registry.get("knows").unwrap();
+        let sig = registry.get("knows").expect("unwrap");
         assert_eq!(sig.arity, 2);
         assert_eq!(sig.arg_types.len(), 2);
         assert_eq!(sig.arg_types[0].type_name, "Person");
@@ -125,13 +125,13 @@ mod tests {
         let mut symbol_table = SymbolTable::new();
         symbol_table
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
         symbol_table
             .add_domain(DomainInfo::new("Thing", 50))
-            .unwrap();
+            .expect("unwrap");
 
         let mut ctx = CompilerContext::new();
-        import_domains(&mut ctx, &symbol_table).unwrap();
+        import_domains(&mut ctx, &symbol_table).expect("unwrap");
 
         assert_eq!(ctx.domains.len(), 2);
         assert_eq!(ctx.domains["Person"].cardinality, 100);
@@ -145,7 +145,7 @@ mod tests {
         ctx.add_domain("Thing", 50);
 
         let mut symbol_table = SymbolTable::new();
-        export_domains(&ctx, &mut symbol_table).unwrap();
+        export_domains(&ctx, &mut symbol_table).expect("unwrap");
 
         assert_eq!(symbol_table.domains.len(), 2);
         assert_eq!(symbol_table.domains["Person"].cardinality, 100);
@@ -168,10 +168,10 @@ mod tests {
         ctx1.add_domain("Person", 100);
 
         let mut symbol_table = SymbolTable::new();
-        export_domains(&ctx1, &mut symbol_table).unwrap();
+        export_domains(&ctx1, &mut symbol_table).expect("unwrap");
 
         let mut ctx2 = CompilerContext::new();
-        import_domains(&mut ctx2, &symbol_table).unwrap();
+        import_domains(&mut ctx2, &symbol_table).expect("unwrap");
 
         assert_eq!(ctx2.domains["Person"].cardinality, 100);
     }

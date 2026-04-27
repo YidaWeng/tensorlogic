@@ -116,7 +116,10 @@ pub(crate) fn compile_all_different(
     }
 
     // Combine all pairwise constraints with AND
-    let result_expr = constraints.into_iter().reduce(TLExpr::and).unwrap();
+    let result_expr = constraints
+        .into_iter()
+        .reduce(TLExpr::and)
+        .expect("constraints non-empty after pairwise loop");
 
     // Compile the combined constraint
     compile_expr(&result_expr, ctx, graph)
@@ -214,7 +217,7 @@ pub(crate) fn compile_global_cardinality(
         let count_expr = occurrence_indicators
             .into_iter()
             .reduce(|acc, indicator| TLExpr::Add(Box::new(acc), Box::new(indicator)))
-            .unwrap();
+            .expect("occurrence_indicators is non-empty since variables is non-empty");
 
         // Create bounds constraints
         // count ≥ min
@@ -262,7 +265,10 @@ pub(crate) fn compile_global_cardinality(
     }
 
     // Combine all value constraints with AND
-    let combined_constraint = value_constraints.into_iter().reduce(TLExpr::and).unwrap();
+    let combined_constraint = value_constraints
+        .into_iter()
+        .reduce(TLExpr::and)
+        .expect("constraints non-empty after pairwise loop");
 
     // Compile the combined constraint
     compile_expr(&combined_constraint, ctx, graph)
@@ -279,7 +285,7 @@ mod tests {
 
         let variables = vec!["x".to_string()];
 
-        let result = compile_all_different(&variables, &mut ctx, &mut graph).unwrap();
+        let result = compile_all_different(&variables, &mut ctx, &mut graph).expect("unwrap");
 
         // Single variable is trivially different from itself
         assert!(result.axes.is_empty()); // Should be a scalar
@@ -292,7 +298,7 @@ mod tests {
 
         let variables = vec!["x".to_string(), "y".to_string()];
 
-        let _result = compile_all_different(&variables, &mut ctx, &mut graph).unwrap();
+        let _result = compile_all_different(&variables, &mut ctx, &mut graph).expect("unwrap");
 
         // Should create inequality constraint
         assert!(!graph.tensors.is_empty());
@@ -305,7 +311,7 @@ mod tests {
 
         let variables = vec!["x".to_string(), "y".to_string(), "z".to_string()];
 
-        let _result = compile_all_different(&variables, &mut ctx, &mut graph).unwrap();
+        let _result = compile_all_different(&variables, &mut ctx, &mut graph).expect("unwrap");
 
         // Should create 3 pairwise inequality constraints
         // (x≠y) ∧ (y≠z) ∧ (x≠z)
@@ -344,7 +350,7 @@ mod tests {
             &mut ctx,
             &mut graph,
         )
-        .unwrap();
+        .expect("unwrap");
 
         assert!(!graph.tensors.is_empty());
     }
@@ -369,7 +375,7 @@ mod tests {
             &mut ctx,
             &mut graph,
         )
-        .unwrap();
+        .expect("unwrap");
 
         // Should return trivially satisfied constraint
         assert!(result.axes.is_empty());

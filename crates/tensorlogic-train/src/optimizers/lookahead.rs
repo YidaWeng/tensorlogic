@@ -157,15 +157,15 @@ mod tests {
             ..Default::default()
         };
         let inner_optimizer = AdamOptimizer::new(inner_config);
-        let mut optimizer = LookaheadOptimizer::new(inner_optimizer, 0.5, 5).unwrap();
+        let mut optimizer = LookaheadOptimizer::new(inner_optimizer, 0.5, 5).expect("unwrap");
         let mut params = HashMap::new();
         params.insert("w".to_string(), array![[1.0, 2.0]]);
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), array![[0.1, 0.1]]);
         for _ in 0..10 {
-            optimizer.step(&mut params, &grads).unwrap();
+            optimizer.step(&mut params, &grads).expect("unwrap");
         }
-        let w = params.get("w").unwrap();
+        let w = params.get("w").expect("unwrap");
         assert!(w[[0, 0]] < 1.0);
         assert!(w[[0, 1]] < 2.0);
         assert_eq!(optimizer.get_lr(), 0.01);
@@ -197,16 +197,16 @@ mod tests {
             ..Default::default()
         };
         let inner_optimizer = SgdOptimizer::new(inner_config);
-        let mut optimizer = LookaheadOptimizer::new(inner_optimizer, 0.5, 3).unwrap();
+        let mut optimizer = LookaheadOptimizer::new(inner_optimizer, 0.5, 3).expect("unwrap");
         let mut params = HashMap::new();
         params.insert("w".to_string(), array![[1.0]]);
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), array![[0.1]]);
-        let initial_w = params.get("w").unwrap()[[0, 0]];
+        let initial_w = params.get("w").expect("unwrap")[[0, 0]];
         for _ in 0..3 {
-            optimizer.step(&mut params, &grads).unwrap();
+            optimizer.step(&mut params, &grads).expect("unwrap");
         }
-        let w_after_sync = params.get("w").unwrap()[[0, 0]];
+        let w_after_sync = params.get("w").expect("unwrap")[[0, 0]];
         assert_ne!(w_after_sync, initial_w);
         assert!(w_after_sync < initial_w);
     }

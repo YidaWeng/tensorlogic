@@ -6,6 +6,7 @@
 //! - Redundant computation detection
 //! - Operation reordering for better cache locality
 
+use std::cmp::Reverse;
 use std::collections::{HashMap, HashSet};
 use tensorlogic_ir::{EinsumGraph, EinsumNode, OpType};
 
@@ -329,7 +330,7 @@ impl FusionPlanner {
 
         // Sort by estimated speedup (highest first)
         let mut sorted_ops = opportunities.to_vec();
-        sorted_ops.sort_by(|a, b| b.estimated_speedup.cmp(&a.estimated_speedup));
+        sorted_ops.sort_by_key(|b| Reverse(b.estimated_speedup));
 
         for fusion in sorted_ops {
             // Skip if either node already part of a fusion

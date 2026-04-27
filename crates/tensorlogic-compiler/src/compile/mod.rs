@@ -15,6 +15,7 @@ mod implication;
 mod let_binding;
 mod logic_ops;
 mod modal_temporal;
+mod pattern_match;
 mod predicate;
 mod probabilistic;
 mod quantifiers;
@@ -54,6 +55,7 @@ pub(crate) use modal_temporal::{
     compile_always, compile_box, compile_diamond, compile_eventually, compile_next,
     compile_release, compile_strong_release, compile_until, compile_weak_until,
 };
+pub(crate) use pattern_match::{compile_match, compile_symbol_literal};
 pub(crate) use predicate::compile_predicate;
 pub(crate) use probabilistic::{compile_probabilistic_choice, compile_weighted_rule};
 pub(crate) use quantifiers::{
@@ -272,5 +274,9 @@ pub(crate) fn compile_expr(
         // Abductive reasoning
         TLExpr::Abducible { name, cost } => compile_abducible(name, *cost, ctx, graph),
         TLExpr::Explain { formula } => compile_explain(formula, ctx, graph),
+
+        // Pattern matching
+        TLExpr::SymbolLiteral(s) => compile_symbol_literal(s, ctx, graph),
+        TLExpr::Match { scrutinee, arms } => compile_match(scrutinee, arms, ctx, graph),
     }
 }

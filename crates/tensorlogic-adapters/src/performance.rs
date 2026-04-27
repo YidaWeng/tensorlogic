@@ -42,13 +42,13 @@ impl StringInterner {
     /// If the string already exists, returns the existing ID.
     /// Otherwise, allocates a new ID and stores the string.
     pub fn intern(&mut self, s: &str) -> usize {
-        let mut strings = self.strings.write().unwrap();
+        let mut strings = self.strings.write().expect("lock should not be poisoned");
 
         if let Some(&id) = strings.get(s) {
             return id;
         }
 
-        let mut ids = self.ids.write().unwrap();
+        let mut ids = self.ids.write().expect("lock should not be poisoned");
         let id = ids.len();
         ids.push(s.to_string());
         strings.insert(s.to_string(), id);
@@ -57,7 +57,7 @@ impl StringInterner {
 
     /// Resolve an ID back to its string.
     pub fn resolve(&self, id: usize) -> Option<&str> {
-        let ids = self.ids.read().unwrap();
+        let ids = self.ids.read().expect("lock should not be poisoned");
         ids.get(id).map(|s| {
             // SAFETY: We're converting the reference to have a 'static lifetime.
             // This is safe because:
@@ -70,7 +70,7 @@ impl StringInterner {
 
     /// Get the number of unique strings interned.
     pub fn len(&self) -> usize {
-        self.ids.read().unwrap().len()
+        self.ids.read().expect("lock should not be poisoned").len()
     }
 
     /// Check if the interner is empty.
@@ -80,13 +80,19 @@ impl StringInterner {
 
     /// Clear all interned strings.
     pub fn clear(&mut self) {
-        self.strings.write().unwrap().clear();
-        self.ids.write().unwrap().clear();
+        self.strings
+            .write()
+            .expect("lock should not be poisoned")
+            .clear();
+        self.ids
+            .write()
+            .expect("lock should not be poisoned")
+            .clear();
     }
 
     /// Get memory usage statistics.
     pub fn memory_usage(&self) -> MemoryStats {
-        let ids = self.ids.read().unwrap();
+        let ids = self.ids.read().expect("lock should not be poisoned");
         let total_string_bytes: usize = ids.iter().map(|s| s.len()).sum();
         let count = ids.len();
 

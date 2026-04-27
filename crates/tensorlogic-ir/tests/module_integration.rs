@@ -42,7 +42,7 @@ fn test_resolution_and_sequent_on_same_problem() {
     assert!(seq_result.is_some());
 
     // Both approaches find proofs (for different problems)
-    let proof = seq_result.unwrap();
+    let proof = seq_result.expect("unwrap");
     assert!(proof.is_valid());
 }
 
@@ -94,7 +94,7 @@ fn test_multiple_proof_strategies_integration() {
 
         // All strategies should find a proof
         assert!(proof.is_some());
-        assert!(proof.unwrap().is_valid());
+        assert!(proof.expect("unwrap").is_valid());
     }
 }
 
@@ -175,9 +175,9 @@ fn test_logical_expression_to_graph_mapping() {
             q_tensor,
             result_tensor,
         ))
-        .unwrap();
+        .expect("unwrap");
 
-    graph.add_output(result_tensor).unwrap();
+    graph.add_output(result_tensor).expect("unwrap");
 
     // Validate the graph
     assert!(graph.validate().is_ok());
@@ -353,7 +353,7 @@ fn test_proof_guided_graph_optimization() {
     // Create a simple graph that could represent this
     let mut graph = EinsumGraph::new();
     let p_tensor = graph.add_tensor("P");
-    graph.add_output(p_tensor).unwrap();
+    graph.add_output(p_tensor).expect("unwrap");
 
     assert!(graph.validate().is_ok());
 }

@@ -7,7 +7,7 @@
 
 use tensorlogic_ir::EinsumGraph;
 use tensorlogic_trustformers::{
-    AttentionConfig, LocalAttention, Result, SparseAttention, SparseAttentionConfig,
+    AttentionConfig, LocalAttention, Result, SparseAttentionGraph, SparseAttentionGraphConfig,
     SparsePatternType,
 };
 
@@ -18,8 +18,8 @@ fn main() -> Result<()> {
     println!("1. Strided sparse attention (attend every k-th position)...");
 
     let base_config = AttentionConfig::new(512, 8)?;
-    let strided_config = SparseAttentionConfig::strided(base_config.clone(), 4)?;
-    let strided_attn = SparseAttention::new(strided_config)?;
+    let strided_config = SparseAttentionGraphConfig::strided(base_config.clone(), 4)?;
+    let strided_attn = SparseAttentionGraph::new(strided_config)?;
 
     println!("   ✓ Created strided sparse attention with stride=4");
     println!("   ✓ Complexity: O(n²/4) instead of O(n²)");
@@ -35,8 +35,8 @@ fn main() -> Result<()> {
     // Example 2: Local Windowed Attention
     println!("2. Local windowed attention (attend within a window)...");
 
-    let local_config = SparseAttentionConfig::local(base_config.clone(), 128)?;
-    let _local_attn = SparseAttention::new(local_config)?;
+    let local_config = SparseAttentionGraphConfig::local(base_config.clone(), 128)?;
+    let _local_attn = SparseAttentionGraph::new(local_config)?;
 
     println!("   ✓ Created local attention with window_size=128");
     println!("   ✓ Complexity: O(n × w) where w=128");
@@ -54,8 +54,8 @@ fn main() -> Result<()> {
     // Example 3: Block-Sparse Attention
     println!("3. Block-sparse attention (block diagonal pattern)...");
 
-    let block_config = SparseAttentionConfig::block_sparse(base_config.clone(), 64)?;
-    let block_attn = SparseAttention::new(block_config)?;
+    let block_config = SparseAttentionGraphConfig::block_sparse(base_config.clone(), 64)?;
+    let block_attn = SparseAttentionGraph::new(block_config)?;
 
     println!("   ✓ Created block-sparse attention with block_size=64");
     println!("   ✓ Complexity: O(n²/block_size)");
@@ -75,8 +75,8 @@ fn main() -> Result<()> {
     // Global positions: every 8th position
     let global_positions: Vec<usize> = (0..256).step_by(8).collect();
     let global_local_config =
-        SparseAttentionConfig::global_local(base_config.clone(), 64, global_positions)?;
-    let global_local_attn = SparseAttention::new(global_local_config)?;
+        SparseAttentionGraphConfig::global_local(base_config.clone(), 64, global_positions)?;
+    let global_local_attn = SparseAttentionGraph::new(global_local_config)?;
 
     println!("   ✓ Created global-local attention");
     println!("   ✓ Local window: 64");
@@ -106,24 +106,24 @@ fn main() -> Result<()> {
     let patterns = vec![
         (
             "Strided (s=4)",
-            SparseAttentionConfig::strided(base_config.clone(), 4)?,
+            SparseAttentionGraphConfig::strided(base_config.clone(), 4)?,
         ),
         (
             "Local (w=128)",
-            SparseAttentionConfig::local(base_config.clone(), 128)?,
+            SparseAttentionGraphConfig::local(base_config.clone(), 128)?,
         ),
         (
             "Block (b=64)",
-            SparseAttentionConfig::block_sparse(base_config.clone(), 64)?,
+            SparseAttentionGraphConfig::block_sparse(base_config.clone(), 64)?,
         ),
         (
             "Global-Local",
-            SparseAttentionConfig::global_local(base_config.clone(), 64, global_pos)?,
+            SparseAttentionGraphConfig::global_local(base_config.clone(), 64, global_pos)?,
         ),
     ];
 
     for (name, config) in patterns {
-        let attn = SparseAttention::new(config)?;
+        let attn = SparseAttentionGraph::new(config)?;
         let sparsity = attn.sparsity_factor(2048);
         let memory = 2048.0 * 2048.0 * sparsity / 1_000_000.0;
         let complexity = match attn.config.pattern {
@@ -171,19 +171,19 @@ fn main() -> Result<()> {
     let configs = vec![
         (
             "Strided (stride=8)",
-            SparseAttentionConfig::strided(base_config.clone(), 8)?,
+            SparseAttentionGraphConfig::strided(base_config.clone(), 8)?,
         ),
         (
             "Local (window=256)",
-            SparseAttentionConfig::local(base_config.clone(), 256)?,
+            SparseAttentionGraphConfig::local(base_config.clone(), 256)?,
         ),
         (
             "Block Sparse (block=128)",
-            SparseAttentionConfig::block_sparse(base_config.clone(), 128)?,
+            SparseAttentionGraphConfig::block_sparse(base_config.clone(), 128)?,
         ),
         (
             "Global-Local (window=128)",
-            SparseAttentionConfig::global_local(base_config.clone(), 128, global_p)?,
+            SparseAttentionGraphConfig::global_local(base_config.clone(), 128, global_p)?,
         ),
     ];
 

@@ -36,24 +36,24 @@ proptest! {
             TLExpr::pred("a", vec![Term::var("i")]),
             TLExpr::pred("b", vec![Term::var("i")])
         );
-        let graph1 = compile_to_einsum(&expr1).unwrap();
+        let graph1 = compile_to_einsum(&expr1).expect("unwrap");
 
         let mut exec1 = Scirs2Exec::new();
-        exec1.add_tensor("a[a]", Scirs2Exec::from_vec(a_vec.clone(), vec![len]).unwrap());
-        exec1.add_tensor("b[a]", Scirs2Exec::from_vec(b_vec.clone(), vec![len]).unwrap());
-        let result1 = exec1.forward(&graph1).unwrap();
+        exec1.add_tensor("a[a]", Scirs2Exec::from_vec(a_vec.clone(), vec![len]).expect("unwrap"));
+        exec1.add_tensor("b[a]", Scirs2Exec::from_vec(b_vec.clone(), vec![len]).expect("unwrap"));
+        let result1 = exec1.forward(&graph1).expect("unwrap");
 
         // Test b + a
         let expr2 = TLExpr::add(
             TLExpr::pred("b", vec![Term::var("i")]),
             TLExpr::pred("a", vec![Term::var("i")])
         );
-        let graph2 = compile_to_einsum(&expr2).unwrap();
+        let graph2 = compile_to_einsum(&expr2).expect("unwrap");
 
         let mut exec2 = Scirs2Exec::new();
-        exec2.add_tensor("b[a]", Scirs2Exec::from_vec(b_vec, vec![len]).unwrap());
-        exec2.add_tensor("a[a]", Scirs2Exec::from_vec(a_vec, vec![len]).unwrap());
-        let result2 = exec2.forward(&graph2).unwrap();
+        exec2.add_tensor("b[a]", Scirs2Exec::from_vec(b_vec, vec![len]).expect("unwrap"));
+        exec2.add_tensor("a[a]", Scirs2Exec::from_vec(a_vec, vec![len]).expect("unwrap"));
+        let result2 = exec2.forward(&graph2).expect("unwrap");
 
         // Check element-wise equality (with small epsilon for floating point)
         let diff = (&result1 - &result2).mapv(|v| v.abs());

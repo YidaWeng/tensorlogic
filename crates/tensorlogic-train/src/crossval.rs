@@ -104,7 +104,12 @@ impl CrossValidationSplit for KFold {
         // Compute fold boundaries
         let mut boundaries = vec![0];
         for size in &fold_sizes {
-            boundaries.push(boundaries.last().unwrap() + size);
+            boundaries.push(
+                boundaries
+                    .last()
+                    .expect("boundaries is initialized non-empty")
+                    + size,
+            );
         }
 
         // Get validation indices for this fold
@@ -209,7 +214,12 @@ impl StratifiedKFold {
             // Compute fold boundaries
             let mut boundaries = vec![0];
             for size in &fold_sizes {
-                boundaries.push(boundaries.last().unwrap() + size);
+                boundaries.push(
+                    boundaries
+                        .last()
+                        .expect("boundaries is initialized non-empty")
+                        + size,
+                );
             }
 
             // Get validation indices for this fold
@@ -466,10 +476,10 @@ mod tests {
 
     #[test]
     fn test_kfold_basic() {
-        let kfold = KFold::new(3).unwrap();
+        let kfold = KFold::new(3).expect("unwrap");
         assert_eq!(kfold.num_splits(), 3);
 
-        let (train, val) = kfold.get_split(0, 10).unwrap();
+        let (train, val) = kfold.get_split(0, 10).expect("unwrap");
         assert!(!train.is_empty());
         assert!(!val.is_empty());
 
@@ -487,9 +497,9 @@ mod tests {
 
     #[test]
     fn test_kfold_with_shuffle() {
-        let kfold = KFold::new(3).unwrap().with_shuffle(42);
-        let (train1, val1) = kfold.get_split(0, 10).unwrap();
-        let (train2, val2) = kfold.get_split(0, 10).unwrap();
+        let kfold = KFold::new(3).expect("unwrap").with_shuffle(42);
+        let (train1, val1) = kfold.get_split(0, 10).expect("unwrap");
+        let (train2, val2) = kfold.get_split(0, 10).expect("unwrap");
 
         // Same seed should produce same results
         assert_eq!(train1, train2);
@@ -499,19 +509,19 @@ mod tests {
     #[test]
     fn test_kfold_invalid() {
         assert!(KFold::new(1).is_err());
-        let kfold = KFold::new(3).unwrap();
+        let kfold = KFold::new(3).expect("unwrap");
         assert!(kfold.get_split(5, 10).is_err()); // fold out of range
     }
 
     #[test]
     fn test_stratified_kfold() {
-        let skfold = StratifiedKFold::new(3).unwrap();
+        let skfold = StratifiedKFold::new(3).expect("unwrap");
         assert_eq!(skfold.num_splits(), 3);
 
         // Create balanced labels: [0, 0, 0, 1, 1, 1, 2, 2, 2]
         let labels = vec![0, 0, 0, 1, 1, 1, 2, 2, 2];
 
-        let (_train, val) = skfold.get_stratified_split(0, &labels).unwrap();
+        let (_train, val) = skfold.get_stratified_split(0, &labels).expect("unwrap");
 
         // Check that validation set has samples from each class
         let mut val_classes: Vec<usize> = val.iter().map(|&i| labels[i]).collect();
@@ -524,25 +534,25 @@ mod tests {
 
     #[test]
     fn test_time_series_split() {
-        let ts_split = TimeSeriesSplit::new(3).unwrap();
+        let ts_split = TimeSeriesSplit::new(3).expect("unwrap");
         assert_eq!(ts_split.num_splits(), 3);
 
-        let (train, val) = ts_split.get_split(0, 10).unwrap();
+        let (train, val) = ts_split.get_split(0, 10).expect("unwrap");
 
         // Training indices should be before validation indices
         if !train.is_empty() && !val.is_empty() {
-            assert!(train.iter().max().unwrap() < val.iter().min().unwrap());
+            assert!(train.iter().max().expect("unwrap") < val.iter().min().expect("unwrap"));
         }
     }
 
     #[test]
     fn test_time_series_split_with_window() {
         let ts_split = TimeSeriesSplit::new(3)
-            .unwrap()
+            .expect("unwrap")
             .with_min_train_size(2)
             .with_max_train_size(5);
 
-        let (train, val) = ts_split.get_split(1, 20).unwrap();
+        let (train, val) = ts_split.get_split(1, 20).expect("unwrap");
 
         // Training set should respect max size
         assert!(train.len() <= 5);
@@ -551,7 +561,7 @@ mod tests {
 
     #[test]
     fn test_time_series_split_invalid() {
-        let ts_split = TimeSeriesSplit::new(3).unwrap();
+        let ts_split = TimeSeriesSplit::new(3).expect("unwrap");
 
         // Too few samples
         assert!(ts_split.get_split(0, 2).is_err());
@@ -564,13 +574,13 @@ mod tests {
     fn test_leave_one_out() {
         let loo = LeaveOneOut::new();
 
-        let (train, val) = loo.get_split(0, 5).unwrap();
+        let (train, val) = loo.get_split(0, 5).expect("unwrap");
 
         assert_eq!(val.len(), 1);
         assert_eq!(train.len(), 4);
         assert_eq!(val[0], 0);
 
-        let (train, val) = loo.get_split(3, 5).unwrap();
+        let (train, val) = loo.get_split(3, 5).expect("unwrap");
         assert_eq!(val[0], 3);
         assert_eq!(train.len(), 4);
     }
@@ -608,7 +618,7 @@ mod tests {
         assert!(std > 0.0);
 
         // Mean metric
-        let mean_acc = results.mean_metric("accuracy").unwrap();
+        let mean_acc = results.mean_metric("accuracy").expect("unwrap");
         assert!((mean_acc - 0.923333).abs() < 1e-5);
     }
 
@@ -623,14 +633,14 @@ mod tests {
 
     #[test]
     fn test_kfold_all_folds() {
-        let kfold = KFold::new(5).unwrap();
+        let kfold = KFold::new(5).expect("unwrap");
         let n_samples = 20;
 
         let mut all_val_indices = Vec::new();
 
         // Collect validation indices from all folds
         for fold in 0..5 {
-            let (_, val) = kfold.get_split(fold, n_samples).unwrap();
+            let (_, val) = kfold.get_split(fold, n_samples).expect("unwrap");
             all_val_indices.extend(val);
         }
 

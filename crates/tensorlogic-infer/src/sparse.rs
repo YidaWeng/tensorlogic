@@ -688,17 +688,17 @@ mod tests {
         assert_eq!(coo.shape, (3, 3));
         assert_eq!(coo.nnz(), 0);
 
-        coo.add_entry(0, 1, 5.0).unwrap();
-        coo.add_entry(1, 2, 3.0).unwrap();
+        coo.add_entry(0, 1, 5.0).expect("unwrap");
+        coo.add_entry(1, 2, 3.0).expect("unwrap");
         assert_eq!(coo.nnz(), 2);
     }
 
     #[test]
     fn test_sparse_coo_to_csr() {
         let mut coo = SparseCOO::new(3, 3);
-        coo.add_entry(0, 0, 1.0).unwrap();
-        coo.add_entry(0, 2, 2.0).unwrap();
-        coo.add_entry(2, 1, 3.0).unwrap();
+        coo.add_entry(0, 0, 1.0).expect("unwrap");
+        coo.add_entry(0, 2, 2.0).expect("unwrap");
+        coo.add_entry(2, 1, 3.0).expect("unwrap");
 
         let csr = coo.to_csr();
         assert_eq!(csr.shape, (3, 3));
@@ -709,13 +709,13 @@ mod tests {
     #[test]
     fn test_sparse_csr_multiply_dense() {
         let mut coo = SparseCOO::new(2, 3);
-        coo.add_entry(0, 0, 1.0).unwrap();
-        coo.add_entry(0, 2, 2.0).unwrap();
-        coo.add_entry(1, 1, 3.0).unwrap();
+        coo.add_entry(0, 0, 1.0).expect("unwrap");
+        coo.add_entry(0, 2, 2.0).expect("unwrap");
+        coo.add_entry(1, 1, 3.0).expect("unwrap");
 
         let csr = coo.to_csr();
         let vec = vec![1.0, 2.0, 3.0];
-        let result = csr.multiply_dense(&vec).unwrap();
+        let result = csr.multiply_dense(&vec).expect("unwrap");
 
         assert_eq!(result.len(), 2);
         assert!((result[0] - 7.0).abs() < 1e-10); // 1*1 + 2*3 = 7
@@ -725,17 +725,17 @@ mod tests {
     #[test]
     fn test_sparse_csr_row_access() {
         let mut coo = SparseCOO::new(3, 3);
-        coo.add_entry(0, 0, 1.0).unwrap();
-        coo.add_entry(0, 2, 2.0).unwrap();
-        coo.add_entry(1, 1, 3.0).unwrap();
+        coo.add_entry(0, 0, 1.0).expect("unwrap");
+        coo.add_entry(0, 2, 2.0).expect("unwrap");
+        coo.add_entry(1, 1, 3.0).expect("unwrap");
 
         let csr = coo.to_csr();
-        let row0 = csr.row(0).unwrap();
+        let row0 = csr.row(0).expect("unwrap");
         assert_eq!(row0.len(), 2);
         assert_eq!(row0[0], (0, 1.0));
         assert_eq!(row0[1], (2, 2.0));
 
-        let row1 = csr.row(1).unwrap();
+        let row1 = csr.row(1).expect("unwrap");
         assert_eq!(row1.len(), 1);
         assert_eq!(row1[0], (1, 3.0));
     }
@@ -743,9 +743,9 @@ mod tests {
     #[test]
     fn test_sparse_csr_transpose() {
         let mut coo = SparseCOO::new(2, 3);
-        coo.add_entry(0, 0, 1.0).unwrap();
-        coo.add_entry(0, 2, 2.0).unwrap();
-        coo.add_entry(1, 1, 3.0).unwrap();
+        coo.add_entry(0, 0, 1.0).expect("unwrap");
+        coo.add_entry(0, 2, 2.0).expect("unwrap");
+        coo.add_entry(1, 1, 3.0).expect("unwrap");
 
         let csr = coo.to_csr();
         let csc = csr.transpose();
@@ -757,8 +757,8 @@ mod tests {
     #[test]
     fn test_sparsity_ratio() {
         let mut coo = SparseCOO::new(10, 10);
-        coo.add_entry(0, 0, 1.0).unwrap();
-        coo.add_entry(5, 5, 2.0).unwrap();
+        coo.add_entry(0, 0, 1.0).expect("unwrap");
+        coo.add_entry(5, 5, 2.0).expect("unwrap");
 
         let sparsity = coo.sparsity_ratio();
         assert!((sparsity - 0.98).abs() < 0.01); // 98% sparse
@@ -767,10 +767,10 @@ mod tests {
     #[test]
     fn test_sparse_tensor_builder() {
         let mut builder = SparseTensor::builder(vec![3, 3], SparseFormat::CSR);
-        builder.add_entry(vec![0, 0], 1.0).unwrap();
-        builder.add_entry(vec![1, 2], 2.0).unwrap();
+        builder.add_entry(vec![0, 0], 1.0).expect("unwrap");
+        builder.add_entry(vec![1, 2], 2.0).expect("unwrap");
 
-        let sparse = builder.build().unwrap();
+        let sparse = builder.build().expect("unwrap");
         assert_eq!(sparse.format(), SparseFormat::CSR);
         assert_eq!(sparse.nnz(), 2);
     }
@@ -778,12 +778,12 @@ mod tests {
     #[test]
     fn test_sparse_tensor_conversion() {
         let mut builder = SparseTensor::builder(vec![3, 3], SparseFormat::COO);
-        builder.add_entry(vec![0, 0], 1.0).unwrap();
-        builder.add_entry(vec![1, 2], 2.0).unwrap();
+        builder.add_entry(vec![0, 0], 1.0).expect("unwrap");
+        builder.add_entry(vec![1, 2], 2.0).expect("unwrap");
 
-        let coo = builder.build().unwrap();
-        let csr = coo.to_csr().unwrap();
-        let csc = csr.to_csc().unwrap();
+        let coo = builder.build().expect("unwrap");
+        let csr = coo.to_csr().expect("unwrap");
+        let csc = csr.to_csc().expect("unwrap");
 
         assert_eq!(coo.nnz(), 2);
         assert_eq!(csr.nnz(), 2);
@@ -804,10 +804,10 @@ mod tests {
         let data = vec![0.0, 1.0, 0.0, 0.0, 2.0, 0.0];
         let shape = vec![2, 3];
 
-        let sparse = to_sparse_if_beneficial(&data, shape, 1e-10, 0.5).unwrap();
+        let sparse = to_sparse_if_beneficial(&data, shape, 1e-10, 0.5).expect("unwrap");
         assert!(sparse.is_some());
 
-        let sparse = sparse.unwrap();
+        let sparse = sparse.expect("unwrap");
         assert_eq!(sparse.nnz(), 2);
         assert!(sparse.sparsity_ratio() > 0.5);
     }
@@ -827,10 +827,10 @@ mod tests {
     #[test]
     fn test_sparse_memory_usage() {
         let mut builder = SparseTensor::builder(vec![100, 100], SparseFormat::CSR);
-        builder.add_entry(vec![0, 0], 1.0).unwrap();
-        builder.add_entry(vec![50, 50], 2.0).unwrap();
+        builder.add_entry(vec![0, 0], 1.0).expect("unwrap");
+        builder.add_entry(vec![50, 50], 2.0).expect("unwrap");
 
-        let sparse = builder.build().unwrap();
+        let sparse = builder.build().expect("unwrap");
         let memory = sparse.memory_bytes();
 
         // Should be much less than dense 100x100 matrix

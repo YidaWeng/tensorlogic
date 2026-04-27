@@ -1,6 +1,6 @@
 //! # Tensorlogic-Trustformers
 //!
-//! **Version**: 0.1.0-rc.1 | **Status**: Production Ready
+//! **Version**: 0.1.0 | **Status**: Production Ready
 //!
 //! Transform transformer architectures into TensorLogic IR using einsum operations.
 //!
@@ -53,8 +53,8 @@
 //! use tensorlogic_ir::EinsumGraph;
 //!
 //! // Configure self-attention
-//! let attn_config = AttentionConfig::new(512, 8).unwrap();
-//! let self_attn = SelfAttention::new(attn_config.clone()).unwrap();
+//! let attn_config = AttentionConfig::new(512, 8).expect("unwrap");
+//! let self_attn = SelfAttention::new(attn_config.clone()).expect("unwrap");
 //!
 //! // Build einsum graph
 //! let mut graph = EinsumGraph::new();
@@ -62,21 +62,21 @@
 //! graph.add_tensor("K");
 //! graph.add_tensor("V");
 //!
-//! let outputs = self_attn.build_attention_graph(&mut graph).unwrap();
+//! let outputs = self_attn.build_attention_graph(&mut graph).expect("unwrap");
 //!
 //! // Configure multi-head attention
-//! let mha = MultiHeadAttention::new(attn_config).unwrap();
+//! let mha = MultiHeadAttention::new(attn_config).expect("unwrap");
 //! let mut mha_graph = EinsumGraph::new();
 //! mha_graph.add_tensor("Q");
 //! mha_graph.add_tensor("K");
 //! mha_graph.add_tensor("V");
 //!
-//! let mha_outputs = mha.build_mha_graph(&mut mha_graph).unwrap();
+//! let mha_outputs = mha.build_mha_graph(&mut mha_graph).expect("unwrap");
 //!
 //! // Configure feed-forward network
 //! let ffn_config = FeedForwardConfig::new(512, 2048)
 //!     .with_activation("gelu");
-//! let ffn = FeedForward::new(ffn_config).unwrap();
+//! let ffn = FeedForward::new(ffn_config).expect("unwrap");
 //!
 //! let mut ffn_graph = EinsumGraph::new();
 //! ffn_graph.add_tensor("x");
@@ -85,7 +85,7 @@
 //! ffn_graph.add_tensor("W2");
 //! ffn_graph.add_tensor("b2");
 //!
-//! let ffn_outputs = ffn.build_ffn_graph(&mut ffn_graph).unwrap();
+//! let ffn_outputs = ffn.build_ffn_graph(&mut ffn_graph).expect("unwrap");
 //! ```
 //!
 //! ## Integration with TensorLogic
@@ -120,12 +120,16 @@ pub mod layers;
 pub mod lora;
 pub mod moe;
 pub mod normalization;
+pub mod normalization_variants;
 pub mod patterns;
 pub mod position;
 pub mod presets;
+pub mod quantization;
 pub mod rule_attention;
+pub mod rule_guided_decoder;
 pub mod sliding_window;
 pub mod sparse_attention;
+pub mod speculative_decoding;
 pub mod stacks;
 pub mod trustformers_integration;
 pub mod utils;
@@ -144,11 +148,21 @@ pub use flash_attention::{
     FlashAttentionV2Config,
 };
 pub use gqa::{GQAConfig, GQAPreset, GQAStats, GroupedQueryAttention};
-pub use kv_cache::{CacheStats, KVCache, KVCacheConfig};
+pub use kv_cache::{
+    CacheStats, CachedAttention, CachedAttentionError, InferenceStats, KVCache, KVCacheConfig,
+    KvCache, KvCacheError, PositionError, RelativePositionBias, RotaryPositionEmbedding,
+};
 pub use layers::{DecoderLayer, DecoderLayerConfig, EncoderLayer, EncoderLayerConfig};
 pub use lora::{LoRAAttention, LoRAConfig, LoRALinear, LoRAPreset, LoRAStats};
-pub use moe::{MoeConfig, MoeLayer, MoePreset, MoeStats, RouterType};
+pub use moe::{
+    combined_aux_loss, importance_loss, load_loss, BatchGatingStats, Expert, GatingDecision,
+    LinearExpert, MoELayer, MoeConfig, MoeError, MoeLayer, MoePreset, MoeStats, RouterType,
+    TopKGate,
+};
 pub use normalization::{LayerNorm, LayerNormConfig, RMSNorm};
+pub use normalization_variants::{
+    BatchNorm, GroupNorm, InstanceNorm, NormStats, NormalizationError, RmsNorm, WeightNorm,
+};
 pub use patterns::{
     AttentionMask, BlockSparseMask, CausalMask, GlobalLocalMask, LocalMask, RuleBasedMask,
     RulePattern, StridedMask,
@@ -158,14 +172,26 @@ pub use position::{
     RelativePositionEncoding, RotaryPositionEncoding, SinusoidalPositionEncoding,
 };
 pub use presets::ModelPreset;
+pub use quantization::{calibrate_linear, QuantizationError, QuantizedLinear};
 pub use rule_attention::{
     RuleAttentionConfig, RuleAttentionType, RuleBasedAttention, StructuredAttention,
+};
+pub use rule_guided_decoder::{
+    ConstraintVerdict, HardMask, LogitMasker, RuleConstraint, RuleGuidedBeamSearch,
+    RuleGuidedError, RuleGuidedResult, SoftPenaltyMask, TokenId, TokenSymbolMapper,
 };
 pub use sliding_window::{
     SlidingWindowAttention, SlidingWindowConfig, SlidingWindowPreset, SlidingWindowStats,
 };
 pub use sparse_attention::{
-    LocalAttention, SparseAttention, SparseAttentionConfig, SparsePatternType,
+    build_mask, LocalAttention, SparseAttention, SparseAttentionConfig, SparseAttentionError,
+    SparseAttentionGraph, SparseAttentionGraphConfig, SparsePatternType,
+};
+pub use speculative_decoding::{
+    DraftModel, DraftProposal, FixedDistDraftModel, FixedDistTargetModel, LogProb, MockDraftModel,
+    MockTargetModel, SpecRng, SpeculativeDecoder, SpeculativeDecoderConfig,
+    SpeculativeDecodingError, SpeculativeDecodingResult, SpeculativeMetrics, TargetModel,
+    TargetScores,
 };
 pub use stacks::{DecoderStack, DecoderStackConfig, EncoderStack, EncoderStackConfig};
 pub use trustformers_integration::{
@@ -196,30 +222,30 @@ mod tests {
 
     #[test]
     fn test_end_to_end_self_attention() {
-        let config = AttentionConfig::new(512, 8).unwrap();
-        let attn = SelfAttention::new(config).unwrap();
+        let config = AttentionConfig::new(512, 8).expect("unwrap");
+        let attn = SelfAttention::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("Q");
         graph.add_tensor("K");
         graph.add_tensor("V");
 
-        let outputs = attn.build_attention_graph(&mut graph).unwrap();
+        let outputs = attn.build_attention_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(graph.validate().is_ok());
     }
 
     #[test]
     fn test_end_to_end_multi_head_attention() {
-        let config = AttentionConfig::new(512, 8).unwrap();
-        let mha = MultiHeadAttention::new(config).unwrap();
+        let config = AttentionConfig::new(512, 8).expect("unwrap");
+        let mha = MultiHeadAttention::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("Q");
         graph.add_tensor("K");
         graph.add_tensor("V");
 
-        let outputs = mha.build_mha_graph(&mut graph).unwrap();
+        let outputs = mha.build_mha_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(graph.validate().is_ok());
     }
@@ -227,7 +253,7 @@ mod tests {
     #[test]
     fn test_end_to_end_ffn() {
         let config = FeedForwardConfig::new(512, 2048);
-        let ffn = FeedForward::new(config).unwrap();
+        let ffn = FeedForward::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("x");
@@ -236,7 +262,7 @@ mod tests {
         graph.add_tensor("W2");
         graph.add_tensor("b2");
 
-        let outputs = ffn.build_ffn_graph(&mut graph).unwrap();
+        let outputs = ffn.build_ffn_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(graph.validate().is_ok());
     }
@@ -244,7 +270,7 @@ mod tests {
     #[test]
     fn test_end_to_end_gated_ffn() {
         let config = FeedForwardConfig::new(512, 2048);
-        let glu = GatedFeedForward::new(config).unwrap();
+        let glu = GatedFeedForward::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("x");
@@ -252,14 +278,14 @@ mod tests {
         graph.add_tensor("W_value");
         graph.add_tensor("W_out");
 
-        let outputs = glu.build_glu_graph(&mut graph).unwrap();
+        let outputs = glu.build_glu_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(graph.validate().is_ok());
     }
 
     #[test]
     fn test_transformer_layer_config() {
-        let config = TransformerLayerConfig::new(512, 8, 2048).unwrap();
+        let config = TransformerLayerConfig::new(512, 8, 2048).expect("unwrap");
         assert_eq!(config.attention.d_model, 512);
         assert_eq!(config.attention.n_heads, 8);
         assert_eq!(config.feed_forward.d_ff, 2048);
@@ -269,7 +295,7 @@ mod tests {
     #[test]
     fn test_config_builder_pattern() {
         let config = AttentionConfig::new(512, 8)
-            .unwrap()
+            .expect("unwrap")
             .with_causal(true)
             .with_dropout(0.1);
 

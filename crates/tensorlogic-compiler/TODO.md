@@ -1,20 +1,9 @@
-# RC.1 Release Status
+# TensorLogic Compiler — TODO
 
-**Version**: 0.1.0-rc.1
-**Status**: Production Ready
-**Release Date**: 2026-03-06
+**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
-This crate is part of the TensorLogic v0.1.0-rc.1 release with:
-- Zero compiler warnings
-- 100% test pass rate
-- Complete documentation
-- Production-ready quality
-
-See main [TODO.md](../../TODO.md) for overall project status.
-
----
-
-# tensorlogic-compiler TODO
+Compiler that lowers logical expressions into optimized einsum graphs.
 
 ## Completed
 
@@ -201,10 +190,10 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Detailed error creation with context (create_detailed_error)
   - [x] 6 new tests for pretty-printing functionality
   - [ ] Show source location in TLExpr (requires TLExpr metadata extension)
-- [x] Error recovery - PARTIAL
+- [x] Error recovery - EXPRESSION-LEVEL (tolerant compilation mode)
   - [x] DiagnosticBuilder collects multiple errors
   - [x] Continue validation after non-fatal warnings
-  - [ ] Continue compilation after non-fatal errors
+  - [x] Continue compilation after non-fatal errors (via `error_recovery::TolerantCompiler`)
 - [x] Validation passes - ENHANCED
   - [x] Pre-compilation validation (validate_expression function)
     - [x] Arity validation
@@ -266,6 +255,13 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Measure compilation time (compilation_performance.rs)
   - [x] Track graph size vs expression complexity
   - [x] Compare optimization passes
+- [x] **Reference Comparison Tests** (tests/reference_comparisons.rs) ✅ NEW (2026-03-29)
+  - [x] AND/OR/NOT/IMPLICATION vs analytical formulas (all 6 strategies)
+  - [x] De Morgan's Laws numerical verification
+  - [x] Distributive and Absorption Laws
+  - [x] Cross-strategy consistency at Boolean inputs
+  - [x] Łukasiewicz triangle inequality
+  - [x] 35 tests passing
 
 ### Tooling
 - [x] Visualization
@@ -288,7 +284,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Debug mode with detailed output
   - [x] Enhanced features: REPL, batch processing, watch mode, shell completion
 
-## Advanced Logic - ALL COMPLETE (v0.1.0-rc.1)
+## Advanced Logic - ALL COMPLETE (v0.1.0)
 
 ### Counting Quantifiers
 - [x] CountingExists (exists>=k x. P(x)) - at least k elements satisfy P
@@ -393,7 +389,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [x] FuzzyImplication operators (Kleene-Dienes, Godel, Reichenbach, Lukasiewicz, Goguen, Rescher)
 - [x] 6 comprehensive tests (all passing)
 
-## Performance - ALL COMPLETE (v0.1.0-rc.1)
+## Performance - ALL COMPLETE (v0.1.0)
 
 ### Multi-threaded Compilation
 - [x] ParallelCompiler with configurable parallelization strategy
@@ -421,9 +417,9 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [x] 6 comprehensive tests
 
 ### JIT Compilation
-- [ ] JIT compilation for hot paths (not yet implemented)
+- [x] JIT compilation for hot paths — call-count-based promotion with pre-optimized graph caching
 
-## Interoperability - ALL COMPLETE (v0.1.0-rc.1)
+## Interoperability - ALL COMPLETE (v0.1.0)
 
 ### Export to ONNX
 - [x] OnnxExportConfig with DataType support (Float32, Float64, Int32, Int64, Bool)
@@ -487,14 +483,77 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [ ] Next (X) temporal operator (requires backend shift operations)
 - [ ] Until (U) temporal operator (requires backend scan operations)
 - [ ] Advanced temporal operators (Release, WeakUntil, StrongRelease)
-- [ ] JIT compilation for hot paths
+- [x] JIT compilation for hot paths — call-count-based promotion with pre-optimized graph caching
 - [ ] Source location tracking in TLExpr (requires TLExpr metadata extension)
-- [ ] Continue compilation after non-fatal errors (partial error recovery)
+- [x] Continue compilation after non-fatal errors (partial error recovery) — completed 2026-04-15 via `error_recovery/` module
+
+## v0.1.4 Enhancements (2026-03-30)
+
+- [x] **Compilation Cache** (`cache.rs`): `LruCompilationCache` (LRU eviction via VecDeque, configurable capacity), `ExprFingerprint` (Debug-derived structural hash), `CachingCompiler` wrapper with `compile()`, `compile_batch()`, `invalidate()`. `CacheStats` with `hit_rate()`. 20 new tests.
+
+## v0.1.5 Enhancements (2026-03-30)
+
+- [x] **Expression Canonicalization** (`optimize/canonical.rs`): `Canonicalizer` (double-neg elimination, nested AND/OR flattening, commutative sorting via `canonical_order_key()`), `CanonicalStats` tracking. Handles all 60+ TLExpr variants recursively. 20 new tests.
+
+## v0.1.7 Enhancements (2026-03-30)
+
+- [x] **Compilation Profiling** (`profiling.rs`): `CompilationProfiler` with `begin_phase`/`end_phase`/`finish`, `ProfileReport` (slowest/fastest phase, percentages, compilation speed), `ProfileEntry` with throughput, `profile_phase()` convenience function. 18 new tests.
+
+## v0.1.10 Enhancements (2026-03-31)
+
+- [x] **RewriteRule Trait** (`rewrite.rs`): `RewriteRule` trait with `name()`, `description()`, `applies_to()`, and `apply()` methods enabling pluggable term-rewriting rules over `TLExpr`
+- [x] **RewriteEngine** (`rewrite.rs`): `RewriteEngine` with configurable rule sets and three application strategies — exhaustive (apply all matching rules), fixed-point (repeat until no change), single-pass (one traversal)
+- [x] **5 Built-in Rewrite Rules** (`rewrite.rs`): `DoubleNegationRule` (NOT(NOT(x)) → x), `IdentityAndRule` (AND(x, TRUE) → x), `IdentityOrRule` (OR(x, FALSE) → x), `DeMorganAndRule` (NOT(AND(x,y)) → OR(NOT(x),NOT(y))), `DeMorganOrRule` (NOT(OR(x,y)) → AND(NOT(x),NOT(y)))
+- [x] **RewriteStats** (`rewrite.rs`): `RewriteStats` tracking per-rule application counts, total rewrite passes performed, and total reductions achieved across the full expression tree
+
+## v0.1.12
+
+- [x] **DeadCodeEliminator** (`dead_code.rs`): `DeadCodeEliminator` struct driving multi-pass DCE over `TLExpr` trees, removing structurally unreachable sub-expressions and constant-foldable branches until a fixed point is reached or `DceConfig::max_passes` is exceeded.
+- [x] **DceStats** (`dead_code.rs`): `DceStats` recording the number of eliminated nodes, passes completed, and whether the process converged, enabling callers to inspect DCE effectiveness.
+- [x] **DceConfig** (`dead_code.rs`): `DceConfig` controlling maximum pass count and enabling/disabling individual fold categories (`fold_constants`, `eliminate_unused_lets`) for fine-grained DCE tuning.
+- [x] **fold_and / fold_or / fold_not / fold_if** (`dead_code.rs`): constant-folding helpers propagating literal `TRUE`/`FALSE` through `AND`, `OR`, `NOT`, and `If` expressions (e.g. `AND(FALSE, x) → FALSE`, `IF(TRUE, t, _) → t`).
+- [x] **Unused Let elimination** (`dead_code.rs`): detects `Let` bindings whose variable does not appear free in the body and removes them, preventing dead-binding accumulation in generated IR.
+
+## v0.1.13
+
+- [x] **ExprComplexity** (`complexity.rs`): Recursive structural complexity scoring traversing all 55+ `TLExpr` variants, computing depth, node count, quantifier nesting, and weighted complexity score with `is_simple()` threshold check
+- [x] **ComplexityThresholds** (`complexity.rs`): Configurable warning/error/critical complexity limits with `check()` returning the highest triggered severity level
+- [x] **ComplexityWarning** (`complexity.rs`): Severity-tagged warnings (`Warning`/`Error`/`Critical`) with human-readable messages and threshold context for compiler diagnostics
+- [x] **ComplexityComparison** (`complexity.rs`): Diff two expressions' complexity metrics producing delta scores, depth changes, and node-count differences with `is_more_complex()` / `is_simpler()` queries
+- [x] **BatchComplexityStats** (`complexity.rs`): Aggregate complexity statistics over expression batches — min/max/mean/median complexity, count above threshold, distribution summary
+
+## v0.1.16
+
+- [x] **LetInliner** (`inline.rs`): Capture-avoiding substitution pass that inlines `Let`-bound variables into their body expressions, driven by `InlineConfig` and producing `InlineStats`
+- [x] **InlineConfig** (`inline.rs`): Builder-style configuration controlling `max_depth` for recursive inlining, `inline_once` (only inline single-use bindings), `always_inline` (force inline regardless of use count), and `size_threshold` (skip inlining when the bound expression exceeds the node-count limit)
+- [x] **InlineStats** (`inline.rs`): Collects `bindings_inlined` count, total `substitutions_performed`, and a `converged` flag indicating whether the fixed-point was reached within the configured pass limit
+- [x] **count_free_occurrences** (`inline.rs`): Recursive function counting the number of free occurrences of a named variable in a `TLExpr` tree, respecting `Let`/`Lambda` binding scopes to avoid counting shadowed uses
+- [x] **capture-avoiding substitute** (`inline.rs`): Core alpha-renaming-based substitution function that replaces free occurrences of a variable with an expression, renaming binders to fresh names when substitution would otherwise capture a free variable in the replacement
+
+## v0.1.15
+
+- [x] **ConstantPropagator** (`const_prop.rs`): Bottom-up constant-folding pass over `TLExpr` trees; traverses all variants and substitutes fully-constant sub-expressions with their evaluated `Num` or boolean literal results until a fixed point is reached or `ConstPropConfig::max_passes` is exceeded
+- [x] **ConstPropStats** (`const_prop.rs`): Collects per-pass and cumulative counts of folded nodes, total passes performed, and a `converged` flag indicating whether the fixed point was reached within the configured pass limit
+- [x] **ConstPropConfig** (`const_prop.rs`): Builder-style configuration controlling `max_passes`, and per-category fold toggles: `fold_arithmetic` (Add/Sub/Mul/Div/Pow), `fold_comparison` (Eq/Lt/Gt/Le/Ge), `fold_boolean` (AND/OR/NOT with short-circuit)
+- [x] **Arithmetic folding** (`const_prop.rs`): Folds `Add`, `Sub`, `Mul`, `Div`, `Pow` nodes whose both operands reduce to `Num` literals; division by zero produces `NaN`-literal rather than panicking
+- [x] **Comparison folding** (`const_prop.rs`): Evaluates `Eq`, `Lt`, `Gt`, `Le`, `Ge` between constant `Num` operands, replacing the comparison node with `TRUE` or `FALSE` `Atom` literals
+- [x] **Boolean folding** (`const_prop.rs`): Short-circuit folds `AND(FALSE, _) → FALSE`, `AND(TRUE, x) → x`, `OR(TRUE, _) → TRUE`, `OR(FALSE, x) → x`, `NOT(TRUE) → FALSE`, `NOT(FALSE) → TRUE`
+
+## v0.1.17
+
+- [x] **CompilerPipeline** (`pipeline.rs`): Composable pass chain driving all compilation phases end-to-end, from parsing through optimisation to code generation, with configurable pass selection via `CompilerPipelineConfig`
+- [x] **CompilerPipelineConfig** (`pipeline.rs`): Builder-style configuration with feature-gate toggles for each pass category (scope analysis, type checking, DCE, CSE, constant propagation, inlining, rewriting), enabling minimal or maximal pipeline configurations
+- [x] **CompilerPassOrder** (`pipeline.rs`): Enum encoding the canonical ordering of compilation passes; supports dependency-aware ordering to prevent applying downstream passes before their prerequisites
+- [x] **CompilerPassStats** (`pipeline.rs`): Per-pass timing (wall-clock nanoseconds) and nodes-affected counters reported after each pass completes, enabling fine-grained profiling of individual pipeline stages
+- [x] **CompilerPipelineStats** (`pipeline.rs`): Aggregate pipeline-level metrics combining per-pass `CompilerPassStats`, total compilation time, overall nodes eliminated, and a `slowest_pass()` helper
+- [x] **PassBenchmark** (`pipeline.rs`): Micro-benchmark harness for individual passes — runs a pass N times, reports mean/min/max wall-clock duration, and flags regressions against a configurable baseline threshold
+- [x] **`inline.rs` sub-module refactor**: `LetInliner` and helpers extracted into a focused `inline/` sub-directory; `inline/mod.rs` re-exports the public API unchanged for backward compatibility
+- [x] **`augmentation.rs` sub-module refactor**: `AugmentationPipeline` and transform helpers extracted into `augmentation/` sub-directory with focused modules per transform family (noise, crop, mix, normalize)
 
 ---
 
-**Total Items:** 103 tasks (all implemented) + future enhancements
-**Completion:** 103/103 (100%) - FULLY COMPLETE as of v0.1.0-rc.1 (2026-03-06)
+**Total Items:** 111 tasks (all implemented) + future enhancements
+**Completion:** 103/103 (100%) - FULLY COMPLETE as of v0.1.0 (2026-03-06)
 
 **Production Ready Features:**
 - Core Compilation: Predicates, AND, OR, NOT, quantifiers, implications
@@ -514,5 +573,29 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - Performance: Parallel compilation, Incremental compilation, Caching
 - Analysis: Profiling, Dataflow, Contraction optimization, Loop fusion, Reachability
 
-**Test Coverage:** 437 tests (100% passing)
+**Test Coverage:** 862 tests (100% passing)
 **Build Status:** Zero errors, zero warnings (strict clippy compliance)
+
+## v0.1.19 (2026-04-05)
+
+- [x] **Partial Evaluation / Specialization** (`partial_eval.rs`): `PEEnv` binding map from variable names to `PEValue` (Constant, Bool, Symbolic); `PEConfig` with toggles for arithmetic folding, boolean folding, branch pruning, let-inlining, and configurable max depth/inline threshold; `PEStats` tracking nodes visited, reduced, and inlined; `partially_evaluate()` single-pass reducer; `specialize()` convenience wrapper binding a named argument; `specialize_batch()` multi-argument specialization; handles all arithmetic/logic/fuzzy/temporal operators with short-circuit branch pruning (IfThenElse under known condition) and let-inlining at or below the inline-size threshold.
+
+## v0.1.18 (2026-04-05)
+
+- [x] **Symbolic Differentiation** (`symbolic_diff.rs`): `differentiate()` computes symbolic derivatives of `TLExpr` with respect to a named variable; `jacobian()` builds the full Jacobian vector for a list of output expressions; `simplify_derivative()` applies algebraic simplification rules (zero/identity elimination, constant folding); `DiffConfig` controls simplification depth and intermediate caching; `DiffResult` carries the differentiated expression plus a `simplified` flag. Supports all arithmetic operators (`Add`, `Sub`, `Mul`, `Div`, `Pow`, `Neg`), logical operators (`And`, `Or`, `Not`, `Implies`), fuzzy operators (`TNorm`, `TCoNorm`), temporal operators (`Eventually`, `Always`, `Until`), and probabilistic expressions.
+
+## v0.1.21 (2026-04-05)
+
+- [x] **Bytecode VM** (`bytecode.rs`): Added bytecode.rs — stack-based bytecode VM: 40-instruction set (arithmetic, comparison, boolean, fuzzy, control flow, variables), `BytecodeProgram` with forward-jump patching, `compile()`/`execute()`/`execute_with_stats()`; short-circuit `And`/`Or` via `JumpIfFalse`/`JumpIfTrue`.
+
+## v0.1.20 (2026-04-05)
+
+- [x] **Type Inference** (`type_infer.rs`): `TLType` enum covering `Bool`, `Numeric`, `Relation(arity)`, `Set`, `Fuzzy`, `Probabilistic`, `Var(name)`, and `Unknown`; unification-based Hindley-Milner-lite inference engine; `Substitution` map with occurs-check to prevent infinite types; `TypeEnv` for binding variable names to `TLType`; `annotate()` building fully type-annotated expression trees from bare `TLExpr` inputs; `unify()` with `UnificationError` reporting mismatched types.
+
+## v0.2.0 / Future Work
+
+- Incremental re-compilation (hash-based graph cache).
+- Alternative backends: CUDA codegen, WASM target.
+- Cost-model-driven optimization pass scheduling.
+- Symbolic differentiation caching across runs.
+- [x] ~~Split `src/dead_code.rs` (1,614 L), `src/partial_eval.rs` (1,789 L), and `src/symbolic_diff.rs` (1,524 L) into directory modules.~~ (completed 2026-04-15)

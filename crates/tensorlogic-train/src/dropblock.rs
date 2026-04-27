@@ -38,22 +38,22 @@
 //! use scirs2_core::random::{StdRng, SeedableRng};
 //!
 //! // Create DropBlock with block_size=3, drop_prob=0.1
-//! let dropblock = DropBlock::new(3, 0.1).unwrap();
+//! let dropblock = DropBlock::new(3, 0.1).expect("unwrap");
 //!
 //! let mut rng = StdRng::seed_from_u64(42);
 //! let activations = Array2::ones((10, 10));
 //!
 //! // Training: drop blocks
-//! let dropped = dropblock.apply(&activations.view(), true, &mut rng).unwrap();
+//! let dropped = dropblock.apply(&activations.view(), true, &mut rng).expect("unwrap");
 //!
 //! // Inference: no dropping
-//! let output = dropblock.apply(&activations.view(), false, &mut rng).unwrap();
+//! let output = dropblock.apply(&activations.view(), false, &mut rng).expect("unwrap");
 //! assert_eq!(output, activations);
 //! ```
 
 use crate::{TrainError, TrainResult};
 use scirs2_core::ndarray::{Array2, ArrayView2};
-use scirs2_core::random::{Rng, StdRng};
+use scirs2_core::random::{RngExt, StdRng};
 
 /// DropBlock regularization.
 ///
@@ -86,7 +86,7 @@ impl DropBlock {
     /// ```rust
     /// use tensorlogic_train::DropBlock;
     ///
-    /// let dropblock = DropBlock::new(7, 0.1).unwrap();
+    /// let dropblock = DropBlock::new(7, 0.1).expect("unwrap");
     /// ```
     pub fn new(block_size: usize, drop_prob: f64) -> TrainResult<Self> {
         if block_size == 0 {
@@ -273,7 +273,7 @@ mod tests {
 
     #[test]
     fn test_dropblock_creation() {
-        let db = DropBlock::new(7, 0.1).unwrap();
+        let db = DropBlock::new(7, 0.1).expect("unwrap");
         assert_eq!(db.block_size, 7);
         assert_eq!(db.drop_prob, 0.1);
         assert_eq!(db.keep_prob, 0.9);
@@ -294,9 +294,9 @@ mod tests {
 
     #[test]
     fn test_dropblock_set_drop_prob() {
-        let mut db = DropBlock::new(7, 0.1).unwrap();
+        let mut db = DropBlock::new(7, 0.1).expect("unwrap");
 
-        db.set_drop_prob(0.2).unwrap();
+        db.set_drop_prob(0.2).expect("unwrap");
         assert_eq!(db.drop_prob, 0.2);
         assert_eq!(db.keep_prob, 0.8);
 
@@ -306,11 +306,13 @@ mod tests {
 
     #[test]
     fn test_dropblock_inference_mode() {
-        let db = DropBlock::new(3, 0.5).unwrap();
+        let db = DropBlock::new(3, 0.5).expect("unwrap");
         let mut rng = StdRng::seed_from_u64(42);
 
         let activations = Array2::ones((10, 10));
-        let output = db.apply(&activations.view(), false, &mut rng).unwrap();
+        let output = db
+            .apply(&activations.view(), false, &mut rng)
+            .expect("unwrap");
 
         // In inference mode, output should be unchanged
         assert_eq!(output, activations);
@@ -318,11 +320,13 @@ mod tests {
 
     #[test]
     fn test_dropblock_zero_prob() {
-        let db = DropBlock::new(3, 0.0).unwrap();
+        let db = DropBlock::new(3, 0.0).expect("unwrap");
         let mut rng = StdRng::seed_from_u64(42);
 
         let activations = Array2::ones((10, 10));
-        let output = db.apply(&activations.view(), true, &mut rng).unwrap();
+        let output = db
+            .apply(&activations.view(), true, &mut rng)
+            .expect("unwrap");
 
         // With zero probability, no blocks should be dropped
         assert_eq!(output, activations);
@@ -330,11 +334,13 @@ mod tests {
 
     #[test]
     fn test_dropblock_training_mode() {
-        let db = DropBlock::new(3, 0.3).unwrap();
+        let db = DropBlock::new(3, 0.3).expect("unwrap");
         let mut rng = StdRng::seed_from_u64(42);
 
         let activations = Array2::ones((20, 20));
-        let output = db.apply(&activations.view(), true, &mut rng).unwrap();
+        let output = db
+            .apply(&activations.view(), true, &mut rng)
+            .expect("unwrap");
 
         // Shape should be preserved
         assert_eq!(output.shape(), activations.shape());
@@ -349,7 +355,7 @@ mod tests {
 
     #[test]
     fn test_dropblock_small_activation_map() {
-        let db = DropBlock::new(7, 0.1).unwrap();
+        let db = DropBlock::new(7, 0.1).expect("unwrap");
         let mut rng = StdRng::seed_from_u64(42);
 
         // Activation map smaller than block size
@@ -361,7 +367,7 @@ mod tests {
 
     #[test]
     fn test_linear_scheduler_creation() {
-        let scheduler = LinearDropBlockScheduler::new(0.1, 1000).unwrap();
+        let scheduler = LinearDropBlockScheduler::new(0.1, 1000).expect("unwrap");
         assert_eq!(scheduler.drop_prob_target, 0.1);
         assert_eq!(scheduler.total_steps, 1000);
     }
@@ -378,7 +384,7 @@ mod tests {
 
     #[test]
     fn test_linear_scheduler_interpolation() {
-        let scheduler = LinearDropBlockScheduler::new(0.1, 100).unwrap();
+        let scheduler = LinearDropBlockScheduler::new(0.1, 100).expect("unwrap");
 
         // At step 0
         assert_eq!(scheduler.get_drop_prob(0), 0.0);
@@ -396,8 +402,8 @@ mod tests {
 
     #[test]
     fn test_dropblock_with_scheduler() {
-        let mut db = DropBlock::new(3, 0.0).unwrap();
-        let scheduler = LinearDropBlockScheduler::new(0.2, 100).unwrap();
+        let mut db = DropBlock::new(3, 0.0).expect("unwrap");
+        let scheduler = LinearDropBlockScheduler::new(0.2, 100).expect("unwrap");
         let mut rng = StdRng::seed_from_u64(42);
 
         let activations = Array2::ones((20, 20));
@@ -405,20 +411,24 @@ mod tests {
         // Simulate training with scheduler
         for step in [0, 50, 100] {
             let drop_prob = scheduler.get_drop_prob(step);
-            db.set_drop_prob(drop_prob).unwrap();
+            db.set_drop_prob(drop_prob).expect("unwrap");
 
-            let output = db.apply(&activations.view(), true, &mut rng).unwrap();
+            let output = db
+                .apply(&activations.view(), true, &mut rng)
+                .expect("unwrap");
             assert_eq!(output.shape(), activations.shape());
         }
     }
 
     #[test]
     fn test_dropblock_normalization() {
-        let db = DropBlock::new(3, 0.1).unwrap();
+        let db = DropBlock::new(3, 0.1).expect("unwrap");
         let mut rng = StdRng::seed_from_u64(42);
 
         let activations = Array2::from_elem((20, 20), 1.0);
-        let output = db.apply(&activations.view(), true, &mut rng).unwrap();
+        let output = db
+            .apply(&activations.view(), true, &mut rng)
+            .expect("unwrap");
 
         // The sum of output should be close to sum of input (due to normalization)
         // This ensures expected value is preserved

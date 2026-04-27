@@ -476,10 +476,10 @@ mod tests {
         grads.insert("w".to_string(), array![[0.1, 0.2], [0.3, 0.4]]);
 
         // Take a step
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         // Parameters should have been updated
-        let updated_w = params.get("w").unwrap();
+        let updated_w = params.get("w").expect("unwrap");
         assert_ne!(updated_w[[0, 0]], 1.0);
 
         // Should have created moments
@@ -500,15 +500,15 @@ mod tests {
 
         // Take multiple steps
         for _ in 0..5 {
-            optimizer.step(&mut params, &grads).unwrap();
+            optimizer.step(&mut params, &grads).expect("unwrap");
         }
 
         // Eval parameters should be different from training parameters
         let train_params = optimizer.get_train_parameters();
         let eval_params = optimizer.get_eval_parameters();
 
-        let train_w = train_params.get("w").unwrap();
-        let eval_w = eval_params.get("w").unwrap();
+        let train_w = train_params.get("w").expect("unwrap");
+        let eval_w = eval_params.get("w").expect("unwrap");
 
         // They should be different due to averaging
         assert_ne!(train_w[[0, 0]], eval_w[[0, 0]]);
@@ -530,7 +530,7 @@ mod tests {
         grads.insert("w".to_string(), array![[0.1]]);
 
         for _ in 0..50 {
-            optimizer.step(&mut params, &grads).unwrap();
+            optimizer.step(&mut params, &grads).expect("unwrap");
         }
 
         // At step 50, effective gamma should be approximately halfway
@@ -544,7 +544,7 @@ mod tests {
         );
 
         for _ in 50..100 {
-            optimizer.step(&mut params, &grads).unwrap();
+            optimizer.step(&mut params, &grads).expect("unwrap");
         }
 
         // At step 100, effective gamma should be full value
@@ -566,10 +566,10 @@ mod tests {
         // Large gradients that should be clipped
         grads.insert("w".to_string(), array![[10.0, -10.0]]);
 
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         // With clipping, the update should be smaller
-        let updated_w = params.get("w").unwrap();
+        let updated_w = params.get("w").expect("unwrap");
         // If no clipping, change would be huge; with clipping, it's bounded
         assert!(updated_w[[0, 0]] > 0.5); // Not too much decrease
         assert!(updated_w[[0, 1]] < 2.5); // Not too much increase
@@ -596,12 +596,12 @@ mod tests {
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), array![[0.1, 0.1]]);
 
-        opt_no_decay.step(&mut params1, &grads).unwrap();
-        opt_with_decay.step(&mut params2, &grads).unwrap();
+        opt_no_decay.step(&mut params1, &grads).expect("unwrap");
+        opt_with_decay.step(&mut params2, &grads).expect("unwrap");
 
         // With weight decay, parameters should shrink more
-        let w1 = params1.get("w").unwrap();
-        let w2 = params2.get("w").unwrap();
+        let w1 = params1.get("w").expect("unwrap");
+        let w2 = params2.get("w").expect("unwrap");
 
         assert!(w2[[0, 0]] < w1[[0, 0]]);
         assert!(w2[[0, 1]] < w1[[0, 1]]);

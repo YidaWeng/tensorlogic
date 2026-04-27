@@ -244,8 +244,9 @@ mod tests {
     #[test]
     fn test_serialize_deserialize() {
         let config = Config::default();
-        let toml_str = toml::to_string(&config).unwrap();
-        let deserialized: Config = toml::from_str(&toml_str).unwrap();
+        let toml_str = toml::to_string(&config).expect("config serialization should succeed");
+        let deserialized: Config =
+            toml::from_str(&toml_str).expect("config deserialization should succeed");
         assert_eq!(config.strategy, deserialized.strategy);
     }
 }

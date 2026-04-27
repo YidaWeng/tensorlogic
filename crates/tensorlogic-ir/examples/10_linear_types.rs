@@ -131,7 +131,7 @@ fn example_linear_context() {
     ctx2.bind("y", LinearType::unrestricted("Int"));
 
     for i in 1..=5 {
-        ctx2.use_var("y").unwrap();
+        ctx2.use_var("y").expect("unwrap");
         println!("Use #{} of unrestricted variable 'y': OK", i);
     }
 
@@ -172,7 +172,7 @@ fn example_linearity_violations() {
     // Correct usage
     let mut ctx3 = LinearContext::new();
     ctx3.bind("z", LinearType::linear("Tensor"));
-    ctx3.use_var("z").unwrap();
+    ctx3.use_var("z").expect("unwrap");
 
     match ctx3.validate() {
         Ok(_) => println!("\n✓ Validation passed for properly used linear variable"),
@@ -268,10 +268,10 @@ fn example_context_merging() {
     else_branch.bind("x", LinearType::unrestricted("Int"));
 
     // Different usage in each branch
-    then_branch.use_var("x").unwrap();
-    then_branch.use_var("x").unwrap();
+    then_branch.use_var("x").expect("unwrap");
+    then_branch.use_var("x").expect("unwrap");
 
-    else_branch.use_var("x").unwrap();
+    else_branch.use_var("x").expect("unwrap");
 
     // Merge contexts
     match then_branch.merge(&else_branch) {
@@ -290,7 +290,7 @@ fn example_context_merging() {
     else_branch2.bind("y", LinearType::linear("Tensor"));
 
     // Use in then branch
-    then_branch2.use_var("y").unwrap();
+    then_branch2.use_var("y").expect("unwrap");
 
     // Don't use in else branch
     // (This should fail when merging)

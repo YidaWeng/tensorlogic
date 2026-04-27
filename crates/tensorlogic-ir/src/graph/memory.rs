@@ -80,7 +80,7 @@ impl Default for MemoryAnalysis {
 /// let mut graph = EinsumGraph::new();
 /// // Build your graph...
 ///
-/// let analysis = analyze_memory(&graph, 8).unwrap();
+/// let analysis = analyze_memory(&graph, 8).expect("unwrap");
 /// println!("Peak memory: {} bytes", analysis.peak_memory_bytes);
 /// println!("Memory waste ratio: {:.2}%", analysis.memory_waste_ratio() * 100.0);
 /// ```
@@ -379,7 +379,7 @@ mod tests {
     #[test]
     fn test_analyze_empty_graph() {
         let graph = EinsumGraph::new();
-        let analysis = analyze_memory(&graph, 8).unwrap();
+        let analysis = analyze_memory(&graph, 8).expect("unwrap");
         assert_eq!(analysis.peak_memory_bytes, 0);
         assert_eq!(analysis.tensors.len(), 0);
     }
@@ -391,9 +391,9 @@ mod tests {
         let b = graph.add_tensor("B");
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
 
-        let analysis = analyze_memory(&graph, 8).unwrap();
+        let analysis = analyze_memory(&graph, 8).expect("unwrap");
         assert!(analysis.peak_memory_bytes > 0);
         assert_eq!(analysis.tensors.len(), 2);
     }
@@ -405,7 +405,7 @@ mod tests {
         let b = graph.add_tensor("B");
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
 
         let lifetimes = analyze_tensor_lifetimes(&graph);
         assert_eq!(lifetimes[a], (Some(0), Some(0)));
@@ -421,10 +421,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("tanh", b, c))
-            .unwrap();
+            .expect("unwrap");
 
         let lifetimes = analyze_tensor_lifetimes(&graph);
         assert_eq!(lifetimes[b], (Some(0), Some(1)));
@@ -478,7 +478,7 @@ mod tests {
     #[test]
     fn test_analyze_inplace_opportunities_empty() {
         let graph = EinsumGraph::new();
-        let candidates = analyze_inplace_opportunities(&graph).unwrap();
+        let candidates = analyze_inplace_opportunities(&graph).expect("unwrap");
         assert!(candidates.is_empty());
     }
 
@@ -489,9 +489,9 @@ mod tests {
         let b = graph.add_tensor("B");
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
 
-        let candidates = analyze_inplace_opportunities(&graph).unwrap();
+        let candidates = analyze_inplace_opportunities(&graph).expect("unwrap");
         assert_eq!(candidates.len(), 1);
     }
 
@@ -504,14 +504,14 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("tanh", b, c))
-            .unwrap();
+            .expect("unwrap");
 
         let deps = build_dependencies(&graph);
-        assert_eq!(deps.get(&0).unwrap().len(), 0); // Node 0 has no dependencies
-        assert_eq!(deps.get(&1).unwrap(), &vec![0]); // Node 1 depends on node 0
+        assert_eq!(deps.get(&0).expect("unwrap").len(), 0); // Node 0 has no dependencies
+        assert_eq!(deps.get(&1).expect("unwrap"), &vec![0]); // Node 1 depends on node 0
     }
 
     #[test]
@@ -522,7 +522,7 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
 
         let deps = build_dependencies(&graph);
         let schedule = topological_sort_memory_aware(&graph, &deps);

@@ -30,22 +30,22 @@
 //!
 //! // Add schemas to the recommendation pool
 //! let mut schema1 = SymbolTable::new();
-//! schema1.add_domain(DomainInfo::new("Person", 100)).unwrap();
+//! schema1.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
 //! recommender.add_schema("users", schema1);
 //!
 //! let mut schema2 = SymbolTable::new();
-//! schema2.add_domain(DomainInfo::new("Product", 200)).unwrap();
+//! schema2.add_domain(DomainInfo::new("Product", 200)).expect("unwrap");
 //! recommender.add_schema("products", schema2);
 //!
 //! // Get recommendations
 //! let mut query = SymbolTable::new();
-//! query.add_domain(DomainInfo::new("User", 50)).unwrap();
+//! query.add_domain(DomainInfo::new("User", 50)).expect("unwrap");
 //!
 //! let recommendations = recommender.recommend(
 //!     &query,
 //!     RecommendationStrategy::Similarity,
 //!     5
-//! ).unwrap();
+//! ).expect("unwrap");
 //!
 //! assert!(!recommendations.is_empty());
 //! ```
@@ -293,7 +293,11 @@ impl SchemaRecommender {
         }
 
         // Re-sort and limit
-        base_recommendations.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+        base_recommendations.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         base_recommendations.truncate(limit);
 
         Ok(base_recommendations)
@@ -315,7 +319,7 @@ impl SchemaRecommender {
         }
 
         // Sort by similarity (highest first)
-        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         similarities.truncate(limit);
 
         Ok(similarities
@@ -355,7 +359,11 @@ impl SchemaRecommender {
             }
         }
 
-        scores.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+        scores.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         scores.truncate(limit);
 
         Ok(scores)
@@ -386,7 +394,11 @@ impl SchemaRecommender {
             }
         }
 
-        scores.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+        scores.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         scores.truncate(limit);
 
         Ok(scores)
@@ -418,7 +430,11 @@ impl SchemaRecommender {
         }
 
         let mut results: Vec<SchemaScore> = combined.into_values().collect();
-        results.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+        results.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         results.truncate(limit);
 
         Ok(results)
@@ -444,7 +460,11 @@ impl SchemaRecommender {
             })
             .collect();
 
-        scores.sort_by(|a, b| b.score.partial_cmp(&a.score).unwrap());
+        scores.sort_by(|a, b| {
+            b.score
+                .partial_cmp(&a.score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
         scores.truncate(limit);
 
         Ok(scores)
@@ -521,7 +541,7 @@ mod tests {
         for i in 0..domain_count {
             schema
                 .add_domain(DomainInfo::new(format!("{}Domain{}", name, i), 100))
-                .unwrap();
+                .expect("unwrap");
         }
         schema
     }
@@ -593,7 +613,7 @@ mod tests {
         let query = create_test_schema("Query", 3);
         let recs = recommender
             .recommend(&query, RecommendationStrategy::Similarity, 2)
-            .unwrap();
+            .expect("unwrap");
 
         assert!(!recs.is_empty());
         assert!(recs.len() <= 2);
@@ -616,7 +636,7 @@ mod tests {
         let query = create_test_schema("Query", 2);
         let recs = recommender
             .recommend(&query, RecommendationStrategy::Pattern, 2)
-            .unwrap();
+            .expect("unwrap");
 
         // Pattern matching may return empty if no patterns match
         // This is expected behavior
@@ -638,7 +658,7 @@ mod tests {
         let query = create_test_schema("Query", 5);
         let recs = recommender
             .recommend(&query, RecommendationStrategy::Collaborative, 2)
-            .unwrap();
+            .expect("unwrap");
 
         assert!(!recs.is_empty());
         assert_eq!(recs[0].schema_id, "popular");
@@ -654,7 +674,7 @@ mod tests {
         let query = create_test_schema("Query", 3);
         let recs = recommender
             .recommend(&query, RecommendationStrategy::Hybrid, 2)
-            .unwrap();
+            .expect("unwrap");
 
         assert!(!recs.is_empty());
     }
@@ -673,7 +693,7 @@ mod tests {
         let query = create_test_schema("Query", 3);
         let recs = recommender
             .recommend_with_context(&query, &context, 2)
-            .unwrap();
+            .expect("unwrap");
 
         assert!(!recs.is_empty());
     }
@@ -707,7 +727,7 @@ mod tests {
                 RecommendationStrategy::UseCase("large".to_string()),
                 2,
             )
-            .unwrap();
+            .expect("unwrap");
 
         assert!(!recs.is_empty());
     }

@@ -74,7 +74,7 @@ fn benchmark_optimizer_comparison(c: &mut Criterion) {
                             None,
                             &mut parameters,
                         )
-                        .unwrap();
+                        .expect("unwrap");
 
                     black_box(parameters);
                 });
@@ -122,7 +122,7 @@ fn benchmark_batch_sizes(c: &mut Criterion) {
                             None,
                             &mut parameters,
                         )
-                        .unwrap();
+                        .expect("unwrap");
 
                     black_box(parameters);
                 });
@@ -170,7 +170,7 @@ fn benchmark_dataset_scaling(c: &mut Criterion) {
                             None,
                             &mut parameters,
                         )
-                        .unwrap();
+                        .expect("unwrap");
 
                     black_box(parameters);
                 });
@@ -220,7 +220,7 @@ fn benchmark_model_sizes(c: &mut Criterion) {
                             None,
                             &mut parameters,
                         )
-                        .unwrap();
+                        .expect("unwrap");
 
                     black_box(parameters);
                 });
@@ -276,7 +276,7 @@ fn benchmark_gradient_clipping(c: &mut Criterion) {
                             None,
                             &mut parameters,
                         )
-                        .unwrap();
+                        .expect("unwrap");
 
                     black_box(parameters);
                 });

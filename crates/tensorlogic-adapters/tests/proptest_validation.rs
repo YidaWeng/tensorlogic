@@ -72,7 +72,7 @@ fn symbol_table_strategy() -> impl Strategy<Value = SymbolTable> {
             .prop_map(|(domains, predicates)| {
                 let mut table = SymbolTable::new();
                 for domain in domains {
-                    table.add_domain(domain).unwrap();
+                    table.add_domain(domain).expect("unwrap");
                 }
                 for predicate in predicates {
                     let _ = table.add_predicate(predicate); // May fail if references unknown domain
@@ -86,13 +86,13 @@ proptest! {
     /// Test that JSON serialization round-trips correctly
     #[test]
     fn test_json_roundtrip(table in symbol_table_strategy()) {
-        let json = table.to_json().unwrap();
-        let deserialized = SymbolTable::from_json(&json).unwrap();
+        let json = table.to_json().expect("unwrap");
+        let deserialized = SymbolTable::from_json(&json).expect("unwrap");
 
         // Check domains match
         prop_assert_eq!(table.domains.len(), deserialized.domains.len());
         for (name, domain) in &table.domains {
-            let deser_domain = deserialized.get_domain(name).unwrap();
+            let deser_domain = deserialized.get_domain(name).expect("unwrap");
             prop_assert_eq!(&domain.name, &deser_domain.name);
             prop_assert_eq!(domain.cardinality, deser_domain.cardinality);
         }
@@ -100,7 +100,7 @@ proptest! {
         // Check predicates match
         prop_assert_eq!(table.predicates.len(), deserialized.predicates.len());
         for (name, pred) in &table.predicates {
-            let deser_pred = deserialized.get_predicate(name).unwrap();
+            let deser_pred = deserialized.get_predicate(name).expect("unwrap");
             prop_assert_eq!(&pred.name, &deser_pred.name);
             prop_assert_eq!(&pred.arg_domains, &deser_pred.arg_domains);
         }
@@ -109,8 +109,8 @@ proptest! {
     /// Test that YAML serialization round-trips correctly
     #[test]
     fn test_yaml_roundtrip(table in symbol_table_strategy()) {
-        let yaml = table.to_yaml().unwrap();
-        let deserialized = SymbolTable::from_yaml(&yaml).unwrap();
+        let yaml = table.to_yaml().expect("unwrap");
+        let deserialized = SymbolTable::from_yaml(&yaml).expect("unwrap");
 
         // Check domains match
         prop_assert_eq!(table.domains.len(), deserialized.domains.len());
@@ -135,7 +135,7 @@ proptest! {
         // Use a map to track the last version of each domain (simulating replacement behavior)
         let mut domain_map = std::collections::HashMap::new();
         for domain in &domains {
-            table.add_domain(domain.clone()).unwrap();
+            table.add_domain(domain.clone()).expect("unwrap");
             domain_map.insert(domain.name.clone(), domain.clone());
         }
 
@@ -143,7 +143,7 @@ proptest! {
         for (name, domain) in domain_map.iter() {
             let retrieved = table.get_domain(name);
             prop_assert!(retrieved.is_some());
-            let retrieved = retrieved.unwrap();
+            let retrieved = retrieved.expect("unwrap");
             prop_assert_eq!(&retrieved.name, &domain.name);
             prop_assert_eq!(retrieved.cardinality, domain.cardinality);
         }
@@ -157,15 +157,15 @@ proptest! {
     ) {
         let mut table = SymbolTable::new();
         for domain in &domains {
-            table.add_domain(domain.clone()).unwrap();
+            table.add_domain(domain.clone()).expect("unwrap");
         }
 
         let domain_names: Vec<String> = domains.iter().map(|d| d.name.clone()).collect();
         let arg_domains = vec![domain_names[0].clone(); arity];
         let pred = PredicateInfo::new("test_pred", arg_domains.clone());
 
-        table.add_predicate(pred).unwrap();
-        let retrieved = table.get_predicate("test_pred").unwrap();
+        table.add_predicate(pred).expect("unwrap");
+        let retrieved = table.get_predicate("test_pred").expect("unwrap");
         prop_assert_eq!(retrieved.arg_domains.len(), arity);
     }
 
@@ -263,7 +263,7 @@ proptest! {
     ) {
         let mut table = SymbolTable::new();
         for domain in &domains {
-            table.add_domain(domain.clone()).unwrap();
+            table.add_domain(domain.clone()).expect("unwrap");
         }
 
         // Binding to existing domain should succeed
@@ -285,8 +285,8 @@ mod deterministic_tests {
     #[test]
     fn test_empty_symbol_table_serialization() {
         let table = SymbolTable::new();
-        let json = table.to_json().unwrap();
-        let deserialized = SymbolTable::from_json(&json).unwrap();
+        let json = table.to_json().expect("unwrap");
+        let deserialized = SymbolTable::from_json(&json).expect("unwrap");
         assert_eq!(table.domains.len(), deserialized.domains.len());
     }
 
@@ -311,7 +311,7 @@ mod deterministic_tests {
     fn test_validation_report_empty_table() {
         let table = SymbolTable::new();
         let validator = SchemaValidator::new(&table);
-        let report = validator.validate().unwrap();
+        let report = validator.validate().expect("unwrap");
         // Empty table should have no errors but may have warnings
         assert!(report.errors.is_empty());
     }
@@ -333,7 +333,7 @@ proptest! {
     #[test]
     fn test_evolution_identical_schemas_no_breaking(table in symbol_table_strategy()) {
         let analyzer = EvolutionAnalyzer::new(&table, &table);
-        let report = analyzer.analyze().unwrap();
+        let report = analyzer.analyze().expect("unwrap");
 
         prop_assert!(!report.has_breaking_changes());
         prop_assert!(report.is_backward_compatible());
@@ -343,7 +343,7 @@ proptest! {
     #[test]
     fn test_evolution_reflexivity(table in symbol_table_strategy()) {
         let analyzer = EvolutionAnalyzer::new(&table, &table);
-        let report = analyzer.analyze().unwrap();
+        let report = analyzer.analyze().expect("unwrap");
 
         prop_assert_eq!(report.breaking_changes.len(), 0);
         prop_assert!(report.is_backward_compatible());
@@ -362,10 +362,10 @@ proptest! {
         }
 
         let mut new_table = old_table.clone();
-        new_table.add_domain(new_domain).unwrap();
+        new_table.add_domain(new_domain).expect("unwrap");
 
         let analyzer = EvolutionAnalyzer::new(&old_table, &new_table);
-        let report = analyzer.analyze().unwrap();
+        let report = analyzer.analyze().expect("unwrap");
 
         // Adding truly new domains should be backward compatible
         prop_assert!(report.is_backward_compatible());
@@ -378,7 +378,7 @@ proptest! {
         new_table in symbol_table_strategy()
     ) {
         let analyzer = EvolutionAnalyzer::new(&old_table, &new_table);
-        let _report = analyzer.analyze().unwrap();
+        let _report = analyzer.analyze().expect("unwrap");
 
         // Migration plan should always exist (may be empty if no changes)
         // Always true for Vec, just verify it doesn't panic
@@ -405,7 +405,7 @@ proptest! {
         // Query for each predicate by name
         for (name, _pred) in &table.predicates {
             let query = PredicateQuery::by_name(name);
-            let results = planner.execute(&query).unwrap();
+            let results = planner.execute(&query).expect("unwrap");
 
             prop_assert!(results.len() <= 1); // At most one result
             if let Some((result_name, _)) = results.first() {
@@ -422,7 +422,7 @@ proptest! {
     ) {
         let mut planner = QueryPlanner::new(&table);
         let query = PredicateQuery::by_arity(arity);
-        let results = planner.execute(&query).unwrap();
+        let results = planner.execute(&query).expect("unwrap");
 
         // All results should have the specified arity
         for (_name, pred) in results {
@@ -437,8 +437,8 @@ proptest! {
         let query = PredicateQuery::by_arity(2);
 
         // Execute same query multiple times
-        let results1 = planner.execute(&query).unwrap();
-        let results2 = planner.execute(&query).unwrap();
+        let results1 = planner.execute(&query).expect("unwrap");
+        let results2 = planner.execute(&query).expect("unwrap");
 
         // Results should be identical
         prop_assert_eq!(results1.len(), results2.len());
@@ -581,7 +581,7 @@ proptest! {
             vec![DimExpr::var("batch"), DimExpr::var("height"), DimExpr::var("width")]
         );
 
-        let shape = tensor.eval_shape(&ctx).unwrap();
+        let shape = tensor.eval_shape(&ctx).expect("unwrap");
         prop_assert_eq!(shape, vec![batch, height, width]);
         prop_assert_eq!(tensor.rank(), 3);
     }
@@ -615,7 +615,7 @@ proptest! {
         // Create resources
         for i in 0..n_resources {
             let name = format!("resource_{}", i);
-            ctx.create_resource(&name, ty.clone(), "test").unwrap();
+            ctx.create_resource(&name, ty.clone(), "test").expect("unwrap");
         }
 
         // Check statistics
@@ -625,7 +625,7 @@ proptest! {
         prop_assert_eq!(stats.used, 0);
 
         // Use first resource
-        ctx.use_resource("resource_0", "test").unwrap();
+        ctx.use_resource("resource_0", "test").expect("unwrap");
         let stats = ctx.statistics();
         prop_assert_eq!(stats.used, 1);
         prop_assert_eq!(stats.unused, n_resources - 1);
@@ -698,10 +698,10 @@ mod database_properties {
             let mut db = MemoryDatabase::new();
 
             // Store the schema
-            let schema_id = db.store_schema("test_schema", &table).unwrap();
+            let schema_id = db.store_schema("test_schema", &table).expect("unwrap");
 
             // Load it back
-            let loaded = db.load_schema(schema_id).unwrap();
+            let loaded = db.load_schema(schema_id).expect("unwrap");
 
             // Verify all domains are preserved
             prop_assert_eq!(table.domains.len(), loaded.domains.len());
@@ -728,10 +728,10 @@ mod database_properties {
             let mut db = MemoryDatabase::new();
 
             // Store with a specific name
-            db.store_schema(&name, &table).unwrap();
+            db.store_schema(&name, &table).expect("unwrap");
 
             // Load by name
-            let loaded = db.load_schema_by_name(&name).unwrap();
+            let loaded = db.load_schema_by_name(&name).expect("unwrap");
 
             // Should match
             prop_assert_eq!(table.domains.len(), loaded.domains.len());
@@ -747,15 +747,15 @@ mod database_properties {
             let mut db = MemoryDatabase::new();
 
             // Store two versions of the same schema
-            let id1 = db.store_schema("versioned_schema", &table1).unwrap();
-            let id2 = db.store_schema("versioned_schema", &table2).unwrap();
+            let id1 = db.store_schema("versioned_schema", &table1).expect("unwrap");
+            let id2 = db.store_schema("versioned_schema", &table2).expect("unwrap");
 
             // IDs should be different
             prop_assert_ne!(id1, id2);
 
             // Both should be loadable
-            let loaded1 = db.load_schema(id1).unwrap();
-            let loaded2 = db.load_schema(id2).unwrap();
+            let loaded1 = db.load_schema(id1).expect("unwrap");
+            let loaded2 = db.load_schema(id2).expect("unwrap");
 
             prop_assert_eq!(table1.domains.len(), loaded1.domains.len());
             prop_assert_eq!(table2.domains.len(), loaded2.domains.len());
@@ -771,10 +771,10 @@ mod database_properties {
             let mut db = MemoryDatabase::new();
             let name = format!("{}_test_{}", prefix, suffix);
 
-            db.store_schema(&name, &table).unwrap();
+            db.store_schema(&name, &table).expect("unwrap");
 
             // Search with prefix should find it
-            let results = db.search_schemas(&format!("{}_", prefix)).unwrap();
+            let results = db.search_schemas(&format!("{}_", prefix)).expect("unwrap");
             prop_assert!(!results.is_empty());
 
             // Verify the found schema has the correct name
@@ -786,13 +786,13 @@ mod database_properties {
         fn test_database_delete(table in symbol_table_strategy()) {
             let mut db = MemoryDatabase::new();
 
-            let id = db.store_schema("to_delete", &table).unwrap();
+            let id = db.store_schema("to_delete", &table).expect("unwrap");
 
             // Verify it exists
             prop_assert!(db.load_schema(id).is_ok());
 
             // Delete it
-            db.delete_schema(id).unwrap();
+            db.delete_schema(id).expect("unwrap");
 
             // Should no longer be loadable
             prop_assert!(db.load_schema(id).is_err());
@@ -808,11 +808,11 @@ mod database_properties {
             let mut db = MemoryDatabase::new();
             let name = "history_test";
 
-            db.store_schema(name, &table1).unwrap();
-            db.store_schema(name, &table2).unwrap();
-            db.store_schema(name, &table3).unwrap();
+            db.store_schema(name, &table1).expect("unwrap");
+            db.store_schema(name, &table2).expect("unwrap");
+            db.store_schema(name, &table3).expect("unwrap");
 
-            let history = db.get_schema_history(name).unwrap();
+            let history = db.get_schema_history(name).expect("unwrap");
 
             // Should have 3 versions
             prop_assert_eq!(history.len(), 3);
@@ -835,10 +835,10 @@ mod database_properties {
             for (i, table) in tables.iter().enumerate() {
                 let name = format!("schema_{}", i);
                 names.push(name.clone());
-                db.store_schema(&name, table).unwrap();
+                db.store_schema(&name, table).expect("unwrap");
             }
 
-            let list = db.list_schemas().unwrap();
+            let list = db.list_schemas().expect("unwrap");
 
             // Should have at least as many as we stored
             prop_assert!(list.len() >= tables.len());
@@ -855,8 +855,8 @@ mod database_properties {
             let mut db = MemoryDatabase::new();
             let empty = SymbolTable::new();
 
-            let id = db.store_schema("empty", &empty).unwrap();
-            let loaded = db.load_schema(id).unwrap();
+            let id = db.store_schema("empty", &empty).expect("unwrap");
+            let loaded = db.load_schema(id).expect("unwrap");
 
             prop_assert_eq!(loaded.domains.len(), 0);
             prop_assert_eq!(loaded.predicates.len(), 0);
@@ -868,11 +868,11 @@ mod database_properties {
         fn test_database_metadata_accuracy(table in symbol_table_strategy()) {
             let mut db = MemoryDatabase::new();
 
-            let id = db.store_schema("metadata_test", &table).unwrap();
-            let list = db.list_schemas().unwrap();
+            let id = db.store_schema("metadata_test", &table).expect("unwrap");
+            let list = db.list_schemas().expect("unwrap");
 
             // Find our schema in the list
-            let metadata = list.iter().find(|m| m.id == id).unwrap();
+            let metadata = list.iter().find(|m| m.id == id).expect("unwrap");
 
             // Verify counts match
             prop_assert_eq!(metadata.num_domains, table.domains.len());
@@ -889,12 +889,12 @@ mod database_properties {
             let mut db = MemoryDatabase::new();
 
             // Store two different schemas
-            let id1 = db.store_schema("schema_a", &table1).unwrap();
-            let id2 = db.store_schema("schema_b", &table2).unwrap();
+            let id1 = db.store_schema("schema_a", &table1).expect("unwrap");
+            let id2 = db.store_schema("schema_b", &table2).expect("unwrap");
 
             // Load them back
-            let loaded1 = db.load_schema(id1).unwrap();
-            let loaded2 = db.load_schema(id2).unwrap();
+            let loaded1 = db.load_schema(id1).expect("unwrap");
+            let loaded2 = db.load_schema(id2).expect("unwrap");
 
             // They should be independent (not affect each other)
             prop_assert_eq!(table1.domains.len(), loaded1.domains.len());

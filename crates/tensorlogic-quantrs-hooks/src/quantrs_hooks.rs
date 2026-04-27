@@ -514,7 +514,7 @@ impl QuantumSolution {
 /// graph.add_variable_with_card("y".to_string(), "Binary".to_string(), 2);
 ///
 /// // Solve using QAOA
-/// let solution = graph.solve_qaoa(2).unwrap();
+/// let solution = graph.solve_qaoa(2).expect("unwrap");
 /// println!("Best assignment: {:?}", solution);
 /// ```
 pub trait QuantumInference {
@@ -569,11 +569,11 @@ pub trait QuantumInference {
 /// graph.add_variable_with_card("x".to_string(), "Binary".to_string(), 2);
 ///
 /// // Convert to QUBO
-/// let qubo = graph.to_qubo().unwrap();
+/// let qubo = graph.to_qubo().expect("unwrap");
 ///
 /// // Run annealing
 /// let config = AnnealingConfig::default();
-/// let solution = graph.anneal(&config).unwrap();
+/// let solution = graph.anneal(&config).expect("unwrap");
 /// ```
 pub trait QuantumAnnealing {
     /// Convert the factor graph to a QUBO (Quadratic Unconstrained Binary Optimization) problem.
@@ -913,16 +913,16 @@ mod tests {
     #[test]
     fn test_factor_to_quantrs_distribution() {
         let values = Array::from_shape_vec(vec![2, 2], vec![0.25, 0.25, 0.25, 0.25])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         let factor = Factor::new(
             "test".to_string(),
             vec!["x".to_string(), "y".to_string()],
             values,
         )
-        .unwrap();
+        .expect("unwrap");
 
-        let dist = factor.to_quantrs_distribution().unwrap();
+        let dist = factor.to_quantrs_distribution().expect("unwrap");
 
         assert_eq!(dist.variables.len(), 2);
         assert_eq!(dist.probabilities.len(), 4);
@@ -932,12 +932,13 @@ mod tests {
     #[test]
     fn test_quantrs_distribution_roundtrip() {
         let values = Array::from_shape_vec(vec![2], vec![0.6, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        let factor = Factor::new("test".to_string(), vec!["x".to_string()], values).unwrap();
+        let factor =
+            Factor::new("test".to_string(), vec!["x".to_string()], values).expect("unwrap");
 
-        let dist = factor.to_quantrs_distribution().unwrap();
-        let factor2 = Factor::from_quantrs_distribution(&dist).unwrap();
+        let dist = factor.to_quantrs_distribution().expect("unwrap");
+        let factor2 = Factor::from_quantrs_distribution(&dist).expect("unwrap");
 
         assert_eq!(factor.variables, factor2.variables);
         assert_eq!(factor.values.shape(), factor2.values.shape());
@@ -946,9 +947,10 @@ mod tests {
     #[test]
     fn test_is_normalized() {
         let values = Array::from_shape_vec(vec![2], vec![0.7, 0.3])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        let factor = Factor::new("test".to_string(), vec!["x".to_string()], values).unwrap();
+        let factor =
+            Factor::new("test".to_string(), vec!["x".to_string()], values).expect("unwrap");
 
         assert!(factor.is_normalized());
     }
@@ -956,14 +958,14 @@ mod tests {
     #[test]
     fn test_support() {
         let values = Array::from_shape_vec(vec![2, 2], vec![0.1, 0.2, 0.3, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         let factor = Factor::new(
             "test".to_string(),
             vec!["x".to_string(), "y".to_string()],
             values,
         )
-        .unwrap();
+        .expect("unwrap");
 
         let support = factor.support();
         assert_eq!(support.len(), 4);
@@ -983,13 +985,13 @@ mod tests {
             "P(x,y)".to_string(),
             vec!["x".to_string(), "y".to_string()],
             Array::from_shape_vec(vec![2, 2], vec![0.25, 0.25, 0.25, 0.25])
-                .unwrap()
+                .expect("unwrap")
                 .into_dyn(),
         )
-        .unwrap();
-        graph.add_factor(factor).unwrap();
+        .expect("unwrap");
+        graph.add_factor(factor).expect("unwrap");
 
-        let model = graph.to_quantrs_model().unwrap();
+        let model = graph.to_quantrs_model().expect("unwrap");
 
         assert_eq!(model.variables.len(), 2);
         assert_eq!(model.factors.len(), 1);
@@ -1006,11 +1008,11 @@ mod tests {
             "P(x,y)".to_string(),
             vec!["x".to_string(), "y".to_string()],
             Array::from_shape_vec(vec![2, 2], vec![0.25, 0.25, 0.25, 0.25])
-                .unwrap()
+                .expect("unwrap")
                 .into_dyn(),
         )
-        .unwrap();
-        graph.add_factor(factor).unwrap();
+        .expect("unwrap");
+        graph.add_factor(factor).expect("unwrap");
 
         let stats = graph.model_stats();
 
@@ -1035,7 +1037,7 @@ mod tests {
             },
         };
 
-        let mi = utils::mutual_information(&dist, "x", "y").unwrap();
+        let mi = utils::mutual_information(&dist, "x", "y").expect("unwrap");
 
         assert_abs_diff_eq!(mi, 0.0, epsilon = 1e-6);
     }
@@ -1068,7 +1070,7 @@ mod tests {
             },
         };
 
-        let kl = utils::kl_divergence(&p, &q).unwrap();
+        let kl = utils::kl_divergence(&p, &q).expect("unwrap");
 
         assert!(kl > 0.0);
     }

@@ -357,7 +357,7 @@ mod tests {
 
         let iou = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((iou - 1.0).abs() < 1e-6);
 
         // Partial overlap
@@ -366,7 +366,7 @@ mod tests {
 
         let iou = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((0.0..=1.0).contains(&iou));
         assert!(iou < 1.0);
     }
@@ -381,7 +381,7 @@ mod tests {
 
         let miou = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((miou - 1.0).abs() < 1e-6);
     }
 
@@ -395,7 +395,7 @@ mod tests {
 
         let dice = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((dice - 1.0).abs() < 1e-6);
 
         // No overlap
@@ -404,7 +404,7 @@ mod tests {
 
         let dice = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!(dice < 0.1);
     }
 
@@ -418,7 +418,7 @@ mod tests {
 
         let map = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((map - 1.0).abs() < 1e-6);
 
         // Random ranking
@@ -427,7 +427,7 @@ mod tests {
 
         let map = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((0.0..=1.0).contains(&map));
     }
 
@@ -440,7 +440,7 @@ mod tests {
 
         let iou = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((0.0..=1.0).contains(&iou));
         assert!(iou < 1.0); // Should be less than 1 due to threshold
     }
@@ -454,7 +454,7 @@ mod tests {
 
         let map = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((0.0..=1.0).contains(&map));
     }
 }

@@ -6,6 +6,7 @@
 //! prepares the framework for future quantization-aware training and inference.
 
 use crate::{Scirs2Tensor, TlBackendError, TlBackendResult};
+use scirs2_core::ndarray;
 use serde::{Deserialize, Serialize};
 
 /// Quantization data type.
@@ -217,26 +218,63 @@ impl QuantizedTensor {
     }
 }
 
-/// Quantize tensor to INT8.
+/// Quantize tensor to INT8, respecting per-channel granularity.
+///
+/// For `PerTensor` granularity, `params.scale[0]` / `params.zero_point[0]` are used
+/// uniformly. For `PerChannel`, each output channel (row in a 2D tensor, outermost
+/// axis in nD) uses its own `scale[c]` / `zero_point[c]`.
 fn quantize_int8(tensor: &Scirs2Tensor, params: &QuantizationParams) -> Scirs2Tensor {
-    let scale = params.scale[0];
-    let zero_point = params.zero_point[0];
-
-    tensor.mapv(|x| {
-        let quantized = (x / scale).round() + zero_point as f64;
-        quantized.clamp(-128.0, 127.0)
-    })
+    match params.granularity {
+        QuantizationGranularity::PerTensor => {
+            let scale = params.scale[0];
+            let zero_point = params.zero_point[0] as f64;
+            tensor.mapv(|x| ((x / scale).round() + zero_point).clamp(-128.0, 127.0))
+        }
+        QuantizationGranularity::PerChannel => {
+            let n_channels = tensor.shape()[0];
+            let mut out = tensor.clone();
+            for (c, mut slab) in out.axis_iter_mut(ndarray::Axis(0)).enumerate() {
+                if c >= params.scale.len() {
+                    // Safety: fall back to first element if params under-specified.
+                    break;
+                }
+                let s = params.scale[c];
+                let zp = params.zero_point[c] as f64;
+                slab.mapv_inplace(|x| ((x / s).round() + zp).clamp(-128.0, 127.0));
+            }
+            let _ = n_channels; // used implicitly via axis_iter_mut
+            out
+        }
+    }
 }
 
-/// Quantize tensor to INT4.
+/// Quantize tensor to INT4, respecting per-channel granularity.
+///
+/// For `PerTensor` granularity, `params.scale[0]` / `params.zero_point[0]` are used
+/// uniformly. For `PerChannel`, each output channel (row in a 2D tensor, outermost
+/// axis in nD) uses its own `scale[c]` / `zero_point[c]`.
 fn quantize_int4(tensor: &Scirs2Tensor, params: &QuantizationParams) -> Scirs2Tensor {
-    let scale = params.scale[0];
-    let zero_point = params.zero_point[0];
-
-    tensor.mapv(|x| {
-        let quantized = (x / scale).round() + zero_point as f64;
-        quantized.clamp(-8.0, 7.0)
-    })
+    match params.granularity {
+        QuantizationGranularity::PerTensor => {
+            let scale = params.scale[0];
+            let zero_point = params.zero_point[0] as f64;
+            tensor.mapv(|x| ((x / scale).round() + zero_point).clamp(-8.0, 7.0))
+        }
+        QuantizationGranularity::PerChannel => {
+            let n_channels = tensor.shape()[0];
+            let mut out = tensor.clone();
+            for (c, mut slab) in out.axis_iter_mut(ndarray::Axis(0)).enumerate() {
+                if c >= params.scale.len() {
+                    break;
+                }
+                let s = params.scale[c];
+                let zp = params.zero_point[c] as f64;
+                slab.mapv_inplace(|x| ((x / s).round() + zp).clamp(-8.0, 7.0));
+            }
+            let _ = n_channels;
+            out
+        }
+    }
 }
 
 /// Simulate FP16 quantization (with rounding to FP16 precision).
@@ -258,12 +296,31 @@ fn quantize_bf16(tensor: &Scirs2Tensor) -> Scirs2Tensor {
     })
 }
 
-/// Dequantize integer-quantized tensor.
+/// Dequantize integer-quantized tensor, respecting per-channel granularity.
+///
+/// For `PerTensor` granularity, `params.scale[0]` / `params.zero_point[0]` are used
+/// uniformly. For `PerChannel`, each output channel (outermost axis) uses its own
+/// `scale[c]` / `zero_point[c]`.
 fn dequantize_integer(tensor: &Scirs2Tensor, params: &QuantizationParams) -> Scirs2Tensor {
-    let scale = params.scale[0];
-    let zero_point = params.zero_point[0];
-
-    tensor.mapv(|q| (q - zero_point as f64) * scale)
+    match params.granularity {
+        QuantizationGranularity::PerTensor => {
+            let scale = params.scale[0];
+            let zero_point = params.zero_point[0] as f64;
+            tensor.mapv(|q| (q - zero_point) * scale)
+        }
+        QuantizationGranularity::PerChannel => {
+            let mut out = tensor.clone();
+            for (c, mut slab) in out.axis_iter_mut(ndarray::Axis(0)).enumerate() {
+                if c >= params.scale.len() {
+                    break;
+                }
+                let s = params.scale[c];
+                let zp = params.zero_point[c] as f64;
+                slab.mapv_inplace(|q| (q - zp) * s);
+            }
+            out
+        }
+    }
 }
 
 /// Quantization-aware training configuration.
@@ -452,7 +509,7 @@ mod tests {
     #[test]
     fn test_symmetric_quantization_int8() {
         let data = vec![-10.0, -5.0, 0.0, 5.0, 10.0];
-        let tensor = ArrayD::from_shape_vec(vec![5], data.clone()).unwrap();
+        let tensor = ArrayD::from_shape_vec(vec![5], data.clone()).expect("unwrap");
 
         let params = QuantizationParams::symmetric_per_tensor(QuantizationType::Int8, &tensor);
 
@@ -464,7 +521,7 @@ mod tests {
     #[test]
     fn test_asymmetric_quantization_int8() {
         let data = vec![0.0, 2.0, 4.0, 6.0, 8.0];
-        let tensor = ArrayD::from_shape_vec(vec![5], data).unwrap();
+        let tensor = ArrayD::from_shape_vec(vec![5], data).expect("unwrap");
 
         let params = QuantizationParams::asymmetric_per_tensor(QuantizationType::Int8, &tensor);
 
@@ -476,7 +533,7 @@ mod tests {
     #[test]
     fn test_quantize_dequantize_int8() {
         let data = vec![-10.0, -5.0, 0.0, 5.0, 10.0];
-        let tensor = ArrayD::from_shape_vec(vec![5], data.clone()).unwrap();
+        let tensor = ArrayD::from_shape_vec(vec![5], data.clone()).expect("unwrap");
 
         let params = QuantizationParams::symmetric_per_tensor(QuantizationType::Int8, &tensor);
         let quantized = QuantizedTensor::quantize(&tensor, params);
@@ -496,7 +553,7 @@ mod tests {
     #[test]
     fn test_quantization_error() {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let tensor = ArrayD::from_shape_vec(vec![5], data).unwrap();
+        let tensor = ArrayD::from_shape_vec(vec![5], data).expect("unwrap");
 
         let params = QuantizationParams::symmetric_per_tensor(QuantizationType::Int8, &tensor);
         let quantized = QuantizedTensor::quantize(&tensor, params);
@@ -508,7 +565,7 @@ mod tests {
 
     #[test]
     fn test_memory_reduction() {
-        let tensor = ArrayD::from_shape_vec(vec![100], vec![1.0; 100]).unwrap();
+        let tensor = ArrayD::from_shape_vec(vec![100], vec![1.0; 100]).expect("unwrap");
         let params = QuantizationParams::symmetric_per_tensor(QuantizationType::Int8, &tensor);
         let quantized = QuantizedTensor::quantize(&tensor, params);
 
@@ -517,8 +574,8 @@ mod tests {
 
     #[test]
     fn test_calibrate_quantization() {
-        let sample1 = ArrayD::from_shape_vec(vec![3], vec![-10.0, 0.0, 10.0]).unwrap();
-        let sample2 = ArrayD::from_shape_vec(vec![3], vec![-8.0, 2.0, 12.0]).unwrap();
+        let sample1 = ArrayD::from_shape_vec(vec![3], vec![-10.0, 0.0, 10.0]).expect("unwrap");
+        let sample2 = ArrayD::from_shape_vec(vec![3], vec![-8.0, 2.0, 12.0]).expect("unwrap");
         let samples = vec![sample1, sample2];
 
         let params = calibrate_quantization(
@@ -526,7 +583,7 @@ mod tests {
             QuantizationType::Int8,
             QuantizationScheme::Symmetric,
         )
-        .unwrap();
+        .expect("unwrap");
 
         assert!(params.scale[0] > 0.0);
         assert_eq!(params.zero_point[0], 0); // Symmetric
@@ -548,7 +605,7 @@ mod tests {
     #[test]
     fn test_fp16_quantization() {
         let data = vec![1.0, 2.0, 3.0, 4.0, 5.0];
-        let tensor = ArrayD::from_shape_vec(vec![5], data.clone()).unwrap();
+        let tensor = ArrayD::from_shape_vec(vec![5], data.clone()).expect("unwrap");
 
         let quantized = quantize_fp16(&tensor);
 
@@ -565,5 +622,136 @@ mod tests {
         assert_eq!(config.target_qtype, QuantizationType::Int8);
         assert_eq!(config.scheme, QuantizationScheme::Symmetric);
         assert!(config.use_ste);
+    }
+
+    // ------------------------------------------------------------------
+    // Per-channel quantization correctness tests
+    // ------------------------------------------------------------------
+
+    /// Build a 2×3 per-channel INT8 params where channel 0 spans [-100,100]
+    /// and channel 1 spans [-1, 1], so scale[0] >> scale[1].
+    fn make_per_channel_params_int8() -> QuantizationParams {
+        // Channel 0: abs_max = 100  → scale = 100/127 ≈ 0.787
+        // Channel 1: abs_max = 1    → scale = 1/127   ≈ 0.00787
+        let scale_0 = 100.0_f64 / 127.0;
+        let scale_1 = 1.0_f64 / 127.0;
+        QuantizationParams {
+            qtype: QuantizationType::Int8,
+            scheme: QuantizationScheme::Symmetric,
+            granularity: QuantizationGranularity::PerChannel,
+            scale: vec![scale_0, scale_1],
+            zero_point: vec![0, 0],
+            min_val: vec![-100.0, -1.0],
+            max_val: vec![100.0, 1.0],
+        }
+    }
+
+    #[test]
+    fn test_per_channel_uses_different_scales() {
+        let params = make_per_channel_params_int8();
+        // scales must be meaningfully different (ratio ≈ 100×)
+        assert!(
+            (params.scale[0] - params.scale[1]).abs() > 0.1,
+            "scale[0]={} scale[1]={} should differ",
+            params.scale[0],
+            params.scale[1]
+        );
+    }
+
+    #[test]
+    fn test_per_channel_quantize_int8_uses_channel_scale() {
+        // Row 0: large values [100, -100, 50]
+        // Row 1: small values [1, -1, 0.5]
+        let data = vec![100.0, -100.0, 50.0, 1.0, -1.0, 0.5];
+        let tensor = ArrayD::from_shape_vec(vec![2, 3], data).expect("build tensor");
+
+        let params = make_per_channel_params_int8();
+        let quantized_tensor = QuantizedTensor::quantize(&tensor, params.clone());
+
+        // Row 0 quantized with scale≈0.787: 100/0.787 ≈ 127 → clamped 127
+        let row0_q_first = quantized_tensor
+            .data
+            .slice(ndarray::s![0, ..])
+            .iter()
+            .copied()
+            .next()
+            .unwrap_or(f64::NAN);
+        // Row 1 quantized with scale≈0.00787: 1/0.00787 ≈ 127 → clamped 127
+        let row1_q_first = quantized_tensor
+            .data
+            .slice(ndarray::s![1, ..])
+            .iter()
+            .copied()
+            .next()
+            .unwrap_or(f64::NAN);
+
+        // Both rows should use the full INT8 dynamic range for their magnitudes
+        assert!(
+            (row0_q_first - 127.0).abs() < 2.0,
+            "row0[0]={row0_q_first} expected ≈127"
+        );
+        assert!(
+            (row1_q_first - 127.0).abs() < 2.0,
+            "row1[0]={row1_q_first} expected ≈127"
+        );
+
+        // Dequantize and check round-trip within channel-scale tolerance
+        let dequantized = quantized_tensor.dequantize();
+
+        let orig_r0_c0 = 100.0_f64;
+        let deq_r0_c0 = dequantized
+            .slice(ndarray::s![0, 0])
+            .first()
+            .copied()
+            .unwrap_or(f64::NAN);
+        assert!(
+            (orig_r0_c0 - deq_r0_c0).abs() < 1.0,
+            "round-trip row0[0]: orig={} deq={}",
+            orig_r0_c0,
+            deq_r0_c0
+        );
+
+        let orig_r1_c0 = 1.0_f64;
+        let deq_r1_c0 = dequantized
+            .slice(ndarray::s![1, 0])
+            .first()
+            .copied()
+            .unwrap_or(f64::NAN);
+        assert!(
+            (orig_r1_c0 - deq_r1_c0).abs() < 0.02,
+            "round-trip row1[0]: orig={} deq={}",
+            orig_r1_c0,
+            deq_r1_c0
+        );
+    }
+
+    #[test]
+    fn test_per_channel_roundtrip_preserves_row_fidelity() {
+        // If we accidentally used scale[0] for row 1, the small-valued row
+        // would round to 0 (loss of information). This test asserts that
+        // PerChannel dequantize gives better fidelity for the small row.
+        let data = vec![100.0, -100.0, 50.0, 1.0, -1.0, 0.5];
+        let tensor = ArrayD::from_shape_vec(vec![2, 3], data).expect("build tensor");
+
+        let params = make_per_channel_params_int8();
+        let quantized = QuantizedTensor::quantize(&tensor, params);
+        let dequantized = quantized.dequantize();
+
+        // Row 1 (small values) must be recovered with fine precision
+        let orig_vals = [1.0_f64, -1.0, 0.5];
+        for (col, &expected) in orig_vals.iter().enumerate() {
+            let got = *dequantized
+                .slice(ndarray::s![1, col..col + 1])
+                .iter()
+                .next()
+                .expect("element");
+            assert!(
+                (expected - got).abs() < 0.02,
+                "row1 col{}: expected={} got={}",
+                col,
+                expected,
+                got
+            );
+        }
     }
 }

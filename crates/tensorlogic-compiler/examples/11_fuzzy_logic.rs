@@ -367,7 +367,7 @@ mod tests {
         let result = compile_to_einsum_with_context(&expr, &mut ctx);
         assert!(result.is_ok());
 
-        let graph = result.unwrap();
+        let graph = result.expect("complex fuzzy expression should compile successfully");
         assert!(graph.validate().is_ok());
     }
 }

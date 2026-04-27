@@ -39,7 +39,7 @@ fn basic_schema() {
         .variable("x", "Person")
         .variable("y", "Event")
         .build()
-        .unwrap();
+        .expect("unwrap");
 
     println!("✓ Created schema with:");
     println!("  {} domains", table.domains.len());
@@ -81,7 +81,7 @@ fn schema_with_metadata() {
             "Organization location",
         )
         .build()
-        .unwrap();
+        .expect("unwrap");
 
     println!("✓ Created schema with metadata");
 
@@ -132,7 +132,7 @@ fn knowledge_graph_schema() {
         .predicate("founded", vec!["Organization", "Date"])
         .predicate("born", vec!["Person", "Date"])
         .build()
-        .unwrap();
+        .expect("unwrap");
 
     println!("✓ Created knowledge graph schema");
     println!("\nStatistics:");

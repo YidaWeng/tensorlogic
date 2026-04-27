@@ -342,7 +342,7 @@ mod tests {
 
         let parser = TurtleParser::new().for_slice(turtle.as_bytes());
         for triple in parser {
-            graph.insert(&triple.unwrap());
+            graph.insert(&triple.expect("unwrap"));
         }
 
         graph

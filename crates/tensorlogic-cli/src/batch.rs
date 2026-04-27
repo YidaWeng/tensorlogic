@@ -90,7 +90,7 @@ impl BatchProcessor {
         pb.set_style(
             ProgressStyle::default_bar()
                 .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg}")
-                .unwrap()
+                .expect("valid progress bar template")
                 .progress_chars("##-"),
         );
 
@@ -132,7 +132,7 @@ impl BatchProcessor {
                 .template(
                     "[{elapsed_precise}] {bar:40.cyan/blue} {pos:>7}/{len:7} {msg} (parallel)",
                 )
-                .unwrap()
+                .expect("valid progress bar template")
                 .progress_chars("##-"),
         );
 
@@ -153,11 +153,11 @@ impl BatchProcessor {
 
                 match self.process_one_with_context(expr_str, &mut local_context) {
                     Ok(_) => {
-                        let mut succ = successes.lock().unwrap();
+                        let mut succ = successes.lock().expect("lock should not be poisoned");
                         *succ += 1;
                     }
                     Err(e) => {
-                        let mut fails = failures.lock().unwrap();
+                        let mut fails = failures.lock().expect("lock should not be poisoned");
                         fails.push((i + 1, expr_str.clone(), e.to_string()));
                     }
                 }
@@ -167,8 +167,11 @@ impl BatchProcessor {
 
         pb.finish_with_message("Done");
 
-        let final_successes = *successes.lock().unwrap();
-        let final_failures = failures.lock().unwrap().clone();
+        let final_successes = *successes.lock().expect("lock should not be poisoned");
+        let final_failures = failures
+            .lock()
+            .expect("lock should not be poisoned")
+            .clone();
 
         Ok(BatchResult {
             total,
@@ -261,7 +264,9 @@ mod tests {
 
         let expressions = vec!["pred(x, y)".to_string(), "AND(a, b)".to_string()];
 
-        let result = processor.process_expressions(&expressions).unwrap();
+        let result = processor
+            .process_expressions(&expressions)
+            .expect("batch processing should succeed");
 
         assert_eq!(result.total, 2);
         assert!(result.successes > 0);
@@ -278,7 +283,9 @@ mod tests {
             "OR(p, q)".to_string(),
         ];
 
-        let result = processor.process_expressions(&expressions).unwrap();
+        let result = processor
+            .process_expressions(&expressions)
+            .expect("parallel batch processing should succeed");
 
         assert_eq!(result.total, 3);
         assert!(result.successes > 0);

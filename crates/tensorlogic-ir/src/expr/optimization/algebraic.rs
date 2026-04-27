@@ -647,6 +647,14 @@ pub fn algebraic_simplify(expr: &TLExpr) -> TLExpr {
         ),
         TLExpr::Abducible { .. } => expr.clone(),
         TLExpr::Explain { formula } => TLExpr::explain(algebraic_simplify(formula)),
+        TLExpr::SymbolLiteral(_) => expr.clone(),
+        TLExpr::Match { scrutinee, arms } => TLExpr::Match {
+            scrutinee: Box::new(algebraic_simplify(scrutinee)),
+            arms: arms
+                .iter()
+                .map(|(p, b)| (p.clone(), Box::new(algebraic_simplify(b))))
+                .collect(),
+        },
 
         // Leaves
         TLExpr::Pred { .. } | TLExpr::Constant(_) => expr.clone(),

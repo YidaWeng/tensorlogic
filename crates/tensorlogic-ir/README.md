@@ -4,11 +4,11 @@
 
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic--ir-orange)](https://crates.io/crates/tensorlogic-ir)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-ir)
-[![Tests](https://img.shields.io/badge/tests-676%2F676-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/tests-806%2F806-brightgreen)](#)
 [![Examples](https://img.shields.io/badge/examples-17-blue)](#)
 [![Benchmarks](https://img.shields.io/badge/benchmarks-50+-orange)](#)
 [![Production](https://img.shields.io/badge/status-production_ready-success)](#)
-[![Version](https://img.shields.io/badge/version-0.1.0--rc.1-blue)](#)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](#)
 [![Zero Warnings](https://img.shields.io/badge/warnings-0-success)](#)
 
 ## Overview
@@ -19,7 +19,7 @@ This crate serves as the **lingua franca** between all TensorLogic components, p
 
 ## Features
 
-### Production Ready (v0.1.0-rc.1)
+### Production Ready (v0.1.0)
 
 #### Advanced Type Systems
 - **Parametric Types**: Type constructors (`List<T>`, `Option<T>`, `Map<K,V>`), unification, generalization
@@ -68,7 +68,7 @@ This crate serves as the **lingua franca** between all TensorLogic components, p
 
 ```toml
 [dependencies]
-tensorlogic-ir = "0.1.0-rc.1"
+tensorlogic-ir = "0.1.0"
 ```
 
 ## Quick Start
@@ -465,8 +465,8 @@ cargo bench -p tensorlogic-ir
 cargo tarpaulin --out Html
 ```
 
-**Test Status**: 676/676 passing (100%)
-- **632 unit tests**: Core functionality, edge cases, and automated theorem proving
+**Test Status**: 806/806 passing (100%)
+- **762 unit tests**: Core functionality, edge cases, automated theorem proving, and S-expression serialization
 - **44 property tests**: Randomized invariant checking (43 passing, 1 ignored)
 - **50+ benchmarks**: Performance measurement across all operations
 - **Zero compiler/clippy warnings**: Production-ready code quality
@@ -489,6 +489,10 @@ tensorlogic-ir/
 │   ├── analysis.rs    # Free variables, predicates
 │   ├── validation.rs  # Arity checking
 │   └── domain_validation.rs # Domain validation
+├── expr_serialize/    # S-expression & binary serialization
+│   ├── mod.rs         # to_sexpr, from_sexpr, to_binary, from_binary
+│   ├── fingerprint.rs # SHA-256 structural hash (expr_fingerprint)
+│   └── batch.rs       # BatchStats for batch serialization
 ├── graph/             # Tensor computation graphs
 │   ├── mod.rs         # EinsumGraph
 │   ├── node.rs        # EinsumNode
@@ -496,6 +500,7 @@ tensorlogic-ir/
 │   ├── optimization.rs # Optimization passes
 │   └── transform.rs   # Graph transformations (disabled)
 ├── metadata.rs        # Provenance & source tracking
+├── parametric_types/  # Parametric type system
 ├── signature.rs       # Type signatures & registry
 ├── term.rs            # Variables & constants
 └── tests.rs           # Integration tests
@@ -578,15 +583,16 @@ cargo bench -p tensorlogic-ir --bench ir_benchmarks -- serialization
 
 See [TODO.md](./TODO.md) for detailed roadmap.
 
-**Current Status**: 100% complete (76/76 tasks) as of v0.1.0-rc.1
+**Current Status**: 100% complete as of v0.1.0
 
-### Completed in RC.1 (2026-03-06)
+### Completed in Stable v0.1.0 (2026-04-06)
 
 - Advanced type systems: dependent types, linear types, refinement types
 - Automated theorem proving: unification, resolution, sequent calculus, CLP
 - Advanced graph analysis: SCC, critical paths, cycle enumeration, isomorphism
 - Profile-guided optimization (PGO) module
-- 676 passing tests with zero warnings
+- S-expression serialization: to_sexpr/from_sexpr/to_binary/from_binary, expr_fingerprint, batch stats
+- 806 passing tests with zero warnings
 
 ## References
 
@@ -599,9 +605,9 @@ Apache-2.0
 
 ---
 
-**Status**: Production Ready (v0.1.0-rc.1)
-**Last Updated**: 2026-03-06
-**Tests**: 676/676 passing (100%)
+**Status**: Stable (v0.1.0)
+**Last Updated**: 2026-04-06
+**Tests**: 806/806 passing (100%)
 **Examples**: 17 comprehensive demonstrations
 **Benchmarks**: 50+ performance tests
 **Documentation**: Zero rustdoc warnings with comprehensive module docs

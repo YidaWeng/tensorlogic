@@ -304,7 +304,7 @@ mod tests {
         let loss = DistillationLoss::new(3.0, 0.7, Box::new(CrossEntropyLoss::default()));
         assert!(loss.is_ok());
 
-        let loss = loss.unwrap();
+        let loss = loss.expect("unwrap");
         assert_eq!(loss.temperature, 3.0);
         assert_eq!(loss.alpha, 0.7);
     }
@@ -329,7 +329,8 @@ mod tests {
 
     #[test]
     fn test_distillation_compute() {
-        let loss = DistillationLoss::new(2.0, 0.5, Box::new(CrossEntropyLoss::default())).unwrap();
+        let loss =
+            DistillationLoss::new(2.0, 0.5, Box::new(CrossEntropyLoss::default())).expect("unwrap");
 
         let student_logits = array![[1.0, 2.0, 0.5], [0.5, 1.0, 2.0]];
         let teacher_logits = array![[1.2, 1.8, 0.6], [0.6, 1.1, 1.9]];
@@ -342,14 +343,14 @@ mod tests {
         );
 
         assert!(result.is_ok());
-        let loss_value = result.unwrap();
+        let loss_value = result.expect("unwrap");
         assert!(loss_value > 0.0);
         assert!(loss_value.is_finite());
     }
 
     #[test]
     fn test_feature_distillation_loss() {
-        let loss = FeatureDistillationLoss::new(vec![0.5, 0.3, 0.2], 2.0).unwrap();
+        let loss = FeatureDistillationLoss::new(vec![0.5, 0.3, 0.2], 2.0).expect("unwrap");
 
         let s1 = array![[1.0, 2.0], [3.0, 4.0]];
         let s2 = array![[0.5, 1.5], [2.5, 3.5]];
@@ -364,7 +365,7 @@ mod tests {
         let result = loss.compute_feature_loss(&student_features, &teacher_features);
         assert!(result.is_ok());
 
-        let loss_value = result.unwrap();
+        let loss_value = result.expect("unwrap");
         assert!(loss_value > 0.0);
         assert!(loss_value < 1.0); // Should be small for similar features
     }
@@ -380,14 +381,14 @@ mod tests {
             loss.compute_attention_loss(&student_attention.view(), &teacher_attention.view());
         assert!(result.is_ok());
 
-        let loss_value = result.unwrap();
+        let loss_value = result.expect("unwrap");
         assert!(loss_value >= 0.0);
         assert!(loss_value.is_finite());
     }
 
     #[test]
     fn test_feature_distillation_shape_mismatch() {
-        let loss = FeatureDistillationLoss::new(vec![1.0], 2.0).unwrap();
+        let loss = FeatureDistillationLoss::new(vec![1.0], 2.0).expect("unwrap");
 
         let s1 = array![[1.0, 2.0]];
         let student_features = vec![s1.view()];

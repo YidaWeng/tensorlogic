@@ -130,7 +130,7 @@ impl CustomOpRegistry {
     ) -> Result<()> {
         let name = name.into();
 
-        let mut handlers = self.handlers.write().unwrap();
+        let mut handlers = self.handlers.write().expect("lock should not be poisoned");
 
         if handlers.contains_key(&name) {
             bail!("Custom operation '{}' is already registered", name);
@@ -142,7 +142,7 @@ impl CustomOpRegistry {
 
     /// Unregister a custom operation.
     pub fn unregister(&mut self, name: &str) -> Result<()> {
-        let mut handlers = self.handlers.write().unwrap();
+        let mut handlers = self.handlers.write().expect("lock should not be poisoned");
 
         if handlers.remove(name).is_none() {
             bail!("Custom operation '{}' not found", name);
@@ -153,19 +153,19 @@ impl CustomOpRegistry {
 
     /// Check if an operation is registered.
     pub fn has_operation(&self, name: &str) -> bool {
-        let handlers = self.handlers.read().unwrap();
+        let handlers = self.handlers.read().expect("lock should not be poisoned");
         handlers.contains_key(name)
     }
 
     /// Get metadata for an operation.
     pub fn get_metadata(&self, name: &str) -> Option<CustomOpMetadata> {
-        let handlers = self.handlers.read().unwrap();
+        let handlers = self.handlers.read().expect("lock should not be poisoned");
         handlers.get(name).map(|(_, meta)| meta.clone())
     }
 
     /// List all registered operations.
     pub fn list_operations(&self) -> Vec<String> {
-        let handlers = self.handlers.read().unwrap();
+        let handlers = self.handlers.read().expect("lock should not be poisoned");
         handlers.keys().cloned().collect()
     }
 
@@ -178,7 +178,7 @@ impl CustomOpRegistry {
         graph: &mut EinsumGraph,
         data: &CustomOpData,
     ) -> Result<usize> {
-        let handlers = self.handlers.read().unwrap();
+        let handlers = self.handlers.read().expect("lock should not be poisoned");
 
         let (handler, metadata) = handlers
             .get(name)

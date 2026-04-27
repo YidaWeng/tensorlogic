@@ -26,6 +26,28 @@ pub enum Pattern {
     Imply(Box<Pattern>, Box<Pattern>),
     /// Match any expression (wildcard)
     Any,
+    /// Match an addition
+    Add(Box<Pattern>, Box<Pattern>),
+    /// Match a subtraction
+    Sub(Box<Pattern>, Box<Pattern>),
+    /// Match a multiplication
+    Mul(Box<Pattern>, Box<Pattern>),
+    /// Match a division
+    Div(Box<Pattern>, Box<Pattern>),
+    /// Match a power
+    Pow(Box<Pattern>, Box<Pattern>),
+    /// Match negation (encoded as Sub(0, x) in TLExpr)
+    Neg(Box<Pattern>),
+    /// Match an exponential
+    Exp(Box<Pattern>),
+    /// Match a logarithm
+    Log(Box<Pattern>),
+    /// Match a sine
+    Sin(Box<Pattern>),
+    /// Match a cosine
+    Cos(Box<Pattern>),
+    /// Match a tangent
+    Tan(Box<Pattern>),
 }
 
 impl Pattern {
@@ -70,6 +92,66 @@ impl Pattern {
     /// Create an implication pattern.
     pub fn imply(left: Pattern, right: Pattern) -> Self {
         Pattern::Imply(Box::new(left), Box::new(right))
+    }
+
+    /// Create an addition pattern.
+    #[allow(clippy::should_implement_trait)]
+    pub fn add(left: Pattern, right: Pattern) -> Self {
+        Pattern::Add(Box::new(left), Box::new(right))
+    }
+
+    /// Create a subtraction pattern.
+    #[allow(clippy::should_implement_trait)]
+    pub fn sub(left: Pattern, right: Pattern) -> Self {
+        Pattern::Sub(Box::new(left), Box::new(right))
+    }
+
+    /// Create a multiplication pattern.
+    #[allow(clippy::should_implement_trait)]
+    pub fn mul(left: Pattern, right: Pattern) -> Self {
+        Pattern::Mul(Box::new(left), Box::new(right))
+    }
+
+    /// Create a division pattern.
+    #[allow(clippy::should_implement_trait)]
+    pub fn div(left: Pattern, right: Pattern) -> Self {
+        Pattern::Div(Box::new(left), Box::new(right))
+    }
+
+    /// Create a power pattern.
+    pub fn pow(left: Pattern, right: Pattern) -> Self {
+        Pattern::Pow(Box::new(left), Box::new(right))
+    }
+
+    /// Create a negation pattern (matches Sub(0, x)).
+    #[allow(clippy::should_implement_trait)]
+    pub fn neg(inner: Pattern) -> Self {
+        Pattern::Neg(Box::new(inner))
+    }
+
+    /// Create an exponential pattern.
+    pub fn exp(inner: Pattern) -> Self {
+        Pattern::Exp(Box::new(inner))
+    }
+
+    /// Create a logarithm pattern.
+    pub fn log(inner: Pattern) -> Self {
+        Pattern::Log(Box::new(inner))
+    }
+
+    /// Create a sine pattern.
+    pub fn sin(inner: Pattern) -> Self {
+        Pattern::Sin(Box::new(inner))
+    }
+
+    /// Create a cosine pattern.
+    pub fn cos(inner: Pattern) -> Self {
+        Pattern::Cos(Box::new(inner))
+    }
+
+    /// Create a tangent pattern.
+    pub fn tan(inner: Pattern) -> Self {
+        Pattern::Tan(Box::new(inner))
     }
 
     /// Try to match this pattern against an expression, returning bindings if successful.
@@ -119,15 +201,40 @@ impl Pattern {
                 pargs.len() == eargs.len()
             }
 
-            // Binary operators
+            // Binary logical operators
             (Pattern::And(pl, pr), TLExpr::And(el, er))
             | (Pattern::Or(pl, pr), TLExpr::Or(el, er))
             | (Pattern::Imply(pl, pr), TLExpr::Imply(el, er)) => {
                 pl.matches_recursive(el, bindings) && pr.matches_recursive(er, bindings)
             }
 
-            // Unary operators
+            // Binary arithmetic operators
+            (Pattern::Add(pl, pr), TLExpr::Add(el, er))
+            | (Pattern::Sub(pl, pr), TLExpr::Sub(el, er))
+            | (Pattern::Mul(pl, pr), TLExpr::Mul(el, er))
+            | (Pattern::Div(pl, pr), TLExpr::Div(el, er))
+            | (Pattern::Pow(pl, pr), TLExpr::Pow(el, er)) => {
+                pl.matches_recursive(el, bindings) && pr.matches_recursive(er, bindings)
+            }
+
+            // Unary logical operators
             (Pattern::Not(p), TLExpr::Not(e)) => p.matches_recursive(e, bindings),
+
+            // Negation: Pattern::Neg(a) matches TLExpr::Sub(Constant(~0.0), ea)
+            (Pattern::Neg(p), TLExpr::Sub(zero_expr, e)) => {
+                if let TLExpr::Constant(v) = zero_expr.as_ref() {
+                    v.abs() < 1e-15 && p.matches_recursive(e, bindings)
+                } else {
+                    false
+                }
+            }
+
+            // Unary transcendental/math operators
+            (Pattern::Exp(p), TLExpr::Exp(e))
+            | (Pattern::Log(p), TLExpr::Log(e))
+            | (Pattern::Sin(p), TLExpr::Sin(e))
+            | (Pattern::Cos(p), TLExpr::Cos(e))
+            | (Pattern::Tan(p), TLExpr::Tan(e)) => p.matches_recursive(e, bindings),
 
             _ => false,
         }
@@ -202,7 +309,12 @@ impl RewriteSystem {
         system = system.add_rule(RewriteRule::named(
             "double_negation",
             Pattern::negation(Pattern::negation(Pattern::var("A"))),
-            |bindings| bindings.get("A").unwrap().clone(),
+            |bindings| {
+                bindings
+                    .get("A")
+                    .expect("binding 'A' must exist when pattern matched")
+                    .clone()
+            },
         ));
 
         // De Morgan's laws: ¬(A ∧ B) → ¬A ∨ ¬B
@@ -211,8 +323,18 @@ impl RewriteSystem {
             Pattern::negation(Pattern::and(Pattern::var("A"), Pattern::var("B"))),
             |bindings| {
                 TLExpr::or(
-                    TLExpr::negate(bindings.get("A").unwrap().clone()),
-                    TLExpr::negate(bindings.get("B").unwrap().clone()),
+                    TLExpr::negate(
+                        bindings
+                            .get("A")
+                            .expect("binding 'A' must exist when pattern matched")
+                            .clone(),
+                    ),
+                    TLExpr::negate(
+                        bindings
+                            .get("B")
+                            .expect("binding 'B' must exist when pattern matched")
+                            .clone(),
+                    ),
                 )
             },
         ));
@@ -223,8 +345,18 @@ impl RewriteSystem {
             Pattern::negation(Pattern::or(Pattern::var("A"), Pattern::var("B"))),
             |bindings| {
                 TLExpr::and(
-                    TLExpr::negate(bindings.get("A").unwrap().clone()),
-                    TLExpr::negate(bindings.get("B").unwrap().clone()),
+                    TLExpr::negate(
+                        bindings
+                            .get("A")
+                            .expect("binding 'A' must exist when pattern matched")
+                            .clone(),
+                    ),
+                    TLExpr::negate(
+                        bindings
+                            .get("B")
+                            .expect("binding 'B' must exist when pattern matched")
+                            .clone(),
+                    ),
                 )
             },
         ));
@@ -235,8 +367,16 @@ impl RewriteSystem {
             Pattern::imply(Pattern::var("A"), Pattern::var("B")),
             |bindings| {
                 TLExpr::or(
-                    TLExpr::negate(bindings.get("A").unwrap().clone()),
-                    bindings.get("B").unwrap().clone(),
+                    TLExpr::negate(
+                        bindings
+                            .get("A")
+                            .expect("binding 'A' must exist when pattern matched")
+                            .clone(),
+                    ),
+                    bindings
+                        .get("B")
+                        .expect("binding 'B' must exist when pattern matched")
+                        .clone(),
                 )
             },
         ));
@@ -519,6 +659,14 @@ impl RewriteSystem {
             ),
             TLExpr::Abducible { .. } => expr.clone(),
             TLExpr::Explain { formula } => TLExpr::explain(self.apply_recursive(formula)),
+            TLExpr::SymbolLiteral(_) => expr.clone(),
+            TLExpr::Match { scrutinee, arms } => TLExpr::Match {
+                scrutinee: Box::new(self.apply_recursive(scrutinee)),
+                arms: arms
+                    .iter()
+                    .map(|(p, b)| (p.clone(), Box::new(self.apply_recursive(b))))
+                    .collect(),
+            },
 
             // Leaves - no recursion needed
             TLExpr::Pred { .. } | TLExpr::Constant(_) => expr.clone(),
@@ -548,7 +696,7 @@ mod tests {
         let pattern = Pattern::var("x");
         let expr = TLExpr::pred("P", vec![Term::var("a")]);
 
-        let bindings = pattern.matches(&expr).unwrap();
+        let bindings = pattern.matches(&expr).expect("unwrap");
         assert_eq!(bindings.get("x"), Some(&expr));
     }
 
@@ -568,7 +716,7 @@ mod tests {
             TLExpr::pred("Q", vec![Term::var("y")]),
         );
 
-        let bindings = pattern.matches(&expr).unwrap();
+        let bindings = pattern.matches(&expr).expect("unwrap");
         assert!(bindings.contains_key("A"));
         assert!(bindings.contains_key("B"));
     }
@@ -578,7 +726,7 @@ mod tests {
         let pattern = Pattern::negation(Pattern::var("A"));
         let expr = TLExpr::negate(TLExpr::pred("P", vec![Term::var("x")]));
 
-        let bindings = pattern.matches(&expr).unwrap();
+        let bindings = pattern.matches(&expr).expect("unwrap");
         assert!(bindings.contains_key("A"));
     }
 
@@ -586,11 +734,16 @@ mod tests {
     fn test_double_negation_rule() {
         let rule = RewriteRule::new(
             Pattern::negation(Pattern::negation(Pattern::var("A"))),
-            |bindings| bindings.get("A").unwrap().clone(),
+            |bindings| {
+                bindings
+                    .get("A")
+                    .expect("binding 'A' must exist when pattern matched")
+                    .clone()
+            },
         );
 
         let expr = TLExpr::negate(TLExpr::negate(TLExpr::pred("P", vec![Term::var("x")])));
-        let result = rule.apply(&expr).unwrap();
+        let result = rule.apply(&expr).expect("unwrap");
 
         assert!(matches!(result, TLExpr::Pred { .. }));
     }
@@ -599,7 +752,12 @@ mod tests {
     fn test_rewrite_system_double_negation() {
         let system = RewriteSystem::new().add_rule(RewriteRule::new(
             Pattern::negation(Pattern::negation(Pattern::var("A"))),
-            |bindings| bindings.get("A").unwrap().clone(),
+            |bindings| {
+                bindings
+                    .get("A")
+                    .expect("binding 'A' must exist when pattern matched")
+                    .clone()
+            },
         ));
 
         let expr = TLExpr::negate(TLExpr::negate(TLExpr::pred("P", vec![Term::var("x")])));
@@ -653,5 +811,76 @@ mod tests {
 
         let result = system.apply_recursive(&expr);
         assert!(matches!(result, TLExpr::Or(_, _)));
+    }
+
+    #[test]
+    fn test_pattern_add_match() {
+        let pattern = Pattern::add(Pattern::var("x"), Pattern::var("y"));
+        let expr = TLExpr::add(TLExpr::constant(1.0), TLExpr::constant(2.0));
+
+        let bindings = pattern
+            .matches(&expr)
+            .expect("Pattern::Add should match TLExpr::Add");
+        assert_eq!(bindings.get("x"), Some(&TLExpr::constant(1.0)));
+        assert_eq!(bindings.get("y"), Some(&TLExpr::constant(2.0)));
+    }
+
+    #[test]
+    fn test_pattern_exp_match() {
+        let pattern = Pattern::exp(Pattern::var("x"));
+        let expr = TLExpr::exp(TLExpr::constant(1.0));
+
+        let bindings = pattern
+            .matches(&expr)
+            .expect("Pattern::Exp should match TLExpr::Exp");
+        assert_eq!(bindings.get("x"), Some(&TLExpr::constant(1.0)));
+    }
+
+    #[test]
+    fn test_pattern_neg_match() {
+        let pattern = Pattern::neg(Pattern::var("x"));
+        // Negation in TLExpr is Sub(0, x)
+        let expr = TLExpr::sub(TLExpr::constant(0.0), TLExpr::constant(5.0));
+
+        let bindings = pattern
+            .matches(&expr)
+            .expect("Pattern::Neg should match TLExpr::Sub(0, x)");
+        assert_eq!(bindings.get("x"), Some(&TLExpr::constant(5.0)));
+    }
+
+    #[test]
+    fn test_pattern_add_does_not_match_mul() {
+        let pattern = Pattern::add(Pattern::var("x"), Pattern::var("y"));
+        let expr = TLExpr::mul(TLExpr::constant(1.0), TLExpr::constant(2.0));
+
+        assert!(pattern.matches(&expr).is_none());
+    }
+
+    #[test]
+    fn test_pattern_sin_cos_tan_match() {
+        let sin_pat = Pattern::sin(Pattern::var("a"));
+        let cos_pat = Pattern::cos(Pattern::var("a"));
+        let tan_pat = Pattern::tan(Pattern::var("a"));
+
+        let sin_expr = TLExpr::sin(TLExpr::constant(0.5));
+        let cos_expr = TLExpr::cos(TLExpr::constant(0.5));
+        let tan_expr = TLExpr::tan(TLExpr::constant(0.5));
+
+        assert!(sin_pat.matches(&sin_expr).is_some());
+        assert!(cos_pat.matches(&cos_expr).is_some());
+        assert!(tan_pat.matches(&tan_expr).is_some());
+
+        // Cross-mismatches
+        assert!(sin_pat.matches(&cos_expr).is_none());
+        assert!(cos_pat.matches(&tan_expr).is_none());
+    }
+
+    #[test]
+    fn test_pattern_neg_nonzero_constant_no_match() {
+        let pattern = Pattern::neg(Pattern::var("x"));
+        // Sub(1.0, x) should NOT match Neg pattern (needs ~0.0 as first arg)
+        let expr = TLExpr::sub(TLExpr::constant(1.0), TLExpr::constant(5.0));
+
+        assert!(pattern.matches(&expr).is_none());
     }
 }

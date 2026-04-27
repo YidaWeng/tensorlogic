@@ -231,11 +231,15 @@ fn scenario_symbol_table_cache() {
     let mut table = SymbolTable::new();
 
     // Add domains
-    table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
     table
         .add_domain(DomainInfo::new("Organization", 50))
-        .unwrap();
-    table.add_domain(DomainInfo::new("Event", 200)).unwrap();
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Event", 200))
+        .expect("unwrap");
 
     // Add predicates
     table
@@ -243,22 +247,22 @@ fn scenario_symbol_table_cache() {
             "knows",
             vec!["Person".to_string(), "Person".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new(
             "works_at",
             vec!["Person".to_string(), "Organization".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new(
             "attends",
             vec!["Person".to_string(), "Event".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new("age", vec!["Person".to_string()]))
-        .unwrap();
+        .expect("unwrap");
 
     println!("Created symbol table:");
     println!("  - 3 domains: Person, Organization, Event");
@@ -329,7 +333,7 @@ fn scenario_performance() {
     for i in 0..100 {
         table
             .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Add many predicates
@@ -340,7 +344,7 @@ fn scenario_performance() {
             .collect();
         table
             .add_predicate(PredicateInfo::new(format!("pred{}", i), domains))
-            .unwrap();
+            .expect("unwrap");
     }
 
     println!("Created large symbol table:");

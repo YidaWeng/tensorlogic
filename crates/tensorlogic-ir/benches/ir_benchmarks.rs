@@ -192,8 +192,8 @@ fn bench_graph_construction(c: &mut Criterion) {
 
             graph
                 .add_node(EinsumNode::elem_binary("add", a, b, c))
-                .unwrap();
-            graph.add_output(c).unwrap();
+                .expect("unwrap");
+            graph.add_output(c).expect("unwrap");
         });
     });
 
@@ -207,11 +207,11 @@ fn bench_graph_construction(c: &mut Criterion) {
                 let next = graph.add_tensor(format!("layer_{}", i));
                 graph
                     .add_node(EinsumNode::elem_unary("relu", current, next))
-                    .unwrap();
+                    .expect("unwrap");
                 current = next;
             }
 
-            graph.add_output(current).unwrap();
+            graph.add_output(current).expect("unwrap");
         });
     });
 
@@ -230,8 +230,8 @@ fn bench_graph_validation(c: &mut Criterion) {
     let c = small_graph.add_tensor("c");
     small_graph
         .add_node(EinsumNode::elem_binary("add", a, b, c))
-        .unwrap();
-    small_graph.add_output(c).unwrap();
+        .expect("unwrap");
+    small_graph.add_output(c).expect("unwrap");
 
     group.bench_function("small_graph", |b| {
         b.iter(|| {
@@ -246,10 +246,10 @@ fn bench_graph_validation(c: &mut Criterion) {
         let next = medium_graph.add_tensor(format!("layer_{}", i));
         medium_graph
             .add_node(EinsumNode::elem_unary("relu", current, next))
-            .unwrap();
+            .expect("unwrap");
         current = next;
     }
-    medium_graph.add_output(current).unwrap();
+    medium_graph.add_output(current).expect("unwrap");
 
     group.bench_function("medium_graph_10_layers", |b| {
         b.iter(|| {
@@ -264,10 +264,10 @@ fn bench_graph_validation(c: &mut Criterion) {
         let next = large_graph.add_tensor(format!("layer_{}", i));
         large_graph
             .add_node(EinsumNode::elem_unary("relu", current, next))
-            .unwrap();
+            .expect("unwrap");
         current = next;
     }
-    large_graph.add_output(current).unwrap();
+    large_graph.add_output(current).expect("unwrap");
 
     group.bench_function("large_graph_50_layers", |b| {
         b.iter(|| {
@@ -295,14 +295,14 @@ fn bench_serialization(c: &mut Criterion) {
 
     group.bench_function("expr_to_json", |b| {
         b.iter(|| {
-            let _json = serde_json::to_string(black_box(&expr)).unwrap();
+            let _json = serde_json::to_string(black_box(&expr)).expect("unwrap");
         });
     });
 
-    let json = serde_json::to_string(&expr).unwrap();
+    let json = serde_json::to_string(&expr).expect("unwrap");
     group.bench_function("expr_from_json", |b| {
         b.iter(|| {
-            let _expr: TLExpr = serde_json::from_str(black_box(&json)).unwrap();
+            let _expr: TLExpr = serde_json::from_str(black_box(&json)).expect("unwrap");
         });
     });
 
@@ -310,16 +310,16 @@ fn bench_serialization(c: &mut Criterion) {
         b.iter(|| {
             let _binary =
                 oxicode::serde::encode_to_vec(black_box(&expr), oxicode::config::standard())
-                    .unwrap();
+                    .expect("unwrap");
         });
     });
 
-    let binary = oxicode::serde::encode_to_vec(&expr, oxicode::config::standard()).unwrap();
+    let binary = oxicode::serde::encode_to_vec(&expr, oxicode::config::standard()).expect("unwrap");
     group.bench_function("expr_from_binary", |b| {
         b.iter(|| {
             let (_expr, _): (TLExpr, usize) =
                 oxicode::serde::decode_from_slice(black_box(&binary), oxicode::config::standard())
-                    .unwrap();
+                    .expect("unwrap");
         });
     });
 
@@ -330,21 +330,21 @@ fn bench_serialization(c: &mut Criterion) {
         let next = graph.add_tensor(format!("layer_{}", i));
         graph
             .add_node(EinsumNode::elem_unary("relu", current, next))
-            .unwrap();
+            .expect("unwrap");
         current = next;
     }
-    graph.add_output(current).unwrap();
+    graph.add_output(current).expect("unwrap");
 
     group.bench_function("graph_to_json", |b| {
         b.iter(|| {
-            let _json = serde_json::to_string(black_box(&graph)).unwrap();
+            let _json = serde_json::to_string(black_box(&graph)).expect("unwrap");
         });
     });
 
-    let graph_json = serde_json::to_string(&graph).unwrap();
+    let graph_json = serde_json::to_string(&graph).expect("unwrap");
     group.bench_function("graph_from_json", |b| {
         b.iter(|| {
-            let _graph: EinsumGraph = serde_json::from_str(black_box(&graph_json)).unwrap();
+            let _graph: EinsumGraph = serde_json::from_str(black_box(&graph_json)).expect("unwrap");
         });
     });
 
@@ -352,18 +352,19 @@ fn bench_serialization(c: &mut Criterion) {
         b.iter(|| {
             let _binary =
                 oxicode::serde::encode_to_vec(black_box(&graph), oxicode::config::standard())
-                    .unwrap();
+                    .expect("unwrap");
         });
     });
 
-    let graph_binary = oxicode::serde::encode_to_vec(&graph, oxicode::config::standard()).unwrap();
+    let graph_binary =
+        oxicode::serde::encode_to_vec(&graph, oxicode::config::standard()).expect("unwrap");
     group.bench_function("graph_from_binary", |b| {
         b.iter(|| {
             let (_graph, _): (EinsumGraph, usize) = oxicode::serde::decode_from_slice(
                 black_box(&graph_binary),
                 oxicode::config::standard(),
             )
-            .unwrap();
+            .expect("unwrap");
         });
     });
 
@@ -391,7 +392,7 @@ fn bench_domain_operations(c: &mut Criterion) {
 
     registry
         .register(DomainInfo::finite("TestDomain", 100))
-        .unwrap();
+        .expect("unwrap");
     group.bench_function("lookup_domain", |b| {
         b.iter(|| {
             let _domain = black_box(&registry).get(black_box("TestDomain"));
@@ -450,10 +451,10 @@ fn bench_cloning(c: &mut Criterion) {
         let next = graph.add_tensor(format!("layer_{}", i));
         graph
             .add_node(EinsumNode::elem_unary("relu", current, next))
-            .unwrap();
+            .expect("unwrap");
         current = next;
     }
-    graph.add_output(current).unwrap();
+    graph.add_output(current).expect("unwrap");
 
     group.bench_function("graph_20_layers", |b| {
         b.iter(|| {
@@ -498,7 +499,7 @@ fn bench_throughput(c: &mut Criterion) {
                         let next = graph.add_tensor(format!("layer_{}", i));
                         graph
                             .add_node(EinsumNode::elem_unary("relu", current, next))
-                            .unwrap();
+                            .expect("unwrap");
                         current = next;
                     }
                 });

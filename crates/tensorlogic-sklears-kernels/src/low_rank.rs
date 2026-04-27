@@ -190,7 +190,9 @@ impl NystromApproximation {
         // Select remaining landmarks based on distance from existing landmarks
         for _ in 1..num_landmarks {
             // Update minimum distances to nearest landmark
-            let last_landmark = *landmarks.last().unwrap();
+            let last_landmark = *landmarks
+                .last()
+                .expect("landmarks is non-empty after first push");
             for i in 0..n {
                 if landmarks.contains(&i) {
                     continue;
@@ -392,7 +394,7 @@ mod tests {
 
     #[test]
     fn test_nystrom_config() {
-        let config = NystromConfig::new(10).unwrap();
+        let config = NystromConfig::new(10).expect("unwrap");
         assert_eq!(config.num_landmarks, 10);
         assert_eq!(config.sampling, SamplingMethod::Uniform);
     }
@@ -407,9 +409,9 @@ mod tests {
     fn test_nystrom_approximation_basic() {
         let data = generate_test_data(50, 10);
         let kernel = LinearKernel::new();
-        let config = NystromConfig::new(10).unwrap();
+        let config = NystromConfig::new(10).expect("unwrap");
 
-        let approx = NystromApproximation::fit(&data, &kernel, config).unwrap();
+        let approx = NystromApproximation::fit(&data, &kernel, config).expect("unwrap");
 
         assert_eq!(approx.num_samples(), 50);
         assert_eq!(approx.num_landmarks(), 10);
@@ -419,12 +421,12 @@ mod tests {
     fn test_nystrom_approximation_value() {
         let data = generate_test_data(20, 5);
         let kernel = LinearKernel::new();
-        let config = NystromConfig::new(5).unwrap();
+        let config = NystromConfig::new(5).expect("unwrap");
 
-        let approx = NystromApproximation::fit(&data, &kernel, config).unwrap();
+        let approx = NystromApproximation::fit(&data, &kernel, config).expect("unwrap");
 
         // Approximate kernel value should be reasonable
-        let value = approx.approximate(0, 1).unwrap();
+        let value = approx.approximate(0, 1).expect("unwrap");
         assert!(value.is_finite());
     }
 
@@ -435,23 +437,23 @@ mod tests {
 
         // First sampling
         let config1 = NystromConfig::new(10)
-            .unwrap()
+            .expect("unwrap")
             .with_sampling(SamplingMethod::First);
-        let approx1 = NystromApproximation::fit(&data, &kernel, config1).unwrap();
+        let approx1 = NystromApproximation::fit(&data, &kernel, config1).expect("unwrap");
         assert_eq!(approx1.landmark_indices()[0], 0);
 
         // Uniform sampling
         let config2 = NystromConfig::new(10)
-            .unwrap()
+            .expect("unwrap")
             .with_sampling(SamplingMethod::Uniform);
-        let approx2 = NystromApproximation::fit(&data, &kernel, config2).unwrap();
+        let approx2 = NystromApproximation::fit(&data, &kernel, config2).expect("unwrap");
         assert_eq!(approx2.num_landmarks(), 10);
 
         // K-means++ sampling
         let config3 = NystromConfig::new(10)
-            .unwrap()
+            .expect("unwrap")
             .with_sampling(SamplingMethod::KMeansPlusPlus);
-        let approx3 = NystromApproximation::fit(&data, &kernel, config3).unwrap();
+        let approx3 = NystromApproximation::fit(&data, &kernel, config3).expect("unwrap");
         assert_eq!(approx3.num_landmarks(), 10);
     }
 
@@ -459,9 +461,9 @@ mod tests {
     fn test_nystrom_compression_ratio() {
         let data = generate_test_data(100, 5);
         let kernel = LinearKernel::new();
-        let config = NystromConfig::new(20).unwrap();
+        let config = NystromConfig::new(20).expect("unwrap");
 
-        let approx = NystromApproximation::fit(&data, &kernel, config).unwrap();
+        let approx = NystromApproximation::fit(&data, &kernel, config).expect("unwrap");
 
         let ratio = approx.compression_ratio();
         // Should have significant compression
@@ -474,13 +476,13 @@ mod tests {
         let kernel = LinearKernel::new();
 
         // Compute exact kernel matrix
-        let exact = kernel.compute_matrix(&data).unwrap();
+        let exact = kernel.compute_matrix(&data).expect("unwrap");
 
         // Compute approximation with many landmarks (should be accurate)
-        let config = NystromConfig::new(20).unwrap();
-        let approx = NystromApproximation::fit(&data, &kernel, config).unwrap();
+        let config = NystromConfig::new(20).expect("unwrap");
+        let approx = NystromApproximation::fit(&data, &kernel, config).expect("unwrap");
 
-        let error = approx.approximation_error(&exact).unwrap();
+        let error = approx.approximation_error(&exact).expect("unwrap");
         // Error should be relatively small with many landmarks
         assert!(error < 10.0);
     }
@@ -489,7 +491,7 @@ mod tests {
     fn test_nystrom_too_many_landmarks() {
         let data = generate_test_data(10, 5);
         let kernel = LinearKernel::new();
-        let config = NystromConfig::new(20).unwrap(); // More landmarks than data points
+        let config = NystromConfig::new(20).expect("unwrap"); // More landmarks than data points
 
         let result = NystromApproximation::fit(&data, &kernel, config);
         assert!(result.is_err());
@@ -500,17 +502,19 @@ mod tests {
         let data = generate_test_data(20, 5);
         let kernel = LinearKernel::new();
         let config = NystromConfig::new(5)
-            .unwrap()
+            .expect("unwrap")
             .with_regularization(1e-4)
-            .unwrap();
+            .expect("unwrap");
 
-        let approx = NystromApproximation::fit(&data, &kernel, config).unwrap();
+        let approx = NystromApproximation::fit(&data, &kernel, config).expect("unwrap");
         assert!(approx.approximate(0, 1).is_ok());
     }
 
     #[test]
     fn test_nystrom_invalid_regularization() {
-        let result = NystromConfig::new(10).unwrap().with_regularization(-0.1);
+        let result = NystromConfig::new(10)
+            .expect("unwrap")
+            .with_regularization(-0.1);
         assert!(result.is_err());
     }
 }

@@ -399,7 +399,7 @@ mod tests {
         std::thread::sleep(Duration::from_millis(10));
         state.complete();
 
-        let elapsed = state.elapsed().unwrap();
+        let elapsed = state.elapsed().expect("unwrap");
         assert!(elapsed.as_millis() >= 10);
     }
 

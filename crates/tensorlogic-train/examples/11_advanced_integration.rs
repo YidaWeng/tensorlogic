@@ -53,17 +53,17 @@ fn compute_accuracy(predictions: &Array2<f64>, targets: &Array2<f64>) -> f64 {
             .row(i)
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("unwrap"))
             .map(|(idx, _)| idx)
-            .unwrap();
+            .expect("unwrap");
 
         let true_class = targets
             .row(i)
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).expect("unwrap"))
             .map(|(idx, _)| idx)
-            .unwrap();
+            .expect("unwrap");
 
         if pred_class == true_class {
             correct += 1;
@@ -133,8 +133,16 @@ fn main() -> TrainResult<()> {
     let mut best_score = f64::NEG_INFINITY;
 
     for config in configs.iter() {
-        let lr = config.get("learning_rate").unwrap().as_float().unwrap();
-        let batch_size = config.get("batch_size").unwrap().as_int().unwrap() as usize;
+        let lr = config
+            .get("learning_rate")
+            .expect("unwrap")
+            .as_float()
+            .expect("unwrap");
+        let batch_size = config
+            .get("batch_size")
+            .expect("unwrap")
+            .as_int()
+            .expect("unwrap") as usize;
 
         // Quick evaluation
         let trainer_config = TrainerConfig {
@@ -194,10 +202,14 @@ fn main() -> TrainResult<()> {
 
     let best_lr = best_config
         .get("learning_rate")
-        .unwrap()
+        .expect("unwrap")
         .as_float()
-        .unwrap();
-    let best_batch = best_config.get("batch_size").unwrap().as_int().unwrap() as usize;
+        .expect("unwrap");
+    let best_batch = best_config
+        .get("batch_size")
+        .expect("unwrap")
+        .as_int()
+        .expect("unwrap") as usize;
 
     println!("\n✓ Best config: lr={:.6}, batch={}\n", best_lr, best_batch);
 
@@ -255,8 +267,8 @@ fn main() -> TrainResult<()> {
         // Evaluate
         let predictions = forward(
             &fold_val_data,
-            params.get("weights").unwrap(),
-            params.get("bias").unwrap(),
+            params.get("weights").expect("unwrap"),
+            params.get("bias").expect("unwrap"),
         );
         let acc = compute_accuracy(&predictions, &fold_val_targets);
         fold_scores.push(acc);
@@ -334,8 +346,8 @@ fn main() -> TrainResult<()> {
     for params in &ensemble_params {
         let pred = forward(
             &val_data,
-            params.get("weights").unwrap(),
-            params.get("bias").unwrap(),
+            params.get("weights").expect("unwrap"),
+            params.get("bias").expect("unwrap"),
         );
         ensemble_predictions = &ensemble_predictions + &pred;
     }
@@ -346,8 +358,8 @@ fn main() -> TrainResult<()> {
     // Individual model accuracy (for comparison)
     let single_pred = forward(
         &val_data,
-        ensemble_params[0].get("weights").unwrap(),
-        ensemble_params[0].get("bias").unwrap(),
+        ensemble_params[0].get("weights").expect("unwrap"),
+        ensemble_params[0].get("bias").expect("unwrap"),
     );
     let single_acc = compute_accuracy(&single_pred, &val_targets);
 

@@ -300,11 +300,11 @@ impl DiffSummary {
 /// use tensorlogic_adapters::{SymbolTable, DomainInfo, compute_diff};
 ///
 /// let mut old_table = SymbolTable::new();
-/// old_table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+/// old_table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
 ///
 /// let mut new_table = SymbolTable::new();
-/// new_table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-/// new_table.add_domain(DomainInfo::new("Location", 50)).unwrap();
+/// new_table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+/// new_table.add_domain(DomainInfo::new("Location", 50)).expect("unwrap");
 ///
 /// let diff = compute_diff(&old_table, &new_table);
 /// assert_eq!(diff.domains_added.len(), 1);
@@ -473,7 +473,9 @@ mod tests {
     #[test]
     fn test_identical_schemas() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let diff = compute_diff(&table, &table);
         assert!(!diff.has_changes());
@@ -489,12 +491,12 @@ mod tests {
         let mut old_table = SymbolTable::new();
         old_table
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_table = old_table.clone();
         new_table
             .add_domain(DomainInfo::new("Location", 50))
-            .unwrap();
+            .expect("unwrap");
 
         let diff = compute_diff(&old_table, &new_table);
         assert_eq!(diff.domains_added.len(), 1);
@@ -511,15 +513,15 @@ mod tests {
         let mut old_table = SymbolTable::new();
         old_table
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
         old_table
             .add_domain(DomainInfo::new("Location", 50))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_table = SymbolTable::new();
         new_table
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let diff = compute_diff(&old_table, &new_table);
         assert_eq!(diff.domains_removed.len(), 1);
@@ -536,12 +538,12 @@ mod tests {
         let mut old_table = SymbolTable::new();
         old_table
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_table = SymbolTable::new();
         new_table
             .add_domain(DomainInfo::new("Person", 200))
-            .unwrap();
+            .expect("unwrap");
 
         let diff = compute_diff(&old_table, &new_table);
         assert_eq!(diff.domains_modified.len(), 1);
@@ -555,12 +557,12 @@ mod tests {
         let mut old_table = SymbolTable::new();
         old_table
             .add_domain(DomainInfo::new("Person", 200))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_table = SymbolTable::new();
         new_table
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let diff = compute_diff(&old_table, &new_table);
         assert!(!diff.is_backward_compatible());
@@ -575,12 +577,12 @@ mod tests {
         let mut old_table = SymbolTable::new();
         old_table
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_table = old_table.clone();
         new_table
             .add_predicate(PredicateInfo::new("knows", vec!["Person".to_string()]))
-            .unwrap();
+            .expect("unwrap");
 
         let diff = compute_diff(&old_table, &new_table);
         assert_eq!(diff.predicates_added.len(), 1);
@@ -592,21 +594,21 @@ mod tests {
         let mut old_table = SymbolTable::new();
         old_table
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
         old_table
             .add_predicate(PredicateInfo::new("knows", vec!["Person".to_string()]))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_table = SymbolTable::new();
         new_table
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
         new_table
             .add_predicate(PredicateInfo::new(
                 "knows",
                 vec!["Person".to_string(), "Person".to_string()],
             ))
-            .unwrap();
+            .expect("unwrap");
 
         let diff = compute_diff(&old_table, &new_table);
         assert_eq!(diff.predicates_modified.len(), 1);
@@ -617,15 +619,23 @@ mod tests {
     #[test]
     fn test_merge_tables() {
         let mut base = SymbolTable::new();
-        base.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        base.add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let mut update = SymbolTable::new();
-        update.add_domain(DomainInfo::new("Person", 200)).unwrap();
-        update.add_domain(DomainInfo::new("Location", 50)).unwrap();
+        update
+            .add_domain(DomainInfo::new("Person", 200))
+            .expect("unwrap");
+        update
+            .add_domain(DomainInfo::new("Location", 50))
+            .expect("unwrap");
 
         let merged = merge_tables(&base, &update);
         assert_eq!(merged.domains.len(), 2);
-        assert_eq!(merged.get_domain("Person").unwrap().cardinality, 200);
+        assert_eq!(
+            merged.get_domain("Person").expect("unwrap").cardinality,
+            200
+        );
         assert!(merged.get_domain("Location").is_some());
     }
 
@@ -634,12 +644,12 @@ mod tests {
         let mut old_table = SymbolTable::new();
         old_table
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_table = old_table.clone();
         new_table
             .add_domain(DomainInfo::new("Location", 50))
-            .unwrap();
+            .expect("unwrap");
 
         let diff = compute_diff(&old_table, &new_table);
         let report = diff.report();
@@ -652,13 +662,15 @@ mod tests {
         let mut old_table = SymbolTable::new();
         old_table
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_table = old_table.clone();
         new_table
             .add_domain(DomainInfo::new("Location", 50))
-            .unwrap();
-        new_table.add_domain(DomainInfo::new("Event", 30)).unwrap();
+            .expect("unwrap");
+        new_table
+            .add_domain(DomainInfo::new("Event", 30))
+            .expect("unwrap");
 
         let diff = compute_diff(&old_table, &new_table);
         let summary = diff.summary();

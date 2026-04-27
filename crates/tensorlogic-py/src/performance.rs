@@ -131,7 +131,7 @@ impl PyProfiler {
 
                 // Calculate percentiles
                 let mut sorted = times.clone();
-                sorted.sort_by(|a, b| a.partial_cmp(b).unwrap());
+                sorted.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
                 let p50 = sorted[sorted.len() / 2];
                 let p95 = sorted[(sorted.len() as f64 * 0.95) as usize];
                 let p99 = sorted[(sorted.len() as f64 * 0.99) as usize];

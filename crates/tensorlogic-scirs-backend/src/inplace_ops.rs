@@ -401,9 +401,11 @@ mod tests {
     #[test]
     fn test_inplace_unary_relu() {
         let mut executor = InplaceExecutor::new();
-        let mut tensor = ArrayD::from_shape_vec(vec![3], vec![-1.0, 0.0, 1.0]).unwrap();
+        let mut tensor = ArrayD::from_shape_vec(vec![3], vec![-1.0, 0.0, 1.0]).expect("unwrap");
 
-        executor.execute_inplace_unary("relu", &mut tensor).unwrap();
+        executor
+            .execute_inplace_unary("relu", &mut tensor)
+            .expect("unwrap");
 
         assert_eq!(tensor[[0]], 0.0);
         assert_eq!(tensor[[1]], 0.0);
@@ -414,11 +416,11 @@ mod tests {
     #[test]
     fn test_inplace_unary_sigmoid() {
         let mut executor = InplaceExecutor::new();
-        let mut tensor = ArrayD::from_shape_vec(vec![2], vec![0.0, 1.0]).unwrap();
+        let mut tensor = ArrayD::from_shape_vec(vec![2], vec![0.0, 1.0]).expect("unwrap");
 
         executor
             .execute_inplace_unary("sigmoid", &mut tensor)
-            .unwrap();
+            .expect("unwrap");
 
         assert!((tensor[[0]] - 0.5).abs() < 1e-6);
         assert!((tensor[[1]] - 0.731).abs() < 0.01);
@@ -428,11 +430,11 @@ mod tests {
     #[test]
     fn test_inplace_unary_oneminus() {
         let mut executor = InplaceExecutor::new();
-        let mut tensor = ArrayD::from_shape_vec(vec![3], vec![0.0, 0.5, 1.0]).unwrap();
+        let mut tensor = ArrayD::from_shape_vec(vec![3], vec![0.0, 0.5, 1.0]).expect("unwrap");
 
         executor
             .execute_inplace_unary("oneminus", &mut tensor)
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(tensor[[0]], 1.0);
         assert_eq!(tensor[[1]], 0.5);
@@ -442,12 +444,12 @@ mod tests {
     #[test]
     fn test_inplace_binary_add() {
         let mut executor = InplaceExecutor::new();
-        let mut lhs = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).unwrap();
-        let rhs = ArrayD::from_shape_vec(vec![3], vec![4.0, 5.0, 6.0]).unwrap();
+        let mut lhs = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).expect("unwrap");
+        let rhs = ArrayD::from_shape_vec(vec![3], vec![4.0, 5.0, 6.0]).expect("unwrap");
 
         executor
             .execute_inplace_binary("add", &mut lhs, &rhs)
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(lhs[[0]], 5.0);
         assert_eq!(lhs[[1]], 7.0);
@@ -458,12 +460,12 @@ mod tests {
     #[test]
     fn test_inplace_binary_multiply() {
         let mut executor = InplaceExecutor::new();
-        let mut lhs = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).unwrap();
-        let rhs = ArrayD::from_shape_vec(vec![3], vec![2.0, 3.0, 4.0]).unwrap();
+        let mut lhs = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).expect("unwrap");
+        let rhs = ArrayD::from_shape_vec(vec![3], vec![2.0, 3.0, 4.0]).expect("unwrap");
 
         executor
             .execute_inplace_binary("multiply", &mut lhs, &rhs)
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(lhs[[0]], 2.0);
         assert_eq!(lhs[[1]], 6.0);
@@ -473,8 +475,8 @@ mod tests {
     #[test]
     fn test_inplace_binary_shape_mismatch() {
         let mut executor = InplaceExecutor::new();
-        let mut lhs = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).unwrap();
-        let rhs = ArrayD::from_shape_vec(vec![2], vec![4.0, 5.0]).unwrap();
+        let mut lhs = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).expect("unwrap");
+        let rhs = ArrayD::from_shape_vec(vec![2], vec![4.0, 5.0]).expect("unwrap");
 
         let result = executor.execute_inplace_binary("add", &mut lhs, &rhs);
         assert!(result.is_err());
@@ -484,11 +486,11 @@ mod tests {
     #[test]
     fn test_inplace_scalar_add() {
         let mut executor = InplaceExecutor::new();
-        let mut tensor = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).unwrap();
+        let mut tensor = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).expect("unwrap");
 
         executor
             .execute_inplace_scalar("add", &mut tensor, 10.0)
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(tensor[[0]], 11.0);
         assert_eq!(tensor[[1]], 12.0);
@@ -498,11 +500,11 @@ mod tests {
     #[test]
     fn test_inplace_scalar_multiply() {
         let mut executor = InplaceExecutor::new();
-        let mut tensor = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).unwrap();
+        let mut tensor = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).expect("unwrap");
 
         executor
             .execute_inplace_scalar("mul", &mut tensor, 2.0)
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(tensor[[0]], 2.0);
         assert_eq!(tensor[[1]], 4.0);
@@ -512,12 +514,14 @@ mod tests {
     #[test]
     fn test_inplace_stats() {
         let mut executor = InplaceExecutor::new();
-        let mut tensor = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).unwrap();
+        let mut tensor = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).expect("unwrap");
 
-        executor.execute_inplace_unary("relu", &mut tensor).unwrap();
+        executor
+            .execute_inplace_unary("relu", &mut tensor)
+            .expect("unwrap");
         executor
             .execute_inplace_scalar("add", &mut tensor, 1.0)
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(executor.stats.inplace_ops, 2);
         assert!(executor.stats.memory_saved_bytes > 0);
@@ -570,9 +574,11 @@ mod tests {
     #[test]
     fn test_reset_stats() {
         let mut executor = InplaceExecutor::new();
-        let mut tensor = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).unwrap();
+        let mut tensor = ArrayD::from_shape_vec(vec![3], vec![1.0, 2.0, 3.0]).expect("unwrap");
 
-        executor.execute_inplace_unary("relu", &mut tensor).unwrap();
+        executor
+            .execute_inplace_unary("relu", &mut tensor)
+            .expect("unwrap");
         assert_eq!(executor.stats.inplace_ops, 1);
 
         executor.reset_stats();

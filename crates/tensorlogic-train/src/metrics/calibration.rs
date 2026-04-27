@@ -231,7 +231,7 @@ mod tests {
 
         let ece = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         // Should be very small for perfectly calibrated predictions
         assert!(ece < 0.1);
@@ -247,7 +247,7 @@ mod tests {
 
         let ece = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         // Should be high for poorly calibrated predictions
         assert!(ece > 0.5);
@@ -262,7 +262,7 @@ mod tests {
 
         let ece = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         assert!((0.0..=1.0).contains(&ece));
     }
@@ -277,7 +277,7 @@ mod tests {
 
         let mce = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         // Should be small for well-calibrated predictions
         assert!(mce < 0.15);
@@ -293,7 +293,7 @@ mod tests {
 
         let mce = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         // MCE should capture the worst bin
         assert!(mce > 0.5);
@@ -310,10 +310,10 @@ mod tests {
 
         let ece = ece_metric
             .compute(&empty_predictions.view(), &empty_targets.view())
-            .unwrap();
+            .expect("unwrap");
         let mce = mce_metric
             .compute(&empty_predictions.view(), &empty_targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(ece, 0.0);
         assert_eq!(mce, 0.0);

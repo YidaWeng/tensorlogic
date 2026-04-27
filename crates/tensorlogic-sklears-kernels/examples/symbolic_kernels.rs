@@ -64,16 +64,22 @@ fn main() {
 fn scaled_kernel_example() {
     // Create a linear kernel scaled by 0.5
     let linear = Arc::new(LinearKernel::new());
-    let expr = KernelExpr::base(linear).scale(0.5).unwrap();
+    let expr = KernelExpr::base(linear)
+        .scale(0.5)
+        .expect("Failed to scale KernelExpr by 0.5");
     let kernel = SymbolicKernel::new(expr);
 
     let x = vec![1.0, 2.0, 3.0];
     let y = vec![4.0, 5.0, 6.0];
 
-    let result = kernel.compute(&x, &y).unwrap();
+    let result = kernel
+        .compute(&x, &y)
+        .expect("scaled_kernel_example: compute failed");
     println!(
         "Linear kernel: x·y = {}",
-        LinearKernel::new().compute(&x, &y).unwrap()
+        LinearKernel::new()
+            .compute(&x, &y)
+            .expect("scaled_kernel_example: linear compute failed")
     );
     println!("Scaled (0.5 * linear): {}", result);
     println!("Verified: 0.5 * 32 = 16");
@@ -83,7 +89,10 @@ fn scaled_kernel_example() {
 fn sum_kernel_example() {
     // Sum of linear and RBF kernels
     let linear = Arc::new(LinearKernel::new());
-    let rbf = Arc::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap());
+    let rbf = Arc::new(
+        RbfKernel::new(RbfKernelConfig::new(0.5))
+            .expect("sum_kernel_example: Failed to create RbfKernel"),
+    );
 
     let expr = KernelExpr::base(linear).add(KernelExpr::base(rbf));
     let kernel = SymbolicKernel::new(expr);
@@ -91,17 +100,21 @@ fn sum_kernel_example() {
     let x = vec![1.0, 2.0, 3.0];
     let y = vec![1.0, 2.0, 3.0]; // Same vector
 
-    let result = kernel.compute(&x, &y).unwrap();
+    let result = kernel
+        .compute(&x, &y)
+        .expect("sum_kernel_example: sum compute failed");
     println!(
         "Linear(x,x): {}",
-        LinearKernel::new().compute(&x, &x).unwrap()
+        LinearKernel::new()
+            .compute(&x, &x)
+            .expect("sum_kernel_example: linear compute failed")
     );
     println!(
         "RBF(x,x): {}",
         RbfKernel::new(RbfKernelConfig::new(0.5))
-            .unwrap()
+            .expect("sum_kernel_example: Failed to create RbfKernel for individual compute")
             .compute(&x, &x)
-            .unwrap()
+            .expect("sum_kernel_example: rbf compute failed")
     );
     println!("Sum (linear + rbf): {}", result);
 }
@@ -118,9 +131,15 @@ fn product_kernel_example() {
     let x = vec![1.0, 2.0, 3.0];
     let y = vec![4.0, 5.0, 6.0];
 
-    let result = kernel.compute(&x, &y).unwrap();
-    let linear_val = LinearKernel::new().compute(&x, &y).unwrap();
-    let cosine_val = CosineKernel::new().compute(&x, &y).unwrap();
+    let result = kernel
+        .compute(&x, &y)
+        .expect("product_kernel_example: product compute failed");
+    let linear_val = LinearKernel::new()
+        .compute(&x, &y)
+        .expect("product_kernel_example: linear compute failed");
+    let cosine_val = CosineKernel::new()
+        .compute(&x, &y)
+        .expect("product_kernel_example: cosine compute failed");
 
     println!("Linear(x,y): {:.4}", linear_val);
     println!("Cosine(x,y): {:.4}", cosine_val);
@@ -137,11 +156,20 @@ fn product_kernel_example() {
 fn complex_composition_example() {
     // Build: 0.7 * linear + 0.3 * rbf^2
     let linear = Arc::new(LinearKernel::new());
-    let rbf = Arc::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap());
+    let rbf = Arc::new(
+        RbfKernel::new(RbfKernelConfig::new(0.5))
+            .expect("complex_composition_example: Failed to create RbfKernel"),
+    );
 
-    let linear_scaled = KernelExpr::base(linear).scale(0.7).unwrap();
-    let rbf_squared = KernelExpr::base(rbf).power(2).unwrap();
-    let rbf_scaled = rbf_squared.scale(0.3).unwrap();
+    let linear_scaled = KernelExpr::base(linear)
+        .scale(0.7)
+        .expect("complex_composition_example: Failed to scale linear by 0.7");
+    let rbf_squared = KernelExpr::base(rbf)
+        .power(2)
+        .expect("complex_composition_example: Failed to raise rbf to power 2");
+    let rbf_scaled = rbf_squared
+        .scale(0.3)
+        .expect("complex_composition_example: Failed to scale rbf_squared by 0.3");
 
     let expr = linear_scaled.add(rbf_scaled);
     let kernel = SymbolicKernel::new(expr);
@@ -149,7 +177,9 @@ fn complex_composition_example() {
     let x = vec![1.0, 2.0, 3.0];
     let y = vec![1.5, 2.5, 3.5];
 
-    let result = kernel.compute(&x, &y).unwrap();
+    let result = kernel
+        .compute(&x, &y)
+        .expect("complex_composition_example: complex compute failed");
     println!("Complex kernel: 0.7*linear + 0.3*rbf^2");
     println!("Result: {:.4}", result);
 
@@ -163,7 +193,10 @@ fn builder_pattern_example() {
     let kernel = KernelBuilder::new()
         .add_scaled(Arc::new(LinearKernel::new()), 0.5)
         .add_scaled(
-            Arc::new(RbfKernel::new(RbfKernelConfig::new(1.0)).unwrap()),
+            Arc::new(
+                RbfKernel::new(RbfKernelConfig::new(1.0))
+                    .expect("builder_pattern_example: Failed to create RbfKernel"),
+            ),
             0.3,
         )
         .add_scaled(Arc::new(CosineKernel::new()), 0.2)
@@ -172,17 +205,23 @@ fn builder_pattern_example() {
     let x = vec![1.0, 2.0, 3.0];
     let y = vec![4.0, 5.0, 6.0];
 
-    let result = kernel.compute(&x, &y).unwrap();
+    let result = kernel
+        .compute(&x, &y)
+        .expect("builder_pattern_example: built kernel compute failed");
     println!("Builder: 0.5*linear + 0.3*rbf + 0.2*cosine");
     println!("Result: {:.4}", result);
 
     // Compare with individual kernels
-    let linear_val = LinearKernel::new().compute(&x, &y).unwrap();
-    let rbf_val = RbfKernel::new(RbfKernelConfig::new(1.0))
-        .unwrap()
+    let linear_val = LinearKernel::new()
         .compute(&x, &y)
-        .unwrap();
-    let cosine_val = CosineKernel::new().compute(&x, &y).unwrap();
+        .expect("builder_pattern_example: linear compute failed");
+    let rbf_val = RbfKernel::new(RbfKernelConfig::new(1.0))
+        .expect("builder_pattern_example: Failed to create RbfKernel for comparison")
+        .compute(&x, &y)
+        .expect("builder_pattern_example: rbf compute failed");
+    let cosine_val = CosineKernel::new()
+        .compute(&x, &y)
+        .expect("builder_pattern_example: cosine compute failed");
 
     let expected = 0.5 * linear_val + 0.3 * rbf_val + 0.2 * cosine_val;
     println!("Expected: {:.4}", expected);
@@ -198,12 +237,26 @@ fn power_kernel_example() {
     let linear = Arc::new(LinearKernel::new());
 
     let k1 = SymbolicKernel::new(KernelExpr::base(linear.clone()));
-    let k2 = SymbolicKernel::new(KernelExpr::base(linear.clone()).power(2).unwrap());
-    let k3 = SymbolicKernel::new(KernelExpr::base(linear).power(3).unwrap());
+    let k2 = SymbolicKernel::new(
+        KernelExpr::base(linear.clone())
+            .power(2)
+            .expect("power_kernel_example: Failed to raise linear to power 2"),
+    );
+    let k3 = SymbolicKernel::new(
+        KernelExpr::base(linear)
+            .power(3)
+            .expect("power_kernel_example: Failed to raise linear to power 3"),
+    );
 
-    let r1 = k1.compute(&x, &y).unwrap();
-    let r2 = k2.compute(&x, &y).unwrap();
-    let r3 = k3.compute(&x, &y).unwrap();
+    let r1 = k1
+        .compute(&x, &y)
+        .expect("power_kernel_example: k1 compute failed");
+    let r2 = k2
+        .compute(&x, &y)
+        .expect("power_kernel_example: k2 compute failed");
+    let r3 = k3
+        .compute(&x, &y)
+        .expect("power_kernel_example: k3 compute failed");
 
     println!("Base value: {}", r1);
     println!("Power 2: {} (verified: {}^2 = {})", r2, r1, r1.powi(2));
@@ -220,10 +273,19 @@ fn hybrid_kernel_example() {
     let kernel = KernelBuilder::new()
         .add_scaled(Arc::new(LinearKernel::new()), 0.4)
         .add_scaled(
-            Arc::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()),
+            Arc::new(
+                RbfKernel::new(RbfKernelConfig::new(0.5))
+                    .expect("hybrid_kernel_example: Failed to create RbfKernel"),
+            ),
             0.4,
         )
-        .add_scaled(Arc::new(PolynomialKernel::new(2, 1.0).unwrap()), 0.2)
+        .add_scaled(
+            Arc::new(
+                PolynomialKernel::new(2, 1.0)
+                    .expect("hybrid_kernel_example: Failed to create PolynomialKernel"),
+            ),
+            0.2,
+        )
         .build();
 
     // Test on sample data
@@ -234,7 +296,9 @@ fn hybrid_kernel_example() {
     ];
 
     println!("\nKernel matrix (3x3):");
-    let matrix = kernel.compute_matrix(&samples).unwrap();
+    let matrix = kernel
+        .compute_matrix(&samples)
+        .expect("hybrid_kernel_example: compute_matrix failed");
 
     for row in &matrix {
         print!("  [{:.3}", row[0]);

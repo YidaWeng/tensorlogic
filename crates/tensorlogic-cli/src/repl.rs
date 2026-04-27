@@ -201,7 +201,7 @@ impl Repl {
                 if let Some(cache) = &self.cache {
                     let stats = cache.stats();
                     println!("\nCache Statistics:");
-                    println!("  Current size: {}", stats.current_size);
+                    println!("  Current size: {}", stats.current_entries);
                     println!("  Hits: {}", stats.hits);
                     println!("  Misses: {}", stats.misses);
                     println!("  Evictions: {}", stats.evictions);
@@ -486,7 +486,10 @@ impl Repl {
     }
 
     fn execute_last_graph(&mut self, show_metrics: bool) -> Result<()> {
-        let graph = self.last_graph.as_ref().unwrap();
+        let graph = self
+            .last_graph
+            .as_ref()
+            .expect("last_graph must be set before calling execute_last_graph");
 
         print_info(&format!(
             "Executing with {} backend...",
@@ -511,7 +514,10 @@ impl Repl {
     }
 
     fn optimize_last_graph(&mut self, level_str: &str, show_stats: bool) -> Result<()> {
-        let graph = self.last_graph.take().unwrap();
+        let graph = self
+            .last_graph
+            .take()
+            .expect("last_graph must be set before calling optimize_last_graph");
 
         let level = OptimizationLevel::from_str(level_str)?;
 

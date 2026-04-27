@@ -183,7 +183,7 @@ mod tests {
     fn test_rule_similarity_kernel_creation() {
         let rules = create_dummy_rules(5);
         let config = RuleSimilarityConfig::new();
-        let kernel = RuleSimilarityKernel::new(rules, config).unwrap();
+        let kernel = RuleSimilarityKernel::new(rules, config).expect("unwrap");
         assert_eq!(kernel.name(), "RuleSimilarity");
     }
 
@@ -203,24 +203,24 @@ mod tests {
             .with_violated_weight(0.5)
             .with_mixed_weight(0.0);
 
-        let kernel = RuleSimilarityKernel::new(rules, config).unwrap();
+        let kernel = RuleSimilarityKernel::new(rules, config).expect("unwrap");
 
         // Both satisfy all rules
         let x = vec![1.0, 1.0, 1.0];
         let y = vec![1.0, 1.0, 1.0];
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!((sim - 1.0).abs() < 1e-10); // Normalized: 3.0 / 3 = 1.0
 
         // Both violate all rules
         let x = vec![0.0, 0.0, 0.0];
         let y = vec![0.0, 0.0, 0.0];
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!((sim - 0.5).abs() < 1e-10); // Normalized: 1.5 / 3 = 0.5
 
         // Completely disagree
         let x = vec![1.0, 1.0, 1.0];
         let y = vec![0.0, 0.0, 0.0];
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!(sim.abs() < 1e-10); // Normalized: 0.0 / 3 = 0.0
     }
 
@@ -228,7 +228,7 @@ mod tests {
     fn test_rule_similarity_dimension_mismatch() {
         let rules = create_dummy_rules(3);
         let config = RuleSimilarityConfig::new();
-        let kernel = RuleSimilarityKernel::new(rules, config).unwrap();
+        let kernel = RuleSimilarityKernel::new(rules, config).expect("unwrap");
 
         let x = vec![1.0, 1.0];
         let y = vec![1.0, 1.0, 1.0];
@@ -244,31 +244,31 @@ mod tests {
         // All predicates match
         let x = vec![1.0, 1.0, 1.0, 1.0];
         let y = vec![1.0, 1.0, 1.0, 1.0];
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!((sim - 1.0).abs() < 1e-10);
 
         // Half predicates match
         let x = vec![1.0, 1.0, 0.0, 0.0];
         let y = vec![1.0, 1.0, 1.0, 1.0];
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!((sim - 0.5).abs() < 1e-10);
 
         // No predicates match
         let x = vec![0.0, 0.0, 0.0, 0.0];
         let y = vec![1.0, 1.0, 1.0, 1.0];
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!(sim.abs() < 1e-10);
     }
 
     #[test]
     fn test_predicate_overlap_with_weights() {
         let weights = vec![1.0, 2.0, 1.0, 2.0]; // Total = 6.0
-        let kernel = PredicateOverlapKernel::with_weights(4, weights).unwrap();
+        let kernel = PredicateOverlapKernel::with_weights(4, weights).expect("unwrap");
 
         // Higher-weighted predicates match
         let x = vec![0.0, 1.0, 0.0, 1.0];
         let y = vec![0.0, 1.0, 0.0, 1.0];
-        let sim = kernel.compute(&x, &y).unwrap();
+        let sim = kernel.compute(&x, &y).expect("unwrap");
         assert!((sim - 4.0 / 6.0).abs() < 1e-10); // (2.0 + 2.0) / 6.0
     }
 
@@ -290,7 +290,7 @@ mod tests {
             vec![0.0, 0.0, 0.0],
         ];
 
-        let matrix = kernel.compute_matrix(&inputs).unwrap();
+        let matrix = kernel.compute_matrix(&inputs).expect("unwrap");
         assert_eq!(matrix.len(), 3);
         assert_eq!(matrix[0].len(), 3);
 

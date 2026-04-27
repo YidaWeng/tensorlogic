@@ -171,7 +171,7 @@ mod tests {
         // Execute an einsum operation
         let _result = executor
             .einsum("ij,jk->ik", &[a.clone(), b.clone()])
-            .unwrap();
+            .expect("unwrap");
 
         // Check that profiling recorded the operation
         assert!(executor.profiler().is_some());
@@ -182,7 +182,7 @@ mod tests {
         let x = TLExpr::pred("x", vec![Term::var("i")]);
         let y = TLExpr::pred("y", vec![Term::var("i")]);
         let expr = TLExpr::add(x, y);
-        let graph = compile_to_einsum(&expr).unwrap();
+        let graph = compile_to_einsum(&expr).expect("unwrap");
 
         let mut executor = ProfiledScirs2Exec::new();
         executor
@@ -192,7 +192,7 @@ mod tests {
             .executor_mut()
             .add_tensor(graph.tensors[1].clone(), create_test_tensor(&[5], 2.0));
 
-        let _result = executor.forward(&graph).unwrap();
+        let _result = executor.forward(&graph).expect("unwrap");
 
         // Check profiling is active
         assert!(executor.profiler().is_some());
@@ -205,7 +205,7 @@ mod tests {
         let a = create_test_tensor(&[2, 2], 1.0);
 
         // Execute with profiling enabled
-        let _result = executor.elem_op(ElemOp::Relu, &a).unwrap();
+        let _result = executor.elem_op(ElemOp::Relu, &a).expect("unwrap");
         assert!(executor.profiler().is_some());
 
         // Disable profiling

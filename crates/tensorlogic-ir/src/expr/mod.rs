@@ -505,6 +505,18 @@ pub enum TLExpr {
     Explain {
         formula: Box<TLExpr>,
     },
+
+    // Pattern matching
+    /// Symbol literal — a named identifier comparable by equality.
+    /// Used as the RHS of `Eq` when lowering `MatchPattern::ConstSymbol`.
+    SymbolLiteral(String),
+
+    /// Pattern-matching expression: `match scrutinee { arm* }`.
+    /// The last arm MUST use `MatchPattern::Wildcard` (enforced by validation).
+    Match {
+        scrutinee: Box<TLExpr>,
+        arms: Vec<(crate::pattern::MatchPattern, Box<TLExpr>)>,
+    },
 }
 
 impl TLExpr {
@@ -1189,6 +1201,26 @@ impl TLExpr {
     pub fn explain(formula: TLExpr) -> Self {
         TLExpr::Explain {
             formula: Box::new(formula),
+        }
+    }
+
+    /// Create a symbol literal expression.
+    pub fn symbol_literal(s: impl Into<String>) -> Self {
+        TLExpr::SymbolLiteral(s.into())
+    }
+
+    /// Create a pattern-matching expression.
+    ///
+    /// # Arguments
+    /// * `scrutinee` — The expression being matched.
+    /// * `arms` — List of `(MatchPattern, body)` pairs; last must be `Wildcard`.
+    pub fn match_expr(
+        scrutinee: TLExpr,
+        arms: Vec<(crate::pattern::MatchPattern, TLExpr)>,
+    ) -> Self {
+        TLExpr::Match {
+            scrutinee: Box::new(scrutinee),
+            arms: arms.into_iter().map(|(p, b)| (p, Box::new(b))).collect(),
         }
     }
 

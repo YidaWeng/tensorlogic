@@ -1,6 +1,6 @@
 //! TLExpr → EinsumGraph compiler (planning only).
 //!
-//! **Version**: 0.1.0-rc.1 | **Status**: Production Ready
+//! **Version**: 0.1.0 | **Status**: Production Ready
 //!
 //! This crate compiles logical expressions into tensor computation graphs
 //! represented as einsum operations. It provides a bridge between symbolic
@@ -126,19 +126,32 @@
 //! assert_eq!(stats.double_negations_eliminated, 1);
 //! ```
 
+pub mod bytecode;
 pub mod cache;
 pub mod compile;
+pub mod complexity;
 pub mod config;
+pub mod const_prop;
 mod context;
+pub mod dead_code;
 pub mod debug;
+pub mod error_recovery;
 pub mod export;
+pub mod expr_diff;
 pub mod import;
 pub mod incremental;
+pub mod inline;
+pub mod jit;
 pub mod optimize;
 #[cfg(feature = "parallel")]
 pub mod parallel;
+pub mod partial_eval;
 pub mod passes;
+pub mod pipeline;
 pub mod profiling;
+pub mod rewrite;
+pub mod symbolic_diff;
+pub mod type_infer;
 
 #[cfg(test)]
 mod property_tests;
@@ -150,16 +163,58 @@ mod tests_math_ops;
 use anyhow::Result;
 use tensorlogic_ir::{EinsumGraph, TLExpr};
 
-pub use cache::{CacheStats, CompilationCache};
+pub use cache::{
+    CacheStats, CachedResult, CachingCompiler, CompilationCache, ExprFingerprint,
+    LruCompilationCache,
+};
+pub use complexity::{
+    check_complexity, BatchComplexityStats, ComplexityComparison, ComplexityThresholds,
+    ComplexityWarning, ExprComplexity, WarningSeverity,
+};
 pub use config::{
     AndStrategy, CompilationConfig, CompilationConfigBuilder, ExistsStrategy, ForallStrategy,
     ImplicationStrategy, ModalStrategy, NotStrategy, OrStrategy, TemporalStrategy,
 };
+pub use const_prop::{ConstPropConfig, ConstPropStats, ConstantPropagator};
 pub use context::{CompilerContext, DomainInfo};
+pub use dead_code::{DceConfig, DceStats, DeadCodeEliminator};
+pub use error_recovery::{
+    compile_tolerant, compile_tolerant_with_strategy, Diagnostic, DiagnosticCollector,
+    PartialCompilationResult, RecoveryAction, RecoveryStrategy, Severity, SourceSpan,
+    TolerantCompiler,
+};
+pub use expr_diff::{expr_diff, DiffEntry, DiffKind, ExprDiff};
+pub use inline::{InlineConfig, InlineStats, LetInliner};
+pub use jit::{JitCompiler, JitError, JitStats};
+pub use partial_eval::{
+    partially_evaluate, specialize, specialize_batch, PEConfig, PEEnv, PEResult, PEStats, PEValue,
+};
+pub use pipeline::{
+    CompilerPassId, CompilerPassOrder, CompilerPassStats, CompilerPipeline, CompilerPipelineConfig,
+    CompilerPipelineResult, CompilerPipelineStats, PassBenchmark,
+};
+pub use profiling::{profile_phase, CompilationProfiler, ProfileEntry, ProfileReport};
+pub use rewrite::{
+    builtin_rules, EliminateAndTrue, EliminateDoubleNeg, EliminateOrFalse, FlattenNestedAnd,
+    FlattenNestedOr, RewriteEngine, RewriteRule, RewriteStats,
+};
+pub use symbolic_diff::{
+    differentiate, jacobian, simplify_derivative, DiffConfig, DiffError, DiffResult,
+};
+pub use type_infer::{
+    annotate, infer_type, Substitution as TypeSubstitution, TLType, TyVarCounter, TypeEnv,
+    TypeInferError, TypeInferResult, TypedExpr,
+};
 
 // Re-export adapter types for convenience
 pub use passes::validate_arity;
 pub use tensorlogic_adapters::{PredicateInfo, SymbolTable};
+
+// Re-export bytecode VM types and functions
+pub use bytecode::{
+    compile, compile_with_config, execute, execute_with_stats, BytecodeProgram, CompileError,
+    Instruction, VmEnv, VmError, VmStats, VmValue,
+};
 
 use compile::{compile_expr, infer_domain};
 

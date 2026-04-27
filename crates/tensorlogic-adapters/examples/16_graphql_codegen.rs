@@ -19,19 +19,19 @@ fn main() {
             DomainInfo::new("Student", 1000)
                 .with_description("Students enrolled in the university"),
         )
-        .unwrap();
+        .expect("unwrap");
 
     schema
         .add_domain(DomainInfo::new("Professor", 100).with_description("Faculty members"))
-        .unwrap();
+        .expect("unwrap");
 
     schema
         .add_domain(DomainInfo::new("Course", 200).with_description("Available courses"))
-        .unwrap();
+        .expect("unwrap");
 
     schema
         .add_domain(DomainInfo::new("Grade", 5).with_description("Letter grades A through F"))
-        .unwrap();
+        .expect("unwrap");
 
     println!("✓ Defined 4 domains");
 
@@ -41,14 +41,14 @@ fn main() {
         vec!["Student".to_string(), "Course".to_string()],
     )
     .with_description("Student is enrolled in a course");
-    schema.add_predicate(enrolled).unwrap();
+    schema.add_predicate(enrolled).expect("unwrap");
 
     let teaches = PredicateInfo::new(
         "teaches",
         vec!["Professor".to_string(), "Course".to_string()],
     )
     .with_description("Professor teaches a course");
-    schema.add_predicate(teaches).unwrap();
+    schema.add_predicate(teaches).expect("unwrap");
 
     let grade_predicate = PredicateInfo::new(
         "course_grade",
@@ -59,14 +59,14 @@ fn main() {
         ],
     )
     .with_description("Grade received by student in course");
-    schema.add_predicate(grade_predicate).unwrap();
+    schema.add_predicate(grade_predicate).expect("unwrap");
 
     let advises = PredicateInfo::new(
         "advises",
         vec!["Professor".to_string(), "Student".to_string()],
     )
     .with_description("Professor advises student");
-    schema.add_predicate(advises).unwrap();
+    schema.add_predicate(advises).expect("unwrap");
 
     println!("✓ Defined 4 predicates\n");
 

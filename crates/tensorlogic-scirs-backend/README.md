@@ -4,8 +4,8 @@
 
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic--scirs--backend-orange)](https://crates.io/crates/tensorlogic-scirs-backend)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-scirs-backend)
-[![Tests](https://img.shields.io/badge/tests-288%2F288-brightgreen)](#)
-[![Production](https://img.shields.io/badge/status-production_ready-success)](#)
+[![Tests](https://img.shields.io/badge/tests-669%2F669-brightgreen)](#)
+[![Production](https://img.shields.io/badge/status-stable-success)](#)
 
 ## Overview
 
@@ -75,6 +75,9 @@ let input_grads = executor.backward(&graph, grads)?;
 ### Advanced Features
 - **Quantization**: INT8/INT4/INT2 quantization (PTQ and QAT modes)
 - **Fuzzy Logic**: Soft/fuzzy logic operations with temperature control (soft_and, soft_or, soft_not, soft_imply, FuzzyLogic struct)
+- **Loss Functions**: 7 differentiable loss functions (MSE, BCE, CrossEntropy, Focal, Huber, KLDiv, CosineEmbedding) with gradient support
+- **Geometric Deep Learning**: GCN layer, graph Laplacian variants, SO(3) rotations, spherical harmonics up to degree 2
+- **Signal Processing**: STFT/iSTFT, DCT/iDCT, DFT/iDFT, six window types, FIR filter, Mel filterbank
 - **GPU Readiness**: CUDA device detection and GPU readiness assessment
 - **Custom Operations**: User-defined operation trait (CustomOp, OpRegistry)
 - **Graph Optimizer**: Constant folding, CSE, DCE, algebraic simplification
@@ -83,7 +86,7 @@ let input_grads = executor.backward(&graph, grads)?;
 - **Checkpoint/Resume**: Full training state save/load with JSON serialization
 
 ### Testing
-- **288 Tests**: All passing with comprehensive coverage
+- **669 Tests**: All passing with comprehensive coverage
 - **Optimization Tests**: DCE, CSE, and memory planning
 - **In-Place Tests**: Zero-allocation operations
 - **Checkpoint Tests**: Save/load/restore functionality
@@ -714,7 +717,7 @@ cargo bench -p tensorlogic-scirs-backend --bench parallel_performance --features
 
 ### Test Coverage
 
-**288 tests, all passing:**
+**669 tests, all passing:**
 
 | Module | Tests |
 |--------|-------|
@@ -739,6 +742,10 @@ cargo bench -p tensorlogic-scirs-backend --bench parallel_performance --features
 | fusion | Operation fusion analysis (6 tests) |
 | shape_inference | Shape validation (8 tests) |
 | capabilities | Runtime capability detection (4 tests) |
+| tensor_loss | 7 differentiable loss functions (included in total) |
+| geometric_ops | GCN, Laplacian variants, SO(3), spherical harmonics (included in total) |
+| signal_ops | STFT, DCT, DFT, window functions, Mel filterbank (included in total) |
+| proptests | Property-based mathematical property verification (included in total) |
 
 ### Property-Based Testing
 
@@ -837,7 +844,7 @@ Apache-2.0
 
 ---
 
-**Status**: Production Ready (v0.1.0-rc.1)
-**Last Updated**: 2026-03-06
-**Tests**: 288/288 passing (100%)
+**Status**: Stable (v0.1.0)
+**Last Updated**: 2026-04-06
+**Tests**: 669/669 passing (100%)
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

@@ -449,6 +449,10 @@ fn count_nodes(expr: &TLExpr) -> usize {
         }
         TLExpr::Abducible { .. } => 1,
         TLExpr::Explain { formula } => 1 + count_nodes(formula),
+        TLExpr::SymbolLiteral(_) => 1,
+        TLExpr::Match { scrutinee, arms } => {
+            1 + count_nodes(scrutinee) + arms.iter().map(|(_, b)| count_nodes(b)).sum::<usize>()
+        }
     }
 }
 

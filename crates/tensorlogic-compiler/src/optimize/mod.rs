@@ -60,6 +60,7 @@
 //! ```
 
 pub mod algebraic;
+pub mod canonical;
 pub mod complexity;
 pub mod constant_folding;
 pub mod cost_based;
@@ -72,6 +73,7 @@ pub mod quantifier_opt;
 pub mod strength_reduction;
 
 pub use algebraic::{simplify_algebraic, AlgebraicSimplificationStats};
+pub use canonical::{canonical_order_key, canonicalize, CanonicalStats, Canonicalizer};
 pub use complexity::{analyze_complexity, compare_complexity, CostWeights, ExpressionComplexity};
 pub use constant_folding::{fold_constants, ConstantFoldingStats};
 pub use cost_based::{optimize_by_cost, optimize_by_cost_with_config, CostBasedStats, RewriteRule};

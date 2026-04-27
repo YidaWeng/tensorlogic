@@ -26,20 +26,20 @@ fn main() {
         HyperparamValue::String("adam".to_string()),
         HyperparamValue::String("adamw".to_string()),
     ])
-    .unwrap();
+    .expect("unwrap");
 
     println!("   Optimizer (discrete): {{sgd, adam, adamw}}");
 
     // Continuous range
-    let _lr_space = HyperparamSpace::continuous(1e-4, 1e-1).unwrap();
+    let _lr_space = HyperparamSpace::continuous(1e-4, 1e-1).expect("unwrap");
     println!("   Learning rate (continuous): [1e-4, 1e-1]");
 
     // Log-uniform (better for learning rate)
-    let _lr_log_space = HyperparamSpace::log_uniform(1e-5, 1e-2).unwrap();
+    let _lr_log_space = HyperparamSpace::log_uniform(1e-5, 1e-2).expect("unwrap");
     println!("   Learning rate (log-uniform): [1e-5, 1e-2]");
 
     // Integer range
-    let _batch_size_space = HyperparamSpace::int_range(16, 128).unwrap();
+    let _batch_size_space = HyperparamSpace::int_range(16, 128).expect("unwrap");
     println!("   Batch size (integer): [16, 128]\n");
 
     // Example 2: Grid Search
@@ -55,13 +55,13 @@ fn main() {
             HyperparamValue::Float(1e-3),
             HyperparamValue::Float(1e-2),
         ])
-        .unwrap(),
+        .expect("unwrap"),
     );
 
     param_space.insert(
         "batch_size".to_string(),
         HyperparamSpace::discrete(vec![HyperparamValue::Int(32), HyperparamValue::Int(64)])
-            .unwrap(),
+            .expect("unwrap"),
     );
 
     param_space.insert(
@@ -70,7 +70,7 @@ fn main() {
             HyperparamValue::String("adam".to_string()),
             HyperparamValue::String("adamw".to_string()),
         ])
-        .unwrap(),
+        .expect("unwrap"),
     );
 
     let mut grid_search = GridSearch::new(param_space, 3);
@@ -139,17 +139,17 @@ fn main() {
 
     param_space_random.insert(
         "learning_rate".to_string(),
-        HyperparamSpace::log_uniform(1e-5, 1e-2).unwrap(),
+        HyperparamSpace::log_uniform(1e-5, 1e-2).expect("unwrap"),
     );
 
     param_space_random.insert(
         "dropout".to_string(),
-        HyperparamSpace::continuous(0.0, 0.5).unwrap(),
+        HyperparamSpace::continuous(0.0, 0.5).expect("unwrap"),
     );
 
     param_space_random.insert(
         "hidden_size".to_string(),
-        HyperparamSpace::int_range(64, 512).unwrap(),
+        HyperparamSpace::int_range(64, 512).expect("unwrap"),
     );
 
     let mut random_search = RandomSearch::new(param_space_random, 10, 42);
@@ -168,9 +168,12 @@ fn main() {
         println!("   Trial {}: ", i + 1);
         for (name, value) in config {
             match name.as_str() {
-                "learning_rate" => println!("     learning_rate: {:.6}", value.as_float().unwrap()),
-                "dropout" => println!("     dropout: {:.3}", value.as_float().unwrap()),
-                "hidden_size" => println!("     hidden_size: {}", value.as_int().unwrap()),
+                "learning_rate" => println!(
+                    "     learning_rate: {:.6}",
+                    value.as_float().expect("unwrap")
+                ),
+                "dropout" => println!("     dropout: {:.3}", value.as_float().expect("unwrap")),
+                "hidden_size" => println!("     hidden_size: {}", value.as_int().expect("unwrap")),
                 _ => {}
             }
         }
@@ -194,17 +197,25 @@ fn main() {
             "     learning_rate: {:.6}",
             best.config
                 .get("learning_rate")
-                .unwrap()
+                .expect("unwrap")
                 .as_float()
-                .unwrap()
+                .expect("unwrap")
         );
         println!(
             "     dropout: {:.3}",
-            best.config.get("dropout").unwrap().as_float().unwrap()
+            best.config
+                .get("dropout")
+                .expect("unwrap")
+                .as_float()
+                .expect("unwrap")
         );
         println!(
             "     hidden_size: {}",
-            best.config.get("hidden_size").unwrap().as_int().unwrap()
+            best.config
+                .get("hidden_size")
+                .expect("unwrap")
+                .as_int()
+                .expect("unwrap")
         );
     }
 
@@ -222,11 +233,21 @@ fn main() {
             result
                 .config
                 .get("learning_rate")
-                .unwrap()
+                .expect("unwrap")
                 .as_float()
-                .unwrap(),
-            result.config.get("dropout").unwrap().as_float().unwrap(),
-            result.config.get("hidden_size").unwrap().as_int().unwrap()
+                .expect("unwrap"),
+            result
+                .config
+                .get("dropout")
+                .expect("unwrap")
+                .as_float()
+                .expect("unwrap"),
+            result
+                .config
+                .get("hidden_size")
+                .expect("unwrap")
+                .as_int()
+                .expect("unwrap")
         );
     }
 

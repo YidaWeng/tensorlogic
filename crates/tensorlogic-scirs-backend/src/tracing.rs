@@ -341,7 +341,7 @@ mod tests {
         assert!(handle.is_some());
 
         tracer.finish_operation(
-            handle.unwrap(),
+            handle.expect("unwrap"),
             vec!["output1".to_string()],
             vec![vec![2, 3]],
             vec![vec![2, 3]],
@@ -371,14 +371,14 @@ mod tests {
         for i in 0..5 {
             let handle = tracer
                 .start_operation("einsum", Some(i), vec![], TraceLevel::Info)
-                .unwrap();
+                .expect("unwrap");
             tracer.finish_operation(handle, vec![], vec![], vec![], None);
         }
 
         for i in 0..3 {
             let handle = tracer
                 .start_operation("reduce", Some(i + 5), vec![], TraceLevel::Info)
-                .unwrap();
+                .expect("unwrap");
             tracer.finish_operation(handle, vec![], vec![], vec![], None);
         }
 

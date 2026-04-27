@@ -16,6 +16,7 @@ mod jupyter;
 mod numpy_conversion;
 mod performance;
 mod persistence;
+mod progress;
 mod provenance;
 mod streaming;
 mod training;
@@ -159,6 +160,9 @@ fn pytensorlogic(_py: Python, m: &Bound<'_, PyModule>) -> PyResult<()> {
 
     // Register performance module
     performance::register_performance_module(m)?;
+
+    // Register progress module
+    progress::register_progress_module(m)?;
 
     // Register streaming module
     streaming::register_streaming_module(m)?;

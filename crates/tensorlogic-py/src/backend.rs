@@ -437,66 +437,74 @@ mod tests {
     }
 
     #[test]
-    fn test_get_capabilities() {
+    fn test_get_capabilities() -> Result<(), Box<dyn std::error::Error>> {
         let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU));
         assert!(caps.is_ok());
-        let caps = caps.unwrap();
+        let caps = caps?;
         assert_eq!(caps.name(), "SciRS2 Backend");
         assert!(!caps.version().is_empty());
+        Ok(())
     }
 
     #[test]
-    fn test_capabilities_devices() {
-        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU)).unwrap();
+    fn test_capabilities_devices() -> Result<(), Box<dyn std::error::Error>> {
+        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU))?;
         let devices = caps.devices();
         assert!(devices.contains(&"CPU".to_string()));
+        Ok(())
     }
 
     #[test]
-    fn test_capabilities_dtypes() {
-        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU)).unwrap();
+    fn test_capabilities_dtypes() -> Result<(), Box<dyn std::error::Error>> {
+        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU))?;
         let dtypes = caps.dtypes();
         assert!(dtypes.contains(&"f64".to_string()));
         assert!(dtypes.contains(&"f32".to_string()));
+        Ok(())
     }
 
     #[test]
-    fn test_capabilities_features() {
-        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU)).unwrap();
+    fn test_capabilities_features() -> Result<(), Box<dyn std::error::Error>> {
+        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU))?;
         let features = caps.features();
         assert!(features.contains(&"Autodiff".to_string()));
         assert!(features.contains(&"BatchExecution".to_string()));
+        Ok(())
     }
 
     #[test]
-    fn test_supports_device() {
-        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU)).unwrap();
+    fn test_supports_device() -> Result<(), Box<dyn std::error::Error>> {
+        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU))?;
         assert!(caps.supports_device("CPU"));
         assert!(caps.supports_device("cpu")); // Case insensitive
+        Ok(())
     }
 
     #[test]
-    fn test_supports_dtype() {
-        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU)).unwrap();
+    fn test_supports_dtype() -> Result<(), Box<dyn std::error::Error>> {
+        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU))?;
         assert!(caps.supports_dtype("f64"));
         assert!(caps.supports_dtype("f32"));
         assert!(caps.supports_dtype("F64")); // Case insensitive
+        Ok(())
     }
 
     #[test]
-    fn test_supports_feature() {
-        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU)).unwrap();
+    fn test_supports_feature() -> Result<(), Box<dyn std::error::Error>> {
+        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU))?;
         assert!(caps.supports_feature("Autodiff"));
         assert!(caps.supports_feature("BatchExecution"));
         assert!(!caps.supports_feature("NonExistentFeature"));
+        Ok(())
     }
 
     #[test]
-    fn test_capabilities_summary() {
-        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU)).unwrap();
+    fn test_capabilities_summary() -> Result<(), Box<dyn std::error::Error>> {
+        let caps = py_get_backend_capabilities(Some(PyBackend::SciRS2CPU))?;
         let summary = caps.summary();
         assert!(summary.contains("SciRS2 Backend"));
         assert!(summary.contains("CPU"));
         assert!(summary.contains("Autodiff"));
+        Ok(())
     }
 }

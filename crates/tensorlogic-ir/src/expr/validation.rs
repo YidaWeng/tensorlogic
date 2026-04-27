@@ -191,6 +191,21 @@ impl TLExpr {
             }
             TLExpr::Abducible { .. } => Ok(()),
             TLExpr::Explain { formula } => formula.validate_arity_recursive(seen),
+            TLExpr::SymbolLiteral(_) => Ok(()),
+            TLExpr::Match { scrutinee, arms } => {
+                if arms.is_empty() {
+                    return Err("Match expression must have at least one arm".into());
+                }
+                let last = &arms[arms.len() - 1].0;
+                if !matches!(last, crate::pattern::MatchPattern::Wildcard) {
+                    return Err("Last arm of Match expression must be a Wildcard pattern".into());
+                }
+                scrutinee.validate_arity_recursive(seen)?;
+                for (_, body) in arms {
+                    body.validate_arity_recursive(seen)?;
+                }
+                Ok(())
+            }
 
             TLExpr::Constant(_) => Ok(()),
         }
@@ -367,6 +382,14 @@ impl TLExpr {
             }
             TLExpr::Abducible { .. } => Ok(()),
             TLExpr::Explain { formula } => formula.collect_and_check_arity(seen),
+            TLExpr::SymbolLiteral(_) => Ok(()),
+            TLExpr::Match { scrutinee, arms } => {
+                scrutinee.collect_and_check_arity(seen)?;
+                for (_, body) in arms {
+                    body.collect_and_check_arity(seen)?;
+                }
+                Ok(())
+            }
 
             TLExpr::Constant(_) => Ok(()),
         }

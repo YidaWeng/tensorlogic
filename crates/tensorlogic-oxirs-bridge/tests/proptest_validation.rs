@@ -207,7 +207,7 @@ proptest! {
 
         for (i, &count) in counts.iter().enumerate() {
             let predicate = format!("http://example.org/p{}", i);
-            prop_assert_eq!(*stats.get(&predicate).unwrap(), count);
+            prop_assert_eq!(*stats.get(&predicate).expect("unwrap"), count);
         }
     }
 }

@@ -148,7 +148,7 @@ impl GraphScheduler {
                 let stage_cost = nodes
                     .iter()
                     .map(|&idx| self.get_operation_cost(idx))
-                    .max_by(|a, b| a.partial_cmp(b).unwrap())
+                    .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                     .unwrap_or(0.0);
 
                 schedule.parallel_stages.push(nodes.clone());
@@ -179,7 +179,9 @@ impl GraphScheduler {
         ready.sort_by(|&a, &b| {
             let cost_a = self.get_operation_cost(a);
             let cost_b = self.get_operation_cost(b);
-            cost_b.partial_cmp(&cost_a).unwrap()
+            cost_b
+                .partial_cmp(&cost_a)
+                .unwrap_or(std::cmp::Ordering::Equal)
         });
 
         let mut scheduled = HashSet::new();
@@ -219,7 +221,9 @@ impl GraphScheduler {
             ready.sort_by(|&a, &b| {
                 let cost_a = self.get_operation_cost(a);
                 let cost_b = self.get_operation_cost(b);
-                cost_b.partial_cmp(&cost_a).unwrap()
+                cost_b
+                    .partial_cmp(&cost_a)
+                    .unwrap_or(std::cmp::Ordering::Equal)
             });
         }
 
@@ -247,7 +251,7 @@ impl GraphScheduler {
                 .iter()
                 .max_by_key(|&&idx| self.estimate_memory_freed(graph, idx, &tensor_lifetimes))
                 .copied()
-                .unwrap();
+                .expect("ready list is non-empty at this point in the loop");
 
             ready.retain(|&idx| idx != best_idx);
 
@@ -368,7 +372,7 @@ impl GraphScheduler {
             let max_dep_finish = deps
                 .iter()
                 .map(|&dep_idx| start_times[dep_idx] + self.get_operation_cost(dep_idx))
-                .max_by(|a, b| a.partial_cmp(b).unwrap())
+                .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                 .unwrap_or(0.0);
 
             start_times[node_idx] = max_dep_finish;
@@ -567,7 +571,7 @@ mod tests {
 
         let schedule = scheduler
             .schedule(&graph, SchedulingObjective::MinimizeLatency)
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(schedule.num_stages(), 0);
     }
 
@@ -580,13 +584,13 @@ mod tests {
         let b = graph.add_tensor("B");
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
 
         scheduler.set_operation_cost(0, 2.0);
 
         let schedule = scheduler
             .schedule(&graph, SchedulingObjective::MinimizeLatency)
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(schedule.execution_order.len(), 1);
         assert_eq!(schedule.total_cost, 2.0);
     }
@@ -602,14 +606,14 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("tanh", b, c))
-            .unwrap();
+            .expect("unwrap");
 
         let deps = scheduler.build_dependencies(&graph);
-        assert_eq!(deps.get(&0).unwrap().len(), 0);
-        assert_eq!(deps.get(&1).unwrap(), &vec![0]);
+        assert_eq!(deps.get(&0).expect("unwrap").len(), 0);
+        assert_eq!(deps.get(&1).expect("unwrap"), &vec![0]);
     }
 
     #[test]
@@ -623,10 +627,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("tanh", b, c))
-            .unwrap();
+            .expect("unwrap");
 
         let deps = scheduler.build_dependencies(&graph);
         let topo = scheduler.topological_sort(&graph, &deps);

@@ -512,8 +512,8 @@ mod tests {
 
         let node = graph
             .add_node(tensorlogic_ir::EinsumNode::elem_unary("exp", t0, t1))
-            .unwrap();
-        graph.add_output(t1).unwrap();
+            .expect("unwrap");
+        graph.add_output(t1).expect("unwrap");
 
         let analysis = analyze_graph_dataflow(&graph);
 
@@ -564,10 +564,10 @@ mod tests {
 
         graph
             .add_node(tensorlogic_ir::EinsumNode::elem_unary("exp", t0, t1))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(tensorlogic_ir::EinsumNode::elem_unary("log", t1, t2))
-            .unwrap();
+            .expect("unwrap");
 
         let analysis = analyze_graph_dataflow(&graph);
 

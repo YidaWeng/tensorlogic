@@ -276,14 +276,14 @@ impl PlacementOptimizer {
 
         // Sort nodes by cost (descending)
         let mut node_order: Vec<_> = costs.iter().enumerate().collect();
-        node_order.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap());
+        node_order.sort_by(|a, b| b.1.partial_cmp(a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Assign each node to the least loaded device
         for (node_idx, &cost) in node_order {
             let min_device_idx = device_loads
                 .iter()
                 .enumerate()
-                .min_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+                .min_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
                 .map(|(idx, _)| idx)
                 .unwrap_or(0);
 
@@ -335,7 +335,9 @@ impl PlacementOptimizer {
             let current_transfers = plan.count_transfers(graph);
 
             for node_idx in 0..graph.nodes.len() {
-                let current_device = plan.get_node_device(node_idx).unwrap();
+                let current_device = plan
+                    .get_node_device(node_idx)
+                    .expect("node was placed before optimization loop");
 
                 // Try each alternative device
                 for &candidate_device in &self.available_devices {

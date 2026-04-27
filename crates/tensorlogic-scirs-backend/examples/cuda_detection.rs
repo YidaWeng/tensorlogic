@@ -12,7 +12,8 @@
 //! gracefully report no CUDA devices found.
 
 use tensorlogic_scirs_backend::{
-    cuda_device_count, detect_cuda_devices, is_cuda_available, Device, DeviceManager, DeviceType,
+    cuda_device_count, detect_cuda_devices, is_cuda_available, Device, DeviceType,
+    SystemDeviceManager,
 };
 
 fn main() {
@@ -76,7 +77,7 @@ fn main() {
     // Use DeviceManager to get all available devices
     println!("3. Device Manager");
     println!("   --------------");
-    let manager = DeviceManager::new();
+    let manager = SystemDeviceManager::new();
 
     println!(
         "   Available devices: {}",

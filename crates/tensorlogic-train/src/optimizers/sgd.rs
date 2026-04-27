@@ -68,7 +68,10 @@ impl Optimizer for SgdOptimizer {
                     .insert(name.clone(), Array::zeros(param.raw_dim()));
             }
 
-            let velocity = self.velocity.get_mut(name).unwrap();
+            let velocity = self
+                .velocity
+                .get_mut(name)
+                .expect("velocity initialized for all parameters");
 
             // Update velocity: v = momentum * v + lr * grad
             velocity.mapv_inplace(|v| self.config.momentum * v);
@@ -139,9 +142,9 @@ mod tests {
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), array![[0.1, 0.1]]);
 
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
-        let w = params.get("w").unwrap();
+        let w = params.get("w").expect("unwrap");
         assert!(w[[0, 0]] < 1.0); // Should decrease
         assert!(w[[0, 1]] < 2.0);
 
@@ -166,10 +169,10 @@ mod tests {
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), array![[1.0]]); // Large gradient
 
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         // Gradient should be clipped to 0.05, so update should be small
-        let w = params.get("w").unwrap();
+        let w = params.get("w").expect("unwrap");
         assert!((w[[0, 0]] - 1.0).abs() < 0.1); // Small change due to clipping
     }
 }

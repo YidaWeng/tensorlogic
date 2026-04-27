@@ -528,7 +528,7 @@ mod tests {
             tensor_metadata: HashMap::new(),
         };
 
-        let result = optimizer.optimize(&graph).unwrap();
+        let result = optimizer.optimize(&graph).expect("unwrap");
         assert!(result.nodes.is_empty());
     }
 
@@ -537,7 +537,7 @@ mod tests {
         let mut optimizer = GraphOptimizer::with_all_passes();
         let graph = create_simple_graph();
 
-        let result = optimizer.optimize(&graph).unwrap();
+        let result = optimizer.optimize(&graph).expect("unwrap");
         assert_eq!(result.nodes.len(), 1);
     }
 
@@ -547,7 +547,7 @@ mod tests {
         optimizer.add_pass(OptimizationPass::DeadCodeElimination);
 
         let graph = create_graph_with_dead_code();
-        let result = optimizer.optimize(&graph).unwrap();
+        let result = optimizer.optimize(&graph).expect("unwrap");
 
         // Should have eliminated the dead node (first one, output 2 is not used)
         assert_eq!(optimizer.stats().dead_code_eliminated, 1);
@@ -560,7 +560,7 @@ mod tests {
         optimizer.add_pass(OptimizationPass::DeadCodeElimination);
 
         let graph = create_graph_with_dead_code();
-        optimizer.optimize(&graph).unwrap();
+        optimizer.optimize(&graph).expect("unwrap");
 
         let stats = optimizer.stats();
         assert_eq!(stats.nodes_before, 2);
@@ -654,7 +654,7 @@ mod tests {
             tensor_metadata: HashMap::new(),
         };
 
-        let _result = optimizer.optimize(&graph).unwrap();
+        let _result = optimizer.optimize(&graph).expect("unwrap");
         // Both nodes have same operation on same input - should be cached
         assert!(optimizer.stats().subgraphs_cached > 0);
     }
@@ -679,7 +679,7 @@ mod tests {
             tensor_metadata: HashMap::new(),
         };
 
-        let _result = optimizer.optimize(&graph).unwrap();
+        let _result = optimizer.optimize(&graph).expect("unwrap");
         // Identity einsum should be simplified
         assert!(optimizer.stats().simplifications > 0);
     }

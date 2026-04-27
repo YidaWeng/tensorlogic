@@ -6,6 +6,7 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+documentation = "https://docs.rs/tensorlogic-trustformers"
 readme = "README.md"
 keywords = ["tensor", "logic", "transformers", "attention", "neural-networks"]
 categories = ["science", "algorithms", "mathematics"]
@@ -17,6 +18,9 @@ serde_json.workspace = true
 thiserror.workspace = true
 tensorlogic-ir.workspace = true
 tensorlogic-infer.workspace = true
+tensorlogic-scirs-backend.workspace = true
+ndarray.workspace = true
+smallvec.workspace = true
 
 # SciRS2 integration for tensor operations
 scirs2-core = { workspace = true }

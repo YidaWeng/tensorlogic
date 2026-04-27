@@ -361,7 +361,7 @@ mod tests {
             },
         );
 
-        registry.register(pred).unwrap();
+        registry.register(pred).expect("unwrap");
         assert!(registry.contains("friend"));
         assert_eq!(registry.len(), 1);
     }
@@ -379,7 +379,7 @@ mod tests {
 
         let expanded = pred
             .expand(&["alice".to_string(), "bob".to_string()])
-            .unwrap();
+            .expect("unwrap");
 
         match expanded {
             PredicateBody::Reference { name, args } => {
@@ -404,7 +404,7 @@ mod tests {
 
         let instance = template
             .instantiate(&["Person".to_string()], &["a".to_string(), "b".to_string()])
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(instance.name, "related<Person>");
         assert_eq!(instance.parameters, vec!["a".to_string(), "b".to_string()]);

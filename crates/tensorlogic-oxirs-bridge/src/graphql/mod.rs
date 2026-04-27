@@ -205,7 +205,9 @@ impl GraphQLConverter {
             return Ok(None); // Not a valid field line
         };
 
-        let (field_part, type_part) = field_line.split_once(':').unwrap();
+        let (field_part, type_part) = field_line
+            .split_once(':')
+            .expect("colon presence validated above");
 
         let field_part = field_part.trim();
         let mut type_part = type_part.trim();
@@ -220,7 +222,9 @@ impl GraphQLConverter {
 
         // Extract field name and arguments
         let (field_name, arguments) = if field_part.contains('(') {
-            let name_end = field_part.find('(').unwrap();
+            let name_end = field_part
+                .find('(')
+                .expect("parenthesis presence validated by contains check");
             let field_name = field_part[..name_end].trim();
             let args_str = field_part[name_end + 1..]
                 .strip_suffix(')')
@@ -287,9 +291,9 @@ impl GraphQLConverter {
         let type_str = if is_list {
             type_str
                 .strip_prefix('[')
-                .unwrap()
+                .expect("is_list guarantees '[' prefix")
                 .strip_suffix(']')
-                .unwrap()
+                .expect("is_list guarantees ']' suffix")
                 .trim_end_matches('!')
         } else {
             type_str
@@ -731,9 +735,9 @@ mod tests {
         "#;
 
         let mut converter = GraphQLConverter::new();
-        converter.parse_schema(schema).unwrap();
+        converter.parse_schema(schema).expect("unwrap");
 
-        let user_type = converter.types().get("User").unwrap();
+        let user_type = converter.types().get("User").expect("unwrap");
         assert_eq!(user_type.fields.len(), 3);
 
         let id_field = &user_type.fields[0];
@@ -752,9 +756,9 @@ mod tests {
         "#;
 
         let mut converter = GraphQLConverter::new();
-        converter.parse_schema(schema).unwrap();
+        converter.parse_schema(schema).expect("unwrap");
 
-        let post_type = converter.types().get("Post").unwrap();
+        let post_type = converter.types().get("Post").expect("unwrap");
         assert_eq!(post_type.fields.len(), 2);
 
         let tags_field = &post_type.fields[0];
@@ -771,7 +775,7 @@ mod tests {
         "#;
 
         let mut converter = GraphQLConverter::new();
-        let table = converter.parse_schema(schema).unwrap();
+        let table = converter.parse_schema(schema).expect("unwrap");
 
         // Should have Person domain
         assert!(table.domains.contains_key("Person"));
@@ -795,7 +799,7 @@ mod tests {
         "#;
 
         let mut converter = GraphQLConverter::new();
-        converter.parse_schema(schema).unwrap();
+        converter.parse_schema(schema).expect("unwrap");
 
         assert_eq!(converter.types().len(), 2);
         assert!(converter.types().contains_key("Author"));
@@ -815,7 +819,7 @@ mod tests {
         "#;
 
         let mut converter = GraphQLConverter::new();
-        let table = converter.parse_schema(schema).unwrap();
+        let table = converter.parse_schema(schema).expect("unwrap");
 
         // Query type should not be added as a domain
         assert!(!table.domains.contains_key("Query"));
@@ -888,9 +892,9 @@ mod tests {
         "#;
 
         let mut converter = GraphQLConverter::new();
-        converter.parse_schema(schema).unwrap();
+        converter.parse_schema(schema).expect("unwrap");
 
-        let user_type = converter.types().get("User").unwrap();
+        let user_type = converter.types().get("User").expect("unwrap");
         assert_eq!(user_type.fields.len(), 1);
 
         let age_field = &user_type.fields[0];
@@ -1012,7 +1016,7 @@ mod tests {
         "#;
 
         let mut converter = GraphQLConverter::new();
-        converter.parse_schema(schema).unwrap();
+        converter.parse_schema(schema).expect("unwrap");
 
         let constraints = converter.get_constraints("Product");
 
@@ -1097,16 +1101,16 @@ mod tests {
         "#;
 
         let mut converter = GraphQLConverter::new();
-        converter.parse_schema(schema).unwrap();
+        converter.parse_schema(schema).expect("unwrap");
 
-        let user_type = converter.types().get("User").unwrap();
+        let user_type = converter.types().get("User").expect("unwrap");
 
         // Verify username field has constraint directive
         let username_field = &user_type
             .fields
             .iter()
             .find(|f| f.name == "username")
-            .unwrap();
+            .expect("unwrap");
         assert!(!username_field.directives.is_empty());
 
         // Verify all constraints can be extracted

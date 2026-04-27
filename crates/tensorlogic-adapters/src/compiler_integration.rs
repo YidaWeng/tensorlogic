@@ -23,8 +23,8 @@ impl CompilerExport {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, CompilerExport};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    /// table.add_domain(DomainInfo::new("Location", 50)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+    /// table.add_domain(DomainInfo::new("Location", 50)).expect("unwrap");
     ///
     /// let domain_map = CompilerExport::export_domains(&table);
     /// assert_eq!(domain_map.get("Person"), Some(&100));
@@ -48,11 +48,11 @@ impl CompilerExport {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, PredicateInfo, CompilerExport};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
     /// table.add_predicate(PredicateInfo::new(
     ///     "knows",
     ///     vec!["Person".to_string(), "Person".to_string()]
-    /// )).unwrap();
+    /// )).expect("unwrap");
     ///
     /// let signatures = CompilerExport::export_predicate_signatures(&table);
     /// assert_eq!(signatures.get("knows"), Some(&vec!["Person".to_string(), "Person".to_string()]));
@@ -75,9 +75,9 @@ impl CompilerExport {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, CompilerExport};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    /// table.bind_variable("x", "Person").unwrap();
-    /// table.bind_variable("y", "Person").unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+    /// table.bind_variable("x", "Person").expect("unwrap");
+    /// table.bind_variable("y", "Person").expect("unwrap");
     ///
     /// let bindings = CompilerExport::export_variable_bindings(&table);
     /// assert_eq!(bindings.get("x"), Some(&"Person".to_string()));
@@ -160,7 +160,7 @@ impl CompilerImport {
     /// domains.insert("Location".to_string(), 50);
     ///
     /// let mut table = SymbolTable::new();
-    /// CompilerImport::import_domains(&mut table, &domains).unwrap();
+    /// CompilerImport::import_domains(&mut table, &domains).expect("unwrap");
     ///
     /// assert!(table.get_domain("Person").is_some());
     /// assert!(table.get_domain("Location").is_some());
@@ -181,12 +181,12 @@ impl CompilerImport {
     /// use std::collections::HashMap;
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
     ///
     /// let mut signatures = HashMap::new();
     /// signatures.insert("knows".to_string(), vec!["Person".to_string(), "Person".to_string()]);
     ///
-    /// CompilerImport::import_predicates(&mut table, &signatures).unwrap();
+    /// CompilerImport::import_predicates(&mut table, &signatures).expect("unwrap");
     ///
     /// assert!(table.get_predicate("knows").is_some());
     /// ```
@@ -209,13 +209,13 @@ impl CompilerImport {
     /// use std::collections::HashMap;
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
     ///
     /// let mut bindings = HashMap::new();
     /// bindings.insert("x".to_string(), "Person".to_string());
     /// bindings.insert("y".to_string(), "Person".to_string());
     ///
-    /// CompilerImport::import_variables(&mut table, &bindings).unwrap();
+    /// CompilerImport::import_variables(&mut table, &bindings).expect("unwrap");
     ///
     /// assert_eq!(table.get_variable_domain("x"), Some("Person"));
     /// assert_eq!(table.get_variable_domain("y"), Some("Person"));
@@ -335,8 +335,12 @@ mod tests {
     #[test]
     fn test_export_domains() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.add_domain(DomainInfo::new("Location", 50)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Location", 50))
+            .expect("unwrap");
 
         let domains = CompilerExport::export_domains(&table);
         assert_eq!(domains.get("Person"), Some(&100));
@@ -346,13 +350,15 @@ mod tests {
     #[test]
     fn test_export_predicate_signatures() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new(
                 "knows",
                 vec!["Person".to_string(), "Person".to_string()],
             ))
-            .unwrap();
+            .expect("unwrap");
 
         let signatures = CompilerExport::export_predicate_signatures(&table);
         assert_eq!(
@@ -364,11 +370,13 @@ mod tests {
     #[test]
     fn test_export_all() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("knows", vec!["Person".to_string()]))
-            .unwrap();
-        table.bind_variable("x", "Person").unwrap();
+            .expect("unwrap");
+        table.bind_variable("x", "Person").expect("unwrap");
 
         let bundle = CompilerExport::export_all(&table);
         assert_eq!(bundle.domains.len(), 1);
@@ -382,7 +390,7 @@ mod tests {
         domains.insert("Person".to_string(), 100);
 
         let mut table = SymbolTable::new();
-        CompilerImport::import_domains(&mut table, &domains).unwrap();
+        CompilerImport::import_domains(&mut table, &domains).expect("unwrap");
 
         assert!(table.get_domain("Person").is_some());
     }
@@ -390,12 +398,14 @@ mod tests {
     #[test]
     fn test_import_predicates() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let mut signatures = HashMap::new();
         signatures.insert("knows".to_string(), vec!["Person".to_string()]);
 
-        CompilerImport::import_predicates(&mut table, &signatures).unwrap();
+        CompilerImport::import_predicates(&mut table, &signatures).expect("unwrap");
         assert!(table.get_predicate("knows").is_some());
     }
 
@@ -407,7 +417,7 @@ mod tests {
             .predicate_signatures
             .insert("knows".to_string(), vec!["UnknownDomain".to_string()]);
 
-        let result = SymbolTableSync::validate_bundle(&table, &bundle).unwrap();
+        let result = SymbolTableSync::validate_bundle(&table, &bundle).expect("unwrap");
         assert!(!result.is_valid());
         assert!(!result.errors.is_empty());
     }
@@ -418,7 +428,7 @@ mod tests {
         let mut bundle = CompilerExportBundle::new();
         bundle.domains.insert("UnusedDomain".to_string(), 100);
 
-        let result = SymbolTableSync::validate_bundle(&table, &bundle).unwrap();
+        let result = SymbolTableSync::validate_bundle(&table, &bundle).expect("unwrap");
         assert!(result.is_valid()); // Still valid, just has warnings
         assert!(!result.warnings.is_empty());
     }
@@ -426,12 +436,14 @@ mod tests {
     #[test]
     fn test_sync_with_compiler() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let mut bundle = CompilerExportBundle::new();
         bundle.domains.insert("Location".to_string(), 50);
 
-        let result = SymbolTableSync::sync_with_compiler(&mut table, &bundle).unwrap();
+        let result = SymbolTableSync::sync_with_compiler(&mut table, &bundle).expect("unwrap");
 
         // Table should now have both domains
         assert!(table.get_domain("Person").is_some());
@@ -489,11 +501,11 @@ impl CompilerExportAdvanced {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, PredicateInfo, PredicateConstraints, CompilerExportAdvanced};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
     ///
     /// let mut pred = PredicateInfo::new("age", vec!["Person".to_string()]);
     /// pred.constraints = Some(PredicateConstraints::new());
-    /// table.add_predicate(pred).unwrap();
+    /// table.add_predicate(pred).expect("unwrap");
     ///
     /// let constraints = CompilerExportAdvanced::export_constraints(&table);
     /// assert!(constraints.contains_key("age"));
@@ -688,11 +700,13 @@ mod advanced_tests {
     #[test]
     fn test_export_constraints() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let mut pred = PredicateInfo::new("age", vec!["Person".to_string()]);
         pred.constraints = Some(PredicateConstraints::new());
-        table.add_predicate(pred).unwrap();
+        table.add_predicate(pred).expect("unwrap");
 
         let constraints = CompilerExportAdvanced::export_constraints(&table);
         assert!(constraints.contains_key("age"));
@@ -729,7 +743,9 @@ mod advanced_tests {
     #[test]
     fn test_export_all_advanced() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let mut hierarchy = DomainHierarchy::new();
         hierarchy.add_subtype("Student", "Person");
@@ -744,7 +760,9 @@ mod advanced_tests {
     #[test]
     fn test_complete_export_bundle() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let mut hierarchy = DomainHierarchy::new();
         hierarchy.add_subtype("Student", "Person");

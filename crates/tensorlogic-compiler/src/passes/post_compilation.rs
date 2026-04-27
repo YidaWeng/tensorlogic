@@ -81,10 +81,10 @@ pub struct PostCompilationResult {
 ///     TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]),
 /// );
 ///
-/// let mut graph = compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+/// let mut graph = compile_to_einsum_with_context(&expr, &mut ctx).expect("unwrap");
 ///
 /// let options = PostCompilationOptions::default();
-/// let result = post_compilation_passes(&mut graph, &ctx, options).unwrap();
+/// let result = post_compilation_passes(&mut graph, &ctx, options).expect("unwrap");
 ///
 /// assert!(result.is_valid);
 /// ```
@@ -445,10 +445,10 @@ mod tests {
 
         let expr = TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]);
 
-        let mut graph = compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+        let mut graph = compile_to_einsum_with_context(&expr, &mut ctx).expect("unwrap");
 
         let options = PostCompilationOptions::default();
-        let result = post_compilation_passes(&mut graph, &ctx, options).unwrap();
+        let result = post_compilation_passes(&mut graph, &ctx, options).expect("unwrap");
 
         assert!(result.is_valid);
     }
@@ -464,10 +464,10 @@ mod tests {
             TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]),
         );
 
-        let mut graph = compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+        let mut graph = compile_to_einsum_with_context(&expr, &mut ctx).expect("unwrap");
 
         let options = PostCompilationOptions::default();
-        let result = post_compilation_passes(&mut graph, &ctx, options).unwrap();
+        let result = post_compilation_passes(&mut graph, &ctx, options).expect("unwrap");
 
         assert!(result.is_valid);
     }
@@ -478,7 +478,7 @@ mod tests {
         ctx.add_domain("D", 10);
 
         let expr = TLExpr::pred("p", vec![Term::var("x")]);
-        let graph = compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+        let graph = compile_to_einsum_with_context(&expr, &mut ctx).expect("unwrap");
 
         assert!(quick_validate(&graph).is_ok());
     }
@@ -505,14 +505,14 @@ mod tests {
             Box::new(TLExpr::pred("q", vec![Term::var("y")])),
         );
 
-        let mut graph = compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+        let mut graph = compile_to_einsum_with_context(&expr, &mut ctx).expect("unwrap");
 
         let options = PostCompilationOptions {
             apply_optimizations: true,
             ..Default::default()
         };
 
-        let result = post_compilation_passes(&mut graph, &ctx, options).unwrap();
+        let result = post_compilation_passes(&mut graph, &ctx, options).expect("unwrap");
         assert!(result.is_valid);
         // May or may not have optimizations depending on graph structure
     }
@@ -524,7 +524,7 @@ mod tests {
 
         let expr = TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]);
 
-        let mut graph = compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+        let mut graph = compile_to_einsum_with_context(&expr, &mut ctx).expect("unwrap");
 
         let options = PostCompilationOptions {
             strict_mode: true,

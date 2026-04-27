@@ -861,7 +861,7 @@ mod tests {
             .benchmark("simple", || {
                 std::thread::sleep(std::time::Duration::from_micros(10));
             })
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(stats.name, "simple");
         assert!(stats.samples > 0);
@@ -918,7 +918,7 @@ mod tests {
         perf.benchmark("test", || {
             let _x = (0..100).sum::<i32>();
         })
-        .unwrap();
+        .expect("unwrap");
         assert!(!perf.results().is_empty());
 
         perf.clear();
@@ -934,7 +934,10 @@ mod tests {
         // Test various percentiles
         assert_eq!(stats.percentile(0.0), Some(10.0));
         // P50 should be close to 50-60 range (linear interpolation)
-        assert!(stats.percentile(50.0).unwrap() >= 50.0 && stats.percentile(50.0).unwrap() <= 60.0);
+        assert!(
+            stats.percentile(50.0).expect("unwrap") >= 50.0
+                && stats.percentile(50.0).expect("unwrap") <= 60.0
+        );
         assert_eq!(stats.percentile(100.0), Some(100.0));
 
         // Test P50, P95, P99 exist
@@ -973,7 +976,7 @@ mod tests {
         let mut stats = BenchmarkStats::from_samples("test".to_string(), samples.clone());
         stats.distribution = Some(samples);
 
-        let outliers = stats.detect_outliers().unwrap();
+        let outliers = stats.detect_outliers().expect("unwrap");
         assert!(!outliers.is_empty());
         assert!(outliers.contains(&1000));
         assert!(outliers.contains(&2000));
@@ -987,7 +990,7 @@ mod tests {
         let mut stats = BenchmarkStats::from_samples("test".to_string(), samples.clone());
         stats.distribution = Some(samples);
 
-        let filtered = stats.without_outliers().unwrap();
+        let filtered = stats.without_outliers().expect("unwrap");
         assert!(filtered.mean_ns < stats.mean_ns); // Mean should be lower without outlier
         assert!(filtered.std_dev_ns < stats.std_dev_ns); // Std dev should be lower
     }
@@ -1044,7 +1047,7 @@ mod tests {
         let p = mann_whitney_u_test(&sample1, &sample2);
         // Identical distributions should have high p-value (close to 1.0)
         assert!(p.is_some());
-        assert!(p.unwrap() > 0.5);
+        assert!(p.expect("unwrap") > 0.5);
     }
 
     #[test]
@@ -1055,7 +1058,7 @@ mod tests {
         let p = mann_whitney_u_test(&sample1, &sample2);
         // Very different distributions should have low p-value (close to 0.0)
         assert!(p.is_some());
-        assert!(p.unwrap() < 0.05); // Statistically significant
+        assert!(p.expect("unwrap") < 0.05); // Statistically significant
     }
 
     #[test]
@@ -1085,7 +1088,7 @@ mod tests {
 
         assert!(comp.is_significant); // Should be statistically significant
         assert!(comp.p_value.is_some());
-        assert!(comp.p_value.unwrap() < 0.05);
+        assert!(comp.p_value.expect("unwrap") < 0.05);
     }
 
     #[test]

@@ -93,7 +93,9 @@ pub fn normalize_ac(expr: &TLExpr, op: ACOperator) -> TLExpr {
         return expr.clone();
     }
 
-    let mut result = operands.pop().unwrap();
+    let mut result = operands
+        .pop()
+        .expect("operands must be non-empty after validation");
     while let Some(operand) = operands.pop() {
         result = match op {
             ACOperator::And => TLExpr::and(operand, result),
@@ -389,9 +391,9 @@ mod tests {
             TLExpr::pred("C", vec![Term::var("z")]),
         );
 
-        let bindings = pattern.matches(&expr).unwrap();
+        let bindings = pattern.matches(&expr).expect("unwrap");
         assert!(bindings.contains_key("rest"));
-        assert_eq!(bindings.get("rest").unwrap().len(), 2); // B and C
+        assert_eq!(bindings.get("rest").expect("unwrap").len(), 2); // B and C
     }
 
     #[test]

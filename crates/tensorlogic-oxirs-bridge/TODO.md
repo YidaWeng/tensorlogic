@@ -1,19 +1,9 @@
-# RC.1 Release Status
+# TensorLogic OxiRS Bridge — TODO
 
-**Version**: 0.1.0-rc.1
-**Status**: Production Ready
+**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
-This crate is part of the TensorLogic v0.1.0-rc.1 release with:
-- Zero compiler warnings
-- 100% test pass rate
-- Complete documentation
-- Production-ready quality
-
-See main [TODO.md](../../TODO.md) for overall project status.
-
----
-
-# tensorlogic-oxirs-bridge TODO
+RDF / SPARQL / SHACL / OWL / JSON-LD integration via the OxiRS stack.
 
 ## Completed
 
@@ -229,10 +219,10 @@ See main [TODO.md](../../TODO.md) for overall project status.
 ## High Priority
 
 ### Integration
-- [ ] Execute and validate
-  - [ ] Run compiled rules with SciRS2 backend
-  - [ ] Generate validation reports from execution
-  - [ ] Export results as RDF
+- [x] Execute and validate
+  - [x] Run compiled rules with SciRS2 backend
+  - [x] Generate validation reports from execution
+  - [x] Export results as RDF
 
 ## Medium Priority
 
@@ -243,10 +233,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [ ] Memory-efficient graph representation
 
 ### Error Handling
-- [ ] Validation warnings (FUTURE)
-  - [ ] Warn about missing labels/comments
-  - [ ] Detect unused classes/properties
-  - [ ] Suggest SHACL shapes for constraints
+- [x] **Validation warnings** ✅ (v0.1.2) — SchemaWarningAnalyzer (MissingLabel, UnusedClass, SuggestSHACL)
 - [ ] Recovery strategies (FUTURE)
   - [ ] Continue parsing after non-fatal errors
   - [ ] Provide partial results on failure
@@ -275,7 +262,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
 
 ### Formats Support
 - [ ] Export formats
-  - [ ] Export SymbolTable as Turtle (currently JSON only)
+  - [x] Export SymbolTable as Turtle (.ttl) ✅ (v0.1.2)
   - [ ] RDF/XML parser (via external crate) (FUTURE)
 
 ### Tooling
@@ -291,14 +278,14 @@ See main [TODO.md](../../TODO.md) for overall project status.
 ## Future Enhancements
 
 ### Advanced RDF Features
-- [ ] Blank node handling
-  - [ ] Generate fresh symbols for blank nodes
-  - [ ] Track blank node identity
-  - [ ] Skolemization
-- [ ] Named graphs
-  - [ ] Support multiple graphs
-  - [ ] Graph-level provenance
-  - [ ] Cross-graph queries
+- [x] **Blank node handling** ✅ (v0.1.2) — BlankNodeManager with fresh IRI generation
+- [x] `named-graphs-multiple` (planned 2026-04-17)
+  - **Goal:** First-class multi-named-graph storage and per-graph query API. Extend `NQuadsProcessor` and add a new `QuadStore` wrapping per-graph `TripleStore`s.
+  - **Design:** `pub struct QuadStore { stores: HashMap<Option<String>, TripleStore> }` — `None` = default graph; `Some(iri)` = named graph. Methods: `insert_quad(&mut self, q: Quad)`, `query_subject(graph: Option<&str>, s: &str) -> Vec<Triple>`, `query_predicate(...)`, `query_object(...)`, `iter_graphs() -> impl Iterator<Item = &Option<String>>`. Reuse existing per-graph triple operations on `TripleStore` (`src/property_path.rs:123–195`); TripleStore itself stays graph-unaware. Bridge: `NQuadsProcessor::into_quad_store(self) -> QuadStore`. SCOPE EXPLICITLY EXCLUDES: SPARQL GRAPH pattern, cross-graph queries, any edits to `sparql/types.rs` / `sparql/compiler.rs` / `oxirs_executor.rs` — those are item 8's territory.
+  - **Files:** `src/quad_store.rs` (NEW); `src/schema/nquads.rs` (add `into_quad_store`); `src/lib.rs` (re-export `QuadStore`). `src/property_path.rs` — NO changes.
+  - **Prerequisites:** none.
+  - **Tests:** ingest n-quads with three named graphs + default graph; per-graph query isolation; default-graph isolation; `iter_graphs` enumerates exactly the inputs.
+  - **Risk:** `lib.rs` re-export overlap with item 8 — edits target distinct non-adjacent lines; conflict-free.
 - [ ] Reification
   - [ ] Handle RDF reification statements
   - [ ] Convert to RDF* where possible
@@ -308,7 +295,18 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [ ] Federated SPARQL queries
 - [ ] SPARQL property paths (e.g., `?x foaf:knows+ ?y`)
 - [ ] GRAPH patterns for named graphs
-- [ ] BIND and VALUES clauses
+- [x] `bind-and-values-clauses` (planned 2026-04-17, completed 2026-04-17)
+  - **Goal:** Add full first-class support for SPARQL `BIND ( expr AS ?var )` and `VALUES (?v1 ?v2) { (t1 t2) … }` to the parser, AST, IR-lowering compiler, executor, and sparql_gen — so a query string with these clauses parses, lowers, executes, and round-trips through generation.
+  - **Design:**
+    - **C1. AST** — `sparql/types.rs`: add `GraphPattern::Bind(BindExpr, String)` and `GraphPattern::Values(Vec<String>, Vec<Vec<PatternElement>>)`; add `pub enum BindExpr { Term(PatternElement) }`. Re-export `BindExpr` and `GraphPattern` from `lib.rs`.
+    - **C2. Parser** — `sparql/compiler.rs`: `parse_graph_pattern` new branches for `BIND ( <elem> AS ?var )` (single-var and multi-var token shapes) and `VALUES ?v { … }` / `VALUES (?v1 ?v2) { (t1 t2) … }` (multi-var grouped). Fix `split_sparql_statements` to be brace+paren depth-aware (VALUES `{}` blocks must stay as one statement). `compile_graph_pattern`: lower `Bind` to `TLExpr::pred("eq", [var, term])`, lower `Values` to disjunction of equality conjunctions.
+    - **C3. Executor** — `oxirs_executor.rs`: `Values` arm produces one binding per row (fully executable, store-independent). `Bind` constant arm produces `{var: QueryValue}`. Bind variable-ref limitation (no per-row context) documented; produces empty binding + filed as follow-up.
+    - **C4. sparql_gen** — `sparql_gen/types.rs`: add `Values(Vec<String>, Vec<Vec<SparqlTerm>>)`. `sparql_gen/functions.rs`: render `VALUES (?v1 ?v2) { (t1 t2) … }`.
+    - **C5. sparql_builder** — add `WhereClauseItem::ValuesMulti(Vec<String>, Vec<Vec<SparqlTerm>>)` + `values_multi()` method + render arm. Keep existing `Values` variant.
+  - **Files:** `sparql/types.rs`, `sparql/compiler.rs`, `oxirs_executor.rs`, `sparql_gen/types.rs`, `sparql_gen/functions.rs`, `sparql_builder.rs`, `lib.rs`, new `tests/bind_values_roundtrip.rs`.
+  - **Tests:** in-source parser tests (parse BIND + VALUES into correct AST), executor tests (`test_execute_values_single_var`, `test_execute_values_multi_var`, `test_execute_bind_constant`), builder test for `values_multi`, integration test `tests/bind_values_roundtrip.rs` (parse → AST → render → re-parse → equal AST).
+  - **Risk:** `split_sparql_statements` splitter may break on VALUES `{}` body — must fix with brace-depth tracking before adding VALUES parse branch.
+  - **Follow-ups (NOT this run):** per-row context for Bind/Filter arithmetic; `BindExpr` variants for arithmetic/function-calls; `UNDEF` in VALUES rows.
 - [ ] SPARQL expression constraints (SPARQL-based SHACL-AF)
 
 ### Reasoning
@@ -327,10 +325,56 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [ ] Schema.org vocabulary
 - [ ] DCAT (data catalogs)
 
+## v0.1.3 Enhancements (2026-03-30)
+
+- [x] **SHACL Report Export** (`shacl/report_export.rs`): `ShaclReportExporter` with Turtle/NTriples/JSON-LD output formats using W3C SHACL vocabulary (sh:ValidationReport, sh:result, sh:resultSeverity). File I/O support. 12 new tests.
+- [x] **Ontology Diff** (`ontology_diff.rs`): `OntologyDiff`, `DiffEntry` (Added/Removed/Modified), `compare_symbol_tables()` compares domain and predicate sets between two SymbolTables. 10 new tests.
+
+## v0.1.5 Enhancements (2026-03-30)
+
+- [x] **SPARQL Property Paths** (`property_path.rs`): `PropertyPath` enum (7 variants: Iri/Sequence/Alternative/ZeroOrMore/OneOrMore/ZeroOrOne/Inverse). `TripleStore` with forward/reverse lookups. `PropertyPathExpander` with fixed-point closure, cycle-safe visited-set tracking, and max-depth guard. `Display` impl for SPARQL syntax. 16 new tests.
+
+## v0.1.8 Enhancements (2026-03-30)
+
+- [x] **RDF Graph Statistics** (`graph_stats.rs`): `GraphStats` (density, degree distributions, self-loops), `PredicateStats` (functional/inverse-functional detection), `DegreeDistribution` (median), `connected_components()` via union-find. 18 new tests.
+
+## v0.1.16
+
+- [x] **RdfBulkImporter** (`rdf_bulk_io.rs`): Streaming multi-format bulk loader accepting Turtle, N-Triples, and N-Quads sources; processes triples in configurable batches with optional progress callbacks and per-batch error recovery
+- [x] **RdfBulkExporter** (`rdf_bulk_io.rs`): High-throughput parallel serializer for large `TripleStore` graphs; supports Turtle, N-Triples, and N-Quads output formats with configurable chunk size and a `NamespaceRegistry` for prefix compaction
+- [x] **NamespaceRegistry** (`rdf_bulk_io.rs`): Prefix-to-IRI mapping with `register()`, `compact_iri()` (longest-prefix lookup returning `prefix:local`), `expand_iri()`, and bulk `to_turtle_prefixes()` serialization
+- [x] **RdfTriple** (`rdf_bulk_io.rs`): Lightweight plain-struct triple (`subject`, `predicate`, `object` as `String`) for zero-copy bulk transfer between loader, store, and exporter without oxrdf allocation overhead
+- [x] **BulkIoStats** (`rdf_bulk_io.rs`): Tracks `triples_processed`, `batches_completed`, `elapsed_secs`, and derives `throughput_triples_per_sec()` for import and export performance reporting
+
+## v0.1.19 (2026-04-06)
+
+- [x] **SPARQL Query Generation** (`sparql_gen.rs`): `SparqlQuery` builder (SELECT/ASK/CONSTRUCT) assembling a list of `GraphPattern` nodes; `GraphPattern` enum with `Triple`, `Optional`, `Union`, `Filter`, and `Bind` variants (NOTE: Values variant was ADDED in the bind-and-values-clauses plan item (2026-04-17); the original claim that it already existed was incorrect); `SparqlFilter` covering equality, comparison, `BOUND`, `REGEX`, `NOT EXISTS`, and `IN` operators; `SparqlGenConfig` with IRI prefix map and depth limit; `expr_to_sparql()` top-level translator from `TLExpr` to `SparqlQuery` — `And` becomes a sequence of patterns, `Or` becomes `UNION`, `Not` / `FuzzyNot` emit `FILTER NOT EXISTS`, `Exists` / `SoftExists` introduce fresh variables, `Imply` / `FuzzyImplication` desugar to `Or(Not(premise), conclusion)`.
+
+## v0.1.21 (2026-04-06)
+
+- [x] **JSON-LD Generation** (`json_ld.rs`): Added json_ld.rs — JSON-LD generation: `ContextTerm`, `TlJsonLdContext` (`expand_iri`, prefixes), `TlJsonLdNode` (@id/@type/properties), `TlJsonLdDocument` (compact+pretty serialization); `context_from_predicates()`, `standard_prefixes_context()`, `context_from_expr()` scanning `TLExpr::Pred` nodes, `expr_to_json_ld_node()`.
+
+## v0.1.11
+
+- [x] **SelectQuery + AskQuery + WhereClause** (`sparql_builder.rs`): `SelectQuery` builder with variable projection, DISTINCT flag, LIMIT/OFFSET pagination; `AskQuery` boolean-result form; `WhereClause` composing one or more `TriplePattern` and optional `SparqlFilter` expressions.
+- [x] **TriplePattern + SparqlFilter + SparqlTerm** (`sparql_builder.rs`): `TriplePattern` with subject/predicate/object each as a `SparqlTerm` (IRI/Literal/Variable/BlankNode); `SparqlFilter` supporting comparison and logical expressions; `Display` impls emitting valid SPARQL 1.1 syntax.
+
+### 2026-04-14 — File split refactor
+
+- Split `src/sparql.rs` (1846L) into `src/sparql/` directory with 3 files (mod.rs 751L, compiler.rs 992L, types.rs 118L) to stay well under the 2,000-line hard cap and 1,500-line soft target.
+- Public API surface preserved via `mod.rs` re-exports; all existing tests still pass (468/468).
+
 ---
 
-**Total Items:** 90+ tasks
-**Completion:** ~85%
+**Total Items:** 92+ tasks
+**Completion:** ~87%
 
-**Status:** Production-ready (v0.1.0-rc.1)
-**Release Date:** 2026-03-06
+**Status:** Production-ready (v0.1.0 Stable)
+**Release Date:** 2026-03-06 (stable: 2026-04-06)
+
+## v0.2.0 / Future Work
+
+- Federated RDF support across multiple endpoints.
+- SHACL-SPARQL query translation.
+- Bulk streaming import for large knowledge graphs.
+- [x] ~~Split `src/sparql_gen.rs` (1,530 L) into a `sparql_gen/` directory.~~ (completed 2026-04-15)

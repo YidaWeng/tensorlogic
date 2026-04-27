@@ -1,6 +1,6 @@
 //! Adapter utilities for the Tensorlogic ecosystem.
 //!
-//! **Version**: 0.1.0-rc.1 | **Status**: Production Ready
+//! **Version**: 0.1.0 | **Status**: Production Ready
 //!
 //! This crate provides the bridge between logical expressions and tensor execution
 //! by managing symbol tables, domain hierarchies, and schema validation.
@@ -102,6 +102,8 @@ mod embeddings;
 mod error;
 mod evolution;
 mod hierarchy;
+pub mod hierarchy_viz;
+mod incremental_query;
 mod incremental_validation;
 mod lazy;
 mod learning;
@@ -118,7 +120,10 @@ mod query_cache;
 mod query_planner;
 mod recommendation;
 mod refinement;
+pub mod rule_deps;
 mod schema_analysis;
+mod schema_lint;
+pub mod schema_migration;
 mod signature_matcher;
 mod symbol_table;
 mod synchronization;
@@ -181,6 +186,7 @@ pub use performance::{CacheStats, LookupCache, MemoryStats, StringInterner};
 pub use predicate::PredicateInfo;
 pub use product::{ProductDomain, ProductDomainExt};
 pub use schema_analysis::{SchemaAnalyzer, SchemaIssue, SchemaRecommendations, SchemaStatistics};
+pub use schema_lint::{LintCode, LintIssue, LintResult, LintSeverity, LinterConfig, SchemaLinter};
 pub use signature_matcher::{MatcherStats, SignatureMatcher};
 pub use symbol_table::SymbolTable;
 pub use validation::{SchemaValidator, ValidationReport};
@@ -189,6 +195,10 @@ pub use validation::{SchemaValidator, ValidationReport};
 pub use evolution::{
     BreakingChange, ChangeImpact, ChangeKind, CompatibilityReport, EvolutionAnalyzer,
     MigrationPlan, MigrationStep, VersionBump,
+};
+pub use incremental_query::{
+    Atom, Edb, EvalStats, Fact, FactArg, Idb, IncrementalEvaluator, QueryError, Relation, Rule,
+    SemiNaiveEvaluator, Term,
 };
 pub use incremental_validation::{
     AffectedComponents, Change, ChangeStats, ChangeTracker, ChangeType, DependencyGraph,
@@ -220,6 +230,13 @@ pub use linear::{
 };
 pub use refinement::{
     DependentRelation, RefinementContext, RefinementPredicate, RefinementRegistry, RefinementType,
+};
+pub use rule_deps::{
+    DepEdge, DepGraphStats, DepNode, RuleDependencyGraph, StratificationError, StratificationLayer,
+};
+pub use schema_migration::{
+    compute_migration, string_similarity, validate_plan, ChangeSeverity, MigrationConfig,
+    MigrationError, SchemaChange, SchemaMigrationPlan, SchemaMigrationStep, SchemaSnapshot,
 };
 pub use synchronization::{
     ApplyResult, ConflictResolution, EventListener, InMemorySyncProtocol, NodeId, SyncChangeType,

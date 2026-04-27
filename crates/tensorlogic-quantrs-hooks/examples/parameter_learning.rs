@@ -12,6 +12,7 @@
 //! We'll generate synthetic data from a known HMM, then attempt to recover the
 //! parameters using only the observation sequences (Baum-Welch algorithm).
 
+use scirs2_core::RngExt;
 use tensorlogic_quantrs_hooks::{BaumWelchLearner, SimpleHMM};
 
 fn main() -> anyhow::Result<()> {
@@ -95,7 +96,7 @@ fn create_true_weather_model() -> SimpleHMM {
             0.4, 0.6, // From Rainy
         ],
     )
-    .unwrap();
+    .expect("Failed to create transition_probabilities array");
 
     // Emission probabilities:
     // Sunny:  60% walk, 30% shop, 10% clean
@@ -107,7 +108,7 @@ fn create_true_weather_model() -> SimpleHMM {
             0.1, 0.2, 0.7, // Rainy -> Walk, Shop, Clean
         ],
     )
-    .unwrap();
+    .expect("Failed to create emission_probabilities array");
 
     hmm
 }

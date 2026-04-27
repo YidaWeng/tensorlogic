@@ -33,10 +33,10 @@
 //!
 //! // Plan a query for binary predicates over Person domain
 //! let query = PredicateQuery::by_signature(vec!["Person".to_string(), "Person".to_string()]);
-//! let plan = planner.plan(&query).unwrap();
+//! let plan = planner.plan(&query).expect("unwrap");
 //!
 //! // Execute the plan
-//! let results = plan.execute(&table).unwrap();
+//! let results = plan.execute(&table).expect("unwrap");
 //! ```
 
 use anyhow::Result;
@@ -278,7 +278,7 @@ impl QueryStatistics {
             .iter()
             .map(|(k, v)| (k.clone(), *v))
             .collect();
-        queries.sort_by(|a, b| b.1.cmp(&a.1));
+        queries.sort_by_key(|b| std::cmp::Reverse(b.1));
         queries.truncate(limit);
         queries
     }
@@ -334,7 +334,7 @@ impl IndexStrategy {
                 strategies
                     .iter()
                     .map(|s| s.estimate_cost(predicates_count, _stats))
-                    .min_by(|a, b| a.partial_cmp(b).unwrap())
+                    .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                     .unwrap_or(predicates_count as f64)
             }
         }
@@ -602,18 +602,22 @@ mod tests {
 
     fn setup_table() -> SymbolTable {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.add_domain(DomainInfo::new("Location", 50)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Location", 50))
+            .expect("unwrap");
 
         let knows = PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()]);
-        table.add_predicate(knows).unwrap();
+        table.add_predicate(knows).expect("unwrap");
 
         let at = PredicateInfo::new("at", vec!["Person".to_string(), "Location".to_string()]);
-        table.add_predicate(at).unwrap();
+        table.add_predicate(at).expect("unwrap");
 
         let friends =
             PredicateInfo::new("friends", vec!["Person".to_string(), "Person".to_string()]);
-        table.add_predicate(friends).unwrap();
+        table.add_predicate(friends).expect("unwrap");
 
         table
     }
@@ -624,7 +628,7 @@ mod tests {
         let mut planner = QueryPlanner::new(&table);
 
         let query = PredicateQuery::by_name("knows");
-        let results = planner.execute(&query).unwrap();
+        let results = planner.execute(&query).expect("unwrap");
 
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].0, "knows");
@@ -636,7 +640,7 @@ mod tests {
         let mut planner = QueryPlanner::new(&table);
 
         let query = PredicateQuery::by_arity(2);
-        let results = planner.execute(&query).unwrap();
+        let results = planner.execute(&query).expect("unwrap");
 
         assert_eq!(results.len(), 3); // knows, at, friends
     }
@@ -647,7 +651,7 @@ mod tests {
         let mut planner = QueryPlanner::new(&table);
 
         let query = PredicateQuery::by_signature(vec!["Person".to_string(), "Person".to_string()]);
-        let results = planner.execute(&query).unwrap();
+        let results = planner.execute(&query).expect("unwrap");
 
         assert_eq!(results.len(), 2); // knows, friends
     }
@@ -658,7 +662,7 @@ mod tests {
         let mut planner = QueryPlanner::new(&table);
 
         let query = PredicateQuery::by_domain("Location");
-        let results = planner.execute(&query).unwrap();
+        let results = planner.execute(&query).expect("unwrap");
 
         assert_eq!(results.len(), 1); // at
         assert_eq!(results[0].0, "at");
@@ -673,7 +677,7 @@ mod tests {
             PredicateQuery::by_arity(2),
             PredicateQuery::by_domain("Location"),
         ]);
-        let results = planner.execute(&query).unwrap();
+        let results = planner.execute(&query).expect("unwrap");
 
         assert_eq!(results.len(), 1); // at
     }
@@ -687,7 +691,7 @@ mod tests {
             PredicateQuery::by_name("knows"),
             PredicateQuery::by_name("at"),
         ]);
-        let results = planner.execute(&query).unwrap();
+        let results = planner.execute(&query).expect("unwrap");
 
         assert_eq!(results.len(), 2); // knows, at
     }
@@ -716,7 +720,7 @@ mod tests {
             .with_required_domain("Person");
 
         let query = PredicateQuery::by_pattern(pattern);
-        let results = planner.execute(&query).unwrap();
+        let results = planner.execute(&query).expect("unwrap");
 
         assert_eq!(results.len(), 1); // friends
     }
@@ -755,10 +759,10 @@ mod tests {
 
         let query = PredicateQuery::by_name("knows");
 
-        planner.plan(&query).unwrap();
+        planner.plan(&query).expect("unwrap");
         assert_eq!(planner.cache_size(), 1);
 
-        planner.plan(&query).unwrap();
+        planner.plan(&query).expect("unwrap");
         assert_eq!(planner.cache_size(), 1); // Should reuse cached plan
 
         planner.clear_cache();

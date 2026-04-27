@@ -278,7 +278,7 @@ mod tests {
     #[test]
     fn test_layernorm_creation() {
         let config = LayerNormConfig::new(512);
-        let ln = LayerNorm::new(config).unwrap();
+        let ln = LayerNorm::new(config).expect("unwrap");
         assert_eq!(ln.config.normalized_shape, 512);
         assert!(ln.has_elementwise_affine());
     }
@@ -286,14 +286,14 @@ mod tests {
     #[test]
     fn test_layernorm_graph_building_with_affine() {
         let config = LayerNormConfig::new(512);
-        let ln = LayerNorm::new(config).unwrap();
+        let ln = LayerNorm::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("x");
         graph.add_tensor("gamma");
         graph.add_tensor("beta");
 
-        let outputs = ln.build_layernorm_graph(&mut graph).unwrap();
+        let outputs = ln.build_layernorm_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
@@ -301,12 +301,12 @@ mod tests {
     #[test]
     fn test_layernorm_graph_building_without_affine() {
         let config = LayerNormConfig::new(512).with_elementwise_affine(false);
-        let ln = LayerNorm::new(config).unwrap();
+        let ln = LayerNorm::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("x");
 
-        let outputs = ln.build_layernorm_graph(&mut graph).unwrap();
+        let outputs = ln.build_layernorm_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
@@ -314,20 +314,20 @@ mod tests {
     #[test]
     fn test_rmsnorm_creation() {
         let config = LayerNormConfig::new(512);
-        let rms = RMSNorm::new(config).unwrap();
+        let rms = RMSNorm::new(config).expect("unwrap");
         assert_eq!(rms.config.normalized_shape, 512);
     }
 
     #[test]
     fn test_rmsnorm_graph_building() {
         let config = LayerNormConfig::new(512);
-        let rms = RMSNorm::new(config).unwrap();
+        let rms = RMSNorm::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("x");
         graph.add_tensor("gamma");
 
-        let outputs = rms.build_rmsnorm_graph(&mut graph).unwrap();
+        let outputs = rms.build_rmsnorm_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
@@ -347,7 +347,7 @@ mod tests {
     #[test]
     fn test_layernorm_eps() {
         let config = LayerNormConfig::new(512).with_eps(1e-6);
-        let ln = LayerNorm::new(config).unwrap();
+        let ln = LayerNorm::new(config).expect("unwrap");
         assert!((ln.eps() - 1e-6).abs() < 1e-10);
     }
 }

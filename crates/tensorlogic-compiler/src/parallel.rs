@@ -714,7 +714,7 @@ mod tests {
         let result = compiler.compile_with_optimization(&expr, &mut ctx, opt_config);
         assert!(result.is_ok());
 
-        let (_graph, opt_stats) = result.unwrap();
+        let (_graph, opt_stats) = result.expect("unwrap");
         // Double negation should be eliminated
         assert!(opt_stats.negation.double_negations_eliminated > 0);
     }

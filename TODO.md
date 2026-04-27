@@ -1,703 +1,126 @@
-# TODO — Tensorlogic
+# TensorLogic — TODO
 
-## 🎉 **v0.1.0-rc.1 Release Status**
+**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-27
+**History**: See [CHANGELOG.md](./CHANGELOG.md) for release history.
 
-**Status**: ✅ **RELEASE CANDIDATE RC.1**
+## Round 5 (2026-04-17) — Complete
 
-This release represents completion of all 8 development phases with production-quality implementation:
-- **4,415 tests passing** (100% success rate, 12 intentionally skipped, +51 new tests)
-- **Zero compiler warnings, zero clippy warnings, zero rustdoc warnings**
-- **ToRSh tensor interoperability** (pure Rust neurosymbolic AI integration, ToRSh 0.1.0 stable)
-- **Comprehensive CI/CD** pipeline enabled
-- **Complete documentation** with tutorials and examples
-- **Latest dependencies** from crates.io (oxicode 0.1.1, SciRS2 0.3.0, SkleaRS 0.1.0-rc.1, ToRSh 0.1.0, rand 0.10, toml 1.0, tokio 1.50)
-- **317,127 lines of code** (282,741 Rust, 34,905 comments, 51,108 blank)
-- **CUDA/GPU infrastructure** (experimental, device management ready)
+### Deliverables
+- [x] **BackendKind enum** — `crates/tensorlogic-infer/src/backend_kind.rs`: 7-variant enum (`Scirs`, `OxiCuda` live; `Metal`/`Vulkan`/`Rocm`/`Webgpu`/`Levelzero` doc-hidden stubs). Implements `std::str::FromStr`. Methods: `default_backend()`, `from_env()`, `is_gpu()`, `supports_autodiff()`, `validate()`, `as_str()`.
+- [x] **tensorlogic-oxicuda-sparse** — new wrapper crate: `SparseCsr`, `spmv`, `spmm`. CPU path: manual CSR arithmetic. GPU path: stubbed (`#[cfg(feature="gpu")]`), wired in Round 6.
+- [x] **tensorlogic-oxicuda-solver** — new wrapper crate: `solve_lu`, `solve_cholesky`, `solve_qr_lstsq`, `cg_solve`. Pure-Rust CPU solvers (Doolittle LU, Cholesky-Banachiewicz, Modified Gram-Schmidt QR, CG). GPU path: stubbed.
+- [x] **tensorlogic-oxicuda-rng** — new wrapper crate: `RngEngine` (PCG-XSH-RR, Box-Muller), `uniform_f32`, `normal_f32`, `bernoulli`. `Send+!Sync`. GPU path: stubbed.
+- [x] **Umbrella feature flags** — `sparse`, `solver`, `rng`, `full-advanced` added to `crates/tensorlogic/Cargo.toml` and re-exported in `crates/tensorlogic/src/lib.rs`.
+- [x] **`[patch.crates-io]` extended** — `oxicuda-sparse`, `oxicuda-solver`, `oxicuda-rand` patched to `/notebooks/oxicuda/crates/*`.
+- [x] **Native `fill` kernel** — `oxicuda_blas::elementwise::fill<T>()` in `/notebooks/oxicuda/crates/oxicuda-blas/src/elementwise/fill.rs`. PTX via `ElementwiseOp::Fill` (added to oxicuda-ptx).
+- [x] **Native `broadcast_axes` kernel** — `oxicuda_blas::elementwise::broadcast_axes<T>()` in `.../broadcast.rs`. `BroadcastTemplate` in oxicuda-ptx uses stride-zero trick; 28-param PTX kernel supports rank ≤ 8.
+- [x] **Autodiff rewiring** — `crates/tensorlogic-oxicuda-backend`: `native-broadcast = ["gpu"]` feature. Under this feature, `broadcast_to_shape` and Mean-divisor `fill` use native GPU kernels (upload→kernel→readback). Removed 4 `TODO(perf)` Round-5-follow-up comments.
+- [x] **LRU cache correctness fix** — `tensorlogic-infer/src/memo_cache.rs`: `find_lru_key` now uses the deque-front strategy (O(1), tie-safe) instead of `min_by_key(last_accessed)` which was racy under nanosecond-level Instant precision.
 
-See [Release Checklist](#release-checklist-v010-rc1) for details.
+### Round 5 Test Coverage
+- `tensorlogic-infer/tests/backend_kind_smoke.rs`: 13 tests
+- `tensorlogic-oxicuda-sparse/tests/smoke.rs`: 13 tests (2 GPU ignored)
+- `tensorlogic-oxicuda-solver/tests/smoke.rs`: 30 tests
+- `tensorlogic-oxicuda-rng/tests/smoke.rs`: 47 tests
+- `tensorlogic-oxicuda-backend/tests/native_broadcast_smoke.rs`: 6 tests (2 GPU ignored)
+- Full workspace: **6784 tests, 6784 passed, 21 skipped (GPU-only), 0 failed**
 
----
+TensorLogic compiles logical rules into tensor equations (einsum graphs) with a minimal DSL + IR, enabling neural / symbolic / probabilistic models in a unified tensor framework.
 
-## RC.1 Release (2026-03-06) ✅ COMPLETE
+## At a glance
 
-### Version Bump
-- [x] All workspace crates bumped from 0.1.0-beta.1 → 0.1.0-rc.1
+- Phase 0 — Repo Hygiene. **Complete.**
+- Phase 1 — Minimal IR & Compiler. **Complete.**
+- Phase 2 — Engine Traits & Dummy Executor. **Complete.**
+- Phase 3 — SciRS2 Backend. **Complete.**
+- Phase 4 — OxiRS Bridge. **Complete.**
+- Phase 5 — Interop Crates. **Complete.**
+- Phase 6 — Training Scaffolds. **Complete.**
+- Phase 7 — Python Bindings. **Complete.**
+- Phase 8 — Validation & Scale. **Complete.**
+- Stable release 0.1.0 — 2026-04-06. **Complete.**
+- Post-stable hardening — 2026-04-14: three oversize files split (`kv_cache.rs`, `codegen.rs`, `sparql.rs`), flagship integration tests added, feature flags introduced. **Complete.**
+- Documentation hygiene — 2026-04-15: extracted release history to CHANGELOG.md, unified TODO header template, added forward-looking v0.2.0 sections to every crate TODO. **Complete.**
+- v0.2.0 research preview — 2026-04-15: six features delivered (rule-guided decoding, learned kernel composition, variational message passing, deep kernel learning, speculative decoding, partial error recovery) + two pre-existing items audited complete (incremental recompilation, streaming inference). **Complete.**
 
-### Dependency Upgrades
-- [x] SciRS2 ecosystem: 0.1.3 → 0.3.0 (scirs2-core, scirs2-linalg, scirs2-autograd, scirs2-optimize)
-- [x] SkleaRS ecosystem: 0.1.0-beta.1 → 0.1.0-rc.1 (sklears-core, sklears-kernel-approximation)
-- [x] ToRSh ecosystem: 0.1.0-beta.1 → 0.1.0 stable (torsh-core, torsh-tensor)
-- [x] rand: 0.9 → 0.10
-- [x] toml: 0.9 → 1.0
-- [x] tokio: 1.49 → 1.50
-- [x] oxrdf: 0.3.2 → 0.3.3; oxttl: 0.2.2 → 0.2.3; tempfile: 3.24 → 3.26
+See [CHANGELOG.md](./CHANGELOG.md) for the full record of each phase, RC, and stable-release deliverable.
 
-### Bug Fixes
-- [x] rand 0.10 API compatibility: `rand::Rng` → `rand::RngExt` in learned_opt.rs
-- [x] torsh_interop.rs: doc test changed from `no_run` to `ignore` to fix build failures
+## Post-stable Roadmap
 
----
+### v0.1.x Stabilization (in-repo, unblocked)
 
-## Phase 0 — Repo Hygiene ✅ COMPLETE
-- [x] LICENSE (Apache-2.0), CODEOWNERS, CONTRIBUTING.md, SECURITY.md
-- [x] Docs skeleton: docs/DSL.md, docs/IR.md, docs/PROVENANCE.md
-- [x] CI: fmt, clippy, tests; MSRV pin; feature matrix (cpu, simd, gpu) ✅ **ENABLED**
+#### Completed 2026-04-15
 
-## Phase 1 — Minimal IR & Compiler ✅ COMPLETE
-- [x] `tensorlogic-ir`: define `Term`, `TLExpr`, `EinsumNode`, `EinsumGraph` (serde on)
-- [x] `tensorlogic-compiler`:
-  - [x] Logic→tensor mapping defaults:
-        AND→Hadamard; OR→max; NOT→1-x; ∃→sum reduction; ∀→dual; →→ReLU(b−a)
-  - [x] Static checks: arity validation, free variable analysis
-  - [x] Emit symbolic `EinsumGraph` (no engine calls)
-  - [x] CompilerContext for domain and variable tracking
-  - [x] Modular structure (compile/, passes/, context)
+- [x] ~~Split the nine remaining files > 1,500 lines using the same `dir/{mod,...}.rs` pattern used 2026-04-14:~~ (completed 2026-04-15)
+  - [x] ~~`crates/tensorlogic-adapters/src/database.rs` (1,613 L)~~ (completed 2026-04-15)
+  - [x] ~~`crates/tensorlogic-compiler/src/dead_code.rs` (1,614 L)~~ (completed 2026-04-15)
+  - [x] ~~`crates/tensorlogic-compiler/src/partial_eval.rs` (1,789 L)~~ (completed 2026-04-15)
+  - [x] ~~`crates/tensorlogic-compiler/src/symbolic_diff.rs` (1,524 L)~~ (completed 2026-04-15)
+  - [x] ~~`crates/tensorlogic-infer/src/causal.rs` (1,589 L)~~ (completed 2026-04-15)
+  - [x] ~~`crates/tensorlogic-ir/src/resolution.rs` (1,712 L)~~ (completed 2026-04-15)
+  - [x] ~~`crates/tensorlogic-oxirs-bridge/src/sparql_gen.rs` (1,530 L)~~ (completed 2026-04-15)
+  - [x] ~~`crates/tensorlogic-quantrs-hooks/src/loopy_bp.rs` (1,744 L)~~ (completed 2026-04-15)
+  - [x] ~~`crates/tensorlogic-train/src/hyperparameter.rs` (1,641 L) and `loss.rs` (1,551 L)~~ (completed 2026-04-15)
+- [x] ~~Fix the doc-build warning: `cargo doc --workspace --no-deps --all-features` reports a bin/lib output-path collision for `tensorlogic`. Rename the CLI `[[bin]]` `name` in `crates/tensorlogic-cli/Cargo.toml` to `tensorlogic-cli` (Cargo issue #6313).~~ (completed 2026-04-15)
 
-## Phase 2 — Engine Traits & Dummy Executor ✅ COMPLETE
-- [x] `tensorlogic-infer`: `TlExecutor` / `TlAutodiff` traits; `ElemOp`, `ReduceOp`
-- [x] Provide a **dummy in-memory executor** for unit tests
-- [x] Examples: `00_minimal_rule`, `01_exists_reduce`, `02_scirs2_execution`
-- [x] Modular structure (traits, dummy_executor, dummy_tensor, ops, error)
+#### Remaining
 
-## Phase 3 — SciRS2 Backend ✅ **PRODUCTION READY** (100% completion)
-Production-ready backend with SIMD acceleration + comprehensive benchmarks
+- Coverage-gate per-crate test counts (nextest + tarpaulin or llvm-cov) into CI once SciRS2 stabilizes.
 
-- [x] `tensorlogic-scirs-backend`:
-  - [x] Map TlExecutor trait to SciRS2 operations
-  - [x] Implement TlAutodiff::forward() with full EinsumGraph execution
-  - [x] Implement TlAutodiff::backward() with gradient computation
-  - [x] Handle all OpType variants (Einsum, ElemUnary, ElemBinary, Reduce)
-  - [x] Features: `cpu` (default)
-  - [x] Integration tests: end-to-end TLExpr → Execution
-  - [x] Backward pass tests for autodiff
-  - [x] Modular structure (executor, conversion, ops, autodiff)
-  - [x] **SIMD Feature** ✅
-    - [x] Feature flag properly passes through to scirs2-core/scirs2-linalg
-    - [x] SIMDAcceleration capability detection
-    - [x] Python Backend.SciRS2SIMD enum variant
-    - [x] Transparent SIMD acceleration (automatic when built with simd feature)
-    - [x] Default backend selection (prefers SIMD when available)
-    - [x] All 4,287 tests passing with SIMD enabled
-  - [x] **Comprehensive Benchmark Suite** ✅ **COMPLETE** (2,425 lines, 9 files)
-    - [x] end_to_end.rs (415 lines, 11 benchmark groups) - Complete pipeline from compilation to execution
-      - Simple predicates, AND/OR/NOT, EXISTS/FORALL quantifiers, implication
-      - Complex nested operations, training iterations (forward+backward), batch processing, graph scaling
-    - [x] operation_benchmarks.rs (360 lines) - Core operation performance
-    - [x] parallel_performance.rs (312 lines) - Multi-threaded execution
-    - [x] simd_specific.rs (272 lines) - SIMD-specific optimizations
-    - [x] gradient_stability.rs (235 lines, 5 benchmark groups) - Gradient computation performance
-    - [x] throughput.rs (233 lines, 5 benchmark groups) - Operations per second measurement
-    - [x] forward_pass.rs (224 lines, 6 benchmark groups) - Forward pass performance
-    - [x] simd_comparison.rs (201 lines, 5 benchmark groups) - SIMD vs non-SIMD comparison
-    - [x] memory_footprint.rs (173 lines, 3 benchmark groups) - Memory allocation patterns
-    - [x] All benchmarks use compiler API for maintainability
-    - [x] Coverage: predicates, logic ops, quantifiers, training, batching, SIMD, memory, parallel
-  - [x] **Benchmark Regression Tracking** ✅ **NEW** (tools/bench-tracker)
-    - [x] Automated baseline management with git commit tracking
-    - [x] Performance comparison with configurable thresholds
-    - [x] Multiple report formats (text, JSON, HTML)
-    - [x] Statistical analysis (mean, median, confidence intervals)
-    - [x] CI/CD integration ready
-  - [ ] Features: `gpu` (FUTURE)
+### v0.2.0 (blocked on upstream SciRS2 / ecosystem)
 
-## Phase 4 — OxiRS Bridge ✅ **PRODUCTION READY** (100% completion)
-Full-featured RDF/SHACL/GraphQL/SPARQL bridge with comprehensive examples
+- Distributed training (NCCL / multi-GPU scheduling).
+- PyPI release of `tensorlogic-py` via maturin; requires release-ready `abi3-py39` manylinux wheels.
 
-- [x] `tensorlogic-oxirs-bridge`:
-  - [x] Build symbol tables from RDF* schema analysis
-  - [x] SchemaAnalyzer for extracting classes and properties
-  - [x] Provenance tracking infrastructure (ProvenanceTracker, RdfStarProvenanceStore)
-  - [x] **N-Triples serialization** (export and import)
-  - [x] **SPARQL query compilation** (SELECT, WHERE, FILTER)
-  - [x] **GraphQL schema integration** ✅ (type/field parsing, scalar handling)
-  - [x] **OWL reasoning** (class hierarchies, property characteristics, RDFS inference)
-  - [x] **SHACL constraint parser** (Turtle format, 15+ constraint types)
-  - [x] Convert SHACL shapes to TLExpr rules
-  - [x] Support for sh:minCount → EXISTS quantifiers
-  - [x] Support for sh:maxCount → Uniqueness constraints
-  - [x] Support for sh:class → Type constraints
-  - [x] Support for sh:datatype → Datatype validation
-  - [x] Support for sh:pattern → Pattern matching predicates
-  - [x] Support for sh:minLength/maxLength → Length constraints
-  - [x] Support for sh:minInclusive/maxInclusive → Range constraints
-  - [x] Support for sh:in → Value enumeration
-  - [x] Support for sh:node → Shape references
-  - [x] **Advanced SHACL features** (sh:and, sh:or, sh:not, sh:xone)
-  - [x] **SHACL validation reports** (W3C-compliant, Turtle/JSON export)
-  - [x] **RDF* provenance** (quoted triples, metadata, confidence scoring)
-  - [x] **6 comprehensive examples** (2099 lines, all features demonstrated)
-  - [x] Modular structure (schema/, provenance, error, compilation, sparql, graphql, shacl)
-  - [x] Comprehensive test suite (103 tests, 100% passing, zero warnings)
-  - [x] **Full SPARQL 1.1** ✅ COMPLETE (CONSTRUCT/ASK/DESCRIBE, OPTIONAL, UNION)
-  - [x] **JSON-LD serialization** ✅ COMPLETE (bidirectional, roundtrip support)
-  - [x] **GraphQL directives → constraint rules** ✅ COMPLETE (5 directive types, 18 tests)
+### v0.2.0 / Research (in-repo, forward-looking)
 
-## Phase 4.5 — Core Enhancements ✅ PRODUCTION READY
-Major enhancement to planning layer with production-grade features
+#### Delivered 2026-04-15 (Research Preview)
 
-### `tensorlogic-ir` Enhancements (55% → 100% core features)
-- [x] **Type System**
-  - [x] Term::Typed with TypeAnnotation
-  - [x] PredicateSignature with arity/type validation
-  - [x] SignatureRegistry for predicate metadata
-  - [x] Enhanced IrError types (ArityMismatch, TypeMismatch, UnboundVariable, InconsistentTypes)
-- [x] **Graph Optimizations**
-  - [x] Dead Code Elimination (DCE) with liveness analysis
-  - [x] Common Subexpression Elimination (CSE) with node hashing
-  - [x] Identity operation simplification
-  - [x] Multi-pass optimization pipeline with OptimizationStats
-- [x] **Metadata & Provenance**
-  - [x] SourceLocation and SourceSpan for error reporting
-  - [x] Provenance tracking (rule IDs, source files, attributes)
-  - [x] Metadata container for IR nodes
-- [x] Test coverage: 22 tests (all passing, zero warnings)
+- [x] ~~Rule-guided sampling decoder in `tensorlogic-trustformers`~~ — `rule_guided_decoder/` module: TLExpr-constrained beam search with hard-masking and soft-penalty modes.
+- [x] ~~Learned kernel composition in `tensorlogic-sklears-kernels`~~ — `learned_composition/` module: differentiable softmax-gated mixture over a kernel library.
+- [x] ~~Variational Message Passing in `tensorlogic-quantrs-hooks`~~ — `vmp/` module: VMP over conjugate exponential families (Gaussian, Categorical, Dirichlet).
+- [x] ~~Deep Kernel Learning in `tensorlogic-sklears-kernels`~~ — `deep_kernel/` module: MLP feature extractor composed with a base kernel (Wilson et al., 2016); Xavier init via SciRS2-Core RNG.
+- [x] ~~Speculative decoding in `tensorlogic-trustformers`~~ — `speculative_decoding/` module: DraftModel + TargetModel traits with rejection-sampling acceptance (Leviathan et al., 2023); empirical distribution preservation chi-square-verified.
+- [x] ~~Partial error recovery in `tensorlogic-compiler`~~ — `error_recovery/` module: TolerantCompiler with configurable RecoveryStrategy; compiles well-formed expressions around non-fatal errors instead of aborting.
+- [x] ~~OxiCUDA GPU backend scaffold in `tensorlogic-oxicuda-backend`~~ — new crate, feature-gated (`gpu`), MVP matmul via `oxicuda-blas`. Supersedes the "blocked on SciRS2 GPU stabilization" status (OxiCUDA is the COOLJAPAN Pure Rust CUDA replacement: ~/work/oxicuda/).
+- [x] ~~Expanded VMP family catalogue in `tensorlogic-quantrs-hooks`~~ — `vmp/gamma.rs` and `vmp/beta.rs`: Gamma-Poisson and Beta-Bernoulli conjugate families with ExponentialFamily trait, closed-form KL, and posterior update helpers.
+- [x] ~~Kernel PCA in `tensorlogic-sklears-kernels`~~ — `kernel_pca/` module: Scholkopf-Smola-Muller (1998) implementation with double-centering, scirs2-linalg eigendecomp, fit/transform API generic over Kernel + Clone + 'static.
+- [x] ~~Numerical MoE layer in `tensorlogic-trustformers`~~ — `moe/` research-preview submodules: TopKGate, LinearExpert, MoELayer with capacity-factor dropping and importance/load auxiliary losses.
 
-### `tensorlogic-compiler` Enhancements (70% → 100% completion) ✅ **PRODUCTION READY**
-- [x] **Variable Scope Analysis**
-  - [x] ScopeAnalysisResult with bound/unbound variable detection
-  - [x] Type conflict tracking across expressions
-  - [x] validate_scopes() for compilation safety
-  - [x] suggest_quantifiers() for helpful error messages
-- [x] **Type Checking & Inference**
-  - [x] TypeChecker with signature registry integration
-  - [x] Automatic type inference from predicate applications
-  - [x] Type consistency validation across expressions
-  - [x] infer_types() with conflict detection
-- [x] **Optimization Passes**
-  - [x] Expression-level CSE with recursive caching
-  - [x] CseResult with elimination statistics
-  - [x] Integration with IR graph optimizations
-- [x] **SymbolTable Integration**
-  - [x] sync_context_with_symbol_table() bidirectional sync
-  - [x] build_signature_registry() from adapter types
-  - [x] Domain import/export utilities
-  - [x] PredicateInfo ↔ PredicateSignature conversion
-- [x] **Enhanced Diagnostics**
-  - [x] Diagnostic struct with levels (Error/Warning/Info/Hint)
-  - [x] enhance_error() for rich error messages
-  - [x] diagnose_expression() for validation
-  - [x] Unused binding warnings
-  - [x] Source location support
-- [x] **Advanced Analysis & Profiling (Beta.1)** ✅ **NEW**
-  - [x] Compilation profiling (time, memory, cache statistics) - profiling.rs (649 lines, 11 tests)
-  - [x] Dataflow analysis (live variables, reaching definitions, use-def chains) - dataflow.rs (586 lines, 10 tests)
-  - [x] Contraction optimization (dynamic programming for einsum) - contraction_opt.rs (497 lines, 13 tests)
-  - [x] Loop fusion (merge loops over same axes) - loop_fusion.rs (392 lines, 9 tests)
-  - [x] Reachability analysis (dominance, SCC, topological order) - reachability.rs (562 lines, 10 tests)
-  - [x] Integrated post-compilation pipeline - post_compilation.rs (enhanced)
-  - [x] Example demonstrating all features - 21_profiling_and_optimization.rs (292 lines)
-- [x] Test coverage: **437 tests** (100% passing, zero warnings) ✅
-- [x] **Comprehensive README documentation** with Beta.1 features (218 lines of new docs)
+#### Audited complete 2026-04-15 (pre-existing implementations)
 
-### `tensorlogic-infer` Enhancements (67% → 100% completion) ✅ **PRODUCTION READY**
-- [x] **Batch Execution**
-  - [x] BatchResult<T> container with metadata
-  - [x] TlBatchExecutor trait with parallel execution
-  - [x] Optimal batch size recommendations
-- [x] **Shape Inference**
-  - [x] TensorShape with static/dynamic/symbolic dimensions
-  - [x] ShapeInferenceContext for graph-level inference
-  - [x] Shape compatibility and broadcasting checks
-  - [x] Einsum spec parsing for output shapes
-- [x] **Backend Capabilities**
-  - [x] BackendCapabilities descriptor
-  - [x] TlCapabilities trait for runtime queries
-  - [x] Device/dtype/feature detection (CPU/GPU/TPU)
-  - [x] Operation support queries (einsum, elem_op, reduce_op)
-- [x] **Execution Profiling**
-  - [x] OpProfile with timing statistics (count, avg, min, max)
-  - [x] MemoryProfile with allocation tracking
-  - [x] Profiler with automatic operation timing
-  - [x] TlProfiledExecutor trait for profiling support
-- [x] **Advanced Quantization (Beta.1)** 🆕
-  - [x] Multiple quantization types (INT8, INT4, INT2, FP8, Binary, Ternary)
-  - [x] Quantization-aware training (QAT) support
-  - [x] Post-training quantization (PTQ) with calibration
-  - [x] Per-tensor and per-channel quantization
-  - [x] Symmetric and asymmetric quantization
-  - [x] Calibration strategies (MinMax, Percentile, MSE, KL-divergence)
-  - [x] Fake quantization for QAT simulation
-  - [x] Quantization summary with compression ratios
-- [x] **Dynamic Batching (Beta.1)** 🆕
-  - [x] Priority-based request queuing (Low/Normal/High/Critical)
-  - [x] Adaptive batch sizing with latency targeting
-  - [x] Request timeout handling
-  - [x] Multiple batching strategies (throughput/latency/interactive)
-  - [x] Comprehensive statistics tracking
-- [x] **Advanced Kernel Fusion (Beta.1)** 🆕
-  - [x] Pattern-based fusion (MatMul+Bias, MatMul+Activation, etc.)
-  - [x] Vertical fusion (producer-consumer chains)
-  - [x] Horizontal fusion (parallel independent operations)
-  - [x] Memory bandwidth-aware cost modeling
-  - [x] Multiple fusion strategies (conservative/aggressive/balanced/memory-aware)
-  - [x] Fusion benefit scoring and analysis
-- [x] **Workspace Management (Beta.1)** 🆕
-  - [x] Pre-allocated memory pools with multiple allocation strategies
-  - [x] Workspace recycling and reuse
-  - [x] Size-based bucket allocation
-  - [x] Automatic expansion and defragmentation
-  - [x] Thread-safe shared workspace pools
-  - [x] Comprehensive statistics and efficiency metrics
-- [x] **Multi-Model Coordination (Beta.1)** 🆕
-  - [x] Ensemble inference (averaging, voting, stacking, boosting)
-  - [x] Model routing strategies (priority, latency, accuracy, round-robin)
-  - [x] Model cascade with early-exit
-  - [x] Resource requirement tracking
-  - [x] Multi-model statistics and usage distribution
-- [x] Test coverage: **368 tests** (365 passing, 99.2% pass rate) ✅
-- [x] Code statistics: **41 Rust files, 20,900+ lines of production code**
-- [x] Build status: Zero errors, zero warnings
+- [x] ~~Incremental re-compilation in `tensorlogic-compiler`~~ — `incremental.rs` (`IncrementalCompiler`, `ChangeDetector`, `ChangeSet`, `IncrementalStats`) + `cache.rs` hash-based `CompileCache`.
+- [x] ~~Streaming inference API in `tensorlogic-infer`~~ — `streaming.rs` (`TlStreamingExecutor` trait, `StreamingConfig`, `StreamProcessor`, `ChunkIterator`, `StreamingConfigV2` with backpressure + watermarks).
 
-### Overall Impact
-- **Total Tests**: 93 tests (all passing, +48 from baseline)
-- **Build Status**: Zero warnings across all core crates
-- **Feature Completion**: 100% of high-priority core features
-- **Production Readiness**: Type safety, optimization, diagnostics, profiling
-- **Code Quality**: Enforced through strict compilation checks
+#### Delivered 2026-04-16
 
-## Phase 5 — Interop Crates ✅ CORE FEATURES COMPLETE
-Three interop crates with production-ready core features
+- [x] ~~Real SGEMM wiring in `tensorlogic-oxicuda-backend`~~ — `GpuState` (Context + BlasHandle), host↔device copies via `oxicuda-memory`, `gemm_api::gemm` SGEMM dispatch, stream sync, `DimensionOverflow` / `From<CudaError>` / `From<BlasError>` error conversions. GPU integration test gated behind `TENSORLOGIC_GPU_TESTS=1`.
+- [x] ~~LoRA adapter in `tensorlogic-train`~~ — `lora/` module: Low-Rank Adaptation (Hu et al., 2021) with ΔW=BA decomposition, merge/unmerge, effective_weight, dropout, compression ratio. `LoraAdapter` multi-layer manager with summary statistics. 12 unit tests + 2 integration tests.
+- [x] ~~Sparse attention in `tensorlogic-trustformers`~~ — `sparse_attention/` module: Longformer-style (Beltagy et al., 2020) sliding-window + global-token attention. Dense boolean mask with sparsity metrics, multi-head forward pass, causal masking support. 12 unit tests + 4 integration tests.
 
-- [x] **`tensorlogic-sklears-kernels`**: logic-derived similarity kernels for ML integration. ✅ **105% COMPLETE** (ENHANCED!)
-  - [x] Rule similarity kernel (measure agreement on logical rules)
-  - [x] Predicate overlap kernel (count shared true predicates)
-  - [x] Classical tensor kernels (Linear, RBF, Polynomial, Cosine, Laplacian, Sigmoid, Chi-Squared, Histogram Intersection)
-  - [x] **Advanced GP kernels** (Matérn nu=0.5/1.5/2.5, Rational Quadratic, Periodic) ✨ **NEW**
-  - [x] Graph kernels (Subgraph matching, Random walk, Weisfeiler-Lehman)
-  - [x] Tree kernels (Subtree, Subset tree, Partial tree)
-  - [x] String kernels (N-gram, Subsequence, Edit distance)
-  - [x] Kernel composition operators (Weighted sum, Product, Kernel alignment)
-  - [x] Kernel transformations (Normalization, Centering, Standardization)
-  - [x] Performance features (Caching, Sparse matrices, Low-rank approximations)
-  - [x] Provenance tracking (Automatic tracking, JSON export, tagged experiments)
-  - [x] Symbolic composition (Algebraic expressions, builder pattern)
-  - [x] SkleaRS trait implementation (KernelFunction trait, Random Fourier Features)
-  - [x] Kernel matrix computation
-  - [x] Configuration system with validation
-  - [x] Error handling with KernelError types
-  - [x] **213 comprehensive tests** (100% passing, zero warnings) ✨ **UPDATED** (+18 tests)
-  - [x] Complete README with architecture guide and use cases
-  - [x] 5 benchmark suites with 47 benchmark groups
-  - [x] Feature extraction (TLExpr→vector conversion)
-  - [x] **Total: 14 tensor kernels** (11 classical + 3 advanced GP kernels)
+#### Remaining
 
-- [x] **`tensorlogic-quantrs-hooks`**: PGM integration with message passing. ✅ **40% COMPLETE**
-  - [x] Factor representation with normalization
-  - [x] Factor graph with adjacency tracking
-  - [x] Message passing algorithms (sum-product, max-product)
-  - [x] Inference engine for marginalization/conditional queries
-  - [x] TLExpr → Factor graph conversion
-  - [x] Marginalization and conditioning operations
-  - [x] 15 comprehensive tests (100% passing, zero warnings)
-  - [x] Error handling with PgmError types
-  - [x] **Full belief propagation with convergence** ✅ COMPLETE (sum-product, damping, early termination)
-  - [x] **Variational inference methods** ✅ COMPLETE (mean-field, Q-distribution optimization)
-  - [x] **Sampling-based inference** ✅ COMPLETE (Gibbs, importance sampling, particle filter)
+All initial v0.2.0 research-preview items for in-repo work are delivered. Next enhancements tracked per-crate: see each `crates/*/TODO.md`.
 
-- [x] **`tensorlogic-trustformers`**: self-attention/FFN as einsum graphs; transformer components. ✅ **100% COMPLETE**
-  - [x] Self-attention as einsum operations
-  - [x] Multi-head attention with head splitting
-  - [x] Feed-forward networks (standard + gated GLU)
-  - [x] Position encodings (sinusoidal, learned, relative, **RoPE, ALiBi**)
-  - [x] Layer normalization (LayerNorm + RMSNorm)
-  - [x] Transformer encoder layers (pre-norm + post-norm)
-  - [x] Transformer decoder layers (pre-norm + post-norm)
-  - [x] Encoder/decoder stacks (multi-layer with position encoding)
-  - [x] Rule-based attention patterns (hard/soft/gated)
-  - [x] Sparse attention patterns (strided, local, block-sparse, global-local)
-  - [x] Utility functions (parameter counting, FLOP calculations, **extended presets**)
-  - [x] **Modern position encodings**: RoPE (LLaMA, GPT-NeoX) + ALiBi (BLOOM)
-  - [x] **Extended model presets**: GPT-2/3 variants, LLaMA (7B-65B), BLOOM, T5 (Small-XXL)
-  - [x] Configuration system with validation
-  - [x] Error handling with IrError conversion
-  - [x] **123 comprehensive tests** (100% passing, zero warnings)
-  - [x] Complete README with examples
-  - [x] **Pre-trained model loading** ✅ COMPLETE (JSON & binary checkpoint formats, name mapping)
-  - [x] **Performance benchmarks** ✅ COMPLETE (5 benchmark groups, attention/FFN/encoder stacks)
+## Per-crate TODOs
 
-## Phase 6 — Training Scaffolds ✅ **PRODUCTION READY** (100% completion)
-Comprehensive training infrastructure with 25,402 lines of production code
-
-- [x] `tensorlogic-train`: Advanced training scaffolds with extensive features
-  - [x] **Loss Functions** (14 types): CrossEntropy, MSE, BCEWithLogits, Focal, Dice, Tversky, Huber, KLDivergence, Hinge, Contrastive, Triplet, PolyLoss, RuleSatisfaction, ConstraintViolation
-  - [x] **Optimizers** (15 types): SGD, Adam, AdamW, RMSprop, Adagrad, NAdam, RAdam, LAMB, LARS, AdaMax, AdaBelief, AdamP, Lookahead, SAM, Sophia
-  - [x] **Learning Rate Schedulers** (11 types): Step, Exponential, Cosine, Warmup, OneCycle, Polynomial, Cyclic, WarmupCosine, Noam, MultiStep, ReduceOnPlateau
-  - [x] **Advanced Callbacks** (13 types): EarlyStopping, Checkpoint, ReduceLROnPlateau, LRFinder, GradientMonitor, Histogram, Profiling, ModelEMA, GradientAccumulation, SWA, Validation
-  - [x] **Comprehensive Metrics**: Accuracy, Precision, Recall, F1, ConfusionMatrix, ROC, BalancedAccuracy, CohensKappa, MCC, TopK, NDCG, IoU, Dice, mAP, ECE, MCE
-  - [x] **Curriculum Learning**: Linear, Exponential, Competence-based, Self-paced, Task-based curricula
-  - [x] **Transfer Learning**: Feature extraction, discriminative fine-tuning, progressive unfreezing, layer freezing
-  - [x] **Hyperparameter Optimization**: Grid search, random search with validation
-  - [x] **Cross-Validation**: K-Fold, Stratified K-Fold, Leave-One-Out, Time Series Split
-  - [x] **Model Ensembling**: Voting (hard/soft), Stacking, Bagging, Model Soups (uniform/greedy)
-  - [x] **Multi-Task Learning**: Multi-task loss composition, PCGrad for gradient conflict resolution
-  - [x] **Knowledge Distillation**: Temperature-based distillation, attention transfer, feature distillation
-  - [x] **Label Smoothing**: Standard label smoothing, Mixup augmentation
-  - [x] **Model Compression**: Magnitude/gradient/structured/global pruning, quantization (int8/int4/int2), mixed precision (FP16/BF16)
-  - [x] **Data Augmentation**: Mixup, CutMix, noise injection, rotation, scaling, composite augmentation
-  - [x] **Advanced Sampling**: Class-balanced, importance sampling, hard negative mining, focal sampling, curriculum sampling
-  - [x] **Regularization** (8 types): L1, L2, ElasticNet, MaxNorm, Orthogonal, Spectral, GroupLasso
-  - [x] **Memory Management**: Gradient checkpointing, memory budgeting, memory profiling
-  - [x] **Logging Backends** (5 types): TensorBoard, CSV, JSON Lines, File, Console
-  - [x] **Few-Shot Learning**: Prototypical networks, matching networks, episode sampling, support set management
-  - [x] **Meta-Learning**: MAML (first/second order), Reptile with task sampling
-  - [x] **Data Preprocessing**: CSV loading, label encoding, one-hot encoding, normalization, standardization
-  - [x] **Model Utilities**: Parameter counting, gradient statistics, LR range testing, model comparison, time estimation
-  - [x] **20 Comprehensive Examples**: Basic training through advanced meta-learning scenarios
-  - [x] **Test coverage**: 434 tests (407 unit + 7 integration + 20 doc), all passing
-  - [x] **Build status**: Zero errors, zero warnings
-  - [x] **Code Statistics**: 89 Rust files, 25,402 lines of code, fully documented
-
-## Phase 7 — Python Bindings ✅ **PRODUCTION READY** (98% overall)
-Production-ready Python API with comprehensive testing, tutorials, backend selection, and packaging
-
-- [x] `tensorlogic-py`: PyO3 with `abi3-py39`; 677 lines of production code
-  - [x] **Core Type Bindings** (types.rs - 331 lines)
-    - [x] PyTerm: Variables and constants with is_var()/is_const()
-    - [x] PyTLExpr: Full logical expression API (13 operations)
-    - [x] PyEinsumGraph: Compiled tensor graphs with stats()
-  - [x] **Compilation API** (compiler.rs - 153 lines)
-    - [x] compile(expr) - Default compilation
-    - [x] compile_with_config(expr, config) - Custom strategies
-    - [x] 6 compilation strategy presets:
-      - [x] soft_differentiable (neural network training)
-      - [x] hard_boolean (discrete Boolean logic)
-      - [x] fuzzy_godel (Gödel fuzzy logic)
-      - [x] fuzzy_product (Product fuzzy logic)
-      - [x] fuzzy_lukasiewicz (Łukasiewicz fuzzy logic)
-      - [x] probabilistic (Probabilistic interpretation)
-  - [x] **Execution API** (executor.rs - 72 lines)
-    - [x] execute(graph, inputs) - NumPy array execution
-    - [x] Dynamic tensor shape handling (ArrayD<f64>)
-    - [x] Proper error propagation to Python
-  - [x] **NumPy Integration** (numpy_conversion.rs - 63 lines)
-    - [x] Bidirectional conversion (NumPy ↔ SciRS2)
-    - [x] Safe memory management with PyReadonlyArray
-    - [x] Support for 2D and dynamic dimensions
-  - [x] **Adapter Bindings** ✅ **EXISTING** (adapters.rs)
-    - [x] PySymbolTable: Domain and predicate management
-    - [x] PyCompilerContext: Compilation context with config
-    - [x] PyDomainInfo: Domain metadata
-    - [x] PyPredicateInfo: Predicate signatures
-  - [x] **Documentation** (416 lines README + 261 lines examples)
-    - [x] Complete API reference
-    - [x] 10 comprehensive Python examples
-    - [x] Installation and usage guide
-    - [x] Architecture overview
-  - [x] **Examples**: 5 Rust examples + 10 Python examples demonstrating all features
-    - [x] 00_minimal_rule: Basic predicate and compilation
-    - [x] 01_exists_reduce: Existential quantifier with reduction
-    - [x] 02_scirs2_execution: Full execution with SciRS2 backend
-    - [x] 03_rdf_integration: OxiRS bridge with RDF* data
-    - [x] 04_compilation_strategies: All 6 strategy presets compared
-  - [x] **Test Coverage**: 30 Rust tests + comprehensive pytest suite ✅
-  - [x] **Python Test Suite (pytest)** ✅
-    - [x] test_types.py (285 lines) - Core type tests
-    - [x] test_execution.py (368 lines) - Execution tests
-    - [x] test_adapters.py (350+ lines) - Adapter type tests
-    - [x] test_strategies.py (470+ lines) - Strategy & property tests
-    - [x] pytest.ini configuration
-    - [x] requirements-dev.txt for dependencies
-    - [x] pyproject.toml with project metadata
-  - [x] **Type Stubs (.pyi files)** ✅
-    - [x] tensorlogic_py.pyi with complete type annotations
-    - [x] IDE support for autocomplete and type checking
-    - [x] mypy configuration in pyproject.toml
-  - [x] **Tutorial Jupyter Notebooks** ✅
-    - [x] 01_getting_started.ipynb (comprehensive 800+ line beginner tutorial)
-      - Basic expressions, compilation, execution
-      - Compilation strategies (6 presets)
-      - Quantifiers, arithmetic, comparisons
-      - Complex nested expressions
-      - Adapters (DomainInfo, PredicateInfo, SymbolTable, CompilerContext)
-      - Practical example: Social network reasoning
-      - Complete with visualizations and exercises
-    - [x] 02_advanced_topics.ipynb (900+ line advanced tutorial)
-      - Multi-arity predicates (binary, ternary, n-ary)
-      - Relational reasoning (transitive closure)
-      - Nested quantifiers (double, triple)
-      - Performance optimization and benchmarking
-      - Strategy selection guide with use cases
-      - Integration patterns (iterative reasoning, multi-rule)
-      - Error handling and debugging techniques
-      - Best practices and performance tips
-    - [x] tutorials/README.md (comprehensive guide)
-      - Tutorial descriptions and learning outcomes
-      - Setup instructions
-      - Tips for learning
-      - Troubleshooting guide
-  - [x] **Backend Selection API** ✅
-    - [x] backend.rs module (480+ lines) with comprehensive backend management
-    - [x] PyBackend enum (Auto, SciRS2CPU, SciRS2GPU)
-    - [x] PyBackendCapabilities class with full capability queries
-    - [x] Backend selection in execute() function
-    - [x] Backend functions:
-      - [x] get_backend_capabilities() - Query backend features
-      - [x] list_available_backends() - List all backends
-      - [x] get_default_backend() - Get system default
-      - [x] get_system_info() - Comprehensive system info
-    - [x] Comprehensive test suite (test_backend.py - 380+ lines, 30+ tests)
-    - [x] Type stubs updated with backend types
-    - [x] Python example (backend_selection.py - 280+ lines)
-    - [x] Full integration with existing execution pipeline
-  - [x] **Maturin Packaging Guide** ✅
-    - [x] Comprehensive PACKAGING.md (500+ lines)
-    - [x] Development setup and workflow
-    - [x] Building wheels for all platforms
-    - [x] Cross-compilation instructions
-    - [x] PyPI publishing guide
-    - [x] CI/CD integration (GitHub Actions + GitLab CI)
-    - [x] Troubleshooting section
-    - [x] Advanced topics (optimization, caching, multi-package)
-    - [x] GitHub Actions workflow template (python-wheels.yml.example)
-    - [x] Makefile with common packaging tasks
-  - [x] **Expose: get_provenance()** ✅ COMPLETE (full RDF* provenance API with metadata extraction)
-  - [x] **ToRSh Tensor Interoperability** ✅ COMPLETE (pure Rust PyTorch alternative)
-    - [x] Bidirectional conversion (TensorLogic ↔ ToRSh)
-    - [x] Type support (f32/f64 with automatic conversion)
-    - [x] Module: torsh_interop.rs (462 lines, 7 tests, 100% passing)
-    - [x] Example: torsh_integration.rs (150+ lines, 4 scenarios)
-    - [x] Feature-gated: --features torsh (optional dependency)
-    - [x] Use cases: Neurosymbolic AI, differentiable logic, hybrid systems
-  - [ ] PyTorch (tch-rs) tensor support - NOT NEEDED (using ToRSh instead)
-
-## Phase 8 — Validation & Scale ✅ **COMPLETE** (100%)
-Full property test validation + integration tests + benchmarks
-
-- [x] **Property Tests** ✅ **100% - 21/21 tests passing** (up from 3/18)
-  - [x] Property test infrastructure created (property_tests.rs - 900+ lines)
-  - [x] 17 core property tests + 4 strategy-specific tests implemented
-  - [x] **CompilationConfig Integration**
-    - [x] Added CompilationConfig to CompilerContext
-    - [x] Created strategy_mapping module (180+ lines)
-    - [x] Updated logic operations (AND, OR, NOT) to use config strategies
-    - [x] Added Min/Max element-wise operations to backend
-    - [x] Optimized Product AND to use einsum fusion
-    - [x] Support for 26+ compilation strategies across 6 operations
-  - [x] **Core Passing Tests** (17/17): ✅
-    - [x] Symmetry: AND(a,b) = AND(b,a), OR(a,b) = OR(b,a)
-    - [x] Associativity: AND/OR with nested operations
-    - [x] Monotonicity: Both AND and OR preserve ordering
-    - [x] Identity: AND(a, TRUE) = a, OR(a, FALSE) = a
-    - [x] Annihilation: AND(a, FALSE) = FALSE, OR(a, TRUE) = TRUE
-    - [x] **De Morgan's Laws**: NOT(AND) = OR(NOT), NOT(OR) = AND(NOT)
-    - [x] Double negation: NOT(NOT(a)) = a
-  - [x] **Strategy-Specific Tests** (4/4): ✅
-    - [x] Absorption AND-OR with Gödel logic (Min/Max)
-    - [x] Absorption OR-AND with Gödel logic (Min/Max)
-    - [x] AND distributes over OR with Boolean logic (Min/Max)
-    - [x] OR distributes over AND with Boolean logic (Min/Max)
-    - Note: Original tests marked as `#[ignore]` for soft_differentiable strategy
-  - [x] **Documentation**: Comprehensive test documentation with strategy guidance
-- [x] **Integration Tests** ✅
-  - [x] End-to-end integration tests (end_to_end.rs - 428 lines, 18 tests)
-  - [x] Basic logical operations (AND, OR, NOT) with execution
-  - [x] Complex nested expressions (De Morgan's, deep nesting)
-  - [x] Multi-arity predicates (binary, ternary)
-  - [x] Strategy comparison tests (soft_differentiable, hard_boolean, fuzzy_godel)
-  - [x] Graph structure validation
-  - [x] Constant tensor handling
-  - [x] All 18 tests passing
-- [x] **Compilation Benchmarks** ✅
-  - [x] Compilation performance benchmarks (compilation_performance.rs - 410+ lines)
-  - [x] Simple expression benchmarks (predicate, AND, OR, NOT)
-  - [x] Complex expression benchmarks (nested, deep, wide)
-  - [x] Quantifier benchmarks (exists, nested quantifiers)
-  - [x] Strategy comparison benchmarks (6 strategies × multiple scenarios)
-  - [x] Multi-arity predicate benchmarks (arity 2-5)
-  - [x] Criterion-based benchmarking infrastructure
-- [x] **Test Suite Health**: 4,415/4,415 tests passing (100%) ✅ (12 skipped)
-  - Updated from 4,287 → 4,415 tests (+128 new tests)
-  - Includes ToRSh interop tests (7 tests)
-- [x] **Fuzzing infrastructure with cargo-fuzz** ✅ COMPLETE
-  - [x] Set up fuzzing for tensorlogic-ir crate
-  - [x] Created 3 fuzz targets (TLExpr, EinsumGraph, optimizations)
-  - [x] Independent workspace configuration (requires nightly to run)
-- [x] **Advanced neurosymbolic AI examples** ✅ COMPLETE
-  - [x] knowledge_graph_reasoning.rs (267 lines, 4 scenarios)
-  - [x] constrained_neural_optimization.rs (290 lines, 6 parts)
-  - [x] Both integrate TensorLogic + ToRSh for hybrid AI
-- [ ] Reference comparisons against symbolic logic solvers (FUTURE)
-- [ ] Scale knobs: sparsity, low-rank, partitioned reductions (FUTURE)
-  - Note: Sparse tensor support already exists (1,194 lines in sparse_tensor.rs)
-- [ ] GPU backend path (Phase 3 follow-up) (FUTURE)
-
-## Project Summary
-
-### Production-Ready Status ✅
-
-**Version**: 0.1.0-rc.1
-**Status**: 🎉 **RELEASE CANDIDATE (RC.1)**
-
-### Comprehensive Statistics
-
-**Testing**:
-- ✅ 4,415/4,415 tests passing (100% pass rate)
-  - Updated from 4,287 (+128 new tests)
-  - 12 tests intentionally skipped (strategy-specific)
-  - Comprehensive coverage across all crates
-  - Includes ToRSh interop tests (7 tests, 100% passing)
-- ✅ Zero compilation warnings
-- ✅ Zero clippy warnings
-- ✅ Zero rustdoc warnings
-- ✅ All benchmarks functional
-
-**Benchmarks**:
-- ✅ 24 benchmark groups across 5 suites (991 total lines)
-- ✅ Complete coverage: SIMD, memory, gradients, throughput, forward pass
-
-**Documentation**:
-- ✅ Comprehensive README.md (500+ lines)
-- ✅ Complete CHANGELOG.md (600+ lines)
-- ✅ Packaging guide (PACKAGING.md, 500+ lines)
-- ✅ 2 tutorial notebooks (1700+ lines)
-- ✅ All community health files present
-
-**Infrastructure**:
-- ✅ GitHub Actions workflow template for wheel building
-- ✅ Makefile with 15 common development tasks
-- ✅ CI/CD ready for PyPI publishing
-- ✅ Cross-platform build support (Linux/macOS/Windows)
-
-### Key Achievements
-
-**SIMD Acceleration**:
-- SIMD acceleration support with feature flags
-- Backend selection API with 4 backend types
-- Python backend capabilities queries
-- 30+ backend tests (380+ lines)
-
-**Comprehensive Benchmarks**:
-- Memory footprint benchmarks (149 lines)
-- Gradient stability benchmarks (207 lines)
-- Throughput benchmarks (235 lines)
-- SIMD comparison benchmark rewrite (203 lines)
-- Phase 3: 100% PRODUCTION READY
-
-**Packaging Infrastructure**:
-- Comprehensive PACKAGING.md (500+ lines)
-- GitHub Actions workflow template (280+ lines)
-- Development Makefile (100+ lines)
-- Phase 7: 98% PRODUCTION READY
-
-**Documentation & Quality**:
-- Enhanced README.md (500+ lines)
-- Complete CHANGELOG.md (600+ lines)
-- Final test verification (783/783 passing)
-- Test count accuracy verification
-- Repository cleanup (removed debug artifacts)
-- Code quality verification (zero warnings)
-- Documentation consistency checks
-
-### Key Deliverables
-
-**Crates** (11 total):
-1. tensorlogic-ir (Core IR types)
-2. tensorlogic-compiler (Logic → tensor compilation)
-3. tensorlogic-infer (Execution traits)
-4. tensorlogic-scirs-backend (SciRS2 backend with SIMD)
-5. tensorlogic-adapters (Symbol tables, domains)
-6. tensorlogic-oxirs-bridge (RDF*/SHACL integration)
-7. tensorlogic-sklears-kernels (ML kernels)
-8. tensorlogic-quantrs-hooks (PGM integration)
-9. tensorlogic-trustformers (Transformer components)
-10. tensorlogic-train (Training infrastructure)
-11. tensorlogic-py (Python bindings with abi3)
-
-**Examples**:
-- 17 Rust examples (+2 neurosymbolic AI)
-  - knowledge_graph_reasoning.rs (267 lines, 4 scenarios)
-  - constrained_neural_optimization.rs (290 lines, 6 parts)
-- 10 Python examples
-- 2 comprehensive Jupyter tutorials (1700+ lines)
-
-**Features**:
-- ✅ Type system with signatures and validation
-- ✅ Graph optimizations (DCE, CSE, identity elimination)
-- ✅ Metadata and provenance tracking
-- ✅ Batch execution support
-- ✅ Shape inference
-- ✅ Backend capabilities queries
-- ✅ Execution profiling
-- ✅ SIMD acceleration (2-4x speedup)
-- ✅ 6 compilation strategies
-- ✅ NumPy integration
-
-### Next Steps (FUTURE)
-
-**Phase 3**:
-- [ ] GPU backend support
-- [ ] Multi-GPU execution
-- [ ] Memory optimization for large graphs
-
-**Phase 7**:
-- [ ] PyTorch tensor interoperability
-- [ ] Provenance API in Python bindings
-- [ ] Additional Python examples
-
-**Phase 8**:
-- [ ] Fuzzing with cargo-fuzz
-- [ ] Reference comparisons against symbolic logic solvers
-- [ ] Scale optimizations (sparsity, low-rank, partitioned reductions)
-
-### Release Checklist (v0.1.0-rc.1) ✅ **READY FOR RELEASE**
-
-**RC.1 Release Status**: All quality gates passed! 🎉
-
-1. **Pre-release** ✅ **COMPLETE**:
-   - [x] Review and finalize all documentation
-   - [x] Update version numbers in all Cargo.toml files (0.1.0-rc.1)
-   - [x] Create release notes from CHANGELOG.md
-   - [x] Update README with accurate metrics (4,415 tests)
-   - [x] Update CHANGELOG with rc.1 date (2026-03-06)
-   - [x] Update TODO.md with rc.1 status
-   - [x] Verify 100% test pass rate (4,415/4,415)
-   - [x] Add CUDA/GPU infrastructure notes
-   - [x] Update code statistics (317,127 lines)
-   - [x] SciRS2 ecosystem upgraded: 0.1.3 → 0.3.0
-   - [x] SkleaRS upgraded: 0.1.0-beta.1 → 0.1.0-rc.1
-   - [x] ToRSh upgraded: 0.1.0-beta.1 → 0.1.0 stable
-   - [x] rand 0.10 API compatibility fix (rand::Rng → rand::RngExt)
-   - [x] toml: 0.9 → 1.0; tokio: 1.49 → 1.50; oxrdf/oxttl/tempfile bumped
-
-2. **Quality Metrics** ✅:
-   - [x] Zero compiler warnings
-   - [x] Zero clippy warnings
-   - [x] Zero rustdoc warnings
-   - [x] 4,415/4,415 tests passing (100%)
-   - [x] All doctests passing
-   - [x] Examples build and run successfully
-   - [x] Benchmarks compile without warnings
-   - [x] CI/CD fully configured
-   - [x] Latest dependencies
-
-3. **Publishing** (READY):
-   - [ ] Publish to crates.io (11 crates in dependency order)
-   - [ ] Build Python wheels for all platforms
-   - [ ] Publish to PyPI
-   - [ ] Create GitHub release v0.1.0-rc.1 with artifacts
-   - [ ] Tag release in git
-
-4. **Post-release**:
-   - [ ] Announce rc.1 release
-   - [ ] Gather user feedback
-   - [ ] Monitor for issues
-   - [ ] Plan stable 0.1.0 release
-
-### RC.1 → Stable Release Roadmap
-
-**Focus**: GPU Acceleration, Stability, User Feedback
-
-**Planned Improvements**:
-- [ ] Address rc.1 user feedback
-- [ ] Complete GPU/CUDA backend implementation
-- [ ] Multi-GPU support and benchmarking
-- [ ] Performance optimization based on benchmarks
-- [ ] Additional examples and tutorials
-- [ ] Documentation improvements
-- [ ] Bug fixes and stability improvements
-- [ ] PyTorch tensor interoperability
+- [crates/tensorlogic/TODO.md](./crates/tensorlogic/TODO.md) — Umbrella / flagship meta-crate.
+- [crates/tensorlogic-ir/TODO.md](./crates/tensorlogic-ir/TODO.md) — IR and DSL.
+- [crates/tensorlogic-infer/TODO.md](./crates/tensorlogic-infer/TODO.md) — Executor traits + autodiff scaffolding.
+- [crates/tensorlogic-compiler/TODO.md](./crates/tensorlogic-compiler/TODO.md) — Logic → einsum compilation.
+- [crates/tensorlogic-adapters/TODO.md](./crates/tensorlogic-adapters/TODO.md) — External data + codegen adapters.
+- [crates/tensorlogic-scirs-backend/TODO.md](./crates/tensorlogic-scirs-backend/TODO.md) — SciRS2 execution backend.
+- [crates/tensorlogic-train/TODO.md](./crates/tensorlogic-train/TODO.md) — Training loop + loss / optimizer / scheduler.
+- [crates/tensorlogic-oxirs-bridge/TODO.md](./crates/tensorlogic-oxirs-bridge/TODO.md) — OxiRS / RDF / SPARQL bridge.
+- [crates/tensorlogic-quantrs-hooks/TODO.md](./crates/tensorlogic-quantrs-hooks/TODO.md) — QuantRS2 probabilistic hooks.
+- [crates/tensorlogic-sklears-kernels/TODO.md](./crates/tensorlogic-sklears-kernels/TODO.md) — Kernel methods.
+- [crates/tensorlogic-trustformers/TODO.md](./crates/tensorlogic-trustformers/TODO.md) — Transformer adapters.
+- [crates/tensorlogic-oxicuda-backend/TODO.md](./crates/tensorlogic-oxicuda-backend/TODO.md) — OxiCUDA GPU backend (Pure Rust CUDA).
+- [crates/tensorlogic-cli/TODO.md](./crates/tensorlogic-cli/TODO.md) — CLI.
+- [crates/tensorlogic-py/TODO.md](./crates/tensorlogic-py/TODO.md) — Python bindings.
 
 ## References
-- Keep the original "Tensor Logic" arXiv links in README for onboarding.
-- For detailed development history, see CHANGELOG.md
-- For packaging instructions, see crates/tensorlogic-py/PACKAGING.md
+
+- [README.md](./README.md) — Project overview.
+- [CHANGELOG.md](./CHANGELOG.md) — Release history.
+- [CLAUDE.md](./CLAUDE.md) — Project conventions.

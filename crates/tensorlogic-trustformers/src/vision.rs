@@ -40,13 +40,13 @@
 //!     3072, // d_ff
 //!     12,   // n_layers
 //!     1000, // num_classes
-//! ).unwrap();
+//! ).expect("unwrap");
 //!
-//! let vit = VisionTransformer::new(config).unwrap();
+//! let vit = VisionTransformer::new(config).expect("unwrap");
 //!
 //! let mut graph = EinsumGraph::new();
 //! graph.add_tensor("image");
-//! let output = vit.build_vit_graph(&mut graph).unwrap();
+//! let output = vit.build_vit_graph(&mut graph).expect("unwrap");
 //! ```
 
 use crate::error::{Result, TrustformerError};
@@ -439,7 +439,7 @@ mod tests {
 
     #[test]
     fn test_patch_embedding_config() {
-        let config = PatchEmbeddingConfig::new(224, 16, 3, 768).unwrap();
+        let config = PatchEmbeddingConfig::new(224, 16, 3, 768).expect("unwrap");
         assert_eq!(config.image_size, 224);
         assert_eq!(config.patch_size, 16);
         assert_eq!(config.in_channels, 3);
@@ -456,14 +456,16 @@ mod tests {
 
     #[test]
     fn test_patch_embedding_graph() {
-        let config = PatchEmbeddingConfig::new(224, 16, 3, 768).unwrap();
-        let patch_embed = PatchEmbedding::new(config).unwrap();
+        let config = PatchEmbeddingConfig::new(224, 16, 3, 768).expect("unwrap");
+        let patch_embed = PatchEmbedding::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("image");
         graph.add_tensor("W_patch_embed");
 
-        let output = patch_embed.build_patch_embed_graph(&mut graph).unwrap();
+        let output = patch_embed
+            .build_patch_embed_graph(&mut graph)
+            .expect("unwrap");
         assert!(output > 0);
         assert!(graph.validate().is_ok());
     }
@@ -480,7 +482,7 @@ mod tests {
             12,   // n_layers
             1000, // num_classes
         )
-        .unwrap();
+        .expect("unwrap");
 
         assert_eq!(config.num_classes, 1000);
         assert!(config.use_class_token);
@@ -490,7 +492,7 @@ mod tests {
     #[test]
     fn test_vit_config_without_class_token() {
         let config = VisionTransformerConfig::new(224, 16, 3, 768, 12, 3072, 12, 1000)
-            .unwrap()
+            .expect("unwrap")
             .with_class_token(false);
 
         assert!(!config.use_class_token);
@@ -499,16 +501,17 @@ mod tests {
 
     #[test]
     fn test_vit_creation() {
-        let config = VisionTransformerConfig::new(224, 16, 3, 768, 12, 3072, 12, 1000).unwrap();
-        let vit = VisionTransformer::new(config).unwrap();
+        let config =
+            VisionTransformerConfig::new(224, 16, 3, 768, 12, 3072, 12, 1000).expect("unwrap");
+        let vit = VisionTransformer::new(config).expect("unwrap");
 
         assert!(vit.config().validate().is_ok());
     }
 
     #[test]
     fn test_vit_graph_building() {
-        let config = VisionTransformerConfig::new(224, 16, 3, 384, 6, 1536, 2, 10).unwrap();
-        let vit = VisionTransformer::new(config).unwrap();
+        let config = VisionTransformerConfig::new(224, 16, 3, 384, 6, 1536, 2, 10).expect("unwrap");
+        let vit = VisionTransformer::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         // Add required input tensors
@@ -519,14 +522,15 @@ mod tests {
         let result = vit.build_vit_graph(&mut graph);
         // The graph building should succeed
         assert!(result.is_ok());
-        let outputs = result.unwrap();
+        let outputs = result.expect("unwrap");
         assert!(!outputs.is_empty());
     }
 
     #[test]
     fn test_vit_parameter_count() {
-        let config = VisionTransformerConfig::new(224, 16, 3, 768, 12, 3072, 12, 1000).unwrap();
-        let vit = VisionTransformer::new(config).unwrap();
+        let config =
+            VisionTransformerConfig::new(224, 16, 3, 768, 12, 3072, 12, 1000).expect("unwrap");
+        let vit = VisionTransformer::new(config).expect("unwrap");
 
         let params = vit.count_parameters();
         assert!(params > 0);
@@ -543,11 +547,11 @@ mod tests {
             ViTPreset::Large16,
             ViTPreset::Huge14,
         ] {
-            let config = preset.config(1000).unwrap();
+            let config = preset.config(1000).expect("unwrap");
             assert!(config.validate().is_ok());
             assert_eq!(config.num_classes, 1000);
 
-            let vit = VisionTransformer::new(config).unwrap();
+            let vit = VisionTransformer::new(config).expect("unwrap");
             assert!(vit.count_parameters() > 0);
         }
     }
@@ -564,7 +568,7 @@ mod tests {
     #[test]
     fn test_different_image_sizes() {
         for (image_size, patch_size) in [(224, 16), (384, 16), (512, 32)] {
-            let config = PatchEmbeddingConfig::new(image_size, patch_size, 3, 768).unwrap();
+            let config = PatchEmbeddingConfig::new(image_size, patch_size, 3, 768).expect("unwrap");
             let expected_patches = (image_size / patch_size) * (image_size / patch_size);
             assert_eq!(config.num_patches(), expected_patches);
         }
@@ -573,7 +577,7 @@ mod tests {
     #[test]
     fn test_vit_config_builder() {
         let config = VisionTransformerConfig::new(224, 16, 3, 768, 12, 3072, 12, 1000)
-            .unwrap()
+            .expect("unwrap")
             .with_class_token(true)
             .with_classifier_dropout(0.1)
             .with_pre_norm(true)

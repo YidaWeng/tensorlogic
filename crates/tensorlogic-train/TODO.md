@@ -1,38 +1,9 @@
-# RC.1 Release Status
+# TensorLogic Train — TODO
 
-**Version**: 0.1.0-rc.1
-**Status**: Production Ready
-**Last Updated**: 2026-03-06
+**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
-This crate is being released as TensorLogic v0.1.0-rc.1 with:
-- **499 tests** (100% passing)
-- Zero compiler warnings (verified with clippy)
-- Complete documentation
-- Modern optimizers and loss functions
-- Advanced utilities for model introspection
-- Computer vision metrics for segmentation and detection
-- Model pruning and compression
-- Model quantization (int8, int4, int2)
-- Mixed precision training (FP16/BF16)
-- Enhanced gradient accumulation
-- Metrics module refactored (7 files, each under 730 lines)
-- Structured logging support (tracing/tracing-subscriber)
-- Few-shot learning helpers (prototypical, matching networks)
-- Meta-learning infrastructure (MAML, Reptile)
-- Gradient Centralization (4 strategies)
-- Schedule-Free AdamW (Defazio et al., 2024)
-- Advanced Augmentation (RandomErasing, CutOut)
-- DropPath / Stochastic Depth
-- DropBlock regularization
-- Prodigy Optimizer (auto-tuning LR, 2024)
-- Bayesian Optimization (GP-based hyperparameter search)
-- SCIRS2 policy compliance verified
-
-See main [TODO.md](../../TODO.md) for overall project status.
-
----
-
-# tensorlogic-train TODO
+Training loop, loss functions, optimizers, schedulers, and callbacks.
 
 ## Completed
 
@@ -218,7 +189,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [x] Load checkpoint and restore training state
 - [x] Resume training from checkpoint (train_from_checkpoint)
 - [x] Scheduler state_dict/load_state_dict for all schedulers
-- [x] Compression support (Gzip default/fast/best, auto-detection)
+- [x] Compression support (via `oxiarc-deflate`, Pure Rust — replaces flate2)
 - [ ] Cloud storage backends (FUTURE)
 
 ### Logging Integration
@@ -451,7 +422,10 @@ See main [TODO.md](../../TODO.md) for overall project status.
 | structured_logging.rs | 4 | All passing |
 | few_shot.rs | 13 | All passing |
 | meta_learning.rs | 15 | All passing |
-| **Total** | **499** | **100%** |
+| neural_ode.rs | 22 | All passing |
+| online_learning.rs | 28 | All passing |
+| adversarial.rs | 29 | All passing |
+| **Total** | **716** | **100%** |
 
 ---
 
@@ -461,7 +435,52 @@ See main [TODO.md](../../TODO.md) for overall project status.
 
 **SCIRS2 Policy:** Fully compliant - all proper scirs2_core::ndarray imports, no direct ndarray/rand imports
 **Code Quality:** All files comply with 2000-line limit
-**Total source lines:** ~23,000+ (across 33 modules + examples + docs)
+**Total source lines:** ~23,000+ (across 36 modules + examples + docs)
+
+## v0.1.7 Enhancements (2026-03-30)
+
+- [x] **Gradient Accumulation** (`gradient_accumulator.rs`): `GradientAccumulator` with `AccumulationConfig` (micro-batch steps, normalization, gradient clipping), `GradientBuffer` with L2 norm, `step()` returns update trigger, `AccumulationStats`. 18 new tests.
+
+## v0.1.14
+
+- [x] **xavier_uniform** (`weight_init.rs`): Glorot uniform initialization sampling from U(-a, a) where a = gain * sqrt(6 / (fan_in + fan_out))
+- [x] **xavier_normal** (`weight_init.rs`): Glorot normal initialization sampling from N(0, gain^2 * 2 / (fan_in + fan_out))
+- [x] **kaiming_uniform** (`weight_init.rs`): He uniform initialization for ReLU networks, U(-bound, bound) with bound = gain * sqrt(3 / fan_in)
+- [x] **kaiming_normal** (`weight_init.rs`): He normal initialization sampling from N(0, gain^2 / fan_in)
+- [x] **lecun** (`weight_init.rs`): LeCun normal initialization sampling from N(0, 1/fan_in), suitable for SELU activations
+- [x] **orthogonal_init** (`weight_init.rs`): QR-decomposition-based orthogonal matrix initialization with configurable gain scaling
+- [x] **InitRng** (`weight_init.rs`): Dedicated LCG-based pseudo-random number generator for reproducible weight initialization with `next_f64()` and `next_normal()` methods
+- [x] **InitStats** (`weight_init.rs`): Statistical analysis of initialized weights including mean, variance, min, max, histogram bin counts, and formatted summary output
+
+## v0.1.15
+
+- [x] **gaussian_noise** (`augmentation.rs`): Adds element-wise zero-mean Gaussian noise with configurable `stddev`; uses `AugRng` for reproducibility and supports optional clipping to keep values in a valid range
+- [x] **dropout** (`augmentation.rs`): Element-wise random zeroing at probability `p` with `1/(1-p)` rescaling to preserve expected activations; produces a companion boolean `dropout_mask` for replay
+- [x] **mixup** (`augmentation.rs`): Convex interpolation of two input tensors and their one-hot label vectors with a Beta-distributed mixing coefficient `lambda`; returns mixed sample and mixed labels
+- [x] **cutmix** (`augmentation.rs`): Rectangular patch swap between two samples — randomly samples a bounding box and blends labels proportionally to the swapped area fraction
+- [x] **random_crop** (`augmentation.rs`): Uniform random sub-tensor crop to a target spatial size; `random_crop_2d` variant handles H×W crops with configurable padding before sampling
+- [x] **normalize** (`augmentation.rs`): Channel-wise mean subtraction and standard-deviation division with optional per-channel `mean`/`std` override; `denormalize` is the exact inverse for visualization
+- [x] **AugmentationPipeline** (`augmentation.rs`): Composable ordered chain of `AugmentationStep` closures; `apply()` runs the chain in sequence, collecting per-step timing into `AugStats` (total ops, cumulative duration, rejection rate for conditional steps)
+- [x] **AugStats** (`augmentation.rs`): Aggregated augmentation statistics tracking total operations applied, cumulative wall-clock duration, and conditional-step rejection rate across a pipeline run
+
+## v0.1.13
+
+- [x] **EarlyStoppingMonitor** (`early_stopping.rs`): Patience-based training termination with configurable `min_delta` improvement threshold, `should_stop()` API returning boolean, tracks best metric value and steps since last improvement
+- [x] **MultiMetricMonitor** (`early_stopping.rs`): Track multiple named metrics simultaneously with independent patience per metric, `should_stop_any()` / `should_stop_all()` aggregation, metric history retrieval
+- [x] **PlateauDetector** (`early_stopping.rs`): Detect loss plateaus using windowed variance analysis with configurable window size and variance threshold, `is_plateau()` check, supports both minimization and maximization objectives
+- [x] **TrainingProgress** (`early_stopping.rs`): Unified progress tracking combining epoch/step counts with elapsed time, ETA estimation, steps-per-second throughput, and `summary()` formatted output
+
+## v0.1.17
+
+- [x] **`augmentation.rs` sub-module refactor**: `augmentation.rs` (single-file, 700+ lines) refactored into `augmentation/` sub-directory with focused modules per transform family: `augmentation/noise.rs` (gaussian_noise, dropout), `augmentation/mix.rs` (mixup, cutmix), `augmentation/spatial.rs` (random_crop), `augmentation/normalize.rs` (normalize, denormalize), and `augmentation/pipeline.rs` (`AugmentationPipeline`, `AugStats`). Public API exported from `augmentation/mod.rs` is fully backward-compatible.
+
+## v0.1.11
+
+- [x] **OptimizerCheckpoint + CheckpointManager + LossTracker** (`checkpoint.rs`): `OptimizerCheckpoint` serializable optimizer state with step/epoch/loss metadata, `CheckpointManager` with configurable keep-last-N policy, best-checkpoint tracking by validation loss, and `load_at_step()` lookup, `LossTracker` windowed moving-average and plateau detection with configurable patience.
+
+## v0.1.4 Enhancements (2026-03-30)
+
+- [x] **Learning Rate Schedulers** (`lr_scheduler.rs`): `LrSchedulerV2` trait (`step`, `current_lr`, `reset`, `steps_taken`, `completed_cycle`). Five implementations: `StepDecayScheduler`, `CosineAnnealingScheduler` (with `with_warm_restarts()`), `WarmupScheduler` (linear warmup wrapping any inner scheduler), `CyclicalScheduler` (triangular CLR), `OneCycleLrScheduler` (linear ramp + cosine decay). `SchedulerConfig` builder for StepDecay/Cosine/OneCycle. 20 new tests.
 
 **Key implementation highlights:**
 - 18 optimizers including cutting-edge 2024 methods (Prodigy, ScheduleFreeAdamW)
@@ -475,3 +494,22 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - Model quantization (INT8/4/2, PTQ, QAT)
 - Mixed precision training (FP16/BF16)
 - 20+ comprehensive training examples (6000+ lines)
+
+## v0.1.18 (2026-04-05)
+
+- [x] **Neural ODE** (`neural_ode.rs`): `OdeFunc` trait for user-defined dynamics `f(t, y, params) -> dy/dt` plus `vjp()` for vector-Jacobian products; `rk4_solve()` fixed-step RK4 integrator returning a full `OdeSolution` trajectory; `dopri5_solve()` adaptive Dormand-Prince RK45 solver with step-size control, error estimation (DOPRI5 Butcher tableau), step rejection, and dense output via `AdaptiveSolution`; `OdeSolverConfig` builder (`rtol`, `atol`, `max_steps`, `dense_output`); `NeuralOde<F: OdeFunc>` wrapping a user dynamics function with `(t0, t1)` integration bounds; `NeuralOde::forward()` runs the forward pass and returns the endpoint state; `adjoint_backward()` implements the adjoint sensitivity method — integrates the adjoint ODE backwards through the stored forward trajectory for memory-efficient gradient computation proportional to O(1) state storage rather than O(T).
+
+## v0.1.21 (2026-04-05)
+
+- [x] **Adversarial Training** (`adversarial.rs`): Added adversarial.rs — adversarial training: FGSM (one-step sign gradient), PGD (iterative with random start + projection), L∞/L2/L1 norm constraints; `CrossEntropyAttackLoss`/`MseAttackLoss`; `LinearAttackModel`; `adversarial_training_loss()`, `robustness_eval()`.
+
+## v0.1.20 (2026-04-05)
+
+- [x] **Online Learning** (`online_learning.rs`): `OnlineLearner` trait with `update()`, `predict()`, `reset()`; `Perceptron` (binary, margin-based weight updates); `PassiveAggressive` (PA / PA-I / PA-II variants with configurable aggressiveness `C`); `OnlineGradientDescent` (squared-loss, hinge-loss, and logistic-loss modes with configurable step size); `FtrlProximal` (Follow The Regularized Leader with L1/L2 regularization, per-coordinate adaptive learning rates); `OnlineStats` collecting per-step loss, mistake rate, cumulative regret, and `n_updates`; `online_evaluate()` batch helper running the learner over a labelled dataset with optional training.
+
+## v0.2.0 / Future Work
+
+- [x] **LoRA adapter support** (`lora/`): `LoraLayer` with low-rank A/B decomposition (Hu et al., 2021), merge/unmerge, effective_weight, compression ratio; `LoraAdapter` multi-layer manager with per-layer summary; `LoraConfig` (rank, alpha, dropout, target_modules, seed); `LoraError` with InvalidRank, DimensionMismatch, MergeError, FrozenWeights. 12 unit tests + 2 integration tests. (completed 2026-04-16)
+- Quantization-aware training.
+- Mixed-precision loops.
+- [x] ~~Split `src/hyperparameter.rs` (1,641 L) and `src/loss.rs` (1,551 L) into directory modules.~~ (completed 2026-04-15)

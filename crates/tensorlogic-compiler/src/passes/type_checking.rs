@@ -516,7 +516,7 @@ mod tests {
 
         let expr = TLExpr::pred("knows", vec![Term::var("alice"), Term::var("bob")]);
 
-        let inferred = infer_types(&expr, &registry).unwrap();
+        let inferred = infer_types(&expr, &registry).expect("unwrap");
 
         assert_eq!(inferred.len(), 2);
         assert_eq!(inferred["alice"].type_name, "Person");
@@ -532,7 +532,7 @@ mod tests {
             TLExpr::pred("likes", vec![Term::var("alice"), Term::var("book")]),
         );
 
-        let inferred = infer_types(&expr, &registry).unwrap();
+        let inferred = infer_types(&expr, &registry).expect("unwrap");
 
         assert_eq!(inferred.len(), 3);
         assert_eq!(inferred["alice"].type_name, "Person");

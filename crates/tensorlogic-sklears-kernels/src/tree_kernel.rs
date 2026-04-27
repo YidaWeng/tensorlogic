@@ -230,7 +230,7 @@ impl SubsetTreeKernelConfig {
 
 impl Default for SubsetTreeKernelConfig {
     fn default() -> Self {
-        Self::new().unwrap()
+        Self::new().expect("default SubsetTreeKernelConfig parameters are valid")
     }
 }
 
@@ -359,7 +359,7 @@ impl PartialTreeKernelConfig {
 
 impl Default for PartialTreeKernelConfig {
     fn default() -> Self {
-        Self::new().unwrap()
+        Self::new().expect("default PartialTreeKernelConfig parameters are valid")
     }
 }
 
@@ -524,7 +524,7 @@ mod tests {
         let config = SubtreeKernelConfig::new().with_normalize(false);
         let kernel = SubtreeKernel::new(config);
 
-        let sim = kernel.compute_trees(&tree1, &tree2).unwrap();
+        let sim = kernel.compute_trees(&tree1, &tree2).expect("unwrap");
         assert!(sim > 0.0);
     }
 
@@ -537,7 +537,7 @@ mod tests {
         let config = SubtreeKernelConfig::new().with_normalize(false);
         let kernel = SubtreeKernel::new(config);
 
-        let sim = kernel.compute_trees(&tree1, &tree2).unwrap();
+        let sim = kernel.compute_trees(&tree1, &tree2).expect("unwrap");
         // Trees with different children have no matching subtrees
         // (root node is different because it includes children)
         assert!(sim >= 0.0); // No matches expected
@@ -558,7 +558,7 @@ mod tests {
         let config = SubtreeKernelConfig::new().with_normalize(false);
         let kernel = SubtreeKernel::new(config);
 
-        let sim = kernel.compute_trees(&tree1, &tree2).unwrap();
+        let sim = kernel.compute_trees(&tree1, &tree2).expect("unwrap");
         // Should have similarity from the shared "child1" subtree
         assert!(sim > 0.0);
     }
@@ -574,7 +574,7 @@ mod tests {
         let config = SubtreeKernelConfig::new().with_normalize(true);
         let kernel = SubtreeKernel::new(config);
 
-        let sim = kernel.compute_trees(&tree1, &tree2).unwrap();
+        let sim = kernel.compute_trees(&tree1, &tree2).expect("unwrap");
         assert!((sim - 1.0).abs() < 1e-6); // Self-similarity should be 1.0 when normalized
     }
 
@@ -586,10 +586,10 @@ mod tests {
         );
         let tree2 = TreeNode::with_children("root", vec![TreeNode::new("child1")]);
 
-        let config = SubsetTreeKernelConfig::new().unwrap();
+        let config = SubsetTreeKernelConfig::new().expect("unwrap");
         let kernel = SubsetTreeKernel::new(config);
 
-        let sim = kernel.compute_trees(&tree1, &tree2).unwrap();
+        let sim = kernel.compute_trees(&tree1, &tree2).expect("unwrap");
         assert!(sim > 0.0);
     }
 
@@ -599,21 +599,21 @@ mod tests {
         let tree2 = tree1.clone();
 
         let config1 = SubsetTreeKernelConfig::new()
-            .unwrap()
+            .expect("unwrap")
             .with_decay(1.0)
-            .unwrap()
+            .expect("unwrap")
             .with_normalize(false);
         let kernel1 = SubsetTreeKernel::new(config1);
 
         let config2 = SubsetTreeKernelConfig::new()
-            .unwrap()
+            .expect("unwrap")
             .with_decay(0.5)
-            .unwrap()
+            .expect("unwrap")
             .with_normalize(false);
         let kernel2 = SubsetTreeKernel::new(config2);
 
-        let sim1 = kernel1.compute_trees(&tree1, &tree2).unwrap();
-        let sim2 = kernel2.compute_trees(&tree1, &tree2).unwrap();
+        let sim1 = kernel1.compute_trees(&tree1, &tree2).expect("unwrap");
+        let sim2 = kernel2.compute_trees(&tree1, &tree2).expect("unwrap");
 
         // Lower decay should give lower similarity
         assert!(sim2 < sim1);
@@ -630,10 +630,10 @@ mod tests {
             vec![TreeNode::new("child1"), TreeNode::new("child3")],
         );
 
-        let config = PartialTreeKernelConfig::new().unwrap();
+        let config = PartialTreeKernelConfig::new().expect("unwrap");
         let kernel = PartialTreeKernel::new(config);
 
-        let sim = kernel.compute_trees(&tree1, &tree2).unwrap();
+        let sim = kernel.compute_trees(&tree1, &tree2).expect("unwrap");
         assert!(sim > 0.0); // Should have partial similarity
     }
 
@@ -643,25 +643,29 @@ mod tests {
         let tree2 = TreeNode::with_children("root2", vec![TreeNode::new("child")]);
 
         let config = PartialTreeKernelConfig::new()
-            .unwrap()
+            .expect("unwrap")
             .with_threshold(0.9)
-            .unwrap();
+            .expect("unwrap");
         let kernel = PartialTreeKernel::new(config);
 
-        let sim = kernel.compute_trees(&tree1, &tree2).unwrap();
+        let sim = kernel.compute_trees(&tree1, &tree2).expect("unwrap");
         // Different roots with high threshold should give low/zero similarity
         assert!(sim < 0.5);
     }
 
     #[test]
     fn test_partial_tree_kernel_config_invalid_decay() {
-        let result = PartialTreeKernelConfig::new().unwrap().with_decay(1.5);
+        let result = PartialTreeKernelConfig::new()
+            .expect("unwrap")
+            .with_decay(1.5);
         assert!(result.is_err());
     }
 
     #[test]
     fn test_partial_tree_kernel_config_invalid_threshold() {
-        let result = PartialTreeKernelConfig::new().unwrap().with_threshold(-0.1);
+        let result = PartialTreeKernelConfig::new()
+            .expect("unwrap")
+            .with_threshold(-0.1);
         assert!(result.is_err());
     }
 
@@ -676,7 +680,7 @@ mod tests {
         let config = SubtreeKernelConfig::new();
         let kernel = SubtreeKernel::new(config);
 
-        let sim = kernel.compute_trees(&tree1, &tree2).unwrap();
+        let sim = kernel.compute_trees(&tree1, &tree2).expect("unwrap");
         assert!(sim > 0.0); // Should have some similarity (And node and p1 match)
     }
 }

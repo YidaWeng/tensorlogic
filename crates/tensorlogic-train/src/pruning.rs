@@ -18,7 +18,7 @@
 //!     0.1, 0.5, 0.9,
 //!     0.2, 0.6, 0.01,
 //!     0.3, 0.7, 0.8,
-//! ]).unwrap();
+//! ]).expect("unwrap");
 //!
 //! let config = PruningConfig {
 //!     pruning_ratio: 0.3, // Remove 30% of weights
@@ -28,7 +28,7 @@
 //! };
 //!
 //! let pruner = MagnitudePruner::new(config);
-//! let (pruned_weights, mask) = pruner.prune(&weights).unwrap();
+//! let (pruned_weights, mask) = pruner.prune(&weights).expect("unwrap");
 //! ```
 //!
 //! ## Gradient-based Pruning
@@ -218,7 +218,7 @@ impl MagnitudePruner {
     /// Calculate pruning threshold based on weight distribution.
     fn calculate_threshold(&self, weights: &Array2<f64>) -> f64 {
         let mut abs_weights: Vec<f64> = weights.iter().map(|w| w.abs()).collect();
-        abs_weights.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        abs_weights.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let prune_count = (abs_weights.len() as f64 * self.current_ratio) as usize;
         if prune_count >= abs_weights.len() {
@@ -339,7 +339,7 @@ impl GradientPruner {
     /// Calculate pruning threshold based on gradient distribution.
     fn calculate_threshold(&self, gradients: &Array2<f64>) -> f64 {
         let mut abs_grads: Vec<f64> = gradients.iter().map(|g| g.abs()).collect();
-        abs_grads.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        abs_grads.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let prune_count = (abs_grads.len() as f64 * self.current_ratio) as usize;
         if prune_count >= abs_grads.len() {
@@ -454,7 +454,7 @@ impl StructuredPruner {
     /// Determine which units to prune based on importance scores.
     fn select_units_to_prune(&self, importance: &[f64]) -> Vec<usize> {
         let mut indexed: Vec<(usize, f64)> = importance.iter().copied().enumerate().collect();
-        indexed.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+        indexed.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
         let prune_count = (importance.len() as f64 * self.current_ratio) as usize;
         indexed
@@ -591,7 +591,7 @@ impl GlobalPruner {
             .flat_map(|w| w.iter().map(|x| x.abs()))
             .collect();
 
-        all_weights.sort_by(|a, b| a.partial_cmp(b).unwrap());
+        all_weights.sort_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal));
 
         let total_params = all_weights.len();
         let prune_count = (total_params as f64 * self.config.pruning_ratio) as usize;
@@ -664,7 +664,7 @@ mod tests {
     fn test_magnitude_pruner() {
         let weights =
             Array2::from_shape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.2, 0.6, 0.01, 0.3, 0.7, 0.8])
-                .unwrap();
+                .expect("unwrap");
 
         let config = PruningConfig {
             pruning_ratio: 0.3,
@@ -674,7 +674,7 @@ mod tests {
         };
 
         let pruner = MagnitudePruner::new(config);
-        let (pruned, mask) = pruner.prune(&weights).unwrap();
+        let (pruned, mask) = pruner.prune(&weights).expect("unwrap");
 
         // Check that smallest weights are pruned
         let active_count = mask.iter().filter(|&&m| m > 0.5).count();
@@ -730,7 +730,7 @@ mod tests {
                 0.8, 0.8, 0.8, // Row 3: high magnitude
             ],
         )
-        .unwrap();
+        .expect("unwrap");
 
         let config = PruningConfig {
             pruning_ratio: 0.5, // Prune 50% of rows (2 out of 4)
@@ -739,7 +739,7 @@ mod tests {
         };
 
         let pruner = StructuredPruner::new(config, StructuredPruningAxis::Rows);
-        let (pruned, _mask) = pruner.prune(&weights).unwrap();
+        let (pruned, _mask) = pruner.prune(&weights).expect("unwrap");
 
         // Check that 2 rows are completely zeroed
         let zero_rows = (0..4)
@@ -761,7 +761,7 @@ mod tests {
                 0.1, 0.9, 0.2, 0.8, 0.1, 0.9, 0.2, 0.8,
             ],
         )
-        .unwrap();
+        .expect("unwrap");
 
         let config = PruningConfig {
             pruning_ratio: 0.5,
@@ -770,7 +770,7 @@ mod tests {
         };
 
         let pruner = StructuredPruner::new(config, StructuredPruningAxis::Columns);
-        let (pruned, _mask) = pruner.prune(&weights).unwrap();
+        let (pruned, _mask) = pruner.prune(&weights).expect("unwrap");
 
         // Check that 2 columns are completely zeroed
         let zero_cols = (0..4)
@@ -787,13 +787,13 @@ mod tests {
             ..Default::default()
         });
 
-        let layer1 = Array2::from_shape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4]).unwrap();
-        let layer2 = Array2::from_shape_vec((2, 2), vec![0.5, 0.6, 0.7, 0.8]).unwrap();
+        let layer1 = Array2::from_shape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4]).expect("unwrap");
+        let layer2 = Array2::from_shape_vec((2, 2), vec![0.5, 0.6, 0.7, 0.8]).expect("unwrap");
 
         global_pruner.add_layer("layer1", layer1);
         global_pruner.add_layer("layer2", layer2);
 
-        let pruned = global_pruner.prune_all().unwrap();
+        let pruned = global_pruner.prune_all().expect("unwrap");
         let stats = global_pruner.statistics(&pruned);
 
         assert_eq!(stats.total_params, 8);
@@ -824,7 +824,7 @@ mod tests {
     fn test_gradient_pruner_fallback() {
         let weights =
             Array2::from_shape_vec((3, 3), vec![0.1, 0.5, 0.9, 0.2, 0.6, 0.01, 0.3, 0.7, 0.8])
-                .unwrap();
+                .expect("unwrap");
 
         let config = PruningConfig {
             pruning_ratio: 0.3,
@@ -832,7 +832,7 @@ mod tests {
         };
 
         let pruner = GradientPruner::new(config);
-        let (_pruned, mask) = pruner.prune(&weights).unwrap();
+        let (_pruned, mask) = pruner.prune(&weights).expect("unwrap");
 
         // Without gradient history, should fall back to magnitude pruning
         let active_count = mask.iter().filter(|&&m| m > 0.5).count();
@@ -845,11 +845,11 @@ mod tests {
 
     #[test]
     fn test_gradient_pruner_with_history() {
-        let weights = Array2::from_shape_vec((2, 2), vec![0.5, 0.6, 0.7, 0.8]).unwrap();
+        let weights = Array2::from_shape_vec((2, 2), vec![0.5, 0.6, 0.7, 0.8]).expect("unwrap");
 
-        let grads1 = Array2::from_shape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4]).unwrap();
+        let grads1 = Array2::from_shape_vec((2, 2), vec![0.1, 0.2, 0.3, 0.4]).expect("unwrap");
 
-        let grads2 = Array2::from_shape_vec((2, 2), vec![0.15, 0.25, 0.35, 0.45]).unwrap();
+        let grads2 = Array2::from_shape_vec((2, 2), vec![0.15, 0.25, 0.35, 0.45]).expect("unwrap");
 
         let config = PruningConfig {
             pruning_ratio: 0.5,
@@ -860,7 +860,9 @@ mod tests {
         pruner.update_gradients("layer1", grads1);
         pruner.update_gradients("layer1", grads2);
 
-        let (pruned, _mask) = pruner.prune_with_history(&weights, "layer1").unwrap();
+        let (pruned, _mask) = pruner
+            .prune_with_history(&weights, "layer1")
+            .expect("unwrap");
 
         // Weights with smallest average gradients should be pruned
         // Average gradients: [0.125, 0.225, 0.325, 0.425]
@@ -918,7 +920,7 @@ mod tests {
 
     #[test]
     fn test_min_threshold() {
-        let weights = Array2::from_shape_vec((2, 2), vec![1e-10, 1e-9, 1e-8, 0.5]).unwrap();
+        let weights = Array2::from_shape_vec((2, 2), vec![1e-10, 1e-9, 1e-8, 0.5]).expect("unwrap");
 
         let config = PruningConfig {
             pruning_ratio: 0.0,  // Don't prune by ratio
@@ -927,7 +929,7 @@ mod tests {
         };
 
         let pruner = MagnitudePruner::new(config);
-        let (pruned, _mask) = pruner.prune(&weights).unwrap();
+        let (pruned, _mask) = pruner.prune(&weights).expect("unwrap");
 
         // All weights below threshold should be pruned
         assert_abs_diff_eq!(pruned[[0, 0]], 0.0, epsilon = 1e-10);
@@ -938,15 +940,15 @@ mod tests {
 
     #[test]
     fn test_apply_mask() {
-        let weights = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let weights = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("unwrap");
 
         let mask = Array2::from_shape_vec((2, 2), vec![1.0, 0.0, 1.0, 0.0])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
 
         let config = PruningConfig::default();
         let pruner = MagnitudePruner::new(config);
-        let pruned = pruner.apply_mask(&weights, &mask).unwrap();
+        let pruned = pruner.apply_mask(&weights, &mask).expect("unwrap");
 
         assert_abs_diff_eq!(pruned[[0, 0]], 1.0, epsilon = 1e-10);
         assert_abs_diff_eq!(pruned[[0, 1]], 0.0, epsilon = 1e-10);
@@ -962,7 +964,7 @@ mod tests {
                 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.1, 0.1, 0.8, 0.1, 0.9, 0.9, 0.1, 0.9,
             ],
         )
-        .unwrap();
+        .expect("unwrap");
 
         let config = PruningConfig {
             pruning_ratio: 0.25,
@@ -971,7 +973,7 @@ mod tests {
         };
 
         let pruner = StructuredPruner::new(config, StructuredPruningAxis::Both);
-        let (_pruned, _mask) = pruner.prune(&weights).unwrap();
+        let (_pruned, _mask) = pruner.prune(&weights).expect("unwrap");
 
         // Should prune both rows and columns based on L2 norms
         // This is a complex test; we just verify it doesn't panic

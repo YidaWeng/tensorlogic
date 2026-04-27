@@ -221,7 +221,7 @@ mod tests {
         let result = compile_counting_exists("x", "Person", &body, 3, &mut ctx, &mut graph);
         assert!(result.is_ok());
 
-        let state = result.unwrap();
+        let state = result.expect("unwrap");
         // Should have no axes (quantified variable removed)
         assert!(state.axes.is_empty());
         // Should have multiple nodes
@@ -239,7 +239,7 @@ mod tests {
         let result = compile_exact_count("i", "Item", &body, 2, &mut ctx, &mut graph);
         assert!(result.is_ok());
 
-        let state = result.unwrap();
+        let state = result.expect("unwrap");
         assert!(state.axes.is_empty());
         assert!(graph.nodes.len() >= 5);
     }
@@ -255,7 +255,7 @@ mod tests {
         let result = compile_majority("v", "Voter", &body, &mut ctx, &mut graph);
         assert!(result.is_ok());
 
-        let state = result.unwrap();
+        let state = result.expect("unwrap");
         assert!(state.axes.is_empty());
         assert!(graph.nodes.len() >= 3);
     }
@@ -271,7 +271,7 @@ mod tests {
         let result = compile_counting_forall("s", "Student", &body, 15, &mut ctx, &mut graph);
         assert!(result.is_ok());
 
-        let state = result.unwrap();
+        let state = result.expect("unwrap");
         assert!(state.axes.is_empty());
     }
 }

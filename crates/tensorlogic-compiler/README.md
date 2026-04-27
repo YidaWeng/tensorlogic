@@ -4,9 +4,9 @@
 
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic--compiler-orange)](https://crates.io/crates/tensorlogic-compiler)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-compiler)
-[![Tests](https://img.shields.io/badge/tests-437%2F437_passing-brightgreen)](#)
-[![Production](https://img.shields.io/badge/status-production_ready-success)](#)
-[![Version](https://img.shields.io/badge/version-0.1.0--rc.1-blue)](#)
+[![Tests](https://img.shields.io/badge/tests-862%2F862_passing-brightgreen)](#)
+[![Production](https://img.shields.io/badge/status-stable-success)](#)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](#)
 [![Zero Warnings](https://img.shields.io/badge/warnings-0-success)](#)
 
 ## Overview
@@ -91,6 +91,39 @@ The compiler features a **7-pass optimization pipeline** that can reduce express
 - **Export to ONNX**: Full protobuf message generation
 - **Export to TensorFlow GraphDef**: TensorFlow op translation
 - **Export to PyTorch**: Human-readable Python nn.Module code generation
+
+### Compiler Pipeline (Production Ready, v0.1.17)
+- **CompilerPipeline**: Composable end-to-end pass chain from parsing through code generation
+- **CompilerPassOrder**: Dependency-aware canonical ordering of compilation passes
+- **CompilerPipelineConfig**: Feature-gate toggles for scope analysis, DCE, CSE, inlining, rewriting
+- **CompilerPassStats / CompilerPipelineStats**: Per-pass timing and aggregate metrics
+- **PassBenchmark**: Micro-benchmark harness for individual passes
+
+### Symbolic Differentiation (Production Ready, v0.1.18)
+- **differentiate()**: Symbolic derivatives of `TLExpr` w.r.t. a named variable
+- **jacobian()**: Full Jacobian vector for a list of output expressions
+- **simplify_derivative()**: Algebraic simplification of computed derivatives
+- **DiffConfig / DiffResult**: Depth-controlled simplification with intermediate caching
+- Supports arithmetic, logical, fuzzy, temporal, and probabilistic operators
+
+### Partial Evaluation (Production Ready, v0.1.19)
+- **partially_evaluate()**: Single-pass reducer with `PEEnv` binding map
+- **specialize()**: Convenience wrapper for binding a single named argument
+- **specialize_batch()**: Multi-argument specialization in one call
+- **PEConfig**: Toggles for arithmetic folding, boolean folding, branch pruning, let-inlining
+- **PEStats**: Nodes visited, reduced, and inlined counters
+
+### Type Inference (Production Ready, v0.1.20)
+- **TLType**: Enum covering Bool, Numeric, Relation(arity), Set, Fuzzy, Probabilistic, Var, Unknown
+- **annotate()**: Fully type-annotated expression trees from bare `TLExpr` inputs
+- **unify()**: Hindley-Milner-lite unification engine with occurs-check
+- **Substitution / TypeEnv**: Variable-to-type binding maps with `UnificationError` reporting
+
+### Bytecode VM (Production Ready, v0.1.21)
+- **Stack-based VM**: 40-instruction set (arithmetic, comparison, boolean, fuzzy, control flow)
+- **compile()**: Compile `TLExpr` to `BytecodeProgram` with forward-jump patching
+- **execute() / execute_with_stats()**: Run programs with optional execution statistics
+- **Short-circuit evaluation**: `JumpIfFalse` / `JumpIfTrue` for `And` / `Or`
 
 ### Performance Features (Production Ready)
 - **Parallel Compilation**: Multi-threaded with configurable parallelization strategy
@@ -669,14 +702,14 @@ cargo test -p tensorlogic-compiler
 cargo llvm-cov --package tensorlogic-compiler
 ```
 
-**Current Test Status (v0.1.0-rc.1):**
-- **437 tests** (100% passing)
+**Current Test Status (v0.1.0):**
+- **862 tests** (100% passing)
 - **Zero warnings** (strict clippy compliance)
-- Production-ready quality
+- Stable quality
 
 ## Current Status & Roadmap
 
-### Production Ready (v0.1.0-rc.1)
+### Stable (v0.1.0)
 - Core logic compilation (AND, OR, NOT, quantifiers, implications)
 - Arithmetic and comparison operations
 - Conditional expressions (if-then-else)
@@ -701,6 +734,11 @@ cargo llvm-cov --package tensorlogic-compiler
 - Property-based testing (21 property tests)
 - Fuzzing infrastructure (4 fuzz targets)
 - Benchmark suite
+- **CompilerPipeline** (v0.1.17): end-to-end composable pass chain with `CompilerPassOrder`
+- **Symbolic differentiation** (v0.1.18): `differentiate()`, `jacobian()`, full arithmetic/logic/fuzzy support
+- **Partial evaluation** (v0.1.19): `partially_evaluate()`, `specialize()`, branch pruning
+- **Type inference** (v0.1.20): `TLType`, `annotate()`, Hindley-Milner-lite unification
+- **Bytecode VM** (v0.1.21): 40-instruction stack VM, `compile()`, `execute()`
 
 ### Known Limitations
 - `Next` (X) temporal operator requires backend shift operations
@@ -752,7 +790,7 @@ Apache-2.0
 
 ---
 
-**Status**: Production Ready (v0.1.0-rc.1)
-**Last Updated**: 2026-03-06
-**Tests**: 437/437 passing (100%)
+**Status**: Stable (v0.1.0)
+**Last Updated**: 2026-04-06
+**Tests**: 862/862 passing (100%)
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

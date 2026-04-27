@@ -511,7 +511,7 @@ mod tests {
     #[test]
     fn test_optimize_layouts_empty_graph() {
         let graph = EinsumGraph::new();
-        let result = optimize_layouts(&graph).unwrap();
+        let result = optimize_layouts(&graph).expect("unwrap");
         assert!(result.layouts.is_empty());
     }
 
@@ -524,9 +524,9 @@ mod tests {
 
         graph
             .add_node(crate::EinsumNode::einsum("ik,kj->ij", vec![a, b], vec![c]))
-            .unwrap();
+            .expect("unwrap");
 
-        let result = optimize_layouts(&graph).unwrap();
+        let result = optimize_layouts(&graph).expect("unwrap");
         assert_eq!(result.layouts.len(), 3);
         assert!(result.estimated_speedup >= 1.0);
     }
@@ -542,7 +542,7 @@ mod tests {
             TensorLayout::new(a, LayoutStrategy::Blocked { block_size: 32 }, &[64, 64]),
         );
 
-        apply_layouts(&mut graph, &layouts).unwrap();
+        apply_layouts(&mut graph, &layouts).expect("unwrap");
 
         // Check that metadata was added
         let metadata = graph.get_tensor_metadata(a);
@@ -609,7 +609,7 @@ mod tests {
         let metadata = crate::Metadata::new().with_attribute("preferred_layout", "blocked");
         graph.add_tensor_metadata(a, metadata);
 
-        let result = optimize_layouts(&graph).unwrap();
+        let result = optimize_layouts(&graph).expect("unwrap");
         assert!(result.get_layout(a).is_some());
         assert!(result.get_layout(b).is_some());
     }

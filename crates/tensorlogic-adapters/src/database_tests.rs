@@ -5,11 +5,13 @@ use crate::{DomainInfo, PredicateInfo};
 fn test_memory_database_store_load() {
     let mut db = MemoryDatabase::new();
     let mut table = SymbolTable::new();
-    table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
 
-    let id = db.store_schema("test_schema", &table).unwrap();
+    let id = db.store_schema("test_schema", &table).expect("unwrap");
 
-    let loaded = db.load_schema(id).unwrap();
+    let loaded = db.load_schema(id).expect("unwrap");
     assert_eq!(loaded.domains.len(), 1);
     assert!(loaded.domains.contains_key("Person"));
 }
@@ -18,11 +20,13 @@ fn test_memory_database_store_load() {
 fn test_memory_database_load_by_name() {
     let mut db = MemoryDatabase::new();
     let mut table = SymbolTable::new();
-    table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
 
-    db.store_schema("test_schema", &table).unwrap();
+    db.store_schema("test_schema", &table).expect("unwrap");
 
-    let loaded = db.load_schema_by_name("test_schema").unwrap();
+    let loaded = db.load_schema_by_name("test_schema").expect("unwrap");
     assert_eq!(loaded.domains.len(), 1);
 }
 
@@ -31,25 +35,31 @@ fn test_memory_database_versioning() {
     let mut db = MemoryDatabase::new();
 
     let mut table_v1 = SymbolTable::new();
-    table_v1.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    table_v1
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
 
-    let id1 = db.store_schema("test_schema", &table_v1).unwrap();
+    let id1 = db.store_schema("test_schema", &table_v1).expect("unwrap");
 
     let mut table_v2 = SymbolTable::new();
-    table_v2.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    table_v2.add_domain(DomainInfo::new("Course", 50)).unwrap();
+    table_v2
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
+    table_v2
+        .add_domain(DomainInfo::new("Course", 50))
+        .expect("unwrap");
 
-    let id2 = db.store_schema("test_schema", &table_v2).unwrap();
+    let id2 = db.store_schema("test_schema", &table_v2).expect("unwrap");
 
     // Should have different IDs
     assert_ne!(id1, id2);
 
     // Load by name should return latest version
-    let latest = db.load_schema_by_name("test_schema").unwrap();
+    let latest = db.load_schema_by_name("test_schema").expect("unwrap");
     assert_eq!(latest.domains.len(), 2);
 
     // Should be able to load old version by ID
-    let old = db.load_schema(id1).unwrap();
+    let old = db.load_schema(id1).expect("unwrap");
     assert_eq!(old.domains.len(), 1);
 }
 
@@ -58,14 +68,18 @@ fn test_memory_database_list_schemas() {
     let mut db = MemoryDatabase::new();
 
     let mut table1 = SymbolTable::new();
-    table1.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    db.store_schema("schema1", &table1).unwrap();
+    table1
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
+    db.store_schema("schema1", &table1).expect("unwrap");
 
     let mut table2 = SymbolTable::new();
-    table2.add_domain(DomainInfo::new("Course", 50)).unwrap();
-    db.store_schema("schema2", &table2).unwrap();
+    table2
+        .add_domain(DomainInfo::new("Course", 50))
+        .expect("unwrap");
+    db.store_schema("schema2", &table2).expect("unwrap");
 
-    let schemas = db.list_schemas().unwrap();
+    let schemas = db.list_schemas().expect("unwrap");
     assert_eq!(schemas.len(), 2);
 
     // Should be sorted by name
@@ -77,11 +91,13 @@ fn test_memory_database_list_schemas() {
 fn test_memory_database_delete() {
     let mut db = MemoryDatabase::new();
     let mut table = SymbolTable::new();
-    table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
 
-    let id = db.store_schema("test_schema", &table).unwrap();
+    let id = db.store_schema("test_schema", &table).expect("unwrap");
 
-    db.delete_schema(id).unwrap();
+    db.delete_schema(id).expect("unwrap");
 
     // Should not be able to load deleted schema
     assert!(db.load_schema(id).is_err());
@@ -92,25 +108,31 @@ fn test_memory_database_search() {
     let mut db = MemoryDatabase::new();
 
     let mut table1 = SymbolTable::new();
-    table1.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    db.store_schema("user_schema", &table1).unwrap();
+    table1
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
+    db.store_schema("user_schema", &table1).expect("unwrap");
 
     let mut table2 = SymbolTable::new();
-    table2.add_domain(DomainInfo::new("Course", 50)).unwrap();
-    db.store_schema("course_schema", &table2).unwrap();
+    table2
+        .add_domain(DomainInfo::new("Course", 50))
+        .expect("unwrap");
+    db.store_schema("course_schema", &table2).expect("unwrap");
 
     let mut table3 = SymbolTable::new();
-    table3.add_domain(DomainInfo::new("Book", 200)).unwrap();
-    db.store_schema("library_schema", &table3).unwrap();
+    table3
+        .add_domain(DomainInfo::new("Book", 200))
+        .expect("unwrap");
+    db.store_schema("library_schema", &table3).expect("unwrap");
 
-    let results = db.search_schemas("schema").unwrap();
+    let results = db.search_schemas("schema").expect("unwrap");
     assert_eq!(results.len(), 3); // All contain "schema"
 
-    let results = db.search_schemas("user").unwrap();
+    let results = db.search_schemas("user").expect("unwrap");
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].name, "user_schema");
 
-    let results = db.search_schemas("lib").unwrap();
+    let results = db.search_schemas("lib").expect("unwrap");
     assert_eq!(results.len(), 1);
     assert_eq!(results[0].name, "library_schema");
 }
@@ -120,21 +142,33 @@ fn test_memory_database_history() {
     let mut db = MemoryDatabase::new();
 
     let mut table_v1 = SymbolTable::new();
-    table_v1.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    db.store_schema("test_schema", &table_v1).unwrap();
+    table_v1
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
+    db.store_schema("test_schema", &table_v1).expect("unwrap");
 
     let mut table_v2 = SymbolTable::new();
-    table_v2.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    table_v2.add_domain(DomainInfo::new("Course", 50)).unwrap();
-    db.store_schema("test_schema", &table_v2).unwrap();
+    table_v2
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
+    table_v2
+        .add_domain(DomainInfo::new("Course", 50))
+        .expect("unwrap");
+    db.store_schema("test_schema", &table_v2).expect("unwrap");
 
     let mut table_v3 = SymbolTable::new();
-    table_v3.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    table_v3.add_domain(DomainInfo::new("Course", 50)).unwrap();
-    table_v3.add_domain(DomainInfo::new("Grade", 5)).unwrap();
-    db.store_schema("test_schema", &table_v3).unwrap();
+    table_v3
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
+    table_v3
+        .add_domain(DomainInfo::new("Course", 50))
+        .expect("unwrap");
+    table_v3
+        .add_domain(DomainInfo::new("Grade", 5))
+        .expect("unwrap");
+    db.store_schema("test_schema", &table_v3).expect("unwrap");
 
-    let history = db.get_schema_history("test_schema").unwrap();
+    let history = db.get_schema_history("test_schema").expect("unwrap");
     assert_eq!(history.len(), 3);
 
     // Should be sorted by version
@@ -175,7 +209,7 @@ fn test_schema_metadata_creation() {
 #[test]
 fn test_empty_database() {
     let db = MemoryDatabase::new();
-    let schemas = db.list_schemas().unwrap();
+    let schemas = db.list_schemas().expect("unwrap");
     assert!(schemas.is_empty());
 }
 
@@ -196,10 +230,12 @@ fn test_delete_nonexistent_schema() {
 fn test_search_empty_pattern() {
     let mut db = MemoryDatabase::new();
     let mut table = SymbolTable::new();
-    table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    db.store_schema("test", &table).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
+    db.store_schema("test", &table).expect("unwrap");
 
-    let results = db.search_schemas("").unwrap();
+    let results = db.search_schemas("").expect("unwrap");
     assert_eq!(results.len(), 1); // Empty pattern matches all
 }
 
@@ -219,29 +255,37 @@ fn test_database_stats_from_database() {
 
     // Add first schema
     let mut table1 = SymbolTable::new();
-    table1.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    table1.add_domain(DomainInfo::new("Course", 50)).unwrap();
+    table1
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
+    table1
+        .add_domain(DomainInfo::new("Course", 50))
+        .expect("unwrap");
     table1
         .add_predicate(PredicateInfo::new(
             "enrolled",
             vec!["Person".to_string(), "Course".to_string()],
         ))
-        .unwrap();
-    db.store_schema("schema1", &table1).unwrap();
+        .expect("unwrap");
+    db.store_schema("schema1", &table1).expect("unwrap");
 
     // Add second schema
     let mut table2 = SymbolTable::new();
-    table2.add_domain(DomainInfo::new("Person", 100)).unwrap(); // Add Person domain
-    table2.add_domain(DomainInfo::new("Book", 200)).unwrap();
+    table2
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap"); // Add Person domain
+    table2
+        .add_domain(DomainInfo::new("Book", 200))
+        .expect("unwrap");
     table2
         .add_predicate(PredicateInfo::new("borrowed", vec!["Person".to_string()]))
-        .unwrap();
+        .expect("unwrap");
     table2
         .add_predicate(PredicateInfo::new("returned", vec!["Person".to_string()]))
-        .unwrap();
-    db.store_schema("schema2", &table2).unwrap();
+        .expect("unwrap");
+    db.store_schema("schema2", &table2).expect("unwrap");
 
-    let stats = DatabaseStats::from_database(&db).unwrap();
+    let stats = DatabaseStats::from_database(&db).expect("unwrap");
     assert_eq!(stats.total_schemas, 2);
     assert_eq!(stats.total_domains, 4); // 2 + 2
     assert_eq!(stats.total_predicates, 3); // 1 + 2
@@ -266,69 +310,83 @@ mod sqlite_tests {
 
     #[test]
     fn test_sqlite_store_load() {
-        let mut db = SQLiteDatabase::new(":memory:").unwrap();
+        let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
-        let id = db.store_schema("test_schema", &table).unwrap();
+        let id = db.store_schema("test_schema", &table).expect("unwrap");
 
-        let loaded = db.load_schema(id).unwrap();
+        let loaded = db.load_schema(id).expect("unwrap");
         assert_eq!(loaded.domains.len(), 1);
         assert!(loaded.domains.contains_key("Person"));
     }
 
     #[test]
     fn test_sqlite_load_by_name() {
-        let mut db = SQLiteDatabase::new(":memory:").unwrap();
+        let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
-        db.store_schema("test_schema", &table).unwrap();
+        db.store_schema("test_schema", &table).expect("unwrap");
 
-        let loaded = db.load_schema_by_name("test_schema").unwrap();
+        let loaded = db.load_schema_by_name("test_schema").expect("unwrap");
         assert_eq!(loaded.domains.len(), 1);
     }
 
     #[test]
     fn test_sqlite_versioning() {
-        let mut db = SQLiteDatabase::new(":memory:").unwrap();
+        let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
 
         let mut table_v1 = SymbolTable::new();
-        table_v1.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table_v1
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
-        let id1 = db.store_schema("test_schema", &table_v1).unwrap();
+        let id1 = db.store_schema("test_schema", &table_v1).expect("unwrap");
 
         let mut table_v2 = SymbolTable::new();
-        table_v2.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table_v2.add_domain(DomainInfo::new("Course", 50)).unwrap();
+        table_v2
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table_v2
+            .add_domain(DomainInfo::new("Course", 50))
+            .expect("unwrap");
 
-        let id2 = db.store_schema("test_schema", &table_v2).unwrap();
+        let id2 = db.store_schema("test_schema", &table_v2).expect("unwrap");
 
         // Should have different IDs
         assert_ne!(id1, id2);
 
         // Load by name should return latest version
-        let latest = db.load_schema_by_name("test_schema").unwrap();
+        let latest = db.load_schema_by_name("test_schema").expect("unwrap");
         assert_eq!(latest.domains.len(), 2);
 
         // Should be able to load old version by ID
-        let old = db.load_schema(id1).unwrap();
+        let old = db.load_schema(id1).expect("unwrap");
         assert_eq!(old.domains.len(), 1);
     }
 
     #[test]
     fn test_sqlite_list_schemas() {
-        let mut db = SQLiteDatabase::new(":memory:").unwrap();
+        let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
 
         let mut table1 = SymbolTable::new();
-        table1.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        db.store_schema("schema1", &table1).unwrap();
+        table1
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        db.store_schema("schema1", &table1).expect("unwrap");
 
         let mut table2 = SymbolTable::new();
-        table2.add_domain(DomainInfo::new("Course", 50)).unwrap();
-        db.store_schema("schema2", &table2).unwrap();
+        table2
+            .add_domain(DomainInfo::new("Course", 50))
+            .expect("unwrap");
+        db.store_schema("schema2", &table2).expect("unwrap");
 
-        let schemas = db.list_schemas().unwrap();
+        let schemas = db.list_schemas().expect("unwrap");
         assert_eq!(schemas.len(), 2);
 
         // Should be sorted by name
@@ -338,13 +396,15 @@ mod sqlite_tests {
 
     #[test]
     fn test_sqlite_delete() {
-        let mut db = SQLiteDatabase::new(":memory:").unwrap();
+        let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
-        let id = db.store_schema("test_schema", &table).unwrap();
+        let id = db.store_schema("test_schema", &table).expect("unwrap");
 
-        db.delete_schema(id).unwrap();
+        db.delete_schema(id).expect("unwrap");
 
         // Should not be able to load deleted schema
         assert!(db.load_schema(id).is_err());
@@ -352,52 +412,70 @@ mod sqlite_tests {
 
     #[test]
     fn test_sqlite_search() {
-        let mut db = SQLiteDatabase::new(":memory:").unwrap();
+        let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
 
         let mut table1 = SymbolTable::new();
-        table1.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        db.store_schema("user_schema", &table1).unwrap();
+        table1
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        db.store_schema("user_schema", &table1).expect("unwrap");
 
         let mut table2 = SymbolTable::new();
-        table2.add_domain(DomainInfo::new("Course", 50)).unwrap();
-        db.store_schema("course_schema", &table2).unwrap();
+        table2
+            .add_domain(DomainInfo::new("Course", 50))
+            .expect("unwrap");
+        db.store_schema("course_schema", &table2).expect("unwrap");
 
         let mut table3 = SymbolTable::new();
-        table3.add_domain(DomainInfo::new("Book", 200)).unwrap();
-        db.store_schema("library_schema", &table3).unwrap();
+        table3
+            .add_domain(DomainInfo::new("Book", 200))
+            .expect("unwrap");
+        db.store_schema("library_schema", &table3).expect("unwrap");
 
-        let results = db.search_schemas("schema").unwrap();
+        let results = db.search_schemas("schema").expect("unwrap");
         assert_eq!(results.len(), 3); // All contain "schema"
 
-        let results = db.search_schemas("user").unwrap();
+        let results = db.search_schemas("user").expect("unwrap");
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].name, "user_schema");
 
-        let results = db.search_schemas("lib").unwrap();
+        let results = db.search_schemas("lib").expect("unwrap");
         assert_eq!(results.len(), 1);
         assert_eq!(results[0].name, "library_schema");
     }
 
     #[test]
     fn test_sqlite_history() {
-        let mut db = SQLiteDatabase::new(":memory:").unwrap();
+        let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
 
         let mut table_v1 = SymbolTable::new();
-        table_v1.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        db.store_schema("test_schema", &table_v1).unwrap();
+        table_v1
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        db.store_schema("test_schema", &table_v1).expect("unwrap");
 
         let mut table_v2 = SymbolTable::new();
-        table_v2.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table_v2.add_domain(DomainInfo::new("Course", 50)).unwrap();
-        db.store_schema("test_schema", &table_v2).unwrap();
+        table_v2
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table_v2
+            .add_domain(DomainInfo::new("Course", 50))
+            .expect("unwrap");
+        db.store_schema("test_schema", &table_v2).expect("unwrap");
 
         let mut table_v3 = SymbolTable::new();
-        table_v3.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table_v3.add_domain(DomainInfo::new("Course", 50)).unwrap();
-        table_v3.add_domain(DomainInfo::new("Grade", 5)).unwrap();
-        db.store_schema("test_schema", &table_v3).unwrap();
+        table_v3
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table_v3
+            .add_domain(DomainInfo::new("Course", 50))
+            .expect("unwrap");
+        table_v3
+            .add_domain(DomainInfo::new("Grade", 5))
+            .expect("unwrap");
+        db.store_schema("test_schema", &table_v3).expect("unwrap");
 
-        let history = db.get_schema_history("test_schema").unwrap();
+        let history = db.get_schema_history("test_schema").expect("unwrap");
         assert_eq!(history.len(), 3);
 
         // Should be sorted by version
@@ -408,19 +486,21 @@ mod sqlite_tests {
 
     #[test]
     fn test_sqlite_with_predicates() {
-        let mut db = SQLiteDatabase::new(":memory:").unwrap();
+        let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new(
                 "knows",
                 vec!["Person".to_string(), "Person".to_string()],
             ))
-            .unwrap();
+            .expect("unwrap");
 
-        let id = db.store_schema("test_schema", &table).unwrap();
+        let id = db.store_schema("test_schema", &table).expect("unwrap");
 
-        let loaded = db.load_schema(id).unwrap();
+        let loaded = db.load_schema(id).expect("unwrap");
         assert_eq!(loaded.domains.len(), 1);
         assert_eq!(loaded.predicates.len(), 1);
         assert!(loaded.predicates.contains_key("knows"));
@@ -428,48 +508,56 @@ mod sqlite_tests {
 
     #[test]
     fn test_sqlite_with_variables() {
-        let mut db = SQLiteDatabase::new(":memory:").unwrap();
+        let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.bind_variable("x", "Person").unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table.bind_variable("x", "Person").expect("unwrap");
 
-        let id = db.store_schema("test_schema", &table).unwrap();
+        let id = db.store_schema("test_schema", &table).expect("unwrap");
 
-        let loaded = db.load_schema(id).unwrap();
+        let loaded = db.load_schema(id).expect("unwrap");
         assert_eq!(loaded.domains.len(), 1);
         assert_eq!(loaded.variables.len(), 1);
-        assert_eq!(loaded.variables.get("x").unwrap(), "Person");
+        assert_eq!(loaded.variables.get("x").expect("unwrap"), "Person");
     }
 
     #[test]
     fn test_sqlite_empty_database() {
-        let db = SQLiteDatabase::new(":memory:").unwrap();
-        let schemas = db.list_schemas().unwrap();
+        let db = SQLiteDatabase::new(":memory:").expect("unwrap");
+        let schemas = db.list_schemas().expect("unwrap");
         assert!(schemas.is_empty());
     }
 
     #[test]
     fn test_sqlite_load_nonexistent() {
-        let db = SQLiteDatabase::new(":memory:").unwrap();
+        let db = SQLiteDatabase::new(":memory:").expect("unwrap");
         assert!(db.load_schema(SchemaId(999)).is_err());
         assert!(db.load_schema_by_name("nonexistent").is_err());
     }
 
     #[test]
     fn test_sqlite_delete_nonexistent() {
-        let mut db = SQLiteDatabase::new(":memory:").unwrap();
+        let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
         assert!(db.delete_schema(SchemaId(999)).is_err());
     }
 
     #[test]
     fn test_sqlite_complex_schema() {
-        let mut db = SQLiteDatabase::new(":memory:").unwrap();
+        let mut db = SQLiteDatabase::new(":memory:").expect("unwrap");
         let mut table = SymbolTable::new();
 
         // Add domains
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.add_domain(DomainInfo::new("Course", 50)).unwrap();
-        table.add_domain(DomainInfo::new("Grade", 5)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Course", 50))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Grade", 5))
+            .expect("unwrap");
 
         // Add predicates
         table
@@ -477,7 +565,7 @@ mod sqlite_tests {
                 "enrolled",
                 vec!["Person".to_string(), "Course".to_string()],
             ))
-            .unwrap();
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new(
                 "grade",
@@ -487,15 +575,15 @@ mod sqlite_tests {
                     "Grade".to_string(),
                 ],
             ))
-            .unwrap();
+            .expect("unwrap");
 
         // Add variables
-        table.bind_variable("student", "Person").unwrap();
-        table.bind_variable("class", "Course").unwrap();
+        table.bind_variable("student", "Person").expect("unwrap");
+        table.bind_variable("class", "Course").expect("unwrap");
 
-        let id = db.store_schema("university", &table).unwrap();
+        let id = db.store_schema("university", &table).expect("unwrap");
 
-        let loaded = db.load_schema(id).unwrap();
+        let loaded = db.load_schema(id).expect("unwrap");
         assert_eq!(loaded.domains.len(), 3);
         assert_eq!(loaded.predicates.len(), 2);
         assert_eq!(loaded.variables.len(), 2);

@@ -739,7 +739,7 @@ mod tests {
 
         let contracted = seq.contract_left(0);
         assert!(contracted.is_some());
-        assert_eq!(contracted.unwrap().antecedents.len(), 1);
+        assert_eq!(contracted.expect("unwrap").antecedents.len(), 1);
     }
 
     #[test]
@@ -863,7 +863,7 @@ mod tests {
 
         let proof = engine.search(&sequent);
         assert!(proof.is_some());
-        assert!(proof.unwrap().is_valid());
+        assert!(proof.expect("unwrap").is_valid());
         assert!(engine.stats.proofs_generated > 0);
     }
 
@@ -881,7 +881,7 @@ mod tests {
 
         let proof = engine.search(&sequent);
         assert!(proof.is_some());
-        let proof = proof.unwrap();
+        let proof = proof.expect("unwrap");
         assert!(proof.is_valid());
         assert!(engine.stats.proofs_generated > 0);
     }
@@ -899,7 +899,7 @@ mod tests {
 
         let proof = engine.search(&sequent);
         assert!(proof.is_some());
-        assert!(proof.unwrap().is_valid());
+        assert!(proof.expect("unwrap").is_valid());
     }
 
     #[test]
@@ -927,6 +927,6 @@ mod tests {
 
         let proof = engine.search(&sequent);
         assert!(proof.is_some());
-        assert!(proof.unwrap().is_valid());
+        assert!(proof.expect("unwrap").is_valid());
     }
 }

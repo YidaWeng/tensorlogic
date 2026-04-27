@@ -114,8 +114,8 @@ fn demo_sqlite_database() {
     let db_path = temp_dir().join("tensorlogic_example.db");
     println!("Database path: {:?}", db_path);
 
-    let mut db =
-        SQLiteDatabase::new(db_path.to_str().unwrap()).expect("Failed to create SQLite database");
+    let mut db = SQLiteDatabase::new(db_path.to_str().expect("unwrap"))
+        .expect("Failed to create SQLite database");
 
     // Create and store a schema
     let table = create_sample_schema();

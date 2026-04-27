@@ -334,12 +334,12 @@ mod tests {
         let b = graph.add_tensor("B");
         let c = graph.add_tensor("C");
 
-        graph.add_input(a).unwrap();
-        graph.add_input(b).unwrap();
+        graph.add_input(a).expect("unwrap");
+        graph.add_input(b).expect("unwrap");
         graph
             .add_node(EinsumNode::einsum("i,j->ij", vec![a, b], vec![c]))
-            .unwrap();
-        graph.add_output(c).unwrap();
+            .expect("unwrap");
+        graph.add_output(c).expect("unwrap");
 
         graph
     }
@@ -351,17 +351,17 @@ mod tests {
         let t2 = graph.add_tensor("t2");
         let t3 = graph.add_tensor("t3");
 
-        graph.add_input(t0).unwrap();
+        graph.add_input(t0).expect("unwrap");
         graph
             .add_node(EinsumNode::einsum("i->i", vec![t0], vec![t1]))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::einsum("i->i", vec![t1], vec![t2]))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::einsum("i->i", vec![t2], vec![t3]))
-            .unwrap();
-        graph.add_output(t3).unwrap();
+            .expect("unwrap");
+        graph.add_output(t3).expect("unwrap");
 
         graph
     }
@@ -419,21 +419,21 @@ mod tests {
         let b = graph.add_tensor("B");
         let c = graph.add_tensor("C");
 
-        graph.add_input(a).unwrap();
+        graph.add_input(a).expect("unwrap");
         // Use 'a' twice
         graph
             .add_node(EinsumNode::einsum("i->i", vec![a], vec![b]))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::einsum("i->i", vec![a], vec![c]))
-            .unwrap();
-        graph.add_output(b).unwrap();
-        graph.add_output(c).unwrap();
+            .expect("unwrap");
+        graph.add_output(b).expect("unwrap");
+        graph.add_output(c).expect("unwrap");
 
         let analysis = DataFlowAnalysis::analyze(&graph);
 
         assert!(analysis.reused_tensors.contains(&a)); // 'a' is reused
-        assert_eq!(*analysis.fan_out.get(&a).unwrap(), 2); // 'a' has fan-out of 2
+        assert_eq!(*analysis.fan_out.get(&a).expect("unwrap"), 2); // 'a' has fan-out of 2
     }
 
     #[test]

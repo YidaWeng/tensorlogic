@@ -341,7 +341,7 @@ mod tests {
 
     #[test]
     fn test_strided_mask_creation() {
-        let mask = StridedMask::new(4, 2).unwrap();
+        let mask = StridedMask::new(4, 2).expect("unwrap");
         assert_eq!(mask.batch_size, 4);
         assert_eq!(mask.stride, 2);
         assert_eq!(mask.mask_type(), "strided");
@@ -355,7 +355,7 @@ mod tests {
 
     #[test]
     fn test_strided_mask_build() {
-        let mask = StridedMask::new(4, 3).unwrap();
+        let mask = StridedMask::new(4, 3).expect("unwrap");
         let mut graph = EinsumGraph::new();
         let result = mask.build_mask(&mut graph, 15);
         assert!(result.is_ok());
@@ -363,7 +363,7 @@ mod tests {
 
     #[test]
     fn test_block_sparse_mask_creation() {
-        let mask = BlockSparseMask::new(4, 8).unwrap();
+        let mask = BlockSparseMask::new(4, 8).expect("unwrap");
         assert_eq!(mask.batch_size, 4);
         assert_eq!(mask.block_size, 8);
         assert_eq!(mask.mask_type(), "block_sparse");
@@ -377,7 +377,7 @@ mod tests {
 
     #[test]
     fn test_block_sparse_mask_build() {
-        let mask = BlockSparseMask::new(4, 16).unwrap();
+        let mask = BlockSparseMask::new(4, 16).expect("unwrap");
         let mut graph = EinsumGraph::new();
         let result = mask.build_mask(&mut graph, 64);
         assert!(result.is_ok());

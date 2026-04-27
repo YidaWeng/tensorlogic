@@ -6,6 +6,8 @@
 //! - Parallelization analysis
 //! - Optimization recommendations
 
+use std::cmp::Reverse;
+
 use anyhow::Result;
 use tensorlogic_ir::{analyze_memory, analyze_parallelization, EinsumGraph, OpType};
 
@@ -117,7 +119,7 @@ impl Default for AnalysisReport {
 /// use tensorlogic_ir::EinsumGraph;
 ///
 /// let graph = EinsumGraph::new();
-/// let report = analyze_graph(&graph).unwrap();
+/// let report = analyze_graph(&graph).expect("unwrap");
 ///
 /// println!("Peak memory: {} bytes", report.peak_memory_bytes);
 ///
@@ -216,9 +218,7 @@ fn generate_recommendations(graph: &EinsumGraph, report: &mut AnalysisReport) {
     }
 
     // Sort recommendations by priority (descending)
-    report
-        .recommendations
-        .sort_by(|a, b| b.priority.cmp(&a.priority));
+    report.recommendations.sort_by_key(|r| Reverse(r.priority));
 }
 
 /// Check if the graph has fusible operations
@@ -253,7 +253,7 @@ fn has_fusible_operations(graph: &EinsumGraph) -> bool {
 /// use tensorlogic_ir::EinsumGraph;
 ///
 /// let graph = EinsumGraph::new();
-/// let (peak_memory, parallel_groups) = quick_analyze(&graph).unwrap();
+/// let (peak_memory, parallel_groups) = quick_analyze(&graph).expect("unwrap");
 /// println!("Memory: {} bytes, Parallelism: {}", peak_memory, parallel_groups);
 /// ```
 pub fn quick_analyze(graph: &EinsumGraph) -> Result<(usize, usize)> {
@@ -276,7 +276,7 @@ pub fn quick_analyze(graph: &EinsumGraph) -> Result<(usize, usize)> {
 /// use tensorlogic_ir::EinsumGraph;
 ///
 /// let graph = EinsumGraph::new();
-/// let report = analyze_graph(&graph).unwrap();
+/// let report = analyze_graph(&graph).expect("unwrap");
 /// print_report(&report);
 /// ```
 pub fn print_report(report: &AnalysisReport) {
@@ -403,7 +403,7 @@ mod tests {
         let result = analyze_graph(&graph);
         assert!(result.is_ok());
 
-        let report = result.unwrap();
+        let report = result.expect("unwrap");
         assert_eq!(report.peak_memory_bytes, 0);
     }
 
@@ -413,7 +413,7 @@ mod tests {
         let result = quick_analyze(&graph);
         assert!(result.is_ok());
 
-        let (memory, parallel_groups) = result.unwrap();
+        let (memory, parallel_groups) = result.expect("unwrap");
         assert_eq!(memory, 0);
         assert_eq!(parallel_groups, 0);
     }

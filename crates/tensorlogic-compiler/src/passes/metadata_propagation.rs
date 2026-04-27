@@ -339,7 +339,7 @@ mod tests {
     fn test_propagate_metadata_with_domains() {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("Person", 100);
-        ctx.bind_var("x", "Person").unwrap();
+        ctx.bind_var("x", "Person").expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         let tensor_idx = graph.add_tensor("Person_x");
@@ -374,6 +374,9 @@ mod tests {
 
         let meta = node.get_metadata();
         assert!(meta.is_some());
-        assert_eq!(meta.unwrap().get_attribute("predicate_name"), Some("knows"));
+        assert_eq!(
+            meta.expect("unwrap").get_attribute("predicate_name"),
+            Some("knows")
+        );
     }
 }

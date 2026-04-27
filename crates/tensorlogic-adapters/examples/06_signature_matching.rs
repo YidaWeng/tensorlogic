@@ -13,10 +13,18 @@ fn main() {
 
     // Add domains
     println!("Adding domains...");
-    table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    table.add_domain(DomainInfo::new("Location", 50)).unwrap();
-    table.add_domain(DomainInfo::new("Object", 200)).unwrap();
-    table.add_domain(DomainInfo::new("Time", 1000)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Location", 50))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Object", 200))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Time", 1000))
+        .expect("unwrap");
 
     // Add predicates with different arities
     println!("Adding predicates...\n");
@@ -24,11 +32,11 @@ fn main() {
     // Unary predicates (arity 1)
     table
         .add_predicate(PredicateInfo::new("person", vec!["Person".to_string()]))
-        .unwrap();
+        .expect("unwrap");
 
     table
         .add_predicate(PredicateInfo::new("location", vec!["Location".to_string()]))
-        .unwrap();
+        .expect("unwrap");
 
     // Binary predicates (arity 2)
     table
@@ -36,21 +44,21 @@ fn main() {
             "knows",
             vec!["Person".to_string(), "Person".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     table
         .add_predicate(PredicateInfo::new(
             "at",
             vec!["Person".to_string(), "Location".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     table
         .add_predicate(PredicateInfo::new(
             "has",
             vec!["Person".to_string(), "Object".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     // Ternary predicates (arity 3)
     table
@@ -62,7 +70,7 @@ fn main() {
                 "Person".to_string(),
             ],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     table
         .add_predicate(PredicateInfo::new(
@@ -73,7 +81,7 @@ fn main() {
                 "Location".to_string(),
             ],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     // Quaternary predicates (arity 4)
     table
@@ -86,7 +94,7 @@ fn main() {
                 "Time".to_string(),
             ],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     // Build the signature matcher
     println!("Building SignatureMatcher...");

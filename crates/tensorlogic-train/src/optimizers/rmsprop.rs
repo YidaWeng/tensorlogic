@@ -68,7 +68,10 @@ impl Optimizer for RMSpropOptimizer {
             if !self.v.contains_key(name) {
                 self.v.insert(name.clone(), Array::zeros(param.raw_dim()));
             }
-            let v = self.v.get_mut(name).unwrap();
+            let v = self
+                .v
+                .get_mut(name)
+                .expect("v initialized for all parameters");
             let grad_squared = grad.mapv(|g| g * g);
             *v = &*v * alpha + &(grad_squared * (1.0 - alpha));
             let update = grad / &v.mapv(|v_val| v_val.sqrt() + eps);
@@ -125,8 +128,8 @@ mod tests {
         params.insert("w".to_string(), array![[1.0, 2.0], [3.0, 4.0]]);
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), array![[0.1, 0.1], [0.1, 0.1]]);
-        optimizer.step(&mut params, &grads).unwrap();
-        let w = params.get("w").unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
+        let w = params.get("w").expect("unwrap");
         assert!(w[[0, 0]] < 1.0);
     }
 }

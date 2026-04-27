@@ -577,7 +577,7 @@ mod tests {
     fn test_compile_tnorm_minimum() {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("D", 10);
-        ctx.bind_var("x", "D").unwrap();
+        ctx.bind_var("x", "D").expect("unwrap");
         ctx.assign_axis("x");
 
         let mut graph = EinsumGraph::new();
@@ -594,7 +594,7 @@ mod tests {
     fn test_compile_tnorm_product() {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("D", 10);
-        ctx.bind_var("x", "D").unwrap();
+        ctx.bind_var("x", "D").expect("unwrap");
         ctx.assign_axis("x");
 
         let mut graph = EinsumGraph::new();
@@ -611,7 +611,7 @@ mod tests {
     fn test_compile_tnorm_lukasiewicz() {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("D", 10);
-        ctx.bind_var("x", "D").unwrap();
+        ctx.bind_var("x", "D").expect("unwrap");
         ctx.assign_axis("x");
 
         let mut graph = EinsumGraph::new();
@@ -628,7 +628,7 @@ mod tests {
     fn test_compile_tconorm_maximum() {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("D", 10);
-        ctx.bind_var("x", "D").unwrap();
+        ctx.bind_var("x", "D").expect("unwrap");
         ctx.assign_axis("x");
 
         let mut graph = EinsumGraph::new();
@@ -645,7 +645,7 @@ mod tests {
     fn test_compile_fuzzy_not_standard() {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("D", 10);
-        ctx.bind_var("x", "D").unwrap();
+        ctx.bind_var("x", "D").expect("unwrap");
         ctx.assign_axis("x");
 
         let mut graph = EinsumGraph::new();
@@ -661,7 +661,7 @@ mod tests {
     fn test_compile_fuzzy_implication_lukasiewicz() {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("D", 10);
-        ctx.bind_var("x", "D").unwrap();
+        ctx.bind_var("x", "D").expect("unwrap");
         ctx.assign_axis("x");
 
         let mut graph = EinsumGraph::new();

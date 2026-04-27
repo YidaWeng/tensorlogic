@@ -388,7 +388,7 @@ mod tests {
     }
 
     #[test]
-    fn test_standard_ffn_build() {
+    fn test_standard_ffn_build() -> Result<(), Box<dyn std::error::Error>> {
         let config = FeedForwardConfig {
             hidden_size: 512,
             intermediate_size: 2048,
@@ -396,15 +396,14 @@ mod tests {
             dropout: 0.1,
             use_bias: true,
         };
-        let ffn = FeedForward::new(config).unwrap();
-        let graph = ffn.build();
-        assert!(graph.is_ok());
-        let graph = graph.unwrap();
+        let ffn = FeedForward::new(config)?;
+        let graph = ffn.build()?;
         assert!(graph.output().is_some());
+        Ok(())
     }
 
     #[test]
-    fn test_glu_ffn_build() {
+    fn test_glu_ffn_build() -> Result<(), Box<dyn std::error::Error>> {
         let config = FeedForwardConfig {
             hidden_size: 512,
             intermediate_size: 2048,
@@ -412,13 +411,14 @@ mod tests {
             dropout: 0.1,
             use_bias: false,
         };
-        let ffn = FeedForward::new(config).unwrap();
+        let ffn = FeedForward::new(config)?;
         let graph = ffn.build();
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_geglu_ffn_build() {
+    fn test_geglu_ffn_build() -> Result<(), Box<dyn std::error::Error>> {
         let config = FeedForwardConfig {
             hidden_size: 512,
             intermediate_size: 2048,
@@ -426,13 +426,14 @@ mod tests {
             dropout: 0.1,
             use_bias: false,
         };
-        let ffn = FeedForward::new(config).unwrap();
+        let ffn = FeedForward::new(config)?;
         let graph = ffn.build();
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_swiglu_ffn_build() {
+    fn test_swiglu_ffn_build() -> Result<(), Box<dyn std::error::Error>> {
         let config = FeedForwardConfig {
             hidden_size: 512,
             intermediate_size: 2048,
@@ -440,13 +441,14 @@ mod tests {
             dropout: 0.1,
             use_bias: false,
         };
-        let ffn = FeedForward::new(config).unwrap();
+        let ffn = FeedForward::new(config)?;
         let graph = ffn.build();
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_different_sizes() {
+    fn test_different_sizes() -> Result<(), Box<dyn std::error::Error>> {
         for (hidden_size, intermediate_size) in vec![(256, 1024), (512, 2048), (768, 3072), (1024, 4096)] {
             let config = FeedForwardConfig {
                 hidden_size,
@@ -455,9 +457,10 @@ mod tests {
                 dropout: 0.1,
                 use_bias: true,
             };
-            let ffn = FeedForward::new(config).unwrap();
+            let ffn = FeedForward::new(config)?;
             let graph = ffn.build();
             assert!(graph.is_ok());
         }
+        Ok(())
     }
 }

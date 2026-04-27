@@ -17,10 +17,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_classes = analyzer.extract_owl_classes().unwrap();
+        let owl_classes = analyzer.extract_owl_classes().expect("unwrap");
 
         assert!(!owl_classes.is_empty());
         let person_class = owl_classes
@@ -46,10 +46,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_classes = analyzer.extract_owl_classes().unwrap();
+        let owl_classes = analyzer.extract_owl_classes().expect("unwrap");
 
         let person_class = owl_classes
             .iter()
@@ -76,10 +76,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_classes = analyzer.extract_owl_classes().unwrap();
+        let owl_classes = analyzer.extract_owl_classes().expect("unwrap");
 
         let legal_entity = owl_classes
             .iter()
@@ -108,10 +108,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_classes = analyzer.extract_owl_classes().unwrap();
+        let owl_classes = analyzer.extract_owl_classes().expect("unwrap");
 
         let working_parent = owl_classes
             .iter()
@@ -138,10 +138,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_classes = analyzer.extract_owl_classes().unwrap();
+        let owl_classes = analyzer.extract_owl_classes().expect("unwrap");
 
         let non_person = owl_classes
             .iter()
@@ -166,10 +166,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_classes = analyzer.extract_owl_classes().unwrap();
+        let owl_classes = analyzer.extract_owl_classes().expect("unwrap");
 
         let person_class = owl_classes
             .iter()
@@ -194,10 +194,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_properties = analyzer.extract_owl_properties().unwrap();
+        let owl_properties = analyzer.extract_owl_properties().expect("unwrap");
 
         let ssn_prop = owl_properties
             .iter()
@@ -221,10 +221,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_properties = analyzer.extract_owl_properties().unwrap();
+        let owl_properties = analyzer.extract_owl_properties().expect("unwrap");
 
         let email_prop = owl_properties
             .iter()
@@ -248,10 +248,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_properties = analyzer.extract_owl_properties().unwrap();
+        let owl_properties = analyzer.extract_owl_properties().expect("unwrap");
 
         let ancestor_prop = owl_properties
             .iter()
@@ -275,10 +275,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_properties = analyzer.extract_owl_properties().unwrap();
+        let owl_properties = analyzer.extract_owl_properties().expect("unwrap");
 
         let friend_prop = owl_properties
             .iter()
@@ -303,10 +303,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_properties = analyzer.extract_owl_properties().unwrap();
+        let owl_properties = analyzer.extract_owl_properties().expect("unwrap");
 
         let has_child = owl_properties
             .iter()
@@ -314,7 +314,11 @@ mod tests {
             .expect("hasChild property not found");
 
         assert!(has_child.inverse_of.is_some());
-        assert!(has_child.inverse_of.as_ref().unwrap().contains("hasParent"));
+        assert!(has_child
+            .inverse_of
+            .as_ref()
+            .expect("unwrap")
+            .contains("hasParent"));
     }
 
     #[test]
@@ -332,10 +336,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_properties = analyzer.extract_owl_properties().unwrap();
+        let owl_properties = analyzer.extract_owl_properties().expect("unwrap");
 
         let has_name = owl_properties
             .iter()
@@ -364,18 +368,20 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_classes = analyzer.extract_owl_classes().unwrap();
+        let owl_classes = analyzer.extract_owl_classes().expect("unwrap");
 
         let parent_class = owl_classes
             .iter()
             .find(|c| c.base.iri.contains("Parent"))
             .expect("Parent class not found");
 
-        let parent_node = oxrdf::NamedNode::new(parent_class.base.iri.clone()).unwrap();
-        let restrictions = analyzer.extract_owl_restrictions(&parent_node).unwrap();
+        let parent_node = oxrdf::NamedNode::new(parent_class.base.iri.clone()).expect("unwrap");
+        let restrictions = analyzer
+            .extract_owl_restrictions(&parent_node)
+            .expect("unwrap");
 
         if !restrictions.is_empty() {
             match &restrictions[0] {
@@ -404,18 +410,20 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_classes = analyzer.extract_owl_classes().unwrap();
+        let owl_classes = analyzer.extract_owl_classes().expect("unwrap");
 
         let happy_person = owl_classes
             .iter()
             .find(|c| c.base.iri.contains("HappyPerson"))
             .expect("HappyPerson class not found");
 
-        let happy_node = oxrdf::NamedNode::new(happy_person.base.iri.clone()).unwrap();
-        let restrictions = analyzer.extract_owl_restrictions(&happy_node).unwrap();
+        let happy_node = oxrdf::NamedNode::new(happy_person.base.iri.clone()).expect("unwrap");
+        let restrictions = analyzer
+            .extract_owl_restrictions(&happy_node)
+            .expect("unwrap");
 
         if !restrictions.is_empty() {
             match &restrictions[0] {
@@ -444,18 +452,20 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_classes = analyzer.extract_owl_classes().unwrap();
+        let owl_classes = analyzer.extract_owl_classes().expect("unwrap");
 
         let parent_class = owl_classes
             .iter()
             .find(|c| c.base.iri.contains("Parent"))
             .expect("Parent class not found");
 
-        let parent_node = oxrdf::NamedNode::new(parent_class.base.iri.clone()).unwrap();
-        let restrictions = analyzer.extract_owl_restrictions(&parent_node).unwrap();
+        let parent_node = oxrdf::NamedNode::new(parent_class.base.iri.clone()).expect("unwrap");
+        let restrictions = analyzer
+            .extract_owl_restrictions(&parent_node)
+            .expect("unwrap");
 
         if !restrictions.is_empty() {
             match &restrictions[0] {
@@ -487,18 +497,20 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_classes = analyzer.extract_owl_classes().unwrap();
+        let owl_classes = analyzer.extract_owl_classes().expect("unwrap");
 
         let monogamist = owl_classes
             .iter()
             .find(|c| c.base.iri.contains("Monogamist"))
             .expect("Monogamist class not found");
 
-        let mono_node = oxrdf::NamedNode::new(monogamist.base.iri.clone()).unwrap();
-        let restrictions = analyzer.extract_owl_restrictions(&mono_node).unwrap();
+        let mono_node = oxrdf::NamedNode::new(monogamist.base.iri.clone()).expect("unwrap");
+        let restrictions = analyzer
+            .extract_owl_restrictions(&mono_node)
+            .expect("unwrap");
 
         if !restrictions.is_empty() {
             match &restrictions[0] {
@@ -528,10 +540,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_properties = analyzer.extract_owl_properties().unwrap();
+        let owl_properties = analyzer.extract_owl_properties().expect("unwrap");
 
         let knows_prop = owl_properties
             .iter()
@@ -577,11 +589,11 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(owl_turtle).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_turtle(owl_turtle).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let owl_classes = analyzer.extract_owl_classes().unwrap();
-        let owl_properties = analyzer.extract_owl_properties().unwrap();
+        let owl_classes = analyzer.extract_owl_classes().expect("unwrap");
+        let owl_properties = analyzer.extract_owl_properties().expect("unwrap");
 
         // Check classes
         assert!(
@@ -602,8 +614,10 @@ mod tests {
             .iter()
             .find(|c| c.base.iri.contains("Employee"))
             .expect("Employee class not found");
-        let emp_node = oxrdf::NamedNode::new(employee.base.iri.clone()).unwrap();
-        let restrictions = analyzer.extract_owl_restrictions(&emp_node).unwrap();
+        let emp_node = oxrdf::NamedNode::new(employee.base.iri.clone()).expect("unwrap");
+        let restrictions = analyzer
+            .extract_owl_restrictions(&emp_node)
+            .expect("unwrap");
         assert!(
             !restrictions.is_empty(),
             "Expected at least one restriction for Employee"

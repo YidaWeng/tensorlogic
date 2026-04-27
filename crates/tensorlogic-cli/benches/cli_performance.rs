@@ -32,7 +32,7 @@ fn bench_parser(c: &mut Criterion) {
 
     for (name, expr) in expressions {
         group.bench_with_input(BenchmarkId::new("parse", name), expr, |b, expr| {
-            b.iter(|| parser::parse_expression(black_box(expr)).unwrap());
+            b.iter(|| parser::parse_expression(black_box(expr)).expect("benchmark input is valid"));
         });
     }
 
@@ -57,14 +57,15 @@ fn bench_compilation(c: &mut Criterion) {
     ];
 
     for (name, expr_str) in test_cases {
-        let expr = parser::parse_expression(expr_str).unwrap();
+        let expr = parser::parse_expression(expr_str).expect("benchmark input is valid");
 
         group.bench_with_input(BenchmarkId::new("compile", name), &expr, |b, expr| {
             b.iter(|| {
                 let config = CompilationConfig::soft_differentiable();
                 let mut ctx = CompilationContext::with_config(config);
                 ctx.add_domain("D", 100);
-                compile_to_einsum_with_context(black_box(expr), &mut ctx).unwrap()
+                compile_to_einsum_with_context(black_box(expr), &mut ctx)
+                    .expect("benchmark compilation should succeed")
             });
         });
     }
@@ -76,7 +77,7 @@ fn bench_compilation(c: &mut Criterion) {
 fn bench_strategies(c: &mut Criterion) {
     let mut group = c.benchmark_group("strategies");
 
-    let expr = parser::parse_expression("a(x) AND b(y) OR c(z)").unwrap();
+    let expr = parser::parse_expression("a(x) AND b(y) OR c(z)").expect("benchmark input is valid");
 
     let strategies = vec![
         (
@@ -95,7 +96,8 @@ fn bench_strategies(c: &mut Criterion) {
             b.iter(|| {
                 let mut ctx = CompilationContext::with_config(config.clone());
                 ctx.add_domain("D", 100);
-                compile_to_einsum_with_context(black_box(&expr), &mut ctx).unwrap()
+                compile_to_einsum_with_context(black_box(&expr), &mut ctx)
+                    .expect("benchmark compilation should succeed")
             });
         });
     }
@@ -119,11 +121,12 @@ fn bench_analysis(c: &mut Criterion) {
     ];
 
     for (name, expr_str) in test_cases {
-        let expr = parser::parse_expression(expr_str).unwrap();
+        let expr = parser::parse_expression(expr_str).expect("benchmark input is valid");
         let config = CompilationConfig::soft_differentiable();
         let mut ctx = CompilationContext::with_config(config);
         ctx.add_domain("D", 100);
-        let graph = compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+        let graph = compile_to_einsum_with_context(&expr, &mut ctx)
+            .expect("benchmark compilation should succeed");
 
         group.bench_with_input(BenchmarkId::new("analyze", name), &graph, |b, graph| {
             b.iter(|| analysis::GraphMetrics::analyze(black_box(graph)));
@@ -153,13 +156,15 @@ fn bench_full_pipeline(c: &mut Criterion) {
             |b, expr_str| {
                 b.iter(|| {
                     // Parse
-                    let expr = parser::parse_expression(black_box(expr_str)).unwrap();
+                    let expr = parser::parse_expression(black_box(expr_str))
+                        .expect("benchmark input is valid");
 
                     // Compile
                     let config = CompilationConfig::soft_differentiable();
                     let mut ctx = CompilationContext::with_config(config);
                     ctx.add_domain("D", 100);
-                    let graph = compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+                    let graph = compile_to_einsum_with_context(&expr, &mut ctx)
+                        .expect("benchmark compilation should succeed");
 
                     // Analyze
                     let _metrics = analysis::GraphMetrics::analyze(&graph);
@@ -175,7 +180,8 @@ fn bench_full_pipeline(c: &mut Criterion) {
 fn bench_domain_sizes(c: &mut Criterion) {
     let mut group = c.benchmark_group("domain_sizes");
 
-    let expr = parser::parse_expression("EXISTS x IN D. knows(x, y)").unwrap();
+    let expr =
+        parser::parse_expression("EXISTS x IN D. knows(x, y)").expect("benchmark input is valid");
 
     for size in [10, 50, 100, 500, 1000].iter() {
         group.bench_with_input(BenchmarkId::new("domain_size", size), size, |b, size| {
@@ -183,7 +189,8 @@ fn bench_domain_sizes(c: &mut Criterion) {
                 let config = CompilationConfig::soft_differentiable();
                 let mut ctx = CompilationContext::with_config(config);
                 ctx.add_domain("D", *size);
-                compile_to_einsum_with_context(black_box(&expr), &mut ctx).unwrap()
+                compile_to_einsum_with_context(black_box(&expr), &mut ctx)
+                    .expect("benchmark compilation should succeed")
             });
         });
     }
@@ -199,7 +206,7 @@ fn bench_expression_scaling(c: &mut Criterion) {
     for chain_length in [2, 4, 8, 16].iter() {
         let expr_parts: Vec<String> = (0..*chain_length).map(|i| format!("p{}(x)", i)).collect();
         let expr_str = expr_parts.join(" AND ");
-        let expr = parser::parse_expression(&expr_str).unwrap();
+        let expr = parser::parse_expression(&expr_str).expect("benchmark input is valid");
 
         group.bench_with_input(
             BenchmarkId::new("and_chain", chain_length),
@@ -209,7 +216,8 @@ fn bench_expression_scaling(c: &mut Criterion) {
                     let config = CompilationConfig::soft_differentiable();
                     let mut ctx = CompilationContext::with_config(config);
                     ctx.add_domain("D", 100);
-                    compile_to_einsum_with_context(black_box(expr), &mut ctx).unwrap()
+                    compile_to_einsum_with_context(black_box(expr), &mut ctx)
+                        .expect("benchmark compilation should succeed")
                 });
             },
         );

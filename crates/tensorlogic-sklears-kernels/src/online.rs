@@ -72,13 +72,13 @@ pub struct OnlineStats {
 /// ```
 /// use tensorlogic_sklears_kernels::{OnlineKernelMatrix, RbfKernel, RbfKernelConfig, Kernel};
 ///
-/// let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+/// let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
 /// let mut online = OnlineKernelMatrix::new(Box::new(kernel));
 ///
 /// // Add samples incrementally
-/// online.add_sample(vec![1.0, 2.0, 3.0]).unwrap();
-/// online.add_sample(vec![4.0, 5.0, 6.0]).unwrap();
-/// online.add_sample(vec![7.0, 8.0, 9.0]).unwrap();
+/// online.add_sample(vec![1.0, 2.0, 3.0]).expect("unwrap");
+/// online.add_sample(vec![4.0, 5.0, 6.0]).expect("unwrap");
+/// online.add_sample(vec![7.0, 8.0, 9.0]).expect("unwrap");
 ///
 /// // Get the kernel matrix
 /// let matrix = online.get_matrix();
@@ -279,10 +279,10 @@ impl OnlineKernelMatrix {
 /// let mut windowed = WindowedKernelMatrix::new(Box::new(kernel), 3);
 ///
 /// // Add samples (window size = 3)
-/// windowed.add_sample(vec![1.0]).unwrap();
-/// windowed.add_sample(vec![2.0]).unwrap();
-/// windowed.add_sample(vec![3.0]).unwrap();
-/// windowed.add_sample(vec![4.0]).unwrap(); // First sample evicted
+/// windowed.add_sample(vec![1.0]).expect("unwrap");
+/// windowed.add_sample(vec![2.0]).expect("unwrap");
+/// windowed.add_sample(vec![3.0]).expect("unwrap");
+/// windowed.add_sample(vec![4.0]).expect("unwrap"); // First sample evicted
 ///
 /// assert_eq!(windowed.len(), 3);
 /// ```
@@ -484,14 +484,14 @@ impl ForgetfulConfig {
 /// ```
 /// use tensorlogic_sklears_kernels::{ForgetfulKernelMatrix, ForgetfulConfig, RbfKernel, RbfKernelConfig, Kernel};
 ///
-/// let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
-/// let config = ForgetfulConfig::with_lambda(0.95).unwrap();
+/// let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
+/// let config = ForgetfulConfig::with_lambda(0.95).expect("unwrap");
 /// let mut forgetful = ForgetfulKernelMatrix::new(Box::new(kernel), config);
 ///
 /// // Add samples (older ones get downweighted)
-/// forgetful.add_sample(vec![1.0, 2.0]).unwrap();
-/// forgetful.add_sample(vec![3.0, 4.0]).unwrap();
-/// forgetful.add_sample(vec![5.0, 6.0]).unwrap();
+/// forgetful.add_sample(vec![1.0, 2.0]).expect("unwrap");
+/// forgetful.add_sample(vec![3.0, 4.0]).expect("unwrap");
+/// forgetful.add_sample(vec![5.0, 6.0]).expect("unwrap");
 ///
 /// // Get weighted kernel matrix
 /// let weighted = forgetful.get_weighted_matrix();
@@ -558,11 +558,10 @@ impl ForgetfulKernelMatrix {
         if let Some(max) = self.config.max_samples {
             while self.samples.len() >= max && !self.samples.is_empty() {
                 // Remove the lowest weight sample
-                if let Some((min_idx, _)) = self
-                    .weights
-                    .iter()
-                    .enumerate()
-                    .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                if let Some((min_idx, _)) =
+                    self.weights.iter().enumerate().min_by(|(_, a), (_, b)| {
+                        a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
+                    })
                 {
                     self.remove_at(min_idx);
                 }
@@ -796,10 +795,10 @@ mod tests {
 
         assert!(online.is_empty());
 
-        online.add_sample(vec![1.0, 2.0]).unwrap();
+        online.add_sample(vec![1.0, 2.0]).expect("unwrap");
         assert_eq!(online.len(), 1);
 
-        online.add_sample(vec![3.0, 4.0]).unwrap();
+        online.add_sample(vec![3.0, 4.0]).expect("unwrap");
         assert_eq!(online.len(), 2);
 
         let matrix = online.get_matrix();
@@ -812,8 +811,8 @@ mod tests {
         let kernel = LinearKernel::new();
         let mut online = OnlineKernelMatrix::new(Box::new(kernel));
 
-        online.add_sample(vec![1.0, 0.0]).unwrap();
-        online.add_sample(vec![0.0, 1.0]).unwrap();
+        online.add_sample(vec![1.0, 0.0]).expect("unwrap");
+        online.add_sample(vec![0.0, 1.0]).expect("unwrap");
 
         let matrix = online.get_matrix();
 
@@ -829,12 +828,12 @@ mod tests {
 
     #[test]
     fn test_online_kernel_matrix_symmetry() {
-        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
         let mut online = OnlineKernelMatrix::new(Box::new(kernel));
 
-        online.add_sample(vec![1.0, 2.0, 3.0]).unwrap();
-        online.add_sample(vec![4.0, 5.0, 6.0]).unwrap();
-        online.add_sample(vec![7.0, 8.0, 9.0]).unwrap();
+        online.add_sample(vec![1.0, 2.0, 3.0]).expect("unwrap");
+        online.add_sample(vec![4.0, 5.0, 6.0]).expect("unwrap");
+        online.add_sample(vec![7.0, 8.0, 9.0]).expect("unwrap");
 
         let matrix = online.get_matrix();
 
@@ -855,11 +854,11 @@ mod tests {
         let kernel = LinearKernel::new();
         let mut online = OnlineKernelMatrix::new(Box::new(kernel));
 
-        online.add_sample(vec![1.0]).unwrap();
-        online.add_sample(vec![2.0]).unwrap();
-        online.add_sample(vec![3.0]).unwrap();
+        online.add_sample(vec![1.0]).expect("unwrap");
+        online.add_sample(vec![2.0]).expect("unwrap");
+        online.add_sample(vec![3.0]).expect("unwrap");
 
-        let removed = online.remove_sample(1).unwrap();
+        let removed = online.remove_sample(1).expect("unwrap");
         assert_eq!(removed, vec![2.0]);
         assert_eq!(online.len(), 2);
 
@@ -873,7 +872,7 @@ mod tests {
         let kernel = LinearKernel::new();
         let mut online = OnlineKernelMatrix::new(Box::new(kernel));
 
-        online.add_sample(vec![1.0, 2.0]).unwrap();
+        online.add_sample(vec![1.0, 2.0]).expect("unwrap");
         let result = online.add_sample(vec![1.0, 2.0, 3.0]);
         assert!(result.is_err());
     }
@@ -883,11 +882,11 @@ mod tests {
         let kernel = LinearKernel::new();
         let mut online = OnlineKernelMatrix::new(Box::new(kernel));
 
-        online.add_sample(vec![1.0, 0.0]).unwrap();
-        online.add_sample(vec![0.0, 1.0]).unwrap();
+        online.add_sample(vec![1.0, 0.0]).expect("unwrap");
+        online.add_sample(vec![0.0, 1.0]).expect("unwrap");
 
         let query = vec![1.0, 1.0];
-        let result = online.compute_with_all(&query).unwrap();
+        let result = online.compute_with_all(&query).expect("unwrap");
 
         // [1,1]·[1,0] = 1
         assert!((result[0] - 1.0).abs() < 1e-10);
@@ -900,9 +899,9 @@ mod tests {
         let kernel = LinearKernel::new();
         let mut online = OnlineKernelMatrix::new(Box::new(kernel));
 
-        online.add_sample(vec![1.0]).unwrap();
-        online.add_sample(vec![2.0]).unwrap();
-        online.add_sample(vec![3.0]).unwrap();
+        online.add_sample(vec![1.0]).expect("unwrap");
+        online.add_sample(vec![2.0]).expect("unwrap");
+        online.add_sample(vec![3.0]).expect("unwrap");
 
         let stats = online.stats();
         assert_eq!(stats.samples_added, 3);
@@ -920,9 +919,9 @@ mod tests {
         assert_eq!(windowed.window_size(), 3);
         assert!(!windowed.is_full());
 
-        windowed.add_sample(vec![1.0]).unwrap();
-        windowed.add_sample(vec![2.0]).unwrap();
-        windowed.add_sample(vec![3.0]).unwrap();
+        windowed.add_sample(vec![1.0]).expect("unwrap");
+        windowed.add_sample(vec![2.0]).expect("unwrap");
+        windowed.add_sample(vec![3.0]).expect("unwrap");
 
         assert!(windowed.is_full());
         assert_eq!(windowed.len(), 3);
@@ -933,11 +932,11 @@ mod tests {
         let kernel = LinearKernel::new();
         let mut windowed = WindowedKernelMatrix::new(Box::new(kernel), 2);
 
-        windowed.add_sample(vec![1.0]).unwrap();
-        windowed.add_sample(vec![2.0]).unwrap();
+        windowed.add_sample(vec![1.0]).expect("unwrap");
+        windowed.add_sample(vec![2.0]).expect("unwrap");
 
         // This should evict [1.0]
-        let evicted = windowed.add_sample(vec![3.0]).unwrap();
+        let evicted = windowed.add_sample(vec![3.0]).expect("unwrap");
         assert_eq!(evicted, Some(vec![1.0]));
         assert_eq!(windowed.len(), 2);
 
@@ -951,8 +950,8 @@ mod tests {
         let kernel = LinearKernel::new();
         let mut windowed = WindowedKernelMatrix::new(Box::new(kernel), 2);
 
-        windowed.add_sample(vec![1.0, 0.0]).unwrap();
-        windowed.add_sample(vec![0.0, 1.0]).unwrap();
+        windowed.add_sample(vec![1.0, 0.0]).expect("unwrap");
+        windowed.add_sample(vec![0.0, 1.0]).expect("unwrap");
 
         let matrix = windowed.get_matrix();
 
@@ -961,7 +960,7 @@ mod tests {
         assert!((matrix[0][1]).abs() < 1e-10);
 
         // Evict first and add new
-        windowed.add_sample(vec![1.0, 1.0]).unwrap();
+        windowed.add_sample(vec![1.0, 1.0]).expect("unwrap");
 
         let matrix = windowed.get_matrix();
         // Now have [0,1] and [1,1]
@@ -976,7 +975,7 @@ mod tests {
         let kernel = LinearKernel::new();
         let mut windowed = WindowedKernelMatrix::new(Box::new(kernel), 3);
 
-        windowed.add_sample(vec![1.0, 2.0]).unwrap();
+        windowed.add_sample(vec![1.0, 2.0]).expect("unwrap");
         let result = windowed.add_sample(vec![1.0]);
         assert!(result.is_err());
     }
@@ -986,11 +985,11 @@ mod tests {
     #[test]
     fn test_forgetful_kernel_matrix_basic() {
         let kernel = LinearKernel::new();
-        let config = ForgetfulConfig::with_lambda(0.9).unwrap();
+        let config = ForgetfulConfig::with_lambda(0.9).expect("unwrap");
         let mut forgetful = ForgetfulKernelMatrix::new(Box::new(kernel), config);
 
-        forgetful.add_sample(vec![1.0]).unwrap();
-        forgetful.add_sample(vec![2.0]).unwrap();
+        forgetful.add_sample(vec![1.0]).expect("unwrap");
+        forgetful.add_sample(vec![2.0]).expect("unwrap");
 
         assert_eq!(forgetful.len(), 2);
         assert!((forgetful.lambda() - 0.9).abs() < 1e-10);
@@ -1006,9 +1005,9 @@ mod tests {
         };
         let mut forgetful = ForgetfulKernelMatrix::new(Box::new(kernel), config);
 
-        forgetful.add_sample(vec![1.0]).unwrap();
-        forgetful.add_sample(vec![2.0]).unwrap();
-        forgetful.add_sample(vec![3.0]).unwrap();
+        forgetful.add_sample(vec![1.0]).expect("unwrap");
+        forgetful.add_sample(vec![2.0]).expect("unwrap");
+        forgetful.add_sample(vec![3.0]).expect("unwrap");
 
         let weights = forgetful.get_weights();
         // Newest has weight 1.0
@@ -1029,8 +1028,8 @@ mod tests {
         };
         let mut forgetful = ForgetfulKernelMatrix::new(Box::new(kernel), config);
 
-        forgetful.add_sample(vec![1.0]).unwrap();
-        forgetful.add_sample(vec![1.0]).unwrap();
+        forgetful.add_sample(vec![1.0]).expect("unwrap");
+        forgetful.add_sample(vec![1.0]).expect("unwrap");
 
         let weighted = forgetful.get_weighted_matrix();
 
@@ -1053,11 +1052,11 @@ mod tests {
         };
         let mut forgetful = ForgetfulKernelMatrix::new(Box::new(kernel), config);
 
-        forgetful.add_sample(vec![1.0]).unwrap();
-        forgetful.add_sample(vec![2.0]).unwrap();
+        forgetful.add_sample(vec![1.0]).expect("unwrap");
+        forgetful.add_sample(vec![2.0]).expect("unwrap");
         // First sample now has weight 0.5
 
-        forgetful.add_sample(vec![3.0]).unwrap();
+        forgetful.add_sample(vec![3.0]).expect("unwrap");
         // First sample would have weight 0.25 < 0.3, should be removed
 
         assert_eq!(forgetful.len(), 2);
@@ -1073,9 +1072,9 @@ mod tests {
         };
         let mut forgetful = ForgetfulKernelMatrix::new(Box::new(kernel), config);
 
-        forgetful.add_sample(vec![1.0]).unwrap();
-        forgetful.add_sample(vec![2.0]).unwrap();
-        forgetful.add_sample(vec![3.0]).unwrap();
+        forgetful.add_sample(vec![1.0]).expect("unwrap");
+        forgetful.add_sample(vec![2.0]).expect("unwrap");
+        forgetful.add_sample(vec![3.0]).expect("unwrap");
 
         assert_eq!(forgetful.len(), 2);
     }
@@ -1090,9 +1089,9 @@ mod tests {
         };
         let mut forgetful = ForgetfulKernelMatrix::new(Box::new(kernel), config);
 
-        forgetful.add_sample(vec![1.0]).unwrap();
-        forgetful.add_sample(vec![2.0]).unwrap();
-        forgetful.add_sample(vec![3.0]).unwrap();
+        forgetful.add_sample(vec![1.0]).expect("unwrap");
+        forgetful.add_sample(vec![2.0]).expect("unwrap");
+        forgetful.add_sample(vec![3.0]).expect("unwrap");
 
         // Weights: 0.81, 0.9, 1.0
         let eff_size = forgetful.effective_size();
@@ -1111,10 +1110,10 @@ mod tests {
     #[test]
     fn test_forgetful_kernel_matrix_dimension_mismatch() {
         let kernel = LinearKernel::new();
-        let config = ForgetfulConfig::with_lambda(0.9).unwrap();
+        let config = ForgetfulConfig::with_lambda(0.9).expect("unwrap");
         let mut forgetful = ForgetfulKernelMatrix::new(Box::new(kernel), config);
 
-        forgetful.add_sample(vec![1.0, 2.0]).unwrap();
+        forgetful.add_sample(vec![1.0, 2.0]).expect("unwrap");
         let result = forgetful.add_sample(vec![1.0]);
         assert!(result.is_err());
     }
@@ -1124,14 +1123,14 @@ mod tests {
     #[test]
     fn test_adaptive_kernel_matrix_basic() {
         let mut adaptive = AdaptiveKernelMatrix::new(
-            |gamma| Box::new(RbfKernel::new(RbfKernelConfig::new(gamma)).unwrap()),
+            |gamma| Box::new(RbfKernel::new(RbfKernelConfig::new(gamma)).expect("unwrap")),
             1.0,
             0.1,
         );
 
-        adaptive.add_sample(vec![1.0, 2.0]).unwrap();
-        adaptive.add_sample(vec![3.0, 4.0]).unwrap();
-        adaptive.add_sample(vec![5.0, 6.0]).unwrap();
+        adaptive.add_sample(vec![1.0, 2.0]).expect("unwrap");
+        adaptive.add_sample(vec![3.0, 4.0]).expect("unwrap");
+        adaptive.add_sample(vec![5.0, 6.0]).expect("unwrap");
 
         assert_eq!(adaptive.len(), 3);
         assert!(adaptive.bandwidth() > 0.0);
@@ -1140,15 +1139,15 @@ mod tests {
     #[test]
     fn test_adaptive_kernel_matrix_bandwidth_update() {
         let mut adaptive = AdaptiveKernelMatrix::new(
-            |gamma| Box::new(RbfKernel::new(RbfKernelConfig::new(gamma)).unwrap()),
+            |gamma| Box::new(RbfKernel::new(RbfKernelConfig::new(gamma)).expect("unwrap")),
             1.0,
             0.5, // High adaptation rate
         );
 
         let initial = adaptive.bandwidth();
 
-        adaptive.add_sample(vec![0.0]).unwrap();
-        adaptive.add_sample(vec![10.0]).unwrap();
+        adaptive.add_sample(vec![0.0]).expect("unwrap");
+        adaptive.add_sample(vec![10.0]).expect("unwrap");
 
         // Bandwidth should have changed
         let after = adaptive.bandwidth();
@@ -1172,8 +1171,8 @@ mod tests {
         let kernel = LinearKernel::new();
         let mut windowed = WindowedKernelMatrix::new(Box::new(kernel), 3);
 
-        windowed.add_sample(vec![1.0]).unwrap();
-        windowed.add_sample(vec![2.0]).unwrap();
+        windowed.add_sample(vec![1.0]).expect("unwrap");
+        windowed.add_sample(vec![2.0]).expect("unwrap");
         windowed.clear();
 
         assert!(windowed.is_empty());
@@ -1183,11 +1182,11 @@ mod tests {
     #[test]
     fn test_forgetful_clear() {
         let kernel = LinearKernel::new();
-        let config = ForgetfulConfig::with_lambda(0.9).unwrap();
+        let config = ForgetfulConfig::with_lambda(0.9).expect("unwrap");
         let mut forgetful = ForgetfulKernelMatrix::new(Box::new(kernel), config);
 
-        forgetful.add_sample(vec![1.0]).unwrap();
-        forgetful.add_sample(vec![2.0]).unwrap();
+        forgetful.add_sample(vec![1.0]).expect("unwrap");
+        forgetful.add_sample(vec![2.0]).expect("unwrap");
         forgetful.clear();
 
         assert!(forgetful.is_empty());

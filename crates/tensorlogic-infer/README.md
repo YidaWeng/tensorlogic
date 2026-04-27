@@ -2,8 +2,8 @@
 
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic--infer-orange)](https://crates.io/crates/tensorlogic-infer)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-infer)
-[![Tests](https://img.shields.io/badge/tests-522-brightgreen)](#)
-[![Production](https://img.shields.io/badge/status-production_ready-success)](#)
+[![Tests](https://img.shields.io/badge/tests-909%2F909_passing-brightgreen)](#)
+[![Production](https://img.shields.io/badge/status-stable-success)](#)
 [![Completion](https://img.shields.io/badge/completion-100%25-success)](#)
 
 Engine-agnostic execution traits, optimization utilities, and planning API for TensorLogic.
@@ -1053,11 +1053,120 @@ tensorlogic-infer
 │   ├── MemoryDiagnostic (memory issues)
 │   ├── PerformanceDiagnostic (performance warnings)
 │   └── SourceLocation (error tracking)
+├── Inference Utilities
+│   ├── MemoCache (LRU/LFU/FIFO expression memoization) [v0.1.17]
+│   ├── MemoKey (SHA-256 structural hash key for TLExpr)
+│   ├── MemoCacheBuilder (builder API with pre-warming)
+│   ├── ConstraintNetwork (AC-3 arc-consistency propagation) [v0.1.19]
+│   ├── CspSolver (backtracking CSP with MRV/DegreeHeuristic)
+│   ├── CausalGraph (d-separation, backdoor/frontdoor criteria) [v0.1.19]
+│   ├── AteBackdoor / AteInstrumentalVariable (ATE estimators)
+│   └── MetropolisHastings / HamiltonianMonteCarlo (MCMC samplers) [v0.1.21]
 └── Testing Support
     ├── DummyExecutor (test executor)
     ├── BackendTestAdapter (backend test templates)
     ├── GradientChecker (numerical gradient checking)
     └── PerfRegression (performance regression testing)
+```
+
+## Expression Memoization (v0.1.17)
+
+`MemoCache` provides a generic LRU/LFU/FIFO memoization store keyed by `MemoKey` (structural SHA-256 hash of a `TLExpr`):
+
+```rust
+use tensorlogic_infer::{MemoCache, MemoEvictionPolicy, MemoCacheBuilder, MemoLookupResult};
+
+// Build a cache with LRU eviction and capacity 512
+let mut cache = MemoCacheBuilder::new()
+    .capacity(512)
+    .policy(MemoEvictionPolicy::LRU)
+    .build();
+
+let key = MemoKey::from_expr(&expr);
+match cache.get(&key) {
+    MemoLookupResult::Hit(graph) => { /* reuse */ }
+    MemoLookupResult::Miss => {
+        let graph = compile_to_einsum(&expr)?;
+        cache.insert(key, graph);
+    }
+}
+
+let stats = cache.stats();
+println!("Hit rate: {:.2}%", stats.hit_rate() * 100.0);
+```
+
+`ExprMemoCache` is a pre-configured `MemoCache<TLExpr, EinsumGraph>` specialisation for the most common caching pattern.
+
+## Constraint Propagation (v0.1.19)
+
+`ConstraintNetwork` provides AC-3 arc-consistency and `CspSolver` for full backtracking constraint satisfaction:
+
+```rust
+use tensorlogic_infer::{ConstraintNetwork, ConstraintRelation, CspSolver, VarOrdering};
+
+let mut net = ConstraintNetwork::new();
+net.add_variable("x", vec![1.0, 2.0, 3.0]);
+net.add_variable("y", vec![1.0, 2.0, 3.0]);
+net.add_constraint("x", "y", ConstraintRelation::LessThan);
+
+// AC-3 arc-consistency
+let reduced = net.propagate();
+println!("Domains reduced: {}", reduced);
+
+// Full CSP solving with MRV heuristic
+let solver = CspSolver::new(VarOrdering::MinRemainingValues);
+let result = solver.solve(&net);
+println!("Solutions found: {}", result.solutions.len());
+```
+
+## Causal Inference (v0.1.19)
+
+`CausalGraph` supports d-separation, backdoor/frontdoor criteria, do-calculus interventions, and ATE estimation:
+
+```rust
+use tensorlogic_infer::{CausalGraph, ObservationalData};
+
+let mut g = CausalGraph::new();
+g.add_edge("T", "Y");
+g.add_edge("C", "T");
+g.add_edge("C", "Y");
+
+// d-separation check
+let sep = g.d_separated("T", "Y", &["C"]);
+println!("d-separated given C: {}", sep);
+
+// Backdoor criterion
+let valid = g.satisfies_backdoor_criterion("T", "Y", &["C"]);
+println!("Backdoor adjustment valid: {}", valid);
+
+// ATE estimation under backdoor adjustment
+let data = ObservationalData::new(covariates, treatments, outcomes);
+let ate = g.ate_backdoor("T", "Y", &["C"], &data);
+println!("Estimated ATE: {}", ate);
+```
+
+## MCMC Sampling (v0.1.21)
+
+`MetropolisHastings` and `HamiltonianMonteCarlo` provide MCMC samplers with diagnostic utilities:
+
+```rust
+use tensorlogic_infer::{
+    MetropolisHastings, HamiltonianMonteCarlo,
+    GaussianProposal, effective_sample_size, gelman_rubin
+};
+
+// Metropolis-Hastings with Gaussian proposal
+let mh = MetropolisHastings::new(log_prob_fn, GaussianProposal::new(0.5));
+let samples = mh.sample(initial, n_samples, &mut rng);
+
+// Hamiltonian Monte Carlo (leapfrog + finite-diff gradients)
+let hmc = HamiltonianMonteCarlo::new(log_prob_fn, step_size, n_leapfrog);
+let samples = hmc.sample(initial, n_samples, &mut rng);
+
+// Diagnostics
+let ess = effective_sample_size(&samples);
+let r_hat = gelman_rubin(&chains);
+println!("ESS: {:.1}, R-hat: {:.4}", ess, r_hat);
 ```
 
 ## Integration with Other Crates
@@ -1112,7 +1221,7 @@ cargo test -p tensorlogic-infer -- --nocapture
 cargo test -p tensorlogic-infer test_streaming
 ```
 
-**Test Coverage**: 522 tests covering all traits and utilities (100% passing)
+**Test Coverage**: 909 tests covering all traits and utilities (100% passing)
 
 ## Contributing
 
@@ -1124,9 +1233,10 @@ Apache-2.0
 
 ---
 
-**Status**: Production Ready (v0.1.0-rc.1)
-**Last Updated**: 2026-03-06
-**Tests**: 522 passing (100%)
-**Code**: 46 files, 21,349 lines
+**Status**: Stable (v0.1.0)
+**Last Updated**: 2026-04-06
+**Tests**: 909 passing (100%)
+**Code**: 74 files, ~26,000 lines
 **Completeness**: 100%
+**Dependencies**: Random number generation via `scirs2_core::random` (no direct `rand` dependency)
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

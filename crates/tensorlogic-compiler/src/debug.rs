@@ -451,7 +451,7 @@ mod tests {
         let result = tracer.finish(&graph);
         assert!(result.is_some());
 
-        let trace = result.unwrap();
+        let trace = result.expect("unwrap");
         assert_eq!(trace.steps.len(), 2);
         assert!(trace.duration_ms.is_some());
     }
@@ -475,7 +475,7 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("relu", t0, t1))
-            .unwrap();
+            .expect("unwrap");
 
         // Should not panic
         print_graph_state(&graph, "Test");

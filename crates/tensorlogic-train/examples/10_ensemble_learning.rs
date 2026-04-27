@@ -26,14 +26,15 @@ fn main() {
     let model2 = LinearModel::new(2, 3);
     let model3 = LinearModel::new(2, 3);
 
-    let voting_hard = VotingEnsemble::new(vec![model1, model2, model3], VotingMode::Hard).unwrap();
+    let voting_hard =
+        VotingEnsemble::new(vec![model1, model2, model3], VotingMode::Hard).expect("unwrap");
 
     println!("   Configuration:");
     println!("     Number of models: {}", voting_hard.num_models());
     println!("     Voting mode: Hard (majority vote)");
 
     let input = array![[1.0, 2.0], [3.0, 4.0]];
-    let predictions = voting_hard.predict(&input).unwrap();
+    let predictions = voting_hard.predict(&input).expect("unwrap");
 
     println!("\n   Input shape: {:?}", input.shape());
     println!("   Output shape: {:?}", predictions.shape());
@@ -53,13 +54,14 @@ fn main() {
     let model2 = LinearModel::new(2, 3);
     let model3 = LinearModel::new(2, 3);
 
-    let voting_soft = VotingEnsemble::new(vec![model1, model2, model3], VotingMode::Soft).unwrap();
+    let voting_soft =
+        VotingEnsemble::new(vec![model1, model2, model3], VotingMode::Soft).expect("unwrap");
 
     println!("   Configuration:");
     println!("     Number of models: {}", voting_soft.num_models());
     println!("     Voting mode: Soft (average probabilities)");
 
-    let predictions = voting_soft.predict(&input).unwrap();
+    let predictions = voting_soft.predict(&input).expect("unwrap");
 
     println!("\n   Predictions: {:?}\n", predictions);
 
@@ -81,16 +83,16 @@ fn main() {
     let weights = vec![0.5, 0.3, 0.2];
 
     let weighted_voting = VotingEnsemble::new(vec![model1, model2, model3], VotingMode::Soft)
-        .unwrap()
+        .expect("unwrap")
         .with_weights(weights)
-        .unwrap();
+        .expect("unwrap");
 
     println!("   Model weights:");
     println!("     Model 1: 0.5 (best performer)");
     println!("     Model 2: 0.3 (good performer)");
     println!("     Model 3: 0.2 (weak performer)");
 
-    let predictions = weighted_voting.predict(&input).unwrap();
+    let predictions = weighted_voting.predict(&input).expect("unwrap");
     println!("\n   Weighted predictions: {:?}\n", predictions);
 
     println!("   Benefits:");
@@ -106,14 +108,14 @@ fn main() {
     let model2 = LinearModel::new(2, 1);
     let model3 = LinearModel::new(2, 1);
 
-    let averaging = AveragingEnsemble::new(vec![model1, model2, model3]).unwrap();
+    let averaging = AveragingEnsemble::new(vec![model1, model2, model3]).expect("unwrap");
 
     println!("   Configuration:");
     println!("     Number of models: {}", averaging.num_models());
     println!("     Task: Regression");
 
     let input_reg = array![[1.0, 2.0], [3.0, 4.0]];
-    let predictions = averaging.predict(&input_reg).unwrap();
+    let predictions = averaging.predict(&input_reg).expect("unwrap");
 
     println!("\n   Input shape: {:?}", input_reg.shape());
     println!("   Output shape: {:?} (regression)", predictions.shape());
@@ -136,7 +138,7 @@ fn main() {
     // Meta-model: 9 inputs (3 models × 3 outputs) → 3 outputs
     let meta_model = LinearModel::new(9, 3);
 
-    let stacking = StackingEnsemble::new(vec![base1, base2, base3], meta_model).unwrap();
+    let stacking = StackingEnsemble::new(vec![base1, base2, base3], meta_model).expect("unwrap");
 
     println!("   Architecture:");
     println!("     Level 1 (Base): 3 models");
@@ -145,7 +147,7 @@ fn main() {
     println!("       • Input: 9 features (3×3 concatenated predictions)");
     println!("       • Output: 3 classes");
 
-    let predictions = stacking.predict(&input).unwrap();
+    let predictions = stacking.predict(&input).expect("unwrap");
 
     println!("\n   Input shape: {:?}", input.shape());
     println!("   Meta-features: [batch, 9] (concatenated base predictions)");
@@ -166,7 +168,7 @@ fn main() {
     println!("6. Bagging Utilities");
     println!("   Generate bootstrap samples for training diverse models\n");
 
-    let bagging = BaggingHelper::new(10, 42).unwrap();
+    let bagging = BaggingHelper::new(10, 42).expect("unwrap");
 
     println!("   Configuration:");
     println!("     Number of estimators: {}", bagging.n_estimators);

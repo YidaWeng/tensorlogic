@@ -355,6 +355,63 @@ impl MemoryDiagnostic {
     }
 }
 
+impl ShapeMismatchDiagnostic {
+    /// If `expected` and `actual` are permutations of each other, add a transpose suggestion.
+    pub fn with_transpose_suggestion(
+        mut diag: Diagnostic,
+        expected: &[usize],
+        actual: &[usize],
+    ) -> Diagnostic {
+        if expected.len() == actual.len() {
+            let mut sorted_expected = expected.to_vec();
+            let mut sorted_actual = actual.to_vec();
+            sorted_expected.sort_unstable();
+            sorted_actual.sort_unstable();
+            if sorted_expected == sorted_actual {
+                // Find the permutation that maps actual → expected.
+                let perm: Vec<usize> = expected
+                    .iter()
+                    .map(|&e| actual.iter().position(|&a| a == e).unwrap_or(0))
+                    .collect();
+                diag = diag.with_suggestion(format!(
+                    "Shapes are permutations of each other. Consider transposing with axes {:?}",
+                    perm
+                ));
+            }
+        }
+        diag
+    }
+
+    /// If the ranks differ by 1 and broadcast/unsqueeze could reconcile them, add a suggestion.
+    pub fn with_broadcast_suggestion(
+        mut diag: Diagnostic,
+        expected: &[usize],
+        actual: &[usize],
+    ) -> Diagnostic {
+        let rank_diff = (expected.len() as isize - actual.len() as isize).unsigned_abs();
+        if rank_diff == 1 {
+            let (longer, shorter) = if expected.len() > actual.len() {
+                (expected, actual)
+            } else {
+                (actual, expected)
+            };
+            // Check if shorter is a suffix of longer (broadcast-compatible).
+            let suffix_matches = longer
+                .iter()
+                .rev()
+                .zip(shorter.iter().rev())
+                .all(|(&l, &s)| l == s || l == 1 || s == 1);
+            if suffix_matches {
+                diag = diag.with_suggestion(format!(
+                    "Ranks differ by 1. Try unsqueezing to shape {:?} or using broadcasting",
+                    longer
+                ));
+            }
+        }
+        diag
+    }
+}
+
 /// Performance diagnostic builder
 pub struct PerformanceDiagnostic;
 
@@ -388,6 +445,71 @@ impl PerformanceDiagnostic {
             .with_suggestion("Enable memory optimization".to_string())
             .with_suggestion("Reduce batch size".to_string())
             .with_suggestion("Use streaming execution for large datasets".to_string())
+    }
+
+    /// Suggest increasing parallelism when independent ops exceed current thread count.
+    pub fn parallelism_available(num_independent_ops: usize, current_threads: usize) -> Diagnostic {
+        Diagnostic::info(format!(
+            "Parallelism opportunity: {} independent ops, only {} threads active",
+            num_independent_ops, current_threads
+        ))
+        .with_code("P001")
+        .with_context(format!(
+            "{} operations could run in parallel but only {} worker threads are available",
+            num_independent_ops, current_threads
+        ))
+        .with_suggestion(format!(
+            "Increase thread pool size to at least {} for maximum throughput",
+            num_independent_ops
+        ))
+        .with_suggestion(
+            "Use rayon or a work-stealing scheduler for automatic parallelism".to_string(),
+        )
+    }
+
+    /// Suggest memory pooling when the allocation rate exceeds a threshold.
+    pub fn high_allocation_rate(allocs_per_second: f64, threshold: f64) -> Diagnostic {
+        Diagnostic::warning(format!(
+            "High allocation rate: {:.1} allocs/s (threshold: {:.1})",
+            allocs_per_second, threshold
+        ))
+        .with_code("P002")
+        .with_context(format!(
+            "Tensor allocations are occurring at {:.1} per second",
+            allocs_per_second
+        ))
+        .with_suggestion("Enable a memory pool (WorkspacePool) to reuse buffers".to_string())
+        .with_suggestion("Pre-allocate output tensors where output shapes are known".to_string())
+    }
+
+    /// Suggest operation fusion when several fuseable ops are detected.
+    pub fn fusion_opportunity(num_fuseable: usize, op_names: &[&str]) -> Diagnostic {
+        Diagnostic::info(format!(
+            "Fusion opportunity: {} operations could be fused",
+            num_fuseable
+        ))
+        .with_code("P003")
+        .with_context(format!("Fuseable operations: {}", op_names.join(", ")))
+        .with_suggestion(
+            "Enable the FusionOptimizer pass to reduce kernel launch overhead".to_string(),
+        )
+        .with_suggestion("Consider using FusionStrategy::Aggressive for maximum fusion".to_string())
+    }
+
+    /// Suggest reducing f64 → f32 when a meaningful speedup is expected.
+    pub fn precision_downgrade_available(estimated_speedup: f64) -> Diagnostic {
+        Diagnostic::info(format!(
+            "Precision downgrade available: estimated {:.1}x speedup using f32",
+            estimated_speedup
+        ))
+        .with_code("P004")
+        .with_context("Computation is currently using f64 (double) precision".to_string())
+        .with_suggestion(
+            "Switch to f32 (single precision) if model accuracy tolerates it".to_string(),
+        )
+        .with_suggestion(
+            "Use MixedPrecisionConfig to selectively apply f16/f32 where safe".to_string(),
+        )
     }
 }
 
@@ -546,5 +668,47 @@ mod tests {
         assert!(Severity::Info < Severity::Warning);
         assert!(Severity::Warning < Severity::Error);
         assert!(Severity::Error < Severity::Critical);
+    }
+
+    #[test]
+    fn test_transpose_suggestion_added() {
+        let base = Diagnostic::error("shape mismatch");
+        // [3, 2] and [2, 3] are permutations of each other.
+        let diag = ShapeMismatchDiagnostic::with_transpose_suggestion(base, &[3, 2], &[2, 3]);
+        assert!(
+            diag.suggestions.iter().any(|s| s.contains("transpos")),
+            "Expected transpose suggestion, got: {:?}",
+            diag.suggestions
+        );
+    }
+
+    #[test]
+    fn test_broadcast_suggestion_added() {
+        let base = Diagnostic::error("shape mismatch");
+        // [1, 4] vs [4] differ by 1 rank; [4] is a suffix of [1, 4].
+        let diag = ShapeMismatchDiagnostic::with_broadcast_suggestion(base, &[1, 4], &[4]);
+        assert!(
+            diag.suggestions
+                .iter()
+                .any(|s| s.contains("unsqueez") || s.contains("broadcast")),
+            "Expected broadcast suggestion, got: {:?}",
+            diag.suggestions
+        );
+    }
+
+    #[test]
+    fn test_parallelism_diagnostic() {
+        let diag = PerformanceDiagnostic::parallelism_available(8, 2);
+        assert_eq!(diag.severity, Severity::Info);
+        assert!(diag.message.contains("Parallelism opportunity"));
+        assert!(!diag.suggestions.is_empty());
+    }
+
+    #[test]
+    fn test_fusion_opportunity_diagnostic() {
+        let diag = PerformanceDiagnostic::fusion_opportunity(3, &["relu", "matmul", "add"]);
+        assert_eq!(diag.severity, Severity::Info);
+        assert!(diag.message.contains("Fusion opportunity"));
+        assert!(diag.context.iter().any(|c| c.contains("relu")));
     }
 }

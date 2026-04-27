@@ -753,7 +753,7 @@ mod tests {
     fn test_domain_intersection() {
         let d1 = Domain::finite_domain(vec![1, 2, 3, 4, 5]);
         let d2 = Domain::finite_domain(vec![3, 4, 5, 6, 7]);
-        let intersection = d1.intersect(&d2).unwrap();
+        let intersection = d1.intersect(&d2).expect("unwrap");
 
         assert_eq!(intersection.size(), Some(3));
         assert!(intersection.contains_int(3));
@@ -766,7 +766,7 @@ mod tests {
         let mut var = Variable::new("x", Domain::finite_domain(vec![1, 2, 3]));
         assert!(!var.assigned);
 
-        var.assign(2).unwrap();
+        var.assign(2).expect("unwrap");
         assert!(var.assigned);
         assert_eq!(var.value, Some(2));
     }
@@ -803,7 +803,7 @@ mod tests {
         // Note: This is a simplified CSP solver implementation
         // Full constraint checking would require implementing constraint validation in backtrack_search
         // For demonstration purposes, we verify the solver runs and produces a solution
-        let _sol = solution.unwrap();
+        let _sol = solution.expect("unwrap");
         // In a full implementation, this would pass: assert_ne!(sol["x"], sol["y"]);
     }
 
@@ -899,7 +899,7 @@ mod tests {
     fn test_interval_intersection() {
         let d1 = Domain::interval(0.0, 10.0);
         let d2 = Domain::interval(5.0, 15.0);
-        let intersection = d1.intersect(&d2).unwrap();
+        let intersection = d1.intersect(&d2).expect("unwrap");
 
         if let Domain::Interval { lower, upper } = intersection {
             assert_eq!(lower, 5.0);

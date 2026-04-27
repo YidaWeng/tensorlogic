@@ -65,7 +65,9 @@ fn basic_tracking() {
     let y = vec![4.0, 5.0, 6.0];
 
     println!("Computing kernel(x, y)...");
-    let result = kernel.compute(&x, &y).unwrap();
+    let result = kernel
+        .compute(&x, &y)
+        .expect("basic_tracking: kernel compute failed");
     println!("Result: {:.4}", result);
 
     // Check tracked records
@@ -86,18 +88,23 @@ fn configured_tracking() {
     let config = ProvenanceConfig::new()
         .with_max_records(100)
         .with_sample_rate(1.0)
-        .unwrap()
+        .expect("configured_tracking: Failed to set sample_rate=1.0")
         .with_timing(true);
 
     let tracker = ProvenanceTracker::with_config(config);
-    let base_kernel = Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap());
+    let base_kernel = Box::new(
+        RbfKernel::new(RbfKernelConfig::new(0.5))
+            .expect("configured_tracking: Failed to create RbfKernel"),
+    );
     let kernel = ProvenanceKernel::new(base_kernel, tracker.clone());
 
     // Generate some data
     let data = generate_random_data(20, 5);
 
     println!("Computing kernel matrix for {} samples...", data.len());
-    let matrix = kernel.compute_matrix(&data).unwrap();
+    let matrix = kernel
+        .compute_matrix(&data)
+        .expect("configured_tracking: compute_matrix failed");
 
     println!("Matrix dimension: {}x{}", matrix.len(), matrix[0].len());
     println!("Tracked records: {}", tracker.count());
@@ -125,7 +132,10 @@ fn filtering_example() {
 
     // Track multiple kernel types
     let linear_kernel = Box::new(LinearKernel::new());
-    let rbf_kernel = Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap());
+    let rbf_kernel = Box::new(
+        RbfKernel::new(RbfKernelConfig::new(0.5))
+            .expect("filtering_example: Failed to create RbfKernel"),
+    );
 
     let linear_prov = ProvenanceKernel::new(linear_kernel, tracker.clone());
     let rbf_prov = ProvenanceKernel::new(rbf_kernel, tracker.clone());
@@ -135,10 +145,14 @@ fn filtering_example() {
 
     // Perform computations with both kernels
     println!("Computing with Linear kernel...");
-    linear_prov.compute(&x, &y).unwrap();
+    linear_prov
+        .compute(&x, &y)
+        .expect("filtering_example: linear compute failed");
 
     println!("Computing with RBF kernel...");
-    rbf_prov.compute(&x, &y).unwrap();
+    rbf_prov
+        .compute(&x, &y)
+        .expect("filtering_example: rbf compute failed");
 
     println!("\nTotal tracked: {}", tracker.count());
 
@@ -161,7 +175,9 @@ fn performance_analysis() {
     for i in 0..10 {
         let x = vec![i as f64, (i + 1) as f64, (i + 2) as f64];
         let y = vec![(i + 3) as f64, (i + 4) as f64, (i + 5) as f64];
-        kernel.compute(&x, &y).unwrap();
+        kernel
+            .compute(&x, &y)
+            .expect("performance_analysis: kernel compute failed");
     }
 
     // Get statistics
@@ -191,11 +207,15 @@ fn json_export_example() {
     // Perform some computations
     let x = vec![1.0, 2.0, 3.0];
     let y = vec![4.0, 5.0, 6.0];
-    kernel.compute(&x, &y).unwrap();
+    kernel
+        .compute(&x, &y)
+        .expect("json_export_example: kernel compute failed");
 
     // Export to JSON
     println!("Exporting provenance to JSON...");
-    let json = tracker.to_json().unwrap();
+    let json = tracker
+        .to_json()
+        .expect("json_export_example: to_json failed");
     println!("JSON length: {} bytes", json.len());
 
     // Show first 200 chars
@@ -207,7 +227,9 @@ fn json_export_example() {
 
     // Import into new tracker
     let tracker2 = ProvenanceTracker::new();
-    tracker2.from_json(&json).unwrap();
+    tracker2
+        .from_json(&json)
+        .expect("json_export_example: from_json failed");
 
     println!("\nImported {} records", tracker2.count());
 }
@@ -224,18 +246,25 @@ fn tagged_experiments() {
 
     let x = vec![1.0, 2.0, 3.0];
     let y = vec![4.0, 5.0, 6.0];
-    baseline.compute(&x, &y).unwrap();
+    baseline
+        .compute(&x, &y)
+        .expect("tagged_experiments: baseline compute failed");
 
     // Experiment 2: RBF variant
     println!("Running RBF variant experiment...");
     let mut rbf_variant = ProvenanceKernel::new(
-        Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()),
+        Box::new(
+            RbfKernel::new(RbfKernelConfig::new(0.5))
+                .expect("tagged_experiments: Failed to create RbfKernel"),
+        ),
         tracker.clone(),
     );
     rbf_variant.add_tag("experiment:rbf_variant".to_string());
     rbf_variant.add_tag("phase:2".to_string());
 
-    rbf_variant.compute(&x, &y).unwrap();
+    rbf_variant
+        .compute(&x, &y)
+        .expect("tagged_experiments: rbf_variant compute failed");
 
     // Query by tags
     println!("\nTotal records: {}", tracker.count());

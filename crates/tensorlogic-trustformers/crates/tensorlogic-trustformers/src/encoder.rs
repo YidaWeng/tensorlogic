@@ -81,11 +81,12 @@ mod tests {
     }
 
     #[test]
-    fn test_encoder_layer_build() {
+    fn test_encoder_layer_build() -> Result<(), Box<dyn std::error::Error>> {
         let config = EncoderConfig::default();
-        let encoder = EncoderLayer::new(config).unwrap();
+        let encoder = EncoderLayer::new(config)?;
         let graph = encoder.build();
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]

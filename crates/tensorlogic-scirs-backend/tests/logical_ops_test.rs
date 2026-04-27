@@ -5,7 +5,7 @@ use tensorlogic_infer::{ElemOp, ReduceOp, TlExecutor};
 use tensorlogic_scirs_backend::Scirs2Exec;
 
 fn create_tensor(data: Vec<f64>, shape: Vec<usize>) -> ArrayD<f64> {
-    ArrayD::from_shape_vec(IxDyn(&shape), data).unwrap()
+    ArrayD::from_shape_vec(IxDyn(&shape), data).expect("unwrap")
 }
 
 fn assert_tensor_eq(actual: &[f64], expected: &[f64], epsilon: f64) {
@@ -29,11 +29,13 @@ fn test_or_max_operation() {
     let x = create_tensor(vec![0.3, 0.7, 0.1, 0.9], vec![4]);
     let y = create_tensor(vec![0.5, 0.2, 0.8, 0.4], vec![4]);
 
-    let result = executor.elem_op_binary(ElemOp::OrMax, &x, &y).unwrap();
+    let result = executor
+        .elem_op_binary(ElemOp::OrMax, &x, &y)
+        .expect("unwrap");
 
     // OR(max) should return max(x, y)
     let expected = vec![0.5, 0.7, 0.8, 0.9];
-    assert_tensor_eq(result.as_slice().unwrap(), &expected, 1e-10);
+    assert_tensor_eq(result.as_slice().expect("unwrap"), &expected, 1e-10);
 }
 
 #[test]
@@ -43,7 +45,9 @@ fn test_or_prob_sum_operation() {
     let x = create_tensor(vec![0.3, 0.7, 0.0, 1.0], vec![4]);
     let y = create_tensor(vec![0.5, 0.2, 0.0, 0.0], vec![4]);
 
-    let result = executor.elem_op_binary(ElemOp::OrProbSum, &x, &y).unwrap();
+    let result = executor
+        .elem_op_binary(ElemOp::OrProbSum, &x, &y)
+        .expect("unwrap");
 
     // OR(prob): a + b - ab
     // 0.3 + 0.5 - 0.15 = 0.65
@@ -51,7 +55,7 @@ fn test_or_prob_sum_operation() {
     // 0.0 + 0.0 - 0.0 = 0.0
     // 1.0 + 0.0 - 0.0 = 1.0
     let expected = vec![0.65, 0.76, 0.0, 1.0];
-    assert_tensor_eq(result.as_slice().unwrap(), &expected, 1e-10);
+    assert_tensor_eq(result.as_slice().expect("unwrap"), &expected, 1e-10);
 }
 
 #[test]
@@ -61,7 +65,9 @@ fn test_nand_operation() {
     let x = create_tensor(vec![0.0, 0.0, 1.0, 1.0], vec![4]);
     let y = create_tensor(vec![0.0, 1.0, 0.0, 1.0], vec![4]);
 
-    let result = executor.elem_op_binary(ElemOp::Nand, &x, &y).unwrap();
+    let result = executor
+        .elem_op_binary(ElemOp::Nand, &x, &y)
+        .expect("unwrap");
 
     // NAND: 1 - (a * b)
     // 1 - 0 = 1.0
@@ -69,7 +75,7 @@ fn test_nand_operation() {
     // 1 - 0 = 1.0
     // 1 - 1 = 0.0
     let expected = vec![1.0, 1.0, 1.0, 0.0];
-    assert_tensor_eq(result.as_slice().unwrap(), &expected, 1e-10);
+    assert_tensor_eq(result.as_slice().expect("unwrap"), &expected, 1e-10);
 }
 
 #[test]
@@ -79,7 +85,9 @@ fn test_nor_operation() {
     let x = create_tensor(vec![0.0, 0.0, 1.0, 1.0], vec![4]);
     let y = create_tensor(vec![0.0, 1.0, 0.0, 1.0], vec![4]);
 
-    let result = executor.elem_op_binary(ElemOp::Nor, &x, &y).unwrap();
+    let result = executor
+        .elem_op_binary(ElemOp::Nor, &x, &y)
+        .expect("unwrap");
 
     // NOR: 1 - max(a, b)
     // 1 - 0 = 1.0
@@ -87,7 +95,7 @@ fn test_nor_operation() {
     // 1 - 1 = 0.0
     // 1 - 1 = 0.0
     let expected = vec![1.0, 0.0, 0.0, 0.0];
-    assert_tensor_eq(result.as_slice().unwrap(), &expected, 1e-10);
+    assert_tensor_eq(result.as_slice().expect("unwrap"), &expected, 1e-10);
 }
 
 #[test]
@@ -97,7 +105,9 @@ fn test_xor_operation() {
     let x = create_tensor(vec![0.0, 0.0, 1.0, 1.0], vec![4]);
     let y = create_tensor(vec![0.0, 1.0, 0.0, 1.0], vec![4]);
 
-    let result = executor.elem_op_binary(ElemOp::Xor, &x, &y).unwrap();
+    let result = executor
+        .elem_op_binary(ElemOp::Xor, &x, &y)
+        .expect("unwrap");
 
     // XOR (soft): a + b - 2ab
     // 0 + 0 - 0 = 0.0
@@ -105,7 +115,7 @@ fn test_xor_operation() {
     // 1 + 0 - 0 = 1.0
     // 1 + 1 - 2 = 0.0
     let expected = vec![0.0, 1.0, 1.0, 0.0];
-    assert_tensor_eq(result.as_slice().unwrap(), &expected, 1e-10);
+    assert_tensor_eq(result.as_slice().expect("unwrap"), &expected, 1e-10);
 }
 
 #[test]
@@ -114,11 +124,13 @@ fn test_product_reduction() {
 
     let x = create_tensor(vec![2.0, 3.0, 4.0, 5.0], vec![2, 2]);
 
-    let result = executor.reduce(ReduceOp::Product, &x, &[0]).unwrap();
+    let result = executor
+        .reduce(ReduceOp::Product, &x, &[0])
+        .expect("unwrap");
 
     // Product over axis 0: [2*4, 3*5] = [8, 15]
     let expected = vec![8.0, 15.0];
-    assert_tensor_eq(result.as_slice().unwrap(), &expected, 1e-10);
+    assert_tensor_eq(result.as_slice().expect("unwrap"), &expected, 1e-10);
 }
 
 #[test]
@@ -127,10 +139,12 @@ fn test_product_reduction_all_axes() {
 
     let x = create_tensor(vec![2.0, 3.0, 4.0, 5.0], vec![2, 2]);
 
-    let result = executor.reduce(ReduceOp::Product, &x, &[0, 1]).unwrap();
+    let result = executor
+        .reduce(ReduceOp::Product, &x, &[0, 1])
+        .expect("unwrap");
 
     // Product of all elements: 2*3*4*5 = 120
-    let value = result.iter().next().unwrap();
+    let value = result.iter().next().expect("unwrap");
     assert!(
         (*value - 120.0).abs() < 1e-10,
         "Expected 120.0, got {}",

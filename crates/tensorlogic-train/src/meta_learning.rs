@@ -563,7 +563,7 @@ mod tests {
         let query_x = Array2::zeros((15, 10));
         let query_y = Array2::zeros((15, 2));
 
-        let task = MetaTask::new(support_x, support_y, query_x, query_y).unwrap();
+        let task = MetaTask::new(support_x, support_y, query_x, query_y).expect("unwrap");
         assert_eq!(task.support_size(), 5);
         assert_eq!(task.query_size(), 15);
     }
@@ -613,7 +613,7 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("weights".to_string(), Array1::zeros(10));
 
-        let adapted = maml.adapt(&task, &params).unwrap();
+        let adapted = maml.adapt(&task, &params).expect("unwrap");
         assert!(adapted.contains_key("weights"));
     }
 
@@ -625,7 +625,7 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("weights".to_string(), Array1::zeros(10));
 
-        let adapted = reptile.adapt(&task, &params).unwrap();
+        let adapted = reptile.adapt(&task, &params).expect("unwrap");
         assert!(adapted.contains_key("weights"));
     }
 
@@ -637,7 +637,7 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("weights".to_string(), Array1::zeros(10));
 
-        let (updated_params, loss) = maml.meta_step(&tasks, &params).unwrap();
+        let (updated_params, loss) = maml.meta_step(&tasks, &params).expect("unwrap");
         assert!(updated_params.contains_key("weights"));
         assert!(loss >= 0.0);
     }
@@ -650,7 +650,7 @@ mod tests {
         let mut params = HashMap::new();
         params.insert("weights".to_string(), Array1::zeros(10));
 
-        let (updated_params, loss) = reptile.meta_step(&tasks, &params).unwrap();
+        let (updated_params, loss) = reptile.meta_step(&tasks, &params).expect("unwrap");
         assert!(updated_params.contains_key("weights"));
         assert!(loss >= 0.0);
     }
@@ -697,6 +697,6 @@ mod tests {
         let support_y = Array2::zeros((5, 2));
         let query_x = Array2::zeros((15, 10));
         let query_y = Array2::zeros((15, 2));
-        MetaTask::new(support_x, support_y, query_x, query_y).unwrap()
+        MetaTask::new(support_x, support_y, query_x, query_y).expect("unwrap")
     }
 }

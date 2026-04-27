@@ -211,12 +211,18 @@ impl ParallelScirs2Exec {
 
                 let (x_broadcast, y_broadcast);
                 let (x_ref, y_ref) = if x_is_scalar && !y_is_scalar {
-                    let scalar_value = x.iter().next().unwrap();
+                    let scalar_value = x
+                        .iter()
+                        .next()
+                        .expect("scalar ndim==0 tensor always has one element");
                     x_broadcast =
                         scirs2_core::ndarray::Array::from_elem(y.raw_dim(), *scalar_value);
                     (&x_broadcast.view(), &y.view())
                 } else if y_is_scalar && !x_is_scalar {
-                    let scalar_value = y.iter().next().unwrap();
+                    let scalar_value = y
+                        .iter()
+                        .next()
+                        .expect("scalar ndim==0 tensor always has one element");
                     y_broadcast =
                         scirs2_core::ndarray::Array::from_elem(x.raw_dim(), *scalar_value);
                     (&x.view(), &y_broadcast.view())
@@ -369,7 +375,9 @@ impl TlAutodiff for ParallelScirs2Exec {
 
         // Initialize input tensors from our stored tensors
         {
-            let mut storage = computed_tensors.lock().unwrap();
+            let mut storage = computed_tensors
+                .lock()
+                .expect("lock should not be poisoned");
             for (idx, tensor_name) in graph.tensors.iter().enumerate() {
                 if let Some(tensor) = self.base.tensors.get(tensor_name) {
                     storage[idx] = Some(tensor.clone());
@@ -416,7 +424,9 @@ impl TlAutodiff for ParallelScirs2Exec {
 
                         // Read inputs from shared storage
                         let inputs: Result<Vec<_>, _> = {
-                            let storage = computed_tensors.lock().unwrap();
+                            let storage = computed_tensors
+                                .lock()
+                                .expect("lock should not be poisoned");
                             node.inputs
                                 .iter()
                                 .map(|&idx| {
@@ -443,8 +453,10 @@ impl TlAutodiff for ParallelScirs2Exec {
 
                 // Store results
                 {
-                    let mut storage = computed_tensors.lock().unwrap();
-                    let mut inputs_vec = node_inputs.lock().unwrap();
+                    let mut storage = computed_tensors
+                        .lock()
+                        .expect("lock should not be poisoned");
+                    let mut inputs_vec = node_inputs.lock().expect("lock should not be poisoned");
 
                     // Ensure node_inputs has enough capacity
                     while inputs_vec.len()
@@ -467,8 +479,10 @@ impl TlAutodiff for ParallelScirs2Exec {
                 // Sequential execution for this level
                 sequential_ops += level_ops.len();
 
-                let mut storage = computed_tensors.lock().unwrap();
-                let mut inputs_vec = node_inputs.lock().unwrap();
+                let mut storage = computed_tensors
+                    .lock()
+                    .expect("lock should not be poisoned");
+                let mut inputs_vec = node_inputs.lock().expect("lock should not be poisoned");
 
                 for &op_idx in level_ops {
                     let node = &graph.nodes[op_idx];
@@ -509,10 +523,13 @@ impl TlAutodiff for ParallelScirs2Exec {
 
         // Store tape for backward pass
         let final_tensors = Arc::try_unwrap(computed_tensors)
-            .unwrap()
+            .expect("all threads finished, Arc has single owner")
             .into_inner()
-            .unwrap();
-        let final_inputs = Arc::try_unwrap(node_inputs).unwrap().into_inner().unwrap();
+            .expect("Mutex should not be poisoned");
+        let final_inputs = Arc::try_unwrap(node_inputs)
+            .expect("all threads finished, Arc has single owner")
+            .into_inner()
+            .expect("Mutex should not be poisoned");
 
         self.base.tape = Some(ForwardTape {
             tensors: final_tensors.clone(),
@@ -590,8 +607,8 @@ mod tests {
         let e_idx = graph.add_tensor("e"); // 4
         let f_idx = graph.add_tensor("f"); // 5
 
-        graph.add_input(a_idx).unwrap();
-        graph.add_input(b_idx).unwrap();
+        graph.add_input(a_idx).expect("unwrap");
+        graph.add_input(b_idx).expect("unwrap");
 
         // Op0: c = relu(a)
         graph
@@ -603,7 +620,7 @@ mod tests {
                 outputs: vec![c_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Op1: d = sigmoid(b)
         graph
@@ -615,7 +632,7 @@ mod tests {
                 outputs: vec![d_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Op2: e = c + d
         graph
@@ -627,7 +644,7 @@ mod tests {
                 outputs: vec![e_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Op3: f = relu(e)
         graph
@@ -639,9 +656,9 @@ mod tests {
                 outputs: vec![f_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
-        graph.add_output(f_idx).unwrap();
+        graph.add_output(f_idx).expect("unwrap");
 
         graph
     }
@@ -668,13 +685,13 @@ mod tests {
         executor.add_tensor("a", array![-1.0, 2.0, -3.0].into_dyn());
         executor.add_tensor("b", array![0.0, 1.0, 2.0].into_dyn());
 
-        let result = executor.forward(&graph).unwrap();
+        let result = executor.forward(&graph).expect("unwrap");
 
         // Verify output shape
         assert_eq!(result.shape(), &[3]);
 
         // Verify statistics
-        let stats = executor.execution_stats().unwrap();
+        let stats = executor.execution_stats().expect("unwrap");
         assert_eq!(stats.num_levels, 3);
         assert!(stats.parallel_ops >= 2); // Op0 and Op1 should run in parallel
     }
@@ -687,13 +704,13 @@ mod tests {
         let mut parallel_exec = ParallelScirs2Exec::new();
         parallel_exec.add_tensor("a", array![-1.0, 2.0, -3.0].into_dyn());
         parallel_exec.add_tensor("b", array![0.0, 1.0, 2.0].into_dyn());
-        let parallel_result = parallel_exec.forward(&graph).unwrap();
+        let parallel_result = parallel_exec.forward(&graph).expect("unwrap");
 
         // Execute with sequential executor
         let mut sequential_exec = crate::executor::Scirs2Exec::new();
         sequential_exec.add_tensor("a", array![-1.0, 2.0, -3.0].into_dyn());
         sequential_exec.add_tensor("b", array![0.0, 1.0, 2.0].into_dyn());
-        let sequential_result = sequential_exec.forward(&graph).unwrap();
+        let sequential_result = sequential_exec.forward(&graph).expect("unwrap");
 
         // Results should match
         assert_eq!(parallel_result.shape(), sequential_result.shape());
@@ -711,9 +728,9 @@ mod tests {
         executor.add_tensor("a", array![1.0, 2.0].into_dyn());
         executor.add_tensor("b", array![3.0, 4.0].into_dyn());
 
-        executor.forward(&graph).unwrap();
+        executor.forward(&graph).expect("unwrap");
 
-        let stats = executor.execution_stats().unwrap();
+        let stats = executor.execution_stats().expect("unwrap");
         assert_eq!(stats.num_levels, 3);
         assert!(stats.max_parallelism >= 2);
         assert!(stats.estimated_speedup > 1.0);
@@ -728,7 +745,7 @@ mod tests {
         executor.add_tensor("a", array![1.0, 2.0].into_dyn());
         executor.add_tensor("b", array![3.0, 4.0].into_dyn());
 
-        executor.forward(&graph).unwrap();
+        executor.forward(&graph).expect("unwrap");
 
         // Pool should have some statistics (if pooling is used)
         let _pool_stats = executor.pool_stats();
@@ -743,7 +760,7 @@ mod tests {
         let a_idx = graph.add_tensor("a");
         let b_idx = graph.add_tensor("b");
 
-        graph.add_input(a_idx).unwrap();
+        graph.add_input(a_idx).expect("unwrap");
 
         // Single operation
         graph
@@ -755,16 +772,16 @@ mod tests {
                 outputs: vec![b_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
-        graph.add_output(b_idx).unwrap();
+        graph.add_output(b_idx).expect("unwrap");
 
         let mut executor = ParallelScirs2Exec::new();
         executor.add_tensor("a", array![1.0, 2.0, 3.0].into_dyn());
 
-        executor.forward(&graph).unwrap();
+        executor.forward(&graph).expect("unwrap");
 
-        let stats = executor.execution_stats().unwrap();
+        let stats = executor.execution_stats().expect("unwrap");
         // Since there's only 1 op, it should run sequentially
         assert_eq!(stats.sequential_ops, 1);
         assert_eq!(stats.parallel_ops, 0);
@@ -778,12 +795,12 @@ mod tests {
         executor.add_tensor("a", array![1.0, 2.0, 3.0].into_dyn());
         executor.add_tensor("b", array![0.5, 1.0, 1.5].into_dyn());
 
-        executor.forward(&graph).unwrap();
+        executor.forward(&graph).expect("unwrap");
 
         // Backward pass
         let loss_grad = array![1.0, 1.0, 1.0].into_dyn();
 
-        let tape = executor.backward(&graph, &loss_grad).unwrap();
+        let tape = executor.backward(&graph, &loss_grad).expect("unwrap");
 
         // Should have gradients for inputs
         assert!(!tape.is_empty());

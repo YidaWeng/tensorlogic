@@ -1,20 +1,9 @@
-# RC.1 Release Status
+# TensorLogic Python Bindings — TODO
 
-**Version**: 0.1.0-rc.1
-**Release Date**: 2026-03-06
-**Status**: Production Ready
+**Status**: Alpha | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
-This crate is part of the TensorLogic v0.1.0-rc.1 release with:
-- Zero compiler warnings
-- 300+ tests passing
-- Complete documentation
-- Production-ready quality
-
-See main [TODO.md](../../TODO.md) for overall project status.
-
----
-
-# pytensorlogic TODO
+PyO3 / abi3-py39 Python bindings via maturin.
 
 ## Completed
 
@@ -320,6 +309,10 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [ ] Sphinx documentation - FUTURE
 - [ ] Tutorial Jupyter notebooks - FUTURE
 
+## v0.1.3 Enhancements (2026-03-30)
+
+- [x] **Training Progress Callbacks** (`progress.rs`): `PyProgressEvent` (step/loss/grad_norm/elapsed_ms with tqdm-compatible `as_dict()`), `PyCompilationEvent` (6 phase events), `PyTrainingResult` (final/avg/reduction loss), `PyTrainingLoop` with optional Python callback. 12 new tests.
+
 ## Future Enhancements
 
 ### Integrations
@@ -346,7 +339,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
 
 **Total Items:** 120+ tasks
 **Completion:** 100% of core + medium + performance + utility features
-**Release:** v0.1.0-rc.1 (2026-03-06)
+**Release:** v0.1.0 Alpha (2026-04-06)
 
 ### Completion Summary
 - Phase 1 Complete: Core types binding (PyTerm, PyTLExpr, PyEinsumGraph)
@@ -372,13 +365,14 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - Phase 21 Complete: Utility Functions (context managers, custom exceptions, helpers)
 
 ### Build Status
-- Maturin build succeeds with zero warnings
+- Maturin build succeeds with zero warnings (run: `maturin develop`)
 - Release build optimized and ready
 - All dependencies resolved
 - Zero clippy warnings
+- Note: `cargo nextest` does not run Python integration tests; use `pytest tests/` after `maturin develop`
 
 ### Test & Example Status
-- 300+ pytest tests across 7 test files
+- 300+ pytest tests across 7 test files (test_types, test_execution, test_backend, test_provenance, test_training, test_persistence, test_dsl)
 - 12 comprehensive examples
 - Type stub file (pytensorlogic.pyi) with full API coverage (1100+ lines)
 - pytest.ini configuration

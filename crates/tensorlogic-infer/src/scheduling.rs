@@ -293,7 +293,7 @@ impl Scheduler {
             .enumerate()
             .map(|(i, &cost)| (i, cost))
             .collect();
-        node_priorities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        node_priorities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Schedule using priority-based topological sort
         let mut executed = HashSet::new();
@@ -400,7 +400,7 @@ impl Scheduler {
                 let max_successor_cost = (0..num_nodes)
                     .filter(|&i| deps.get(&i).map(|d| d.contains(&node_idx)).unwrap_or(false))
                     .map(|i| critical_costs[i])
-                    .max_by(|a, b| a.partial_cmp(b).unwrap())
+                    .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                     .unwrap_or(0.0);
 
                 critical_costs[node_idx] = node_cost + max_successor_cost;

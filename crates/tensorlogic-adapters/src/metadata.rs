@@ -496,7 +496,7 @@ mod tests {
 
         assert_eq!(meta.version_history.len(), 2);
 
-        let latest = meta.latest_version().unwrap();
+        let latest = meta.latest_version().expect("unwrap");
         assert_eq!(latest.version, "1.1.0");
         assert_eq!(latest.author, "Bob");
     }
@@ -522,7 +522,7 @@ mod tests {
         domain_cat.add_tag("location");
         registry.register_category(domain_cat);
 
-        let category = registry.get_category("domain").unwrap();
+        let category = registry.get_category("domain").expect("unwrap");
         assert!(category.contains("person"));
 
         let found_category = registry.find_category_for_tag("person");

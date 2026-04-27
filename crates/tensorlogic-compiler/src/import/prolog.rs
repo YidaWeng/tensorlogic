@@ -17,13 +17,13 @@
 //! use tensorlogic_compiler::import::prolog::parse_prolog;
 //!
 //! // Simple fact
-//! let expr = parse_prolog("knows(alice, bob).").unwrap();
+//! let expr = parse_prolog("knows(alice, bob).").expect("unwrap");
 //!
 //! // Rule with implication
-//! let expr = parse_prolog("mortal(X) :- human(X).").unwrap();
+//! let expr = parse_prolog("mortal(X) :- human(X).").expect("unwrap");
 //!
 //! // Conjunction
-//! let expr = parse_prolog("human(X), greek(X).").unwrap();
+//! let expr = parse_prolog("human(X), greek(X).").expect("unwrap");
 //! ```
 
 use anyhow::{anyhow, Result};
@@ -180,55 +180,55 @@ mod tests {
 
     #[test]
     fn test_simple_fact() {
-        let expr = parse_prolog("mortal(socrates).").unwrap();
+        let expr = parse_prolog("mortal(socrates).").expect("unwrap");
         assert!(matches!(expr, TLExpr::Pred { .. }));
     }
 
     #[test]
     fn test_rule() {
-        let expr = parse_prolog("mortal(X) :- human(X).").unwrap();
+        let expr = parse_prolog("mortal(X) :- human(X).").expect("unwrap");
         assert!(matches!(expr, TLExpr::Imply { .. }));
     }
 
     #[test]
     fn test_conjunction() {
-        let expr = parse_prolog("human(X), mortal(X).").unwrap();
+        let expr = parse_prolog("human(X), mortal(X).").expect("unwrap");
         assert!(matches!(expr, TLExpr::And(_, _)));
     }
 
     #[test]
     fn test_disjunction() {
-        let expr = parse_prolog("human(X) ; god(X).").unwrap();
+        let expr = parse_prolog("human(X) ; god(X).").expect("unwrap");
         assert!(matches!(expr, TLExpr::Or(_, _)));
     }
 
     #[test]
     fn test_negation_prefix() {
-        let expr = parse_prolog("\\+ mortal(X).").unwrap();
+        let expr = parse_prolog("\\+ mortal(X).").expect("unwrap");
         assert!(matches!(expr, TLExpr::Not(_)));
     }
 
     #[test]
     fn test_negation_function() {
-        let expr = parse_prolog("not(mortal(X)).").unwrap();
+        let expr = parse_prolog("not(mortal(X)).").expect("unwrap");
         assert!(matches!(expr, TLExpr::Not(_)));
     }
 
     #[test]
     fn test_complex_rule() {
-        let expr = parse_prolog("mortal(X) :- human(X), \\+ god(X).").unwrap();
+        let expr = parse_prolog("mortal(X) :- human(X), \\+ god(X).").expect("unwrap");
         assert!(matches!(expr, TLExpr::Imply { .. }));
     }
 
     #[test]
     fn test_predicate_no_args() {
-        let expr = parse_prolog("alive.").unwrap();
+        let expr = parse_prolog("alive.").expect("unwrap");
         assert!(matches!(expr, TLExpr::Pred { .. }));
     }
 
     #[test]
     fn test_multiple_args() {
-        let expr = parse_prolog("knows(alice, bob, charlie).").unwrap();
+        let expr = parse_prolog("knows(alice, bob, charlie).").expect("unwrap");
         if let TLExpr::Pred { name, args } = expr {
             assert_eq!(name, "knows");
             assert_eq!(args.len(), 3);
@@ -239,7 +239,7 @@ mod tests {
 
     #[test]
     fn test_variables_and_constants() {
-        let expr = parse_prolog("age(Person, 25).").unwrap();
+        let expr = parse_prolog("age(Person, 25).").expect("unwrap");
         if let TLExpr::Pred { name: _, args } = expr {
             assert!(matches!(args[0], Term::Var(_)));
             assert!(matches!(args[1], Term::Const(_)));

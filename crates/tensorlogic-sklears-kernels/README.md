@@ -1,7 +1,7 @@
 # tensorlogic-sklears-kernels
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic-sklears-kernels-orange)](https://crates.io/crates/tensorlogic-sklears-kernels)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-sklears-kernels)
-[![Tests](https://img.shields.io/badge/tests-391%2F391-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/tests-451%2F451-brightgreen)](#)
 [![Production](https://img.shields.io/badge/status-production_ready-success)](#)
 
 **Logic-derived similarity kernels for machine learning integration**
@@ -88,10 +88,25 @@ This crate provides kernel functions that measure similarity based on logical ru
 - **HadamardTaskKernel** - Element-wise product
 - **MultiTaskKernelBuilder** - Builder pattern for multi-task kernels
 
+### Batch Kernel Computation and Gram Matrix (v0.1.6)
+- **KernelCache** - LRU cache with symmetric key normalization and hit rate statistics
+- **BatchKernelComputer** - O(n²/2) Gram matrix computation with optional caching
+- **GramMatrix** - Symmetry check, trace, Frobenius norm, PSD diagonal check
+- **KernelMatrixStats** - Aggregate statistics for computed kernel matrices
+
+### Kernel Alignment (v0.1.18)
+- **KernelMatrix** - Kernel matrix with centering, Frobenius inner product, Frobenius norm, and trace operations
+- **KernelTargetAlignment (KTA)** - Uncentered alignment between a kernel matrix and an ideal label kernel
+- **CenteredKernelAlignment (CKA)** - HSIC-normalized centered KTA robust to different-scale kernels
+- **HilbertSchmidtIndependenceCriterion (HSIC)** - Statistical independence criterion between two kernel matrices
+- **AlignmentResult** - Raw score, centered score, and HSIC value
+- **KernelAlignmentGridSearch** - Exhaustive parameter grid search scored by CKA
+- **KernelAlignmentGradientAscent** - Finite-difference gradient-free ascent to maximize alignment
+- **AlignmentError** - Typed error enum for dimension mismatches and degenerate matrices
+
 ### Composite and Performance Features
 - **Weighted Sum Kernels** - Combine multiple kernels with weights
 - **Product Kernels** - Multiplicative kernel combinations
-- **Kernel Alignment** - Measure similarity between kernel matrices
 - **Kernel Caching** - LRU cache with hit rate statistics (CachedKernel, KernelMatrixCache)
 - **Sparse Matrices** - CSR format for memory-efficient storage (SparseKernelMatrix)
 - **Low-Rank Approximations** - Nystrom method with three sampling strategies
@@ -123,10 +138,11 @@ This crate provides kernel functions that measure similarity based on logical ru
 - Expression simplification and PSD property checking
 
 ### Quality Assurance
-- **391 Tests** - Comprehensive test coverage (100% passing)
+- **451 Tests** - Comprehensive test coverage (100% passing)
 - **Zero Warnings** - Strict code quality enforcement (clippy clean)
 - **Type-Safe API** - Builder pattern with validation
 - **Production Ready** - Battle-tested implementations
+- **Pure Rust RNG** - `rand_09`/`rand_distr_05` removed from `sklears` feature; all random number generation uses `scirs2_core::random`
 
 ## Quick Start
 
@@ -276,7 +292,7 @@ let kernel_matrix = kernel.compute_matrix(&features).unwrap();
 
 ```bash
 cargo nextest run -p tensorlogic-sklears-kernels
-# 391 tests, all passing, zero warnings
+# 451 tests, all passing, zero warnings
 ```
 
 ## Benchmarking
@@ -299,8 +315,8 @@ Apache-2.0
 
 ---
 
-**Status**: Production Ready (v0.1.0-rc.1)
-**Last Updated**: 2026-03-06
-**Tests**: 391/391 passing (100%)
+**Status**: Production Ready (v0.1.0 Stable)
+**Last Updated**: 2026-04-06
+**Tests**: 451/451 passing (100%)
 **Benchmarks**: 5 suites, 47 benchmark groups
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

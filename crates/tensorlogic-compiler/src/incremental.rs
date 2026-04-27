@@ -31,14 +31,14 @@
 //!
 //! // Initial compilation
 //! let expr1 = TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]);
-//! let graph1 = compiler.compile(&expr1).unwrap();
+//! let graph1 = compiler.compile(&expr1).expect("unwrap");
 //!
 //! // Compile similar expression - some parts will be reused
 //! let expr2 = TLExpr::and(
 //!     TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]),
 //!     TLExpr::pred("likes", vec![Term::var("x"), Term::var("z")]),
 //! );
-//! let graph2 = compiler.compile(&expr2).unwrap();
+//! let graph2 = compiler.compile(&expr2).expect("unwrap");
 //!
 //! // Check incremental compilation stats
 //! let stats = compiler.stats();
@@ -469,11 +469,11 @@ impl IncrementalCompiler {
 
         // Try to get from cache
         let expr_key = format!("{:?}", expr);
-        let cache = self.cache.lock().unwrap();
+        let cache = self.cache.lock().expect("lock should not be poisoned");
 
         if let Some(entry) = cache.get(&expr_key) {
             // Cache hit!
-            let mut stats = self.stats.lock().unwrap();
+            let mut stats = self.stats.lock().expect("lock should not be poisoned");
             stats.cache_hits += 1;
             stats.nodes_reused += entry.graph.nodes.len();
             drop(stats);
@@ -495,18 +495,21 @@ impl IncrementalCompiler {
         })?;
 
         // Update stats
-        let mut stats = self.stats.lock().unwrap();
+        let mut stats = self.stats.lock().expect("lock should not be poisoned");
         stats.cache_misses += 1;
         stats.nodes_compiled += graph.nodes.len();
         drop(stats);
 
         // Store in cache
-        let mut timestamp_guard = self.next_timestamp.lock().unwrap();
+        let mut timestamp_guard = self
+            .next_timestamp
+            .lock()
+            .expect("lock should not be poisoned");
         let timestamp = *timestamp_guard;
         *timestamp_guard += 1;
         drop(timestamp_guard);
 
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().expect("lock should not be poisoned");
         cache.insert(
             expr_key,
             CacheEntry {
@@ -521,27 +524,30 @@ impl IncrementalCompiler {
 
     /// Invalidate cache entries affected by changes.
     fn invalidate_affected(&mut self, changes: &ChangeSet) {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().expect("lock should not be poisoned");
         cache.retain(|_, entry| !changes.affects(&entry.dependencies));
 
-        let mut stats = self.stats.lock().unwrap();
+        let mut stats = self.stats.lock().expect("lock should not be poisoned");
         stats.invalidations += 1;
     }
 
     /// Clear the cache.
     pub fn clear_cache(&mut self) {
-        let mut cache = self.cache.lock().unwrap();
+        let mut cache = self.cache.lock().expect("lock should not be poisoned");
         cache.clear();
     }
 
     /// Get incremental compilation statistics.
     pub fn stats(&self) -> IncrementalStats {
-        self.stats.lock().unwrap().clone()
+        self.stats
+            .lock()
+            .expect("lock should not be poisoned")
+            .clone()
     }
 
     /// Reset statistics.
     pub fn reset_stats(&mut self) {
-        let mut stats = self.stats.lock().unwrap();
+        let mut stats = self.stats.lock().expect("lock should not be poisoned");
         *stats = IncrementalStats::default();
     }
 }
@@ -615,12 +621,12 @@ mod tests {
         let expr = TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]);
 
         // First compilation
-        let _graph1 = compiler.compile(&expr).unwrap();
+        let _graph1 = compiler.compile(&expr).expect("unwrap");
         assert_eq!(compiler.stats().cache_misses, 1);
         assert_eq!(compiler.stats().cache_hits, 0);
 
         // Second compilation - should hit cache
-        let _graph2 = compiler.compile(&expr).unwrap();
+        let _graph2 = compiler.compile(&expr).expect("unwrap");
         assert_eq!(compiler.stats().cache_misses, 1);
         assert_eq!(compiler.stats().cache_hits, 1);
         assert_eq!(compiler.stats().hit_rate(), 0.5);
@@ -655,14 +661,14 @@ mod tests {
         let expr = TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]);
 
         // First compilation
-        let _graph1 = compiler.compile(&expr).unwrap();
+        let _graph1 = compiler.compile(&expr).expect("unwrap");
         assert_eq!(compiler.stats().cache_misses, 1);
 
         // Change domain
         compiler.context_mut().add_domain("Person", 200);
 
         // Should recompile due to domain change and invalidate cache
-        let _graph2 = compiler.compile(&expr).unwrap();
+        let _graph2 = compiler.compile(&expr).expect("unwrap");
         // After invalidation, this is another cache miss
         assert!(compiler.stats().cache_misses >= 1);
         assert!(compiler.stats().invalidations >= 1);
@@ -678,9 +684,9 @@ mod tests {
         let expr1 = TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]);
         let expr2 = TLExpr::pred("likes", vec![Term::var("x"), Term::var("z")]);
 
-        compiler.compile(&expr1).unwrap();
-        compiler.compile(&expr1).unwrap(); // Should be cache hit
-        compiler.compile(&expr2).unwrap();
+        compiler.compile(&expr1).expect("unwrap");
+        compiler.compile(&expr1).expect("unwrap"); // Should be cache hit
+        compiler.compile(&expr2).expect("unwrap");
 
         let stats = compiler.stats();
         assert_eq!(stats.total_compilations(), 3);

@@ -5,35 +5,23 @@ All notable changes to TensorLogic will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [0.1.0-rc.1] - 2026-03-06
-
-### Changed - Release Candidate 1
-
-#### Version Bump
-- **Version bump from 0.1.0-beta.1 to 0.1.0-rc.1** across all workspace crates
-  - Workspace version updated in root Cargo.toml
-  - All internal crate references updated (tensorlogic-ir, tensorlogic-adapters, tensorlogic-infer, tensorlogic-compiler, tensorlogic-scirs-backend, tensorlogic-train, tensorlogic-oxirs-bridge, tensorlogic-sklears-kernels, tensorlogic-quantrs-hooks, tensorlogic-trustformers)
-  - tensorlogic-py version aligned to 0.1.0-rc.1
-  - Version strings updated in lib.rs doc comments (tensorlogic, tensorlogic-train, tensorlogic-trustformers)
-
-#### Dependency Upgrades
-- **SciRS2 ecosystem**: 0.1.3 -> 0.3.0 (scirs2-core, scirs2-linalg, scirs2-autograd, scirs2-optimize)
-- **SkleaRS ecosystem**: 0.1.0-beta.1 -> 0.1.0-rc.1 (sklears-core, sklears-kernel-approximation)
-- **ToRSh ecosystem**: 0.1.0-beta.1 -> 0.1.0 (torsh-core, torsh-tensor)
-- **rand**: 0.9 -> 0.10
-- **toml**: 0.9 -> 1.0
-- **tokio**: 1.49 -> 1.50
-- **oxrdf**: 0.3.2 -> 0.3.3
-- **oxttl**: 0.2.2 -> 0.2.3
-- **tempfile**: 3.24 -> 3.26
-
-### Fixed
-- **rand 0.10 compatibility**: Changed `rand::Rng` to `rand::RngExt` in learned_opt.rs for rand 0.10 API
-- **Doc test in torsh_interop.rs**: Changed `no_run` to `ignore` to prevent doc test build failures
-
 ## [Unreleased]
 
 ### Added
+
+- **Longformer-style sparse attention** (tensorlogic-trustformers): numerical sliding-window + global-token attention per Beltagy et al. (2020). `LongformerConfig` with window_size / global_token_indices / num_heads / head_dim / causal / dropout, `LongformerMask` dense boolean mask with `build_mask()` and sparsity metrics, `LongformerAttention` multi-head forward pass with pre-built or on-the-fly mask, `SparseAttentionError` with thiserror bridging. Original graph-building types renamed to `SparseAttentionGraph` / `SparseAttentionGraphConfig`. 12 unit tests + 4 integration tests.
+- **LoRA adapter** (tensorlogic-train): Low-Rank Adaptation (Hu et al., 2021) for parameter-efficient fine-tuning. `LoraLayer` with A/B decomposition, merge/unmerge, effective_weight, dropout, compression ratio. `LoraAdapter` multi-layer manager with summary statistics. `LoraConfig` (rank, alpha, dropout, target_modules, seed). `LoraError` with InvalidRank, DimensionMismatch, MergeError, FrozenWeights. 12 unit tests + 2 integration tests.
+- **`tensorlogic-oxicuda-backend` SGEMM wiring**: Real GPU matmul via `oxicuda-blas` SGEMM. `GpuState` manages `Arc<Context>` + `Stream` + `BlasHandle`; `matmul_ij_jk_ik` performs host->device copy, `gemm_api::gemm` dispatch, stream sync, device->host readback. Safe `u32` dimension casts with `DimensionOverflow` error. `From<CudaError>` and `From<BlasError>` conversions. Integration test (`tests/gpu_sgemm.rs`) gated behind `TENSORLOGIC_GPU_TESTS=1`.
+- **`tensorlogic-oxicuda-backend`** (new crate): Feature-gated OxiCUDA GPU backend exposing `OxiCudaExecutor` (implements `TlExecutor`). Default build is pure Rust with no GPU dependency; `--features gpu` pulls in `oxicuda-backend` + `oxicuda-blas` from crates.io. MVP supports 2D matmul einsum (`ij,jk->ik`); other ops return `OxiCudaBackendError::Unsupported`. Runtime requires only the NVIDIA driver — no CUDA SDK / nvcc / C/C++ toolchain. Supersedes the prior "blocked on SciRS2 GPU stabilization" status.
+- Partial error recovery (tensorlogic-compiler): TolerantCompiler with Diagnostic / DiagnosticCollector and configurable RecoveryStrategy (SkipOnError / SkipOnFatal / AbortOnAny); compiles well-formed expressions around non-fatal errors instead of aborting the whole program.
+- Speculative decoding (tensorlogic-trustformers): model-level speculative decoding with DraftModel + TargetModel traits, rejection sampling with adjusted resampling, empirical-distribution-preserving acceptance — implements Leviathan et al. (2023).
+- Rule-guided sampling decoder (tensorlogic-trustformers): TLExpr-constrained beam search with hard-masking and soft-penalty modes, integrating tensorlogic-infer::BeamSearchDecoder.
+- Learned kernel composition (tensorlogic-sklears-kernels): differentiable mixture over a kernel library with trainable softmax-gated weights, gradient ∂K_mix/∂w_i = p_i·(K_i - K_mix).
+- Deep Kernel Learning (tensorlogic-sklears-kernels): DKL wraps a base Kernel with an MLP feature extractor K_DKL(x,y) = K_base(g_θ(x), g_θ(y)); Xavier init via SciRS2-Core RNG; ReLU/Tanh/Identity activations.
+- Variational Message Passing (tensorlogic-quantrs-hooks v0.2.0 research preview): coordinate-ascent VMP engine for conjugate-exponential families with Gaussian (mean-unknown, precision-known), Categorical, and Dirichlet distributions, four factor relationships (GaussianObservation, GaussianStep, DirichletCategorical, CategoricalObservation), closed-form KL helpers, monotone ELBO with divergence detection, and optional FactorGraph validation via `VariationalMessagePassing::with_graph`. Local ln_gamma/digamma keeps the module scirs2-special free. 30 new tests covering single-variable conjugacy, Gaussian chains, Dirichlet-Categorical counts, ELBO monotonicity, and BayesianNetwork integration. Reference: Winn & Bishop (2005), JMLR 6, 661-694.
+- Expanded VMP family catalogue (tensorlogic-quantrs-hooks): Gamma (shape-rate) and Beta (alpha-beta) distributions with ExponentialFamily trait, closed-form KL divergences, natural-parameter round-trips, Gamma-Poisson and Beta-Bernoulli conjugate posterior updates, and Gamma-Poisson / Beta-Bernoulli end-to-end integration tests. 17 new unit tests + 2 integration tests.
+- Kernel PCA (tensorlogic-sklears-kernels): full Scholkopf-Smola-Muller (1998) implementation with double-centering, scirs2-linalg eigh-based eigendecomposition, fit/transform/fit_transform API generic over any Kernel + Clone + 'static, explained-variance-ratio, out-of-sample projection via centered test-kernel path. 8 unit tests + 2 integration tests (Swiss-roll RBF embedding, collinear linear-kernel dominance).
+- Numerical Mixture-of-Experts layer (tensorlogic-trustformers): research-preview MoELayer with TopKGate (xavier_init / from_weights), LinearExpert, top-k softmax gating, Switch-Transformer capacity-factor dropping, importance_loss / load_loss / combined_aux_loss auxiliary losses, and BatchGatingStats. 12 unit tests + 2 integration tests (4-expert batch-32 routing, capacity-factor overflow).
 
 #### Neurosymbolic AI Enhancements (2026-01-02)
 - **ToRSh tensor interoperability** (pure Rust PyTorch alternative)
@@ -92,6 +80,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Code quality**: Zero deprecated warnings (fixed into_raw_vec usage)
 - **Documentation**: Enhanced README with neurosymbolic AI section
 
+### Changed — 2026-04-15
+- **Binary rename** — `tensorlogic-cli` `[[bin]]` renamed from `tensorlogic` to `tensorlogic-cli` to resolve the doc-build name collision with the meta crate (Cargo issue #6313). README shell-example invocations updated (~68 lines) to match.
+- **File splits (v0.1.x refactoring policy)** — Ten oversize source files (1524–1789 lines) refactored into submodule directories with every submodule under 500 lines:
+  - `tensorlogic-adapters`: `database.rs` → `database/` (7 files)
+  - `tensorlogic-compiler`: `dead_code.rs` → `dead_code/` (11 files), `partial_eval.rs` → `partial_eval/` (11 files), `symbolic_diff.rs` → `symbolic_diff/` (10 files)
+  - `tensorlogic-infer`: `causal.rs` → `causal/` (6 files)
+  - `tensorlogic-ir`: `resolution.rs` → `resolution/` (9 files)
+  - `tensorlogic-oxirs-bridge`: `sparql_gen.rs` → `sparql_gen/` (8 files)
+  - `tensorlogic-quantrs-hooks`: `loopy_bp.rs` → `loopy_bp/` (9 files)
+  - `tensorlogic-train`: `hyperparameter.rs` → `hyperparameter/` (9 files), `loss.rs` → `loss/` (18 files)
+  Public APIs preserved via `pub use` re-exports from each new `mod.rs`. All 6,407 tests still pass.
+
+### Fixed — 2026-04-15
+- Eliminated one `.unwrap()` in `loopy_bp` and one fragile indexed-`HashMap` access during the `loopy_bp` split (no-unwrap policy).
+
 ### Status
 - **4,363/4,363 tests passing (100%)** - Comprehensive coverage
 - **Zero compiler warnings, zero clippy warnings**
@@ -103,6 +106,64 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Additional fuzzy logic variants
 - Execute fuzzing on nightly Rust
 - Reference comparisons against symbolic logic solvers
+
+## [0.1.0] - 2026-04-27
+
+### Changed - Stable Release
+
+#### Version Bump
+- **Version bump from 0.1.0-rc.1 to 0.1.0** across all workspace crates
+  - Workspace version updated in root Cargo.toml
+  - All 10 internal crate references updated to 0.1.0 stable (tensorlogic-ir, tensorlogic-adapters, tensorlogic-infer, tensorlogic-compiler, tensorlogic-scirs-backend, tensorlogic-train, tensorlogic-oxirs-bridge, tensorlogic-sklears-kernels, tensorlogic-quantrs-hooks, tensorlogic-trustformers)
+  - tensorlogic-py version aligned to 0.1.0
+
+#### Dependency Upgrades
+- **SciRS2 ecosystem**: 0.3.0 → 0.3.4 (scirs2-core, scirs2-linalg, scirs2-autograd, scirs2-optimize)
+- **SkleaRS ecosystem**: 0.1.0-rc.1 → 0.1.0 stable (sklears-core, sklears-kernel-approximation)
+- **ToRSh ecosystem**: 0.1.0 → 0.1.1 (torsh-core, torsh-tensor)
+- **OxiRS ecosystem**: 0.1.0 → 0.2.2 (oxirs-core, oxirs-gql, oxirs-ttl) — major API upgrade
+- **oxicode**: 0.1.1 → 0.2 (serialization/codec library)
+- **clap**: 4.5 → 4.6
+- **clap_complete**: 4.5 → 4.6
+- **assert_cmd**: 2.1 → 2.2
+- **rand**: Added `rand_09` (rand 0.9) as explicit workspace alias for backward-compat crates
+
+#### Dependency Fixes
+- **oxirs-core**: Fixed RngExt trait import compatibility with scirs2-core 0.3.2
+- **tensorlogic-sklears-kernels**: Fixed `StdRng` type mismatch with `sklears-kernel-approximation` — migrated from `rand_09`/`rand_distr_05` to `scirs2_core::rand_prelude`/`scirs2_core::rand_distributions` (rand 0.10 alignment, sklears-kernel-approximation uses scirs2-core's rand 0.10)
+- **tensorlogic-train**: Removed unused Rng imports
+
+#### Code Quality
+- Fixed all clippy warnings (sort_by → sort_by_key, collapsible match guards)
+- Zero warnings policy enforced across all crates
+- 6397 tests passing (100% success rate)
+- Eliminated 7 `unwrap()` calls in `sklears_integration.rs` `sample_frequencies` implementations — replaced with `expect("Normal distribution parameters must be valid")` per no-unwrap policy
+
+## [0.1.0-rc.1] - 2026-03-06
+
+### Changed - Release Candidate 1
+
+#### Version Bump
+- **Version bump from 0.1.0-beta.1 to 0.1.0-rc.1** across all workspace crates
+  - Workspace version updated in root Cargo.toml
+  - All internal crate references updated (tensorlogic-ir, tensorlogic-adapters, tensorlogic-infer, tensorlogic-compiler, tensorlogic-scirs-backend, tensorlogic-train, tensorlogic-oxirs-bridge, tensorlogic-sklears-kernels, tensorlogic-quantrs-hooks, tensorlogic-trustformers)
+  - tensorlogic-py version aligned to 0.1.0-rc.1
+  - Version strings updated in lib.rs doc comments (tensorlogic, tensorlogic-train, tensorlogic-trustformers)
+
+#### Dependency Upgrades
+- **SciRS2 ecosystem**: 0.1.3 -> 0.3.0 (scirs2-core, scirs2-linalg, scirs2-autograd, scirs2-optimize)
+- **SkleaRS ecosystem**: 0.1.0-beta.1 -> 0.1.0-rc.1 (sklears-core, sklears-kernel-approximation)
+- **ToRSh ecosystem**: 0.1.0-beta.1 -> 0.1.0 (torsh-core, torsh-tensor)
+- **rand**: 0.9 -> 0.10
+- **toml**: 0.9 -> 1.0
+- **tokio**: 1.49 -> 1.50
+- **oxrdf**: 0.3.2 -> 0.3.3
+- **oxttl**: 0.2.2 -> 0.2.3
+- **tempfile**: 3.24 -> 3.26
+
+### Fixed
+- **rand 0.10 compatibility**: Changed `rand::Rng` to `rand::RngExt` in learned_opt.rs for rand 0.10 API
+- **Doc test in torsh_interop.rs**: Changed `no_run` to `ignore` to prevent doc test build failures
 
 ## [0.1.0-beta.1] - 2026-01-28
 
@@ -424,36 +485,3 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Tutorial notebooks
 - 15+ examples (Rust + Python)
-
-## Release Notes Format
-
-### Version Number Convention
-- **Major.Minor.Patch-PreRelease**
-- Example: `0.1.0-beta.1`
-- Pre-release tags: `dev`, `alpha`, `beta`, `rc`
-
-### Section Categories
-- **Added**: New features
-- **Changed**: Changes in existing functionality
-- **Deprecated**: Soon-to-be removed features
-- **Removed**: Removed features
-- **Fixed**: Bug fixes
-- **Security**: Security fixes
-
-### Status Indicators
-- ✅ Complete
-- 🚧 In Progress
-- ⚠️ Deprecated
-- 🔒 Security Fix
-
----
-
-**Current Status**: 🎉 **Production Ready**
-
-**Next Release**: v0.1.0 (planned)
-- GPU backend support
-- PyPI publication
-- Performance optimizations
-- Additional examples
-
-For detailed development progress, see [TODO.md](TODO.md).

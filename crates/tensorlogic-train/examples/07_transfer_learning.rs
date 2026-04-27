@@ -59,7 +59,7 @@ fn main() {
         "classifier.fc".to_string(),
     ];
 
-    let mut unfreezing = ProgressiveUnfreezing::new(layer_order, 5).unwrap();
+    let mut unfreezing = ProgressiveUnfreezing::new(layer_order, 5).expect("unwrap");
 
     println!("   Training schedule (unfreeze every 5 epochs):");
     println!("   Stage 0 (epochs 0-4): All frozen");
@@ -83,7 +83,7 @@ fn main() {
     println!("3. Discriminative Fine-Tuning");
     println!("   Use different learning rates for different layers\n");
 
-    let mut finetuning = DiscriminativeFineTuning::new(1e-3, 0.5).unwrap();
+    let mut finetuning = DiscriminativeFineTuning::new(1e-3, 0.5).expect("unwrap");
 
     let layers = vec![
         "encoder.layer1".to_string(),
@@ -156,7 +156,7 @@ fn main() {
     }
 
     // Strategy 2: Full fine-tuning with discriminative LR
-    let mut finetuning = DiscriminativeFineTuning::new(1e-4, 0.5).unwrap();
+    let mut finetuning = DiscriminativeFineTuning::new(1e-4, 0.5).expect("unwrap");
     finetuning.compute_layer_lrs(&layers);
 
     let manager = TransferLearningManager::new().with_discriminative_finetuning(finetuning);
@@ -169,7 +169,7 @@ fn main() {
     }
 
     // Strategy 3: Progressive unfreezing
-    let unfreezing = ProgressiveUnfreezing::new(layers.clone(), 5).unwrap();
+    let unfreezing = ProgressiveUnfreezing::new(layers.clone(), 5).expect("unwrap");
     let mut manager = TransferLearningManager::new().with_progressive_unfreezing(unfreezing);
 
     println!("\n   Phase 3: Progressive Unfreezing");

@@ -116,11 +116,11 @@ mod tests {
 
     #[test]
     fn test_parse_einsum_spec() {
-        let (inputs, output) = parse_einsum_spec("ij,jk->ik").unwrap();
+        let (inputs, output) = parse_einsum_spec("ij,jk->ik").expect("unwrap");
         assert_eq!(inputs, vec!["ij", "jk"]);
         assert_eq!(output, "ik");
 
-        let (inputs, output) = parse_einsum_spec("abc,bcd,cde->ae").unwrap();
+        let (inputs, output) = parse_einsum_spec("abc,bcd,cde->ae").expect("unwrap");
         assert_eq!(inputs, vec!["abc", "bcd", "cde"]);
         assert_eq!(output, "ae");
     }
@@ -131,12 +131,14 @@ mod tests {
         let output_spec = "ik";
 
         // Gradient for first input (A in A @ B)
-        let grad_spec_0 = compute_gradient_spec("ij,jk->ik", 0, &input_specs, output_spec).unwrap();
+        let grad_spec_0 =
+            compute_gradient_spec("ij,jk->ik", 0, &input_specs, output_spec).expect("unwrap");
         // grad_A = grad_output @ B^T, which is "ik,jk->ij"
         assert_eq!(grad_spec_0, "ik,jk->ij");
 
         // Gradient for second input (B in A @ B)
-        let grad_spec_1 = compute_gradient_spec("ij,jk->ik", 1, &input_specs, output_spec).unwrap();
+        let grad_spec_1 =
+            compute_gradient_spec("ij,jk->ik", 1, &input_specs, output_spec).expect("unwrap");
         // grad_B = A^T @ grad_output, which is "ik,ij->jk"
         assert_eq!(grad_spec_1, "ik,ij->jk");
     }
@@ -147,21 +149,23 @@ mod tests {
 
         // Matrix multiplication: C = A @ B
         // A: 2x3, B: 3x4, C: 2x4
-        let a = Scirs2Exec::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).unwrap();
+        let a =
+            Scirs2Exec::from_vec(vec![1.0, 2.0, 3.0, 4.0, 5.0, 6.0], vec![2, 3]).expect("unwrap");
         let b = Scirs2Exec::from_vec(
             vec![1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0],
             vec![3, 4],
         )
-        .unwrap();
+        .expect("unwrap");
 
         // Forward pass
         let _c = executor
             .einsum("ij,jk->ik", &[a.clone(), b.clone()])
-            .unwrap();
+            .expect("unwrap");
 
         // Backward pass with ones gradient
         let grad_c = Scirs2Exec::ones(vec![2, 4]);
-        let grads = compute_einsum_gradients("ij,jk->ik", &[a, b], &grad_c, &mut executor).unwrap();
+        let grads =
+            compute_einsum_gradients("ij,jk->ik", &[a, b], &grad_c, &mut executor).expect("unwrap");
 
         assert_eq!(grads.len(), 2);
         assert_eq!(grads[0].shape(), &[2, 3]); // grad_A shape
@@ -173,19 +177,19 @@ mod tests {
         let mut executor = Scirs2Exec::new();
 
         // Element-wise multiplication with explicit indices: C = A * B
-        let a = Scirs2Exec::from_vec(vec![2.0, 3.0, 4.0, 5.0], vec![2, 2]).unwrap();
-        let b = Scirs2Exec::from_vec(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).unwrap();
+        let a = Scirs2Exec::from_vec(vec![2.0, 3.0, 4.0, 5.0], vec![2, 2]).expect("unwrap");
+        let b = Scirs2Exec::from_vec(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).expect("unwrap");
 
         // Forward: element-wise multiply (sum over no indices)
         let _c = executor
             .einsum("ij,ij->ij", &[a.clone(), b.clone()])
-            .unwrap();
+            .expect("unwrap");
 
         // Backward
         let grad_c = Scirs2Exec::ones(vec![2, 2]);
         let grads =
             compute_einsum_gradients("ij,ij->ij", &[a.clone(), b.clone()], &grad_c, &mut executor)
-                .unwrap();
+                .expect("unwrap");
 
         // grad_A = grad_C * B
         assert_eq!(grads[0].shape(), &[2, 2]);

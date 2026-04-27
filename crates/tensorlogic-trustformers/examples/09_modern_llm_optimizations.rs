@@ -33,7 +33,9 @@ fn demo_grouped_query_attention() {
     println!("Comparing attention configurations:\n");
 
     // Standard MHA (LLaMA 2 7B)
-    let mha_config = GQAPreset::Llama2_7B.config().unwrap();
+    let mha_config = GQAPreset::Llama2_7B
+        .config()
+        .expect("Llama2_7B preset should produce valid config");
     let mha_stats = GQAStats::from_config(&mha_config);
     println!("LLaMA 2 7B (MHA):");
     println!(
@@ -44,7 +46,9 @@ fn demo_grouped_query_attention() {
     println!();
 
     // GQA (LLaMA 2 70B)
-    let gqa_config = GQAPreset::Llama2_70B.config().unwrap();
+    let gqa_config = GQAPreset::Llama2_70B
+        .config()
+        .expect("Llama2_70B preset should produce valid config");
     let gqa_stats = GQAStats::from_config(&gqa_config);
     println!("LLaMA 2 70B (GQA):");
     println!(
@@ -55,7 +59,9 @@ fn demo_grouped_query_attention() {
     println!();
 
     // GQA (Mistral 7B)
-    let mistral_config = GQAPreset::Mistral7B.config().unwrap();
+    let mistral_config = GQAPreset::Mistral7B
+        .config()
+        .expect("Mistral7B preset should produce valid config");
     let mistral_stats = GQAStats::from_config(&mistral_config);
     println!("Mistral 7B (GQA):");
     println!(
@@ -69,7 +75,9 @@ fn demo_grouped_query_attention() {
     println!();
 
     // MQA (Falcon 40B)
-    let mqa_config = GQAPreset::Falcon40B.config().unwrap();
+    let mqa_config = GQAPreset::Falcon40B
+        .config()
+        .expect("Falcon40B preset should produce valid config");
     let mqa_stats = GQAStats::from_config(&mqa_config);
     println!("Falcon 40B (MQA):");
     println!(
@@ -80,15 +88,20 @@ fn demo_grouped_query_attention() {
     println!();
 
     // 2. Build a GQA graph
-    let config = GQAConfig::new(512, 8, 2).unwrap().with_causal(true);
-    let gqa = GroupedQueryAttention::new(config.clone()).unwrap();
+    let config = GQAConfig::new(512, 8, 2)
+        .expect("valid GQA config parameters")
+        .with_causal(true);
+    let gqa = GroupedQueryAttention::new(config.clone())
+        .expect("valid GQA config should construct attention");
 
     let mut graph = EinsumGraph::new();
     graph.add_tensor("Q");
     graph.add_tensor("K");
     graph.add_tensor("V");
 
-    let outputs = gqa.build_gqa_graph(&mut graph).unwrap();
+    let outputs = gqa
+        .build_gqa_graph(&mut graph)
+        .expect("GQA graph construction should succeed");
 
     println!("Custom GQA graph built:");
     println!(
@@ -114,23 +127,29 @@ fn demo_sliding_window_attention() {
     // 1. Show preset configurations
     println!("Preset configurations:\n");
 
-    let mistral_config = SlidingWindowPreset::Mistral7B.config().unwrap();
+    let mistral_config = SlidingWindowPreset::Mistral7B
+        .config()
+        .expect("Mistral7B preset should produce valid config");
     println!("Mistral 7B:");
     println!("  window_size: {}", mistral_config.window_size);
     println!("  causal: {}", mistral_config.causal);
 
-    let longformer_config = SlidingWindowPreset::LongformerBase.config().unwrap();
+    let longformer_config = SlidingWindowPreset::LongformerBase
+        .config()
+        .expect("LongformerBase preset should produce valid config");
     println!("\nLongformer Base:");
     println!("  window_size: {}", longformer_config.window_size);
 
-    let bigbird_config = SlidingWindowPreset::BigBirdBase.config().unwrap();
+    let bigbird_config = SlidingWindowPreset::BigBirdBase
+        .config()
+        .expect("BigBirdBase preset should produce valid config");
     println!("\nBigBird Base:");
     println!("  window_size: {}", bigbird_config.window_size);
 
     // 2. Calculate complexity reduction for different sequence lengths
     println!("\nComplexity reduction for different sequence lengths:\n");
 
-    let config = SlidingWindowConfig::new(512, 8, 256).unwrap();
+    let config = SlidingWindowConfig::new(512, 8, 256).expect("valid sliding window parameters");
 
     for seq_len in [512, 2048, 8192, 32768] {
         let stats = SlidingWindowStats::from_config(&config, seq_len);
@@ -142,16 +161,19 @@ fn demo_sliding_window_attention() {
     println!("\nBuilding sliding window attention graph:");
 
     let config = SlidingWindowConfig::new(512, 8, 256)
-        .unwrap()
+        .expect("valid sliding window parameters")
         .with_causal(true);
-    let swa = SlidingWindowAttention::new(config.clone()).unwrap();
+    let swa = SlidingWindowAttention::new(config.clone())
+        .expect("valid sliding window config should construct");
 
     let mut graph = EinsumGraph::new();
     graph.add_tensor("Q");
     graph.add_tensor("K");
     graph.add_tensor("V");
 
-    let outputs = swa.build_swa_graph(&mut graph).unwrap();
+    let outputs = swa
+        .build_swa_graph(&mut graph)
+        .expect("sliding window graph construction should succeed");
 
     println!(
         "  d_model: {}, n_heads: {}, window_size: {}",
@@ -205,13 +227,15 @@ fn demo_lora() {
 
     let config = LoRAConfig::new(8, 16.0);
     let lora = LoRALinear::new(512, 512, config.clone())
-        .unwrap()
+        .expect("valid LoRA config should construct linear layer")
         .with_name("demo");
 
     let mut graph = EinsumGraph::new();
     graph.add_tensor("x");
 
-    let outputs = lora.build_lora_graph(&mut graph).unwrap();
+    let outputs = lora
+        .build_lora_graph(&mut graph)
+        .expect("LoRA graph construction should succeed");
 
     println!(
         "  rank: {}, alpha: {}, scaling: {}",
@@ -227,14 +251,17 @@ fn demo_lora() {
     println!("\nBuilding LoRA attention layer graph:");
 
     let config = LoRAConfig::new(8, 16.0).with_projections(true, true);
-    let lora_attn = LoRAAttention::new(512, 8, config).unwrap();
+    let lora_attn = LoRAAttention::new(512, 8, config)
+        .expect("valid LoRA config should construct attention layer");
 
     let mut graph = EinsumGraph::new();
     graph.add_tensor("Q");
     graph.add_tensor("K");
     graph.add_tensor("V");
 
-    let outputs = lora_attn.build_lora_attention_graph(&mut graph).unwrap();
+    let outputs = lora_attn
+        .build_lora_attention_graph(&mut graph)
+        .expect("LoRA attention graph construction should succeed");
 
     println!("  LoRA applied to: Q and V projections");
     println!("  Trainable params: {}", lora_attn.trainable_params());

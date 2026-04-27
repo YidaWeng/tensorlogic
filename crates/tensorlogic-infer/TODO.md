@@ -1,20 +1,9 @@
-# RC.1 Release Status
+# TensorLogic Infer — TODO
 
-**Version**: 0.1.0-rc.1
-**Status**: Production Ready
-**Release Date**: 2026-03-06
+**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
-This crate is part of the TensorLogic v0.1.0-rc.1 release with:
-- Zero compiler warnings
-- 100% test pass rate
-- Complete documentation
-- Production-ready quality
-
-See main [TODO.md](../../TODO.md) for overall project status.
-
----
-
-# tensorlogic-infer TODO
+Executor and autodiff traits for tensor-logic inference pipelines.
 
 ## Completed
 
@@ -336,6 +325,100 @@ See main [TODO.md](../../TODO.md) for overall project status.
 
 ---
 
+## v0.1.1 Additions (2026-03-29) ✅
+- [x] **Low-Rank Approximation** (src/low_rank/)
+  - [x] TruncatedSvd with power-iteration (from scratch, no external SVD)
+  - [x] SvdResult: reconstruct(), relative_error(), energy_fraction()
+  - [x] LowRankApproximation: matrix/matmul approx, is_candidate(), optimal_rank()
+  - [x] LowRankInferencePass: EinsumGraph candidate scanning
+  - [x] 15 tests passing
+- [x] **Partitioned Reductions** (src/partitioned/)
+  - [x] PartitionedReducer: reduce_all(), reduce_axis(), log_sum_exp()
+  - [x] AccumulationStrategy: Sum/Max/Min/Mean/Product/LogSumExp
+  - [x] PartitionedStats tracking
+  - [x] 10 tests passing
+- [x] **Enhanced Streaming (StreamingConfigV2)** (streaming.rs extensions)
+  - [x] BackpressureConfig with 4 strategies (Block/DropOldest/DropNewest/ErrorOnFull)
+  - [x] WatermarkConfig for out-of-order event handling
+  - [x] StreamingStats: latency, drop rate, throughput
+  - [x] 15 tests passing
+- [x] **Windowed Aggregation** (src/windowed_aggregation.rs)
+  - [x] WindowedAggregation: tumbling, sliding, session, count windows
+  - [x] WindowAggregation: Sum/Mean/Max/Min/Count/LastValue/FirstValue
+  - [x] WindowConfig builder API
+  - [x] 12 tests passing
+
+## v0.1.3 Enhancements (2026-03-30)
+
+- [x] **Symbolic Shape Support** (`symbolic_shape.rs`): `SymbolicDim` (Fixed/Symbolic/Product), `SymbolicShape = Vec<SymbolicDim>`, `ShapeConstraint`, `SymbolicShapeEnv` with unification engine. `propagate_einsum_shapes()` infers output shapes from einsum specs. Handles batch dims, chained ops, contradiction detection. 25 new tests.
+
+## v0.1.4 Enhancements (2026-03-30)
+
+- [x] **Structured Sparsity + Pruning** (`pruning.rs`): `SparsityPattern` (Unstructured/Block/Row/Column/N:M), `MagnitudePruner::prune_2d()` and `prune()` (N-D), `SparsityStats::compute()` with theoretical speedup, `PruningConfig` with rescale option. Free functions: `compute_sparsity()`, `row_norms()`. 20 new tests.
+
+## v0.1.5 Enhancements (2026-03-30)
+
+- [x] **Tensor Statistics + Anomaly Detection** (`tensor_stats.rs`): `TensorStatsSummary::compute()` (mean/std/min/max/percentiles with NaN/Inf handling), `AnomalyDetector` (z-score outliers, IQR-based, constant detection), `ActivationStatistics` (per-tensor history with trend_mean/trend_std). 20 new tests.
+
+## v0.1.7 Enhancements (2026-03-30)
+
+- [x] **Execution Plan Formatter** (`execution_plan.rs`): `ExecutionPlan` with `PlanStep` builder, `PlanFormatter::format_table()` and `format_tree()`, `compute_memory_timeline()`, parallel speedup analysis, critical path computation. 18 new tests.
+
+## v0.1.8 Enhancements (2026-03-30)
+
+- [x] **Execution Trace Recording** (`execution_trace.rs`): `TraceRecorder` (real-time recording), `RecordedExecutionTrace` (JSON export, slowest-ops, peak memory), `TraceAnalyzer` (operation summary, memory hotspots, avg duration). 18 new tests.
+
+## v0.1.10 Enhancements (2026-03-31)
+
+- [x] **FLOP Estimation** (`cost_model.rs`): `FlopEstimate` with per-node FLOP counting — einsum uses product of all dimension sizes, reduce uses element count, elem-wise ops use tensor size; free function `estimate_node_flops()`
+- [x] **Memory Cost Estimation** (`cost_model.rs`): `MemoryCostEstimate` simulating peak live-set memory across a topological execution schedule; accounts for tensor lifetimes and simultaneous live buffers
+- [x] **Graph Cost Summary** (`cost_model.rs`): `GraphCostSummary` aggregating total FLOPs, peak memory bytes, critical-path cost, and per-node breakdown for profiling-guided optimization decisions
+- [x] **Cost Model** (`cost_model.rs`): `CostModel` struct with `estimate_graph()` producing a full `GraphCostSummary` and `cheapest_node()`/`most_expensive_node()` query helpers
+- [x] **Cost-Aware Schedule** (`cost_model.rs`): `CostAwareSchedule` producing a topologically valid execution order ranked by descending per-node cost, enabling schedulers to prioritize critical-path operations first
+
+## v0.1.11
+
+- [x] **BeamSearchDecoder + BeamHypothesis + BeamState** (`beam_search.rs`): `BeamSearchDecoder` with configurable beam width, length penalty (alpha), and repetition penalty; `BeamHypothesis` stores a token sequence with cumulative log-probability; `BeamState` holds the pruned beam set at each step with top-k selection.
+- [x] **BeamSearchResult + BeamSearchStats** (`beam_search.rs`): `BeamSearchResult` returns top-k finished sequences sorted by length-normalized score; `BeamSearchStats` tracks total expansion steps, hypotheses pruned by beam width, and EOS-triggered completions.
+
+## v0.1.14
+
+- [x] **JoinOrderOptimizer** (`join_order.rs`): Configurable join ordering engine supporting greedy and dynamic-programming strategies with cost-based optimization
+- [x] **greedy_order** (`join_order.rs`): Greedy join ordering that iteratively selects the lowest-cost pair of relations to join based on estimated selectivity
+- [x] **dp_order** (`join_order.rs`): Optimal dynamic-programming join ordering with memoization over relation subsets, guaranteeing minimum estimated cost plans
+- [x] **JoinPlan** (`join_order.rs`): Tree-structured execution plan representing the join order with estimated total cost and per-node cost breakdown
+- [x] **JoinPlanNode** (`join_order.rs`): Individual node in a join plan tree, either a leaf (base relation) or an inner join of two sub-plans with local cost estimate
+- [x] **JoinStats** (`join_order.rs`): Statistics for join optimization including number of relations, strategy used, estimated cost, and planning wall-clock time
+
+## v0.1.16
+
+- [x] **UncertaintyEstimate** (`uncertainty.rs`): Result type holding `mean` prediction tensor, `aleatoric_variance` (data noise), and `epistemic_variance` (model uncertainty) components with `total_variance()` and `std_dev()` convenience methods
+- [x] **MonteCarloEstimator** (`uncertainty.rs`): Dropout-based MC sampling engine that runs `n_samples` stochastic forward passes, aggregates ensemble statistics, and decomposes total variance into aleatoric and epistemic contributions
+- [x] **CalibrationMetrics** (`uncertainty.rs`): Computes Expected Calibration Error (ECE), Maximum Calibration Error (MCE), and reliability diagram data (confidence bins vs accuracy) for assessing how well predicted confidence matches empirical accuracy
+- [x] **ConfidenceInterval** (`uncertainty.rs`): Lower/upper bound pair at a configurable coverage probability (e.g. 90%, 95%) derived from the predictive distribution; constructed via `from_normal()` and `from_quantiles()` helpers
+- [x] **PredictionInterval** (`uncertainty.rs`): Combines a point estimate with calibrated prediction intervals, distinguishing in-distribution from out-of-distribution samples using a configurable OOD threshold on epistemic variance
+
+## v0.1.12
+
+- [x] **GreedyDecoder** (`sampling.rs`): deterministic token selection via argmax over the logit/probability vector; handles equal-value ties by returning the lowest index.
+- [x] **TemperatureSampler** (`sampling.rs`): scales logits by `1/temperature` before softmax then draws a token using a `SimpleRng` LCG; temperature=1.0 reproduces the original distribution.
+- [x] **TopKSampler** (`sampling.rs`): truncates the distribution to the top-k highest-logit tokens, re-normalizes, then applies temperature sampling; falls back to greedy when k=1.
+- [x] **TopPSampler** (`sampling.rs`): nucleus sampling — sorts tokens by descending probability, includes the minimal prefix whose cumulative probability exceeds `p`, then samples uniformly from that nucleus.
+- [x] **ConfigurableSampler** (`sampling.rs`): unified enum (`Greedy` / `Temperature` / `TopK` / `TopP`) dispatching the appropriate strategy from a single `SamplingConfig` struct containing temperature, k, and p parameters.
+- [x] **SimpleRng** (`sampling.rs`): lightweight LCG pseudo-random number generator seeded at construction; provides `next_f64()` and `next_usize_below()` used internally by the probabilistic samplers.
+
+## v0.1.17
+
+- [x] **MemoCache** (`memo_cache.rs`): Generic LRU-style expression memoization store keyed by `MemoKey`; configurable capacity with eviction triggered automatically when capacity is exceeded
+- [x] **MemoKey** (`memo_cache.rs`): Structural SHA-256 hash key for `TLExpr` sub-trees enabling equality-based cache lookup without full expression comparison; `from_expr()` constructor
+- [x] **MemoEvictionPolicy** (`memo_cache.rs`): Enum selecting eviction strategy — `LRU` (least-recently-used), `LFU` (least-frequently-used), `FIFO` (insertion order) — applied consistently on every cache miss when at capacity
+- [x] **MemoStats** (`memo_cache.rs`): Hit count, miss count, eviction count, and `hit_rate()` convenience method for monitoring memoization effectiveness at runtime
+- [x] **MemoLookupResult** (`memo_cache.rs`): Typed enum `Hit(value)` / `Miss` returned by `MemoCache::get()` eliminating the need for `Option` unwrapping at call sites
+- [x] **ExprMemoCache** (`memo_cache.rs`): Pre-configured `MemoCache<TLExpr, EinsumGraph>` specialisation for the most common caching pattern in the inference pipeline
+- [x] **MemoCacheBuilder** (`memo_cache.rs`): Builder API for constructing `MemoCache` with capacity, eviction policy, and optional pre-warming from a sequence of `(key, value)` pairs
+
+---
+
 ## Open / Future Work
 
 ### Distributed Improvements
@@ -348,22 +431,22 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [ ] Elastic training (dynamic worker scaling)
   - [ ] Distributed checkpointing
 - [ ] **Performance monitoring**
-  - [ ] Per-device profiling
-  - [ ] Communication bottleneck detection
-  - [ ] Load balancing metrics
+  - [x] Per-device profiling
+  - [x] Communication bottleneck detection
+  - [x] Load balancing metrics
 
 ### Developer Experience
-- [ ] **Improved error messages**
-  - [ ] More descriptive validation errors
-  - [ ] Helpful suggestions for common mistakes
-  - [ ] Better shape mismatch diagnostics
-- [ ] **Enhanced debugging**
-  - [ ] Step-through execution mode
-  - [ ] Intermediate value logging
-  - [ ] Memory leak detection
+- [x] **Improved error messages** ✅ (v0.1.2) — ShapeMismatchDiagnostic with transpose/broadcast suggestions, PerformanceDiagnostic recommendations
+- [x] **Enhanced debugging** ✅ (v0.1.2) — StepExecutor with IntermediateValue logging (min/max/mean/nan/inf), BreakpointCondition (NodeIndex, OnNaN, OnInf, Always)
 - [ ] **Performance profiling tools**
-  - [ ] Flamegraph generation
-  - [ ] Critical path analysis
+  - [x] Flamegraph generation
+  - [x] `critical-path-analysis` (completed 2026-04-17)
+    - **Goal:** Dedicated analysis API extracting the longest dependency chain (critical path) of an inference graph and reporting the bottleneck node + total estimated latency.
+    - **Design:** Topological sort + DAG longest-path (dynamic programming over reverse topo order). `pub struct CriticalPathReport { pub nodes: Vec<NodeId>, pub total_latency_ns: u64, pub bottleneck: NodeId }`. `pub fn critical_path(graph: &InferenceGraph) -> CriticalPathReport`. Node latency comes from existing per-node cost estimate (or 1 unit if absent — emit `MissingCost` warning).
+    - **Files:** `src/critical_path.rs` (NEW); `src/lib.rs` (export `CriticalPathReport`, `critical_path`).
+    - **Prerequisites:** reuse existing `InferenceGraph` / `NodeId` types in this crate — no new graph abstraction.
+    - **Tests:** unit tests with hand-rolled DAGs: linear chain (entire graph is critical); diamond (longer branch wins); isolated nodes (empty critical path with MissingCost warning).
+    - **Risk:** Graph-type interop — if shapes don't fit, narrow to `pub trait CriticalPathInput` and adapt internally.
   - [ ] Memory bandwidth profiling
 
 ### Hardware-Specific Backends
@@ -377,8 +460,8 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [ ] Azure ML integration
 
 ### Advanced Optimizations
-- [ ] Higher-order derivatives
-- [ ] Jacobian/Hessian computation
+- [x] **Higher-order derivatives** ✅ (v0.1.2) — JacobianComputer, HessianComputer (finite differences)
+- [x] **Enhanced diagnostics** ✅ (v0.1.2) — ShapeMismatchDiagnostic suggestions, PerformanceDiagnostic recommendations
 - [ ] Sparse gradient support
 - [ ] Cross-operator fusion enhancements
 - [ ] Template-based kernel generation
@@ -433,11 +516,31 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - Speculative Execution (Experimental)
 - Learned Optimizations (Experimental)
 
-**Test Coverage:** 522 tests (all passing)
+**Test Coverage:** 909 tests (all passing)
 **Build Status:** ZERO ERRORS, ZERO WARNINGS
-**Total Lines of Code:** ~21,349 lines Rust code
+**Total Lines of Code:** ~26,000 lines Rust code
 **Examples:** 3 working examples (jit_demo.rs, distributed_demo.rs, recovery_demo.rs)
 
-**Version**: 0.1.0-rc.1
-**Release Date**: 2026-03-06
+**Version**: 0.1.0
+**Release Date**: 2026-04-06
 **Backward Compatibility**: Maintained
+
+## v0.1.21 (2026-04-05)
+
+- [x] **MCMC Sampling** (`mcmc.rs`): Added mcmc.rs — MCMC sampling: `MetropolisHastings` (pluggable `LogProb` + `Proposal`), `HamiltonianMonteCarlo` (leapfrog + finite-diff gradients); `McmcRng` (LCG+Box-Muller); `GaussianProposal`/`IndependentGaussianProposal`; `effective_sample_size`, `gelman_rubin`, `autocorrelation` diagnostics.
+
+## v0.1.19 (2026-04-05)
+
+- [x] **Causal Inference** (`causal.rs`): `CausalGraph` with directed-edge adjacency representation; d-separation via the Bayes-Ball algorithm (`d_separated()`); backdoor criterion check (`satisfies_backdoor_criterion()`) identifying valid adjustment sets that block all back-door paths from treatment to outcome; frontdoor criterion check (`satisfies_frontdoor_criterion()`); do-calculus intervention operator (`do_intervention()`) returning the post-intervention DAG; `ate_backdoor()` estimator of the Average Treatment Effect under backdoor adjustment; `ate_instrumental_variable()` IV estimator using a provided instrument; `propensity_score()` logistic-approximation propensity scoring; `ObservationalData` struct for passing empirical covariate/treatment/outcome samples.
+
+## v0.1.18 (2026-04-05)
+
+- [x] **Constraint Propagation** (`constraint_propagation.rs`): `ConstraintNetwork` manages variables, `Domain` (ordered set of `f64` values), and `BinaryConstraint` arcs; AC-3 arc-consistency algorithm (`propagate()`) with a workqueue driving domain reduction to a fixed point; `ConstraintRelation` enum with 7 variants (`Equal`, `NotEqual`, `LessThan`, `LessEqual`, `GreaterThan`, `GreaterEqual`, `CustomFn`); `CspSolver` backtracking CSP solver with configurable `VarOrdering` (Lexicographic, `MinRemainingValues` / MRV, `DegreeHeuristic`) and optional forward-checking that runs AC-3 after every variable assignment to prune sibling domains early; `SolveResult` carrying all solutions found (or first-solution-only mode).
+
+## v0.2.0 / Future Work
+
+- Lazy batched execution (fold compatible `forward` calls across a batch).
+- Memoization cache for repeated graph sub-patterns.
+- Streaming inference API for large graphs.
+- Zero-copy tensor sharing between executor and backend.
+- [x] ~~Split `src/causal.rs` (1,589 L) into a `causal/` directory.~~ (completed 2026-04-15)
