@@ -487,26 +487,26 @@ mod tests {
     #[test]
     fn test_lora_linear_creation() {
         let config = LoRAConfig::new(8, 16.0);
-        let lora = LoRALinear::new(512, 512, config).unwrap();
+        let lora = LoRALinear::new(512, 512, config).expect("unwrap");
         assert_eq!(lora.trainable_params(), 8192);
     }
 
     #[test]
     fn test_lora_linear_graph() {
         let config = LoRAConfig::new(8, 16.0);
-        let lora = LoRALinear::new(512, 512, config).unwrap();
+        let lora = LoRALinear::new(512, 512, config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("x");
 
-        let outputs = lora.build_lora_graph(&mut graph).unwrap();
+        let outputs = lora.build_lora_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
     }
 
     #[test]
     fn test_lora_attention_creation() {
         let config = LoRAConfig::new(8, 16.0);
-        let lora_attn = LoRAAttention::new(512, 8, config).unwrap();
+        let lora_attn = LoRAAttention::new(512, 8, config).expect("unwrap");
 
         // Q and V: 2 * 8192 = 16384
         assert_eq!(lora_attn.trainable_params(), 16384);
@@ -515,14 +515,16 @@ mod tests {
     #[test]
     fn test_lora_attention_graph() {
         let config = LoRAConfig::new(8, 16.0);
-        let lora_attn = LoRAAttention::new(512, 8, config).unwrap();
+        let lora_attn = LoRAAttention::new(512, 8, config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("Q");
         graph.add_tensor("K");
         graph.add_tensor("V");
 
-        let outputs = lora_attn.build_lora_attention_graph(&mut graph).unwrap();
+        let outputs = lora_attn
+            .build_lora_attention_graph(&mut graph)
+            .expect("unwrap");
         assert_eq!(outputs.len(), 1);
     }
 

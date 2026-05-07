@@ -153,7 +153,7 @@ fn bench_profile_serialization(c: &mut Criterion) {
         })
     });
 
-    let json = profile.to_json().unwrap();
+    let json = profile.to_json().expect("unwrap");
 
     c.bench_function("profile_from_json", |b| {
         b.iter(|| {

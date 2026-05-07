@@ -43,8 +43,10 @@ fn demo_icm_correlated() {
         vec![0.5, 0.6, 1.0], // Task 2 less correlated with Task 0
     ];
 
-    let base_kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
-    let icm = ICMKernel::new(Box::new(base_kernel), task_covariance).unwrap();
+    let base_kernel =
+        RbfKernel::new(RbfKernelConfig::new(0.5)).expect("RBF kernel construction should succeed");
+    let icm = ICMKernel::new(Box::new(base_kernel), task_covariance)
+        .expect("ICM kernel construction should succeed");
 
     println!("Tasks: 3 (correlated)");
     println!("Base kernel: RBF (γ=0.5)");
@@ -62,7 +64,9 @@ fn demo_icm_correlated() {
     ];
 
     // Compute kernel matrix
-    let matrix = icm.compute_task_matrix(&samples).unwrap();
+    let matrix = icm
+        .compute_task_matrix(&samples)
+        .expect("ICM task matrix computation should succeed");
 
     println!("Kernel matrix (same features, different tasks):");
     println!("         Task0   Task1   Task2   Task0'");
@@ -95,7 +99,8 @@ fn demo_icm_independent() {
     println!("{}", "-".repeat(50));
 
     let base_kernel = LinearKernel::new();
-    let icm = ICMKernel::independent(Box::new(base_kernel), 3).unwrap();
+    let icm = ICMKernel::independent(Box::new(base_kernel), 3)
+        .expect("ICM independent kernel construction should succeed");
 
     println!("Tasks: 3 (independent)");
     println!("Base kernel: Linear\n");
@@ -104,8 +109,12 @@ fn demo_icm_independent() {
     let y = TaskInput::new(vec![1.0, 2.0], 1);
     let z = TaskInput::new(vec![1.0, 2.0], 0);
 
-    let k_same = icm.compute_tasks(&x, &z).unwrap();
-    let k_diff = icm.compute_tasks(&x, &y).unwrap();
+    let k_same = icm
+        .compute_tasks(&x, &z)
+        .expect("ICM compute_tasks should succeed");
+    let k_diff = icm
+        .compute_tasks(&x, &y)
+        .expect("ICM compute_tasks should succeed");
 
     println!("Same task (0-0):      K = {:.3}", k_same);
     println!("Different task (0-1): K = {:.3}", k_diff);
@@ -122,14 +131,18 @@ fn demo_lmc_multiprocess() {
     let mut lmc = LMCKernel::new(2);
 
     // Process 1: Long-range RBF with high cross-task correlation
-    let rbf_long = RbfKernel::new(RbfKernelConfig::new(0.1)).unwrap();
+    let rbf_long =
+        RbfKernel::new(RbfKernelConfig::new(0.1)).expect("RBF kernel construction should succeed");
     let cov1 = vec![vec![1.0, 0.9], vec![0.9, 1.0]];
-    lmc.add_component(Box::new(rbf_long), cov1).unwrap();
+    lmc.add_component(Box::new(rbf_long), cov1)
+        .expect("LMC add_component should succeed");
 
     // Process 2: Short-range RBF with lower cross-task correlation
-    let rbf_short = RbfKernel::new(RbfKernelConfig::new(2.0)).unwrap();
+    let rbf_short =
+        RbfKernel::new(RbfKernelConfig::new(2.0)).expect("RBF kernel construction should succeed");
     let cov2 = vec![vec![1.0, 0.3], vec![0.3, 1.0]];
-    lmc.add_component(Box::new(rbf_short), cov2).unwrap();
+    lmc.add_component(Box::new(rbf_short), cov2)
+        .expect("LMC add_component should succeed");
 
     println!("Tasks: 2");
     println!("Latent processes: 2");
@@ -140,8 +153,12 @@ fn demo_lmc_multiprocess() {
     let near = [TaskInput::new(vec![0.0], 0), TaskInput::new(vec![0.1], 1)];
     let far = [TaskInput::new(vec![0.0], 0), TaskInput::new(vec![2.0], 1)];
 
-    let k_near = lmc.compute_tasks(&near[0], &near[1]).unwrap();
-    let k_far = lmc.compute_tasks(&far[0], &far[1]).unwrap();
+    let k_near = lmc
+        .compute_tasks(&near[0], &near[1])
+        .expect("LMC compute_tasks should succeed");
+    let k_far = lmc
+        .compute_tasks(&far[0], &far[1])
+        .expect("LMC compute_tasks should succeed");
 
     println!("Cross-task kernel (near, d=0.1): K = {:.4}", k_near);
     println!("Cross-task kernel (far, d=2.0):  K = {:.4}", k_far);
@@ -166,7 +183,8 @@ fn demo_multioutput_regression() {
     println!("  Task 2: Humidity (moderately correlated)\n");
 
     // Build ICM using the builder
-    let base_kernel = RbfKernel::new(RbfKernelConfig::new(1.0)).unwrap();
+    let base_kernel =
+        RbfKernel::new(RbfKernelConfig::new(1.0)).expect("RBF kernel construction should succeed");
     let task_covariance = vec![
         vec![1.0, 0.85, 0.4],
         vec![0.85, 1.0, 0.3],
@@ -176,7 +194,7 @@ fn demo_multioutput_regression() {
     let icm = MultiTaskKernelBuilder::new(3)
         .add_component(Box::new(base_kernel), task_covariance)
         .build_icm()
-        .unwrap();
+        .expect("multi-task kernel builder should succeed");
 
     // Training data (mixed tasks)
     let training_data = vec![
@@ -210,7 +228,9 @@ fn demo_multioutput_regression() {
     println!("\nKernel values to training points:");
 
     for train in &training_data {
-        let k = icm.compute_tasks(&query, train).unwrap();
+        let k = icm
+            .compute_tasks(&query, train)
+            .expect("ICM compute_tasks should succeed");
         let task_name = match train.task {
             0 => "Temperature",
             1 => "Pressure",

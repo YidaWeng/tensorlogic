@@ -1,6 +1,6 @@
 //! # Tensorlogic-SkleaRS-Kernels
 //!
-//! **Version**: 0.1.0-beta.1 | **Status**: Production Ready
+//! **Version**: 0.1.0 | **Status**: Production Ready
 //!
 //! Logic-derived similarity kernels for machine learning integration.
 //!
@@ -29,7 +29,7 @@
 //! let kernel = LinearKernel::new();
 //! let x = vec![1.0, 2.0, 3.0];
 //! let y = vec![4.0, 5.0, 6.0];
-//! let similarity = kernel.compute(&x, &y).unwrap();
+//! let similarity = kernel.compute(&x, &y).expect("unwrap");
 //! ```
 //!
 //! ### Logic-Derived Kernels
@@ -57,12 +57,12 @@
 //!     .with_violated_weight(0.5)     // Both violate
 //!     .with_mixed_weight(0.0);       // Disagree
 //!
-//! let kernel = RuleSimilarityKernel::new(rules, config).unwrap();
+//! let kernel = RuleSimilarityKernel::new(rules, config).expect("unwrap");
 //!
 //! // Compute similarity
 //! let x = vec![1.0, 1.0, 0.0];  // Satisfies first two rules
 //! let y = vec![1.0, 1.0, 1.0];  // Satisfies all three rules
-//! let sim = kernel.compute(&x, &y).unwrap();
+//! let sim = kernel.compute(&x, &y).expect("unwrap");
 //! ```
 //!
 //! #### Predicate Overlap
@@ -76,7 +76,7 @@
 //!
 //! let x = vec![1.0, 1.0, 0.0, 0.0];  // First two predicates true
 //! let y = vec![1.0, 1.0, 1.0, 0.0];  // First three predicates true
-//! let sim = kernel.compute(&x, &y).unwrap();
+//! let sim = kernel.compute(&x, &y).expect("unwrap");
 //! // Similarity = 2/4 = 0.5 (two shared true predicates)
 //! ```
 //!
@@ -90,7 +90,7 @@
 //! let kernel = LinearKernel::new();
 //! let x = vec![1.0, 2.0, 3.0];
 //! let y = vec![4.0, 5.0, 6.0];
-//! let sim = kernel.compute(&x, &y).unwrap();
+//! let sim = kernel.compute(&x, &y).expect("unwrap");
 //! // Similarity = dot(x, y) = 1*4 + 2*5 + 3*6 = 32
 //! ```
 //!
@@ -100,11 +100,11 @@
 //! use tensorlogic_sklears_kernels::{RbfKernel, RbfKernelConfig, Kernel};
 //!
 //! let config = RbfKernelConfig::new(0.5);  // gamma = 0.5
-//! let kernel = RbfKernel::new(config).unwrap();
+//! let kernel = RbfKernel::new(config).expect("unwrap");
 //!
 //! let x = vec![1.0, 2.0, 3.0];
 //! let y = vec![1.0, 2.0, 3.0];
-//! let sim = kernel.compute(&x, &y).unwrap();
+//! let sim = kernel.compute(&x, &y).expect("unwrap");
 //! // Similarity = exp(-gamma * ||x-y||^2) = 1.0 (same vectors)
 //! ```
 //!
@@ -113,11 +113,11 @@
 //! ```rust
 //! use tensorlogic_sklears_kernels::{PolynomialKernel, Kernel};
 //!
-//! let kernel = PolynomialKernel::new(2, 1.0).unwrap();  // degree=2, constant=1
+//! let kernel = PolynomialKernel::new(2, 1.0).expect("unwrap");  // degree=2, constant=1
 //!
 //! let x = vec![1.0, 2.0];
 //! let y = vec![3.0, 4.0];
-//! let sim = kernel.compute(&x, &y).unwrap();
+//! let sim = kernel.compute(&x, &y).expect("unwrap");
 //! // Similarity = (dot(x,y) + c)^d = (11 + 1)^2 = 144
 //! ```
 //!
@@ -130,7 +130,7 @@
 //!
 //! let x = vec![1.0, 2.0, 3.0];
 //! let y = vec![2.0, 4.0, 6.0];  // Parallel to x
-//! let sim = kernel.compute(&x, &y).unwrap();
+//! let sim = kernel.compute(&x, &y).expect("unwrap");
 //! // Similarity = cos(angle) = 1.0 (parallel vectors)
 //! ```
 //!
@@ -148,7 +148,7 @@
 //!     vec![5.0, 6.0],
 //! ];
 //!
-//! let matrix = kernel.compute_matrix(&inputs).unwrap();
+//! let matrix = kernel.compute_matrix(&inputs).expect("unwrap");
 //! // matrix[i][j] = kernel(inputs[i], inputs[j])
 //! // Symmetric positive semi-definite matrix
 //! ```
@@ -170,11 +170,11 @@
 //! );
 //!
 //! // Compile to kernel
-//! let kernel = RuleSimilarityKernel::from_rules(vec![rule]).unwrap();
+//! let kernel = RuleSimilarityKernel::from_rules(vec![rule]).expect("unwrap");
 //!
 //! // Use in machine learning
 //! let data = vec![/* feature vectors */];
-//! let kernel_matrix = kernel.compute_matrix(&data).unwrap();
+//! let kernel_matrix = kernel.compute_matrix(&data).expect("unwrap");
 //! ```
 //!
 //! ## Use Cases
@@ -185,7 +185,7 @@
 //!
 //! ```rust,ignore
 //! let rules = extract_rules_from_knowledge_base();
-//! let kernel = RuleSimilarityKernel::new(rules, config).unwrap();
+//! let kernel = RuleSimilarityKernel::new(rules, config).expect("unwrap");
 //! let svm = KernelSVM::new(kernel);
 //! svm.fit(training_data, labels);
 //! ```
@@ -197,7 +197,7 @@
 //! ```rust,ignore
 //! let predicates = extract_predicates_from_text(document);
 //! let kernel = PredicateOverlapKernel::new(predicates.len());
-//! let similarity = kernel.compute(&doc1_features, &doc2_features).unwrap();
+//! let similarity = kernel.compute(&doc1_features, &doc2_features).expect("unwrap");
 //! ```
 //!
 //! ### 3. Hybrid Kernels
@@ -205,13 +205,13 @@
 //! Combine logical and tensor-based features:
 //!
 //! ```rust,ignore
-//! let logic_kernel = RuleSimilarityKernel::new(rules, config).unwrap();
-//! let tensor_kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+//! let logic_kernel = RuleSimilarityKernel::new(rules, config).expect("unwrap");
+//! let tensor_kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
 //!
 //! // Weighted combination
 //! let alpha = 0.7;
-//! let similarity = alpha * logic_kernel.compute(x, y).unwrap()
-//!                + (1.0 - alpha) * tensor_kernel.compute(x_emb, y_emb).unwrap();
+//! let similarity = alpha * logic_kernel.compute(x, y).expect("unwrap")
+//!                + (1.0 - alpha) * tensor_kernel.compute(x_emb, y_emb).expect("unwrap");
 //! ```
 //!
 //! ## Design Philosophy
@@ -223,16 +223,21 @@
 //! 5. **Interpretability**: Clear mapping from logic to similarity
 
 pub mod ard_kernel;
+pub mod batch;
 pub mod cache;
 pub mod composite_kernel;
+pub mod deep_kernel;
 pub mod error;
 pub mod feature_extraction;
 pub mod gradient;
 pub mod graph_kernel;
+pub mod kernel_alignment;
+pub mod kernel_pca;
 pub mod kernel_selection;
 pub mod kernel_transform;
 pub mod kernel_utils;
 pub mod kpca;
+pub mod learned_composition;
 pub mod logic_kernel;
 pub mod low_rank;
 pub mod multitask;
@@ -254,18 +259,36 @@ pub use ard_kernel::{
     ArdMaternKernel, ArdRationalQuadraticKernel, ArdRbfKernel, ConstantKernel, DotProductKernel,
     KernelGradient, ScaledKernel, WhiteNoiseKernel,
 };
+pub use batch::{
+    BatchKernelComputer, GramMatrix, KernelCache as BatchKernelCache, KernelMatrixStats,
+};
 pub use cache::{CacheStats, CachedKernel, KernelMatrixCache};
 pub use composite_kernel::{KernelAlignment, ProductKernel, WeightedSumKernel};
+pub use deep_kernel::{
+    Activation as DeepKernelActivation, DeepKernel, DeepKernelBuilder, DenseLayer,
+    MLPFeatureExtractor, NeuralFeatureMap,
+};
 pub use error::{KernelError, Result};
 pub use feature_extraction::{FeatureExtractionConfig, FeatureExtractor};
 pub use graph_kernel::{
     Graph, RandomWalkKernel, SubgraphMatchingConfig, SubgraphMatchingKernel, WalkKernelConfig,
     WeisfeilerLehmanConfig, WeisfeilerLehmanKernel,
 };
+pub use kernel_alignment::{
+    alignment_stats, centered_kernel_alignment, gradient_ascent_alignment, grid_search_alignment,
+    hsic, kernel_target_alignment, AlignmentError, AlignmentOptConfig, AlignmentResult,
+    AlignmentStats, KernelMatrix, OptimizationResult,
+};
+pub use kernel_pca::{
+    FittedKernelPCA, KernelPCA, KernelPcaConfig, KernelPcaError, KernelPcaResult,
+};
 pub use kernel_selection::{
     CrossValidationResult, GammaSearchResult, KFoldConfig, KernelComparison, KernelSelector,
 };
 pub use kernel_transform::NormalizedKernel;
+pub use learned_composition::{
+    LearnedMixtureBuilder, LearnedMixtureKernel, TrainableKernelMixture,
+};
 pub use logic_kernel::{PredicateOverlapKernel, RuleSimilarityKernel};
 pub use low_rank::{NystromApproximation, NystromConfig, SamplingMethod};
 pub use multitask::{
@@ -321,8 +344,8 @@ mod tests {
         let kernels: Vec<Box<dyn Kernel>> = vec![
             Box::new(LinearKernel::new()),
             Box::new(CosineKernel::new()),
-            Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()),
-            Box::new(PolynomialKernel::new(2, 1.0).unwrap()),
+            Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap")),
+            Box::new(PolynomialKernel::new(2, 1.0).expect("unwrap")),
         ];
 
         let x = vec![1.0, 2.0, 3.0];
@@ -339,10 +362,15 @@ mod tests {
         assert_eq!(LinearKernel::new().name(), "Linear");
         assert_eq!(CosineKernel::new().name(), "Cosine");
         assert_eq!(
-            RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap().name(),
+            RbfKernel::new(RbfKernelConfig::new(0.5))
+                .expect("unwrap")
+                .name(),
             "RBF"
         );
-        assert_eq!(PolynomialKernel::new(2, 1.0).unwrap().name(), "Polynomial");
+        assert_eq!(
+            PolynomialKernel::new(2, 1.0).expect("unwrap").name(),
+            "Polynomial"
+        );
     }
 
     #[test]
@@ -350,7 +378,7 @@ mod tests {
         let kernel = LinearKernel::new();
         assert!(kernel.is_psd());
 
-        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
         assert!(kernel.is_psd());
     }
 }

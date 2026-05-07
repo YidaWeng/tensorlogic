@@ -580,46 +580,42 @@ impl Profiler {
                         ));
                     }
                 }
-                "Optimization" => {
+                "Optimization"
                     if hotspot.severity == HotspotSeverity::High
-                        || hotspot.severity == HotspotSeverity::Critical
-                    {
-                        suggestions.push(format!(
-                            "Optimization is taking {:.1}% of time. Consider:\n    \
+                        || hotspot.severity == HotspotSeverity::Critical =>
+                {
+                    suggestions.push(format!(
+                        "Optimization is taking {:.1}% of time. Consider:\n    \
                             - Lowering optimization level if compilation speed is critical\n    \
                             - Disabling optimization for development/debugging\n    \
                             - Graph complexity (tensors: {}, nodes: {}) may be causing slow optimization",
-                            hotspot.percentage,
-                            graph.tensors.len(),
-                            graph.nodes.len()
-                        ));
-                    }
+                        hotspot.percentage,
+                        graph.tensors.len(),
+                        graph.nodes.len()
+                    ));
                 }
-                "Serialization" => {
+                "Serialization"
                     if hotspot.severity == HotspotSeverity::Medium
                         || hotspot.severity == HotspotSeverity::High
-                        || hotspot.severity == HotspotSeverity::Critical
-                    {
-                        suggestions.push(format!(
-                            "Serialization is taking {:.1}% of time. This is unusual. Consider:\n    \
+                        || hotspot.severity == HotspotSeverity::Critical =>
+                {
+                    suggestions.push(format!(
+                        "Serialization is taking {:.1}% of time. This is unusual. Consider:\n    \
                             - Using compact JSON format if output size matters\n    \
                             - Caching serialized graphs for repeated use\n    \
                             - Very large graphs ({} tensors, {} nodes) cause slow serialization",
-                            hotspot.percentage,
-                            graph.tensors.len(),
-                            graph.nodes.len()
-                        ));
-                    }
+                        hotspot.percentage,
+                        graph.tensors.len(),
+                        graph.nodes.len()
+                    ));
                 }
-                "Graph Validation" => {
-                    if hotspot.severity != HotspotSeverity::Low {
-                        suggestions.push(format!(
-                            "Validation is taking {:.1}% of time. Consider:\n    \
+                "Graph Validation" if hotspot.severity != HotspotSeverity::Low => {
+                    suggestions.push(format!(
+                        "Validation is taking {:.1}% of time. Consider:\n    \
                             - Disabling validation in production builds\n    \
                             - Using validation only during development/testing",
-                            hotspot.percentage
-                        ));
-                    }
+                        hotspot.percentage
+                    ));
                 }
                 _ => {}
             }
@@ -963,7 +959,7 @@ mod tests {
         let result = profiler.profile(&expr, &ctx);
         assert!(result.is_ok());
 
-        let profile = result.unwrap();
+        let profile = result.expect("profiler should succeed");
         assert!(profile.total_time_us > 0);
         assert!(!profile.phases.is_empty());
         // Check bottleneck analysis exists
@@ -1003,7 +999,7 @@ mod tests {
         let result = profiler.profile(&expr, &ctx);
         assert!(result.is_ok());
 
-        let profile = result.unwrap();
+        let profile = result.expect("profiler should succeed");
         // Should have 3 phases: analysis, compilation, serialization
         assert!(profile.phases.len() >= 2);
         // Bottleneck analysis should exist
@@ -1038,7 +1034,7 @@ mod tests {
         let result = profiler.profile(&expr, &ctx);
         assert!(result.is_ok());
 
-        let profile = result.unwrap();
+        let profile = result.expect("profiler should succeed");
         // Check that bottleneck analysis exists and has valid severity score
         assert!(profile.bottleneck_analysis.severity_score <= 100);
         // Suggestions may or may not be empty depending on whether bottlenecks were detected
@@ -1063,7 +1059,7 @@ mod tests {
         let result = profiler.profile(&expr, &ctx);
         assert!(result.is_ok());
 
-        let profile = result.unwrap();
+        let profile = result.expect("profiler should succeed");
         // Variance should be calculated correctly
         // Note: min_time_us can be 0 if execution is faster than 1 microsecond
         assert!(profile.variance.max_time_us >= profile.variance.min_time_us);

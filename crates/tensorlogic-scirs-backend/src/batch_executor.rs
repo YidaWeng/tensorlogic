@@ -210,7 +210,7 @@ mod tests {
         let x = TLExpr::pred("x", vec![Term::var("i")]);
         let y = TLExpr::pred("y", vec![Term::var("i")]);
         let expr = TLExpr::add(x, y);
-        let graph = compile_to_einsum(&expr).unwrap();
+        let graph = compile_to_einsum(&expr).expect("unwrap");
 
         let mut executor = Scirs2Exec::new();
 
@@ -221,7 +221,9 @@ mod tests {
             vec![create_test_tensor(&[5], 5.0), create_test_tensor(&[5], 6.0)],
         ];
 
-        let result = executor.execute_batch(&graph, batch_inputs).unwrap();
+        let result = executor
+            .execute_batch(&graph, batch_inputs)
+            .expect("unwrap");
 
         assert_eq!(result.len(), 3);
         assert!((result.outputs[0][0] - 3.0).abs() < 1e-6); // 1 + 2
@@ -243,7 +245,7 @@ mod tests {
     fn test_parallel_batch_executor() {
         let x = TLExpr::pred("x", vec![Term::var("i")]);
         let expr = TLExpr::mul(x.clone(), x);
-        let graph = compile_to_einsum(&expr).unwrap();
+        let graph = compile_to_einsum(&expr).expect("unwrap");
 
         let executor = ParallelBatchExecutor::new();
 
@@ -252,7 +254,9 @@ mod tests {
             vec![create_test_tensor(&[3], 3.0)],
         ];
 
-        let result = executor.execute_parallel(&graph, batch_inputs).unwrap();
+        let result = executor
+            .execute_parallel(&graph, batch_inputs)
+            .expect("unwrap");
 
         assert_eq!(result.len(), 2);
         assert!((result.outputs[0][0] - 4.0).abs() < 1e-6); // 2 * 2
@@ -262,7 +266,7 @@ mod tests {
     #[test]
     fn test_empty_batch_error() {
         let x = TLExpr::pred("x", vec![Term::var("i")]);
-        let graph = compile_to_einsum(&x).unwrap();
+        let graph = compile_to_einsum(&x).expect("unwrap");
 
         let mut executor = Scirs2Exec::new();
         let batch_inputs: Vec<Vec<ArrayD<f64>>> = vec![];
@@ -276,7 +280,7 @@ mod tests {
         let x = TLExpr::pred("x", vec![Term::var("i")]);
         let y = TLExpr::pred("y", vec![Term::var("i")]);
         let expr = TLExpr::add(x, y);
-        let graph = compile_to_einsum(&expr).unwrap();
+        let graph = compile_to_einsum(&expr).expect("unwrap");
 
         let batch_inputs = vec![
             vec![create_test_tensor(&[3], 1.0), create_test_tensor(&[3], 2.0)],
@@ -286,12 +290,12 @@ mod tests {
         let mut executor = Scirs2Exec::new();
         let result_seq = executor
             .execute_batch(&graph, batch_inputs.clone())
-            .unwrap();
+            .expect("unwrap");
 
         let mut executor2 = Scirs2Exec::new();
         let result_par = executor2
             .execute_batch_parallel(&graph, batch_inputs, None)
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(result_seq.len(), result_par.len());
         for (seq, par) in result_seq.outputs.iter().zip(result_par.outputs.iter()) {

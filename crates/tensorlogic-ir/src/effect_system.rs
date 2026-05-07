@@ -577,7 +577,7 @@ mod tests {
     fn test_effect_scheme_concrete() {
         let scheme = EffectScheme::concrete(EffectSet::pure());
         let subst = EffectSubstitution::new();
-        let effects = scheme.evaluate(&subst).unwrap();
+        let effects = scheme.evaluate(&subst).expect("unwrap");
 
         assert!(effects.is_pure());
     }
@@ -590,7 +590,7 @@ mod tests {
         let mut subst = EffectSubstitution::new();
         subst.insert(var, EffectSet::pure());
 
-        let effects = scheme.evaluate(&subst).unwrap();
+        let effects = scheme.evaluate(&subst).expect("unwrap");
         assert!(effects.is_pure());
     }
 
@@ -601,7 +601,7 @@ mod tests {
         let union_scheme = EffectScheme::union(scheme1, scheme2);
 
         let subst = EffectSubstitution::new();
-        let effects = union_scheme.evaluate(&subst).unwrap();
+        let effects = union_scheme.evaluate(&subst).expect("unwrap");
 
         assert!(effects.is_pure());
         assert!(effects.is_differentiable());

@@ -233,7 +233,7 @@ fn main() {
 
     let mut ctx = CompilerContext::new();
     ctx.add_domain("D", 10000);
-    ctx.bind_var("i", "D").unwrap();
+    ctx.bind_var("i", "D").expect("unwrap");
 
     let before_mem = estimate_memory(&complex_expr, &ctx);
     let (optimized, _) = pipeline.optimize(&complex_expr);

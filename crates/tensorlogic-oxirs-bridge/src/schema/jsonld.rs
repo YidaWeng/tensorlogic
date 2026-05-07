@@ -160,8 +160,8 @@ impl SchemaAnalyzer {
     /// }"#;
     ///
     /// let mut analyzer = SchemaAnalyzer::new();
-    /// analyzer.load_jsonld(jsonld).unwrap();
-    /// analyzer.analyze().unwrap();
+    /// analyzer.load_jsonld(jsonld).expect("unwrap");
+    /// analyzer.analyze().expect("unwrap");
     ///
     /// assert_eq!(analyzer.classes.len(), 1);
     /// ```
@@ -353,10 +353,10 @@ impl SchemaAnalyzer {
     ///
     ///     ex:Person a rdfs:Class ;
     ///         rdfs:label "Person" .
-    /// "#).unwrap();
-    /// analyzer.analyze().unwrap();
+    /// "#).expect("unwrap");
+    /// analyzer.analyze().expect("unwrap");
     ///
-    /// let jsonld = analyzer.to_jsonld().unwrap();
+    /// let jsonld = analyzer.to_jsonld().expect("unwrap");
     /// assert!(jsonld.contains("@context"));
     /// assert!(jsonld.contains("@graph"));
     /// ```
@@ -377,13 +377,13 @@ impl SchemaAnalyzer {
     /// analyzer.load_turtle(r#"
     ///     @prefix ex: <http://example.org/> .
     ///     ex:Thing a <http://www.w3.org/2000/01/rdf-schema#Class> .
-    /// "#).unwrap();
-    /// analyzer.analyze().unwrap();
+    /// "#).expect("unwrap");
+    /// analyzer.analyze().expect("unwrap");
     ///
     /// let mut context = JsonLdContext::new();
     /// context.add_prefix("ex".to_string(), "http://example.org/".to_string());
     ///
-    /// let jsonld = analyzer.to_jsonld_with_context(context).unwrap();
+    /// let jsonld = analyzer.to_jsonld_with_context(context).expect("unwrap");
     /// assert!(jsonld.contains("\"ex\": \"http://example.org/\""));
     /// ```
     pub fn to_jsonld_with_context(&self, mut context: JsonLdContext) -> Result<String> {
@@ -661,10 +661,10 @@ mod tests {
                 rdfs:comment "A human being" .
         "#,
             )
-            .unwrap();
-        analyzer.analyze().unwrap();
+            .expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let jsonld = analyzer.to_jsonld().unwrap();
+        let jsonld = analyzer.to_jsonld().expect("unwrap");
 
         // Verify JSON-LD structure
         assert!(jsonld.contains("@context"));
@@ -687,10 +687,10 @@ mod tests {
                 rdfs:subClassOf ex:Animal .
         "#,
             )
-            .unwrap();
-        analyzer.analyze().unwrap();
+            .expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let jsonld = analyzer.to_jsonld().unwrap();
+        let jsonld = analyzer.to_jsonld().expect("unwrap");
 
         assert!(jsonld.contains("Animal"));
         assert!(jsonld.contains("Dog"));
@@ -713,10 +713,10 @@ mod tests {
                 rdfs:range ex:Person .
         "#,
             )
-            .unwrap();
-        analyzer.analyze().unwrap();
+            .expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let jsonld = analyzer.to_jsonld().unwrap();
+        let jsonld = analyzer.to_jsonld().expect("unwrap");
 
         assert!(jsonld.contains("knows"));
         assert!(jsonld.contains("domain"));
@@ -733,13 +733,13 @@ mod tests {
             ex:Thing a <http://www.w3.org/2000/01/rdf-schema#Class> .
         "#,
             )
-            .unwrap();
-        analyzer.analyze().unwrap();
+            .expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
         let mut context = JsonLdContext::new();
         context.add_prefix("ex".to_string(), "http://example.org/".to_string());
 
-        let jsonld = analyzer.to_jsonld_with_context(context).unwrap();
+        let jsonld = analyzer.to_jsonld_with_context(context).expect("unwrap");
 
         assert!(jsonld.contains("\"ex\": \"http://example.org/\""));
         assert!(jsonld.contains("ex:Thing"));
@@ -758,18 +758,22 @@ mod tests {
                 rdfs:label "Person" .
         "#,
             )
-            .unwrap();
-        analyzer.analyze().unwrap();
+            .expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
-        let jsonld_str = analyzer.to_jsonld().unwrap();
+        let jsonld_str = analyzer.to_jsonld().expect("unwrap");
 
         // Parse back as JSON to verify structure
-        let parsed: Value = serde_json::from_str(&jsonld_str).unwrap();
+        let parsed: Value = serde_json::from_str(&jsonld_str).expect("unwrap");
 
         assert!(parsed.get("@context").is_some());
         assert!(parsed.get("@graph").is_some());
 
-        let graph = parsed.get("@graph").unwrap().as_array().unwrap();
+        let graph = parsed
+            .get("@graph")
+            .expect("unwrap")
+            .as_array()
+            .expect("unwrap");
         assert!(!graph.is_empty());
 
         let first_item = &graph[0];
@@ -823,8 +827,8 @@ mod tests {
             foaf:knows a <http://www.w3.org/1999/02/22-rdf-syntax-ns#Property> .
         "#,
             )
-            .unwrap();
-        analyzer.analyze().unwrap();
+            .expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
         let namespaces = analyzer.detect_namespaces();
 
@@ -839,7 +843,7 @@ mod tests {
             "foaf": "http://xmlns.com/foaf/0.1/"
         });
 
-        let context = JsonLdContext::from_json(&context_json).unwrap();
+        let context = JsonLdContext::from_json(&context_json).expect("unwrap");
         assert_eq!(
             context.prefixes().get("ex"),
             Some(&"http://example.org/".to_string())
@@ -884,11 +888,14 @@ mod tests {
         }"#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_jsonld(jsonld).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_jsonld(jsonld).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
         assert_eq!(analyzer.classes.len(), 1);
-        let person = analyzer.classes.get("http://example.org/Person").unwrap();
+        let person = analyzer
+            .classes
+            .get("http://example.org/Person")
+            .expect("unwrap");
         assert_eq!(person.label, Some("Person".to_string()));
         assert_eq!(person.comment, Some("A human being".to_string()));
     }
@@ -913,11 +920,14 @@ mod tests {
         }"#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_jsonld(jsonld).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_jsonld(jsonld).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
         assert_eq!(analyzer.properties.len(), 1);
-        let knows = analyzer.properties.get("http://example.org/knows").unwrap();
+        let knows = analyzer
+            .properties
+            .get("http://example.org/knows")
+            .expect("unwrap");
         assert_eq!(knows.label, Some("knows".to_string()));
         assert!(knows
             .domain
@@ -945,16 +955,16 @@ mod tests {
                             rdfs:label "Organization" .
         "#,
             )
-            .unwrap();
-        analyzer1.analyze().unwrap();
+            .expect("unwrap");
+        analyzer1.analyze().expect("unwrap");
 
         // Export to JSON-LD
-        let jsonld = analyzer1.to_jsonld().unwrap();
+        let jsonld = analyzer1.to_jsonld().expect("unwrap");
 
         // Import back
         let mut analyzer2 = SchemaAnalyzer::new();
-        analyzer2.load_jsonld(&jsonld).unwrap();
-        analyzer2.analyze().unwrap();
+        analyzer2.load_jsonld(&jsonld).expect("unwrap");
+        analyzer2.analyze().expect("unwrap");
 
         // Verify roundtrip
         assert_eq!(analyzer1.classes.len(), analyzer2.classes.len());
@@ -963,7 +973,10 @@ mod tests {
             .classes
             .contains_key("http://example.org/Organization"));
 
-        let person2 = analyzer2.classes.get("http://example.org/Person").unwrap();
+        let person2 = analyzer2
+            .classes
+            .get("http://example.org/Person")
+            .expect("unwrap");
         assert_eq!(person2.label, Some("Person".to_string()));
         assert_eq!(person2.comment, Some("A human being".to_string()));
     }
@@ -988,12 +1001,15 @@ mod tests {
         }"#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_jsonld(jsonld).unwrap();
-        analyzer.analyze().unwrap();
+        analyzer.load_jsonld(jsonld).expect("unwrap");
+        analyzer.analyze().expect("unwrap");
 
         assert_eq!(analyzer.classes.len(), 1);
         // Note: The analyzer will pick one of the labels
-        let person = analyzer.classes.get("http://example.org/Person").unwrap();
+        let person = analyzer
+            .classes
+            .get("http://example.org/Person")
+            .expect("unwrap");
         assert!(person.label.is_some());
     }
 

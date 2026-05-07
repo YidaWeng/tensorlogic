@@ -35,7 +35,7 @@ pub(crate) fn compile_weighted_rule(
             .tensors
             .iter()
             .position(|t| t == &weight_name)
-            .unwrap()
+            .expect("weight tensor was just registered")
     };
 
     // Multiply rule result by weight
@@ -100,7 +100,11 @@ pub(crate) fn compile_probabilistic_choice(
         let prob_idx = if !graph.tensors.contains(&prob_name) {
             graph.add_tensor(prob_name.clone())
         } else {
-            graph.tensors.iter().position(|t| t == &prob_name).unwrap()
+            graph
+                .tensors
+                .iter()
+                .position(|t| t == &prob_name)
+                .expect("prob tensor was just registered")
         };
 
         let result_idx = graph.add_tensor(format!("prob_choice_{}", graph.tensors.len()));
@@ -124,7 +128,7 @@ pub(crate) fn compile_probabilistic_choice(
             .tensors
             .iter()
             .position(|t| t == &prob_0_name)
-            .unwrap()
+            .expect("prob_0 tensor exists because contains check passed")
     };
 
     let weighted_0_idx = graph.add_tensor(format!("weighted_0_{}", graph.tensors.len()));
@@ -144,7 +148,7 @@ pub(crate) fn compile_probabilistic_choice(
                 .tensors
                 .iter()
                 .position(|t| t == &prob_i_name)
-                .unwrap()
+                .expect("prob_i tensor exists because contains check passed")
         };
 
         let weighted_i_idx =

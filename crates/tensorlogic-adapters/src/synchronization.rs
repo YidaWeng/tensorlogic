@@ -212,7 +212,7 @@ impl SyncEvent {
     fn current_timestamp() -> u64 {
         SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .expect("SystemTime after UNIX_EPOCH")
             .as_millis() as u64
     }
 }
@@ -810,9 +810,9 @@ mod tests {
             None,
         );
 
-        protocol.send_event(&node, &event).unwrap();
+        protocol.send_event(&node, &event).expect("unwrap");
 
-        let received = protocol.receive_events().unwrap();
+        let received = protocol.receive_events().expect("unwrap");
         assert_eq!(received.len(), 1);
         assert_eq!(received[0].entity_name, "Person");
     }
@@ -834,7 +834,7 @@ mod tests {
         let mut mgr = SynchronizationManager::new(node, table);
 
         let domain = DomainInfo::new("Person", 100);
-        mgr.add_domain(domain).unwrap();
+        mgr.add_domain(domain).expect("unwrap");
 
         assert_eq!(mgr.pending_events().len(), 1);
         assert_eq!(mgr.stats.events_sent, 1);
@@ -845,12 +845,14 @@ mod tests {
     fn test_sync_manager_add_predicate() {
         let node = NodeId::new("test");
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let mut mgr = SynchronizationManager::new(node, table);
 
         let predicate = PredicateInfo::new("knows", vec!["Person".to_string()]);
-        mgr.add_predicate(predicate).unwrap();
+        mgr.add_predicate(predicate).expect("unwrap");
 
         assert_eq!(mgr.pending_events().len(), 1);
         assert_eq!(mgr.stats.events_sent, 1);
@@ -869,11 +871,11 @@ mod tests {
 
         // Node 1 adds a domain
         let domain = DomainInfo::new("Person", 100);
-        mgr1.add_domain(domain).unwrap();
+        mgr1.add_domain(domain).expect("unwrap");
 
         // Get event and apply to node 2
         let events = mgr1.pending_events();
-        let result = mgr2.apply_event(events[0].clone()).unwrap();
+        let result = mgr2.apply_event(events[0].clone()).expect("unwrap");
 
         assert_eq!(result, ApplyResult::Applied);
         assert!(mgr2.table().get_domain("Person").is_some());
@@ -888,7 +890,7 @@ mod tests {
         let mut mgr = SynchronizationManager::new(node.clone(), table);
 
         let domain = DomainInfo::new("Person", 100);
-        let event_data = serde_json::to_string(&domain).unwrap();
+        let event_data = serde_json::to_string(&domain).expect("unwrap");
 
         let mut clock = VectorClock::new();
         clock.increment(&node);
@@ -902,11 +904,11 @@ mod tests {
         );
 
         // Apply first time
-        let result1 = mgr.apply_event(event.clone()).unwrap();
+        let result1 = mgr.apply_event(event.clone()).expect("unwrap");
         assert_eq!(result1, ApplyResult::Applied);
 
         // Apply again (duplicate)
-        let result2 = mgr.apply_event(event).unwrap();
+        let result2 = mgr.apply_event(event).expect("unwrap");
         assert_eq!(result2, ApplyResult::Ignored);
         assert_eq!(mgr.stats.events_ignored, 1);
     }
@@ -917,14 +919,16 @@ mod tests {
         let node2 = NodeId::new("node2");
 
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let mut mgr = SynchronizationManager::new(node2.clone(), table);
         mgr.set_resolution_strategy(ConflictResolution::FirstWriteWins);
 
         // Try to add same domain from another node
         let domain = DomainInfo::new("Person", 200);
-        let event_data = serde_json::to_string(&domain).unwrap();
+        let event_data = serde_json::to_string(&domain).expect("unwrap");
 
         let mut clock = VectorClock::new();
         clock.increment(&node1);
@@ -937,7 +941,7 @@ mod tests {
             Some(event_data),
         );
 
-        let result = mgr.apply_event(event).unwrap();
+        let result = mgr.apply_event(event).expect("unwrap");
         assert_eq!(result, ApplyResult::Ignored);
         assert_eq!(mgr.stats.conflicts_detected, 1);
     }
@@ -954,15 +958,17 @@ mod tests {
         let mut mgr2 = SynchronizationManager::new(node2, table2);
 
         // Node 1 adds domains
-        mgr1.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        mgr1.add_domain(DomainInfo::new("Place", 50)).unwrap();
+        mgr1.add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        mgr1.add_domain(DomainInfo::new("Place", 50))
+            .expect("unwrap");
 
         // Get events from node 1 and apply to node 2
         let events = mgr1.pending_events();
         assert_eq!(events.len(), 2);
 
         for event in events {
-            mgr2.apply_event(event).unwrap();
+            mgr2.apply_event(event).expect("unwrap");
         }
 
         // Verify node 2 received both domains

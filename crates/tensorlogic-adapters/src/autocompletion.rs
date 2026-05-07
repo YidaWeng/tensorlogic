@@ -407,7 +407,7 @@ impl PatternDatabase {
             }
         }
 
-        suggestions.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        suggestions.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         suggestions
     }
 
@@ -432,7 +432,7 @@ impl PatternDatabase {
             }
         }
 
-        suggestions.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap());
+        suggestions.sort_by(|a, b| b.2.partial_cmp(&a.2).unwrap_or(std::cmp::Ordering::Equal));
         suggestions
     }
 
@@ -461,7 +461,7 @@ impl PatternDatabase {
             suggestions.push((domain.to_lowercase(), 0.6));
         }
 
-        suggestions.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        suggestions.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         suggestions
     }
 
@@ -490,7 +490,7 @@ impl PatternDatabase {
             }
         }
 
-        suggestions.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        suggestions.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         suggestions
     }
 
@@ -568,7 +568,7 @@ mod tests {
         let mut table = SymbolTable::new();
         table
             .add_domain(DomainInfo::new("CustomDomain", 100))
-            .unwrap();
+            .expect("unwrap");
 
         ac.index_table(&table);
 

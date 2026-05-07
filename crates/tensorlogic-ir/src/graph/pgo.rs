@@ -158,7 +158,7 @@ impl ExecutionProfile {
             .map(|(id, stats)| (*id, stats.performance_score()))
             .collect();
 
-        scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        scores.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
         scores.truncate(n);
         scores
     }
@@ -429,7 +429,7 @@ impl ProfileGuidedOptimizer {
         let depth = if input_depths.is_empty() {
             0
         } else {
-            input_depths.into_iter().max().unwrap() + 1
+            input_depths.into_iter().max().unwrap_or(0) + 1
         };
 
         memo.insert(node_id, depth);
@@ -446,19 +446,17 @@ impl ProfileGuidedOptimizer {
 
         for hint in hints {
             match hint {
-                OptimizationHint::FuseNodes(nodes) => {
-                    if self.try_fuse_nodes(graph, nodes)? {
-                        applied += 1;
-                    }
+                OptimizationHint::FuseNodes(nodes) if self.try_fuse_nodes(graph, nodes)? => {
+                    applied += 1;
                 }
                 OptimizationHint::CacheTensor(tensor_id) => {
                     self.mark_tensor_cached(graph, *tensor_id);
                     applied += 1;
                 }
-                OptimizationHint::InPlaceOp(node_id) => {
-                    if self.try_make_inplace(graph, *node_id)? {
-                        applied += 1;
-                    }
+                OptimizationHint::InPlaceOp(node_id)
+                    if self.try_make_inplace(graph, *node_id)? =>
+                {
+                    applied += 1;
                 }
                 OptimizationHint::PreAllocate { tensor, size } => {
                     self.mark_preallocate(graph, *tensor, *size);
@@ -623,8 +621,8 @@ mod tests {
         profile.record_node(0, Duration::from_millis(100), 1024);
         profile.record_tensor_access(0, 2048);
 
-        let json = profile.to_json().unwrap();
-        let restored = ExecutionProfile::from_json(&json).unwrap();
+        let json = profile.to_json().expect("unwrap");
+        let restored = ExecutionProfile::from_json(&json).expect("unwrap");
 
         assert_eq!(profile.node_stats.len(), restored.node_stats.len());
         assert_eq!(profile.tensor_stats.len(), restored.tensor_stats.len());

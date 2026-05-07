@@ -91,7 +91,7 @@ fn example_concurrent_readers() -> anyhow::Result<()> {
     }
 
     for handle in handles {
-        handle.join().unwrap();
+        handle.join().expect("unwrap");
     }
 
     println!("All readers completed successfully\n");
@@ -137,7 +137,7 @@ fn example_reader_writer_pattern() -> anyhow::Result<()> {
                 let domain_name = format!("WriterDomain_{}_{}", writer_id, iteration);
                 guard
                     .add_domain(DomainInfo::new(&domain_name, 100))
-                    .unwrap();
+                    .expect("unwrap");
                 println!(
                     "  Writer {} (iteration {}): Added {}",
                     writer_id, iteration, domain_name
@@ -148,7 +148,7 @@ fn example_reader_writer_pattern() -> anyhow::Result<()> {
     }
 
     for handle in handles {
-        handle.join().unwrap();
+        handle.join().expect("unwrap");
     }
 
     // Final count
@@ -171,8 +171,8 @@ fn example_transactions() -> anyhow::Result<()> {
     {
         let mut txn = table.begin_transaction();
         txn.execute(|t| {
-            t.add_domain(DomainInfo::new("User", 1000)).unwrap();
-            t.add_domain(DomainInfo::new("Post", 5000)).unwrap();
+            t.add_domain(DomainInfo::new("User", 1000)).expect("unwrap");
+            t.add_domain(DomainInfo::new("Post", 5000)).expect("unwrap");
             Ok(())
         })?;
         txn.commit();
@@ -189,8 +189,9 @@ fn example_transactions() -> anyhow::Result<()> {
     {
         let mut txn = table.begin_transaction();
         txn.execute(|t| {
-            t.add_domain(DomainInfo::new("Comment", 10000)).unwrap();
-            t.add_domain(DomainInfo::new("Tag", 500)).unwrap();
+            t.add_domain(DomainInfo::new("Comment", 10000))
+                .expect("unwrap");
+            t.add_domain(DomainInfo::new("Tag", 500)).expect("unwrap");
             Ok(())
         })?;
         println!("  Added 2 domains in transaction");
@@ -209,7 +210,8 @@ fn example_transactions() -> anyhow::Result<()> {
     {
         let mut txn = table.begin_transaction();
         txn.execute(|t| {
-            t.add_domain(DomainInfo::new("AutoRollback", 100)).unwrap();
+            t.add_domain(DomainInfo::new("AutoRollback", 100))
+                .expect("unwrap");
             Ok(())
         })?;
         println!("  Added domain but not committing");
@@ -251,7 +253,7 @@ fn example_lock_timeouts() -> anyhow::Result<()> {
         println!("  ✓ Thread 2: Got lock (unexpected!)");
     }
 
-    handle.join().unwrap();
+    handle.join().expect("unwrap");
 
     println!("Thread 2: Attempting to acquire write lock with 200ms timeout...");
     let result = table.write_timeout(Duration::from_millis(200));
@@ -298,7 +300,7 @@ fn example_lock_statistics() -> anyhow::Result<()> {
                 let mut guard = table_clone.write();
                 guard
                     .add_domain(DomainInfo::new(format!("Domain_{}_{}", i, j), 100))
-                    .unwrap();
+                    .expect("unwrap");
                 thread::sleep(Duration::from_millis(15));
             }
         }));
@@ -316,7 +318,7 @@ fn example_lock_statistics() -> anyhow::Result<()> {
     }
 
     for handle in handles {
-        handle.join().unwrap();
+        handle.join().expect("unwrap");
     }
 
     // Print statistics

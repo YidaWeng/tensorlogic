@@ -703,7 +703,7 @@ mod tests {
     use scirs2_core::ndarray::ArrayD;
 
     fn create_tensor(data: Vec<f64>, shape: Vec<usize>) -> Scirs2Tensor {
-        ArrayD::from_shape_vec(shape, data).unwrap()
+        ArrayD::from_shape_vec(shape, data).expect("unwrap")
     }
 
     #[test]
@@ -736,7 +736,9 @@ mod tests {
         let tensor = create_tensor(vec![-1.0, 0.0, 1.0], vec![3]);
         let mut ctx = CustomOpContext::new();
 
-        let result = registry.execute("softplus", &[&tensor], &mut ctx).unwrap();
+        let result = registry
+            .execute("softplus", &[&tensor], &mut ctx)
+            .expect("unwrap");
 
         // softplus(-1) ≈ 0.3133, softplus(0) = ln(2) ≈ 0.6931, softplus(1) ≈ 1.3133
         assert!(result[[0]] > 0.3 && result[[0]] < 0.35);
@@ -753,7 +755,7 @@ mod tests {
 
         let grads = registry
             .backward("softplus", &grad, &[&tensor], &ctx)
-            .unwrap();
+            .expect("unwrap");
 
         // d/dx softplus(0) = sigmoid(0) = 0.5
         assert!((grads[0][[0]] - 0.5).abs() < 0.001);
@@ -767,7 +769,7 @@ mod tests {
 
         let result = registry
             .execute("leaky_relu", &[&tensor], &mut ctx)
-            .unwrap();
+            .expect("unwrap");
 
         assert!((result[[0]] - (-0.02)).abs() < 0.001); // -2 * 0.01
         assert_eq!(result[[1]], 0.0);
@@ -780,7 +782,9 @@ mod tests {
         let tensor = create_tensor(vec![-1.0, 0.0, 1.0], vec![3]);
         let mut ctx = CustomOpContext::with_grad();
 
-        let result = registry.execute("elu", &[&tensor], &mut ctx).unwrap();
+        let result = registry
+            .execute("elu", &[&tensor], &mut ctx)
+            .expect("unwrap");
 
         // elu(-1) = exp(-1) - 1 ≈ -0.632
         assert!((result[[0]] - (-0.632)).abs() < 0.01);
@@ -794,7 +798,9 @@ mod tests {
         let tensor = create_tensor(vec![0.0], vec![1]);
         let mut ctx = CustomOpContext::new();
 
-        let result = registry.execute("swish", &[&tensor], &mut ctx).unwrap();
+        let result = registry
+            .execute("swish", &[&tensor], &mut ctx)
+            .expect("unwrap");
 
         // swish(0) = 0 * 0.5 = 0
         assert_eq!(result[[0]], 0.0);
@@ -806,7 +812,9 @@ mod tests {
         let tensor = create_tensor(vec![-1.0, 0.0, 1.0], vec![3]);
         let mut ctx = CustomOpContext::new();
 
-        let result = registry.execute("gelu", &[&tensor], &mut ctx).unwrap();
+        let result = registry
+            .execute("gelu", &[&tensor], &mut ctx)
+            .expect("unwrap");
 
         // gelu(0) = 0
         assert!((result[[1]]).abs() < 0.01);
@@ -823,7 +831,7 @@ mod tests {
 
         let result = registry
             .execute("hard_sigmoid", &[&tensor], &mut ctx)
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(result[[0]], 0.0); // Clipped to 0
         assert_eq!(result[[1]], 0.5); // (0 + 3) / 6 = 0.5
@@ -838,7 +846,7 @@ mod tests {
 
         let result = registry
             .execute("hard_swish", &[&tensor], &mut ctx)
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(result[[0]], 0.0); // -4 * 0 = 0
         assert_eq!(result[[1]], 0.0); // 0 * 0.5 = 0
@@ -853,7 +861,7 @@ mod tests {
         let tensor = create_tensor(vec![1.0, 2.0], vec![2]);
         ctx.save_for_backward("test", tensor.clone());
 
-        let saved = ctx.get_saved("test").unwrap();
+        let saved = ctx.get_saved("test").expect("unwrap");
         assert_eq!(saved[[0]], 1.0);
         assert_eq!(saved[[1]], 2.0);
 
@@ -881,7 +889,9 @@ mod tests {
         let y = create_tensor(vec![3.0, 2.0], vec![2]);
         let mut ctx = CustomOpContext::new();
 
-        let result = registry.execute("pow", &[&x, &y], &mut ctx).unwrap();
+        let result = registry
+            .execute("pow", &[&x, &y], &mut ctx)
+            .expect("unwrap");
 
         assert_eq!(result[[0]], 8.0); // 2^3
         assert_eq!(result[[1]], 9.0); // 3^2
@@ -927,7 +937,9 @@ mod tests {
         let tensor = create_tensor(vec![0.0], vec![1]);
         let mut ctx = CustomOpContext::new();
 
-        let result = registry.execute("mish", &[&tensor], &mut ctx).unwrap();
+        let result = registry
+            .execute("mish", &[&tensor], &mut ctx)
+            .expect("unwrap");
 
         // mish(0) = 0 * tanh(softplus(0)) = 0 * tanh(ln(2)) ≈ 0
         assert!(result[[0]].abs() < 0.01);

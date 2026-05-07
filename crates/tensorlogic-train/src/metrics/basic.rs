@@ -288,7 +288,7 @@ mod tests {
 
         let accuracy = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(accuracy, 1.0);
 
         // Partial correct
@@ -297,7 +297,7 @@ mod tests {
 
         let accuracy = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((accuracy - 2.0 / 3.0).abs() < 1e-6);
     }
 
@@ -310,7 +310,7 @@ mod tests {
 
         let precision = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((0.0..=1.0).contains(&precision));
     }
 
@@ -323,7 +323,7 @@ mod tests {
 
         let recall = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((0.0..=1.0).contains(&recall));
     }
 
@@ -336,7 +336,7 @@ mod tests {
 
         let f1 = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((0.0..=1.0).contains(&f1));
     }
 }

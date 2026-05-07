@@ -42,19 +42,19 @@ fn main() {
     // Learning rate: log-uniform from 1e-4 to 1e-1
     param_space.insert(
         "lr".to_string(),
-        HyperparamSpace::log_uniform(1e-4, 1e-1).unwrap(),
+        HyperparamSpace::log_uniform(1e-4, 1e-1).expect("unwrap"),
     );
 
     // Batch size: integer from 16 to 128
     param_space.insert(
         "batch_size".to_string(),
-        HyperparamSpace::int_range(16, 128).unwrap(),
+        HyperparamSpace::int_range(16, 128).expect("unwrap"),
     );
 
     // Dropout: continuous from 0.0 to 0.5
     param_space.insert(
         "dropout".to_string(),
-        HyperparamSpace::continuous(0.0, 0.5).unwrap(),
+        HyperparamSpace::continuous(0.0, 0.5).expect("unwrap"),
     );
 
     println!("Search space:");
@@ -156,9 +156,21 @@ fn main() {
 
     let mut grid_best_score: f64 = 0.0;
     for config in grid_configs {
-        let lr = config.get("lr").unwrap().as_float().unwrap();
-        let batch_size = config.get("batch_size").unwrap().as_int().unwrap();
-        let dropout = config.get("dropout").unwrap().as_float().unwrap();
+        let lr = config
+            .get("lr")
+            .expect("unwrap")
+            .as_float()
+            .expect("unwrap");
+        let batch_size = config
+            .get("batch_size")
+            .expect("unwrap")
+            .as_int()
+            .expect("unwrap");
+        let dropout = config
+            .get("dropout")
+            .expect("unwrap")
+            .as_float()
+            .expect("unwrap");
 
         let score = objective_function(lr, batch_size, dropout);
         grid_search.add_result(HyperparamResult::new(config, score));
@@ -171,9 +183,21 @@ fn main() {
 
     let mut random_best_score: f64 = 0.0;
     for config in random_configs {
-        let lr = config.get("lr").unwrap().as_float().unwrap();
-        let batch_size = config.get("batch_size").unwrap().as_int().unwrap();
-        let dropout = config.get("dropout").unwrap().as_float().unwrap();
+        let lr = config
+            .get("lr")
+            .expect("unwrap")
+            .as_float()
+            .expect("unwrap");
+        let batch_size = config
+            .get("batch_size")
+            .expect("unwrap")
+            .as_int()
+            .expect("unwrap");
+        let dropout = config
+            .get("dropout")
+            .expect("unwrap")
+            .as_float()
+            .expect("unwrap");
 
         let score = objective_function(lr, batch_size, dropout);
         random_search.add_result(HyperparamResult::new(config, score));
@@ -205,9 +229,24 @@ fn main() {
     println!("╚══════════════════════════════════════════════════════════════╝\n");
 
     if let Some(best) = bayes_opt_ei.best_result() {
-        let lr = best.config.get("lr").unwrap().as_float().unwrap();
-        let batch_size = best.config.get("batch_size").unwrap().as_int().unwrap();
-        let dropout = best.config.get("dropout").unwrap().as_float().unwrap();
+        let lr = best
+            .config
+            .get("lr")
+            .expect("unwrap")
+            .as_float()
+            .expect("unwrap");
+        let batch_size = best
+            .config
+            .get("batch_size")
+            .expect("unwrap")
+            .as_int()
+            .expect("unwrap");
+        let dropout = best
+            .config
+            .get("dropout")
+            .expect("unwrap")
+            .as_float()
+            .expect("unwrap");
 
         println!("Bayesian Optimization (EI) found:");
         println!("  • Learning rate: {:.6}", lr);
@@ -239,12 +278,24 @@ fn run_optimization(bayes_opt: &mut BayesianOptimization, _name: &str) {
 
     while !bayes_opt.is_complete() {
         // Get next suggested configuration
-        let config = bayes_opt.suggest().unwrap();
+        let config = bayes_opt.suggest().expect("unwrap");
 
         // Extract hyperparameters
-        let lr = config.get("lr").unwrap().as_float().unwrap();
-        let batch_size = config.get("batch_size").unwrap().as_int().unwrap();
-        let dropout = config.get("dropout").unwrap().as_float().unwrap();
+        let lr = config
+            .get("lr")
+            .expect("unwrap")
+            .as_float()
+            .expect("unwrap");
+        let batch_size = config
+            .get("batch_size")
+            .expect("unwrap")
+            .as_int()
+            .expect("unwrap");
+        let dropout = config
+            .get("dropout")
+            .expect("unwrap")
+            .as_float()
+            .expect("unwrap");
 
         // Evaluate the objective function
         let score = objective_function(lr, batch_size, dropout);
@@ -277,9 +328,24 @@ fn run_optimization(bayes_opt: &mut BayesianOptimization, _name: &str) {
     // Show top 3 results
     println!("\nTop 3 configurations:");
     for (i, result) in bayes_opt.sorted_results().iter().take(3).enumerate() {
-        let lr = result.config.get("lr").unwrap().as_float().unwrap();
-        let batch_size = result.config.get("batch_size").unwrap().as_int().unwrap();
-        let dropout = result.config.get("dropout").unwrap().as_float().unwrap();
+        let lr = result
+            .config
+            .get("lr")
+            .expect("unwrap")
+            .as_float()
+            .expect("unwrap");
+        let batch_size = result
+            .config
+            .get("batch_size")
+            .expect("unwrap")
+            .as_int()
+            .expect("unwrap");
+        let dropout = result
+            .config
+            .get("dropout")
+            .expect("unwrap")
+            .as_float()
+            .expect("unwrap");
 
         println!(
             "  {}. Score={:.6}: lr={:.6}, bs={:3}, dp={:.4}",

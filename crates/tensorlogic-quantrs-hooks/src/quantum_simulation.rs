@@ -33,7 +33,7 @@ use crate::sampling::Assignment;
 use quantrs2_sim::Complex64;
 use quantrs2_sim::StateVectorSimulator;
 use scirs2_core::ndarray::ArrayD;
-use scirs2_core::random::{thread_rng, Rng, SeedableRng, StdRng};
+use scirs2_core::random::{thread_rng, Rng, RngExt, SeedableRng, StdRng};
 use std::collections::HashMap;
 
 /// Configuration for quantum simulation.

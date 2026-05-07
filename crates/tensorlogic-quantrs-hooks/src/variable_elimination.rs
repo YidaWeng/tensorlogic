@@ -291,10 +291,10 @@ mod tests {
 
         // Add uniform factor
         let factor = Factor::uniform("P(x)".to_string(), vec!["x".to_string()], 2);
-        graph.add_factor(factor).unwrap();
+        graph.add_factor(factor).expect("unwrap");
 
         let ve = VariableElimination::new();
-        let marginal = ve.marginalize(&graph, "x").unwrap();
+        let marginal = ve.marginalize(&graph, "x").expect("unwrap");
 
         assert_eq!(marginal.len(), 2);
         let sum: f64 = marginal.iter().sum();
@@ -309,25 +309,25 @@ mod tests {
 
         // P(x)
         let px_values = Array::from_shape_vec(vec![2], vec![0.6, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        let px = Factor::new("P(x)".to_string(), vec!["x".to_string()], px_values).unwrap();
-        graph.add_factor(px).unwrap();
+        let px = Factor::new("P(x)".to_string(), vec!["x".to_string()], px_values).expect("unwrap");
+        graph.add_factor(px).expect("unwrap");
 
         // P(y|x)
         let pyx_values = Array::from_shape_vec(vec![2, 2], vec![0.9, 0.1, 0.2, 0.8])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         let pyx = Factor::new(
             "P(y|x)".to_string(),
             vec!["x".to_string(), "y".to_string()],
             pyx_values,
         )
-        .unwrap();
-        graph.add_factor(pyx).unwrap();
+        .expect("unwrap");
+        graph.add_factor(pyx).expect("unwrap");
 
         let ve = VariableElimination::new();
-        let marginal_y = ve.marginalize(&graph, "y").unwrap();
+        let marginal_y = ve.marginalize(&graph, "y").expect("unwrap");
 
         assert_eq!(marginal_y.len(), 2);
         let sum: f64 = marginal_y.iter().sum();
@@ -341,7 +341,7 @@ mod tests {
         graph.add_variable_with_card("y".to_string(), "Binary".to_string(), 2);
 
         let ve = VariableElimination::new();
-        let marginals = ve.marginalize_all(&graph).unwrap();
+        let marginals = ve.marginalize_all(&graph).expect("unwrap");
 
         assert_eq!(marginals.len(), 2);
         assert!(marginals.contains_key("x"));
@@ -356,28 +356,28 @@ mod tests {
 
         // Add factors
         let px_values = Array::from_shape_vec(vec![2], vec![0.6, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        let px = Factor::new("P(x)".to_string(), vec!["x".to_string()], px_values).unwrap();
-        graph.add_factor(px).unwrap();
+        let px = Factor::new("P(x)".to_string(), vec!["x".to_string()], px_values).expect("unwrap");
+        graph.add_factor(px).expect("unwrap");
 
         let pyx_values = Array::from_shape_vec(vec![2, 2], vec![0.9, 0.1, 0.2, 0.8])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         let pyx = Factor::new(
             "P(y|x)".to_string(),
             vec!["x".to_string(), "y".to_string()],
             pyx_values,
         )
-        .unwrap();
-        graph.add_factor(pyx).unwrap();
+        .expect("unwrap");
+        graph.add_factor(pyx).expect("unwrap");
 
         let mut assignment = HashMap::new();
         assignment.insert("x".to_string(), 0);
         assignment.insert("y".to_string(), 1);
 
         let ve = VariableElimination::new();
-        let prob = ve.joint_probability(&graph, &assignment).unwrap();
+        let prob = ve.joint_probability(&graph, &assignment).expect("unwrap");
 
         // P(x=0, y=1) = P(x=0) * P(y=1|x=0) = 0.6 * 0.1 = 0.06
         assert_abs_diff_eq!(prob, 0.06, epsilon = 1e-6);
@@ -393,7 +393,7 @@ mod tests {
         let order = vec!["x".to_string(), "y".to_string()];
         let ve = VariableElimination::with_order(order);
 
-        let marginal = ve.marginalize(&graph, "z").unwrap();
+        let marginal = ve.marginalize(&graph, "z").expect("unwrap");
         assert_eq!(marginal.len(), 2);
     }
 
@@ -405,24 +405,24 @@ mod tests {
 
         // Add biased factors
         let px_values = Array::from_shape_vec(vec![2], vec![0.3, 0.7])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        let px = Factor::new("P(x)".to_string(), vec!["x".to_string()], px_values).unwrap();
-        graph.add_factor(px).unwrap();
+        let px = Factor::new("P(x)".to_string(), vec!["x".to_string()], px_values).expect("unwrap");
+        graph.add_factor(px).expect("unwrap");
 
         let pyx_values = Array::from_shape_vec(vec![2, 2], vec![0.8, 0.2, 0.1, 0.9])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         let pyx = Factor::new(
             "P(y|x)".to_string(),
             vec!["x".to_string(), "y".to_string()],
             pyx_values,
         )
-        .unwrap();
-        graph.add_factor(pyx).unwrap();
+        .expect("unwrap");
+        graph.add_factor(pyx).expect("unwrap");
 
         let ve = VariableElimination::new();
-        let map_assignment = ve.map(&graph).unwrap();
+        let map_assignment = ve.map(&graph).expect("unwrap");
 
         assert!(map_assignment.contains_key("x"));
         assert!(map_assignment.contains_key("y"));

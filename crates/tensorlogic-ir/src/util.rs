@@ -12,7 +12,7 @@ use crate::{EinsumGraph, TLExpr, Term};
 /// Pretty-print a TLExpr to a string.
 pub fn pretty_print_expr(expr: &TLExpr) -> String {
     let mut buffer = String::new();
-    pretty_print_expr_inner(expr, &mut buffer, 0).unwrap();
+    pretty_print_expr_inner(expr, &mut buffer, 0).expect("writing to String never fails");
     buffer
 }
 
@@ -541,6 +541,18 @@ fn pretty_print_expr_inner(expr: &TLExpr, buf: &mut String, indent: usize) -> fm
         TLExpr::Constant(value) => {
             writeln!(buf, "{}{}", spaces, value)?;
         }
+        TLExpr::SymbolLiteral(s) => {
+            writeln!(buf, "{}:{}", spaces, s)?;
+        }
+        TLExpr::Match { scrutinee, arms } => {
+            writeln!(buf, "{}MATCH(", spaces)?;
+            pretty_print_expr_inner(scrutinee, buf, indent + 1)?;
+            for (pat, body) in arms {
+                writeln!(buf, "{}  {} =>", spaces, pat)?;
+                pretty_print_expr_inner(body, buf, indent + 2)?;
+            }
+            writeln!(buf, "{})", spaces)?;
+        }
     }
 
     Ok(())
@@ -826,6 +838,22 @@ impl ExprStats {
             TLExpr::Constant(_) => {
                 // Leaf node
             }
+            TLExpr::SymbolLiteral(_) => {
+                // Leaf node
+            }
+            TLExpr::Match { scrutinee, arms } => {
+                stats.logical_op_count += 1;
+                let sd = Self::compute_recursive(scrutinee, stats, depth + 1);
+                if sd > max_child_depth {
+                    max_child_depth = sd;
+                }
+                for (_, body) in arms {
+                    let bd = Self::compute_recursive(body, stats, depth + 1);
+                    if bd > max_child_depth {
+                        max_child_depth = bd;
+                    }
+                }
+            }
         }
 
         max_child_depth
@@ -891,40 +919,45 @@ impl GraphStats {
 /// Pretty-print a graph to a string.
 pub fn pretty_print_graph(graph: &EinsumGraph) -> String {
     let mut buffer = String::new();
-    writeln!(buffer, "EinsumGraph {{").unwrap();
-    writeln!(buffer, "  Tensors: {} total", graph.tensors.len()).unwrap();
+    writeln!(buffer, "EinsumGraph {{").expect("writing to String buffer never fails");
+    writeln!(buffer, "  Tensors: {} total", graph.tensors.len())
+        .expect("writing to String buffer never fails");
 
     for (idx, name) in graph.tensors.iter().enumerate() {
-        writeln!(buffer, "    t{}: {}", idx, name).unwrap();
+        writeln!(buffer, "    t{}: {}", idx, name).expect("writing to String buffer never fails");
     }
 
-    writeln!(buffer, "  Nodes: {} total", graph.nodes.len()).unwrap();
+    writeln!(buffer, "  Nodes: {} total", graph.nodes.len())
+        .expect("writing to String buffer never fails");
     for (idx, node) in graph.nodes.iter().enumerate() {
-        write!(buffer, "    n{}: ", idx).unwrap();
+        write!(buffer, "    n{}: ", idx).expect("writing to String buffer never fails");
         match &node.op {
-            crate::graph::OpType::Einsum { spec } => {
-                write!(buffer, "Einsum(\"{}\")", spec).unwrap()
+            crate::graph::OpType::Einsum { spec } => write!(buffer, "Einsum(\"{}\")", spec)
+                .expect("writing to String buffer never fails"),
+            crate::graph::OpType::ElemUnary { op } => {
+                write!(buffer, "ElemUnary({})", op).expect("writing to String buffer never fails")
             }
-            crate::graph::OpType::ElemUnary { op } => write!(buffer, "ElemUnary({})", op).unwrap(),
             crate::graph::OpType::ElemBinary { op } => {
-                write!(buffer, "ElemBinary({})", op).unwrap()
+                write!(buffer, "ElemBinary({})", op).expect("writing to String buffer never fails")
             }
             crate::graph::OpType::Reduce { op, axes } => {
-                write!(buffer, "Reduce({}, axes={:?})", op, axes).unwrap()
+                write!(buffer, "Reduce({}, axes={:?})", op, axes)
+                    .expect("writing to String buffer never fails")
             }
         }
-        write!(buffer, " <- [").unwrap();
+        write!(buffer, " <- [").expect("writing to String buffer never fails");
         for (i, input) in node.inputs.iter().enumerate() {
             if i > 0 {
-                write!(buffer, ", ").unwrap();
+                write!(buffer, ", ").expect("writing to String buffer never fails");
             }
-            write!(buffer, "t{}", input).unwrap();
+            write!(buffer, "t{}", input).expect("writing to String buffer never fails");
         }
-        writeln!(buffer, "]").unwrap();
+        writeln!(buffer, "]").expect("writing to String buffer never fails");
     }
 
-    writeln!(buffer, "  Outputs: {:?}", graph.outputs).unwrap();
-    writeln!(buffer, "}}").unwrap();
+    writeln!(buffer, "  Outputs: {:?}", graph.outputs)
+        .expect("writing to String buffer never fails");
+    writeln!(buffer, "}}").expect("writing to String buffer never fails");
 
     buffer
 }
@@ -989,9 +1022,9 @@ mod tests {
                 },
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
-        graph.add_output(t1).unwrap();
+        graph.add_output(t1).expect("unwrap");
 
         let stats = GraphStats::compute(&graph);
 

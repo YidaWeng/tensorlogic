@@ -32,7 +32,7 @@ fn create_test_tensor(shape: &[usize]) -> ArrayD<f64> {
             .map(|i| (i as f64) * 0.01)
             .collect(),
     )
-    .unwrap()
+    .expect("unwrap")
 }
 
 /// Benchmark with high parallelism: multiple independent operations
@@ -54,7 +54,7 @@ fn bench_high_parallelism(c: &mut Criterion) {
         let and_34 = TLExpr::and(p3, p4);
         let expr = TLExpr::and(and_12, and_34);
 
-        let graph = compile_to_einsum(&expr).unwrap();
+        let graph = compile_to_einsum(&expr).expect("unwrap");
 
         // Sequential benchmark
         group.bench_with_input(BenchmarkId::new("sequential", size), size, |b, &size| {
@@ -65,7 +65,7 @@ fn bench_high_parallelism(c: &mut Criterion) {
             }
 
             b.iter(|| {
-                let result = executor.forward(black_box(&graph)).unwrap();
+                let result = executor.forward(black_box(&graph)).expect("unwrap");
                 black_box(result);
             });
         });
@@ -80,7 +80,7 @@ fn bench_high_parallelism(c: &mut Criterion) {
             }
 
             b.iter(|| {
-                let result = executor.forward(black_box(&graph)).unwrap();
+                let result = executor.forward(black_box(&graph)).expect("unwrap");
                 black_box(result);
             });
         });
@@ -104,7 +104,7 @@ fn bench_low_parallelism(c: &mut Criterion) {
         // Create context with domain
         let mut ctx = CompilerContext::new();
         ctx.add_domain("domain", *size);
-        let graph = compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+        let graph = compile_to_einsum_with_context(&expr, &mut ctx).expect("unwrap");
 
         // Sequential benchmark
         group.bench_with_input(BenchmarkId::new("sequential", size), size, |b, &size| {
@@ -113,7 +113,7 @@ fn bench_low_parallelism(c: &mut Criterion) {
             executor.add_tensor(graph.tensors[0].clone(), tensor);
 
             b.iter(|| {
-                let result = executor.forward(black_box(&graph)).unwrap();
+                let result = executor.forward(black_box(&graph)).expect("unwrap");
                 black_box(result);
             });
         });
@@ -126,7 +126,7 @@ fn bench_low_parallelism(c: &mut Criterion) {
             executor.add_tensor(graph.tensors[0].clone(), tensor);
 
             b.iter(|| {
-                let result = executor.forward(black_box(&graph)).unwrap();
+                let result = executor.forward(black_box(&graph)).expect("unwrap");
                 black_box(result);
             });
         });
@@ -147,7 +147,7 @@ fn bench_medium_parallelism(c: &mut Criterion) {
         let p2 = TLExpr::pred("p2", vec![Term::var("i"), Term::var("j")]);
         let expr = TLExpr::or(p1, p2);
 
-        let graph = compile_to_einsum(&expr).unwrap();
+        let graph = compile_to_einsum(&expr).expect("unwrap");
 
         // Sequential benchmark
         group.bench_with_input(BenchmarkId::new("sequential", size), size, |b, &size| {
@@ -158,7 +158,7 @@ fn bench_medium_parallelism(c: &mut Criterion) {
             executor.add_tensor("p2".to_string(), tensor2);
 
             b.iter(|| {
-                let result = executor.forward(black_box(&graph)).unwrap();
+                let result = executor.forward(black_box(&graph)).expect("unwrap");
                 black_box(result);
             });
         });
@@ -173,7 +173,7 @@ fn bench_medium_parallelism(c: &mut Criterion) {
             executor.add_tensor("p2".to_string(), tensor2);
 
             b.iter(|| {
-                let result = executor.forward(black_box(&graph)).unwrap();
+                let result = executor.forward(black_box(&graph)).expect("unwrap");
                 black_box(result);
             });
         });
@@ -199,7 +199,7 @@ fn bench_thread_scaling(c: &mut Criterion) {
     let and_34 = TLExpr::and(p3, p4);
     let expr = TLExpr::and(and_12, and_34);
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
 
     for num_threads in [1, 2, 4, 8].iter() {
         group.bench_with_input(
@@ -215,7 +215,7 @@ fn bench_thread_scaling(c: &mut Criterion) {
                 }
 
                 b.iter(|| {
-                    let result = executor.forward(black_box(&graph)).unwrap();
+                    let result = executor.forward(black_box(&graph)).expect("unwrap");
                     black_box(result);
                 });
             },
@@ -236,7 +236,7 @@ fn bench_backward_pass(c: &mut Criterion) {
         let p2 = TLExpr::pred("p2", vec![Term::var("i"), Term::var("j")]);
         let expr = TLExpr::and(p1, p2);
 
-        let graph = compile_to_einsum(&expr).unwrap();
+        let graph = compile_to_einsum(&expr).expect("unwrap");
 
         // Sequential benchmark
         group.bench_with_input(BenchmarkId::new("sequential", size), size, |b, &size| {
@@ -247,13 +247,13 @@ fn bench_backward_pass(c: &mut Criterion) {
             executor.add_tensor("p2".to_string(), tensor2);
 
             // Forward pass first
-            executor.forward(&graph).unwrap();
+            executor.forward(&graph).expect("unwrap");
 
             b.iter(|| {
                 let loss_grad = create_test_tensor(&[size, size]);
                 let result = executor
                     .backward(black_box(&graph), black_box(&loss_grad))
-                    .unwrap();
+                    .expect("unwrap");
                 black_box(result);
             });
         });
@@ -268,13 +268,13 @@ fn bench_backward_pass(c: &mut Criterion) {
             executor.add_tensor("p2".to_string(), tensor2);
 
             // Forward pass first
-            executor.forward(&graph).unwrap();
+            executor.forward(&graph).expect("unwrap");
 
             b.iter(|| {
                 let loss_grad = create_test_tensor(&[size, size]);
                 let result = executor
                     .backward(black_box(&graph), black_box(&loss_grad))
-                    .unwrap();
+                    .expect("unwrap");
                 black_box(result);
             });
         });

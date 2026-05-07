@@ -21,8 +21,8 @@ fn test_provenance_json() {
     let mut tracker = ProvenanceTracker::new();
     tracker.track_entity("http://example.org/Alice".to_string(), 42);
 
-    let json = tracker.to_json().unwrap();
-    let restored = ProvenanceTracker::from_json(&json).unwrap();
+    let json = tracker.to_json().expect("unwrap");
+    let restored = ProvenanceTracker::from_json(&json).expect("unwrap");
 
     assert_eq!(restored.get_tensor("http://example.org/Alice"), Some(42));
 }
@@ -52,7 +52,7 @@ fn test_empty_schema_analyzer() {
 fn test_symbol_table_from_empty_schema() {
     let analyzer = SchemaAnalyzer::new();
 
-    let table = analyzer.to_symbol_table().unwrap();
+    let table = analyzer.to_symbol_table().expect("unwrap");
     // Now includes standard RDF/RDFS types: Literal, Resource, Entity
     assert_eq!(table.domains.len(), 3);
     assert_eq!(table.predicates.len(), 0);
@@ -81,8 +81,8 @@ fn test_schema_analyzer_with_simple_rdf() {
                 rdfs:range ex:Person .
     "#;
 
-    analyzer.load_turtle(turtle_data).unwrap();
-    analyzer.analyze().unwrap();
+    analyzer.load_turtle(turtle_data).expect("unwrap");
+    analyzer.analyze().expect("unwrap");
 
     assert_eq!(analyzer.classes.len(), 1);
     assert!(analyzer.classes.contains_key("http://example.org/Person"));

@@ -1,21 +1,11 @@
-# Beta.1 Release Status ✅
+# TensorLogic — Flagship Meta-Crate — TODO
 
-**Version**: 0.1.0-beta.1
-**Status**: Production Ready
+**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
-This meta crate is part of the TensorLogic v0.1.0-beta.1 release with:
-- Zero compiler warnings
-- 100% test pass rate
-- Complete documentation
-- Production-ready quality
+Umbrella crate re-exporting planning, execution, and integration layers.
 
-See main [TODO.md](../../TODO.md) for overall project status.
-
----
-
-# tensorlogic (Meta Crate) TODO
-
-## Completed ✓
+## Completed
 
 ### Core Functionality
 - [x] Re-export all planning layer components
@@ -32,7 +22,18 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] tensorlogic-quantrs-hooks
   - [x] tensorlogic-trustformers
 
-### Documentation ✅ COMPLETE
+### Prelude Module - COMPLETE
+- [x] `Term` (from tensorlogic::ir)
+- [x] `TLExpr` (from tensorlogic::ir)
+- [x] `compile_to_einsum` (from tensorlogic::compiler)
+- [x] `TlExecutor` (from tensorlogic::infer)
+- [x] `TlAutodiff` (from tensorlogic::infer)
+- [x] `Scirs2Exec` (from tensorlogic::scirs_backend)
+
+Note: `EinsumGraph`, `CompilerContext`, `CompilationConfig`, `IrError`, `CompilerError`
+are available via their respective sub-modules but are not in the prelude.
+
+### Documentation - COMPLETE
 - [x] Comprehensive README.md
   - [x] Overview and quick start
   - [x] Architecture explanation
@@ -40,17 +41,13 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Examples with commands
   - [x] Feature flags documentation
   - [x] Migration guide from individual crates
+  - [x] Accurate prelude contents
 - [x] Module organization
   - [x] Planning layer exports
   - [x] Execution layer exports
   - [x] Integration layer exports
-- [x] Prelude module for convenient imports
-  - [x] Common types (Term, TLExpr, EinsumGraph)
-  - [x] Compilation functions
-  - [x] Execution traits
-  - [x] Error types
 
-### Examples ✅ COMPLETE
+### Examples - COMPLETE
 - [x] 00_minimal_rule - Basic predicate and compilation
 - [x] 01_exists_reduce - Existential quantifier with reduction
 - [x] 02_scirs2_execution - Full execution with SciRS2 backend
@@ -59,7 +56,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
 
 All examples work correctly and demonstrate meta crate usage.
 
-### Workspace Integration ✅ COMPLETE
+### Workspace Integration - COMPLETE
 - [x] Proper Cargo.toml structure
   - [x] All component dependencies specified
   - [x] Workspace inheritance (version, edition, license, etc.)
@@ -69,17 +66,18 @@ All examples work correctly and demonstrate meta crate usage.
   - [x] lib.rs with organized re-exports
   - [x] examples/ directory with all examples
   - [x] README.md and TODO.md
-
-### Virtual Workspace Structure ✅ COMPLETE
 - [x] Moved from root to crates/tensorlogic/
 - [x] All examples migrated successfully
 - [x] Build and test infrastructure working
 - [x] Documentation references updated
 
-## Future Enhancements 🔮
+## Future Enhancements
 
 ### Prelude Improvements
-- [ ] Add more convenience re-exports based on user feedback
+- [x] Add more convenience re-exports based on user feedback (completed 2026-04-14)
+  - [x] `EinsumGraph` - frequently needed alongside `TLExpr` (completed 2026-04-14)
+  - [x] `CompilationConfig` - needed for most non-default compilations (completed 2026-04-14)
+  - [x] `IrError`, `CompilerError` - for error handling in user code (completed 2026-04-14 — expanded to all 10 canonical sub-crate error types)
 - [ ] Group exports by common use cases
 - [ ] Trait extension methods for ergonomic API
 
@@ -97,13 +95,13 @@ All examples work correctly and demonstrate meta crate usage.
 - [ ] Add performance comparison guide
 
 ### Feature Flags
-- [ ] Fine-grained feature control
-  - [ ] Individual component features
+- [x] Fine-grained feature control (completed 2026-04-14)
+  - [x] Individual component features (completed 2026-04-14 — `train`, `oxirs`, `quantrs`, `sklears`, `trustformers` gates)
   - [ ] Backend selection features
-  - [ ] Integration layer opt-in
-- [ ] Performance features
-  - [ ] `full` feature for all components
-  - [ ] `minimal` feature for core only
+  - [x] Integration layer opt-in (completed 2026-04-14)
+- [x] Performance features (completed 2026-04-14)
+  - [x] `full` feature for all components (completed 2026-04-14)
+  - [x] `minimal` feature for core only (completed 2026-04-14)
   - [ ] `no-std` support investigation
 
 ### Tooling
@@ -111,7 +109,7 @@ All examples work correctly and demonstrate meta crate usage.
 - [ ] Component dependency graph visualization
 - [ ] Automatic re-export generation tool
 
-## Low Priority 🟢
+## Low Priority
 
 ### Optimization
 - [ ] Compile time optimization
@@ -122,9 +120,9 @@ All examples work correctly and demonstrate meta crate usage.
   - [ ] Link-time optimization settings
 
 ### Testing
-- [ ] Integration tests for meta crate
-  - [ ] Verify all re-exports work
-  - [ ] Test prelude imports
+- [x] Integration tests for meta crate (completed 2026-04-14)
+  - [x] Verify all re-exports work (completed 2026-04-14 — `tests/reexport_surface.rs`, 7 tests)
+  - [x] Test prelude imports (completed 2026-04-14 — `tests/prelude_smoke.rs`, 3 tests)
   - [ ] Example compilation tests
 - [ ] Documentation tests
   - [ ] All code examples in README
@@ -132,21 +130,36 @@ All examples work correctly and demonstrate meta crate usage.
 
 ---
 
-**Completion**: 100% (All planned features for beta.1)
+**Completion**: 100% (All planned features for 0.1.0)
+**Release**: v0.1.0 (2026-03-06)
+
 **Production Ready Features:**
 - Complete re-export of all 10 component crates
 - Organized module structure (planning/execution/integration layers)
-- Convenient prelude module
+- Prelude module with 6 core items
 - 5 comprehensive examples
 - Complete documentation
 - Virtual workspace integration
-
-**Test Coverage**: Examples tested via `cargo run`
-**Build Status**: Zero warnings
-**Documentation**: Complete with migration guide
 
 **Notes:**
 - This is a pure re-export crate with no implementation code
 - All functionality is provided by component crates
 - Examples serve as integration tests
-- Version is synchronized with all components (0.1.0-beta.1)
+- Version is synchronized with all components (0.1.0)
+- Prelude intentionally kept minimal; users should import from sub-modules for additional types
+
+## 2026-04-14 — Post-stable hardening
+
+First pass of workspace-level integration tests and the long-staged v0.1.1 convenience work, landed under the stable 0.1.0 branch without any breaking change:
+
+- **Integration tests** — added `tests/prelude_smoke.rs` (3 tests) exercising a minimal end-to-end flow through the re-exported prelude items (`Term`, `TLExpr`, `compile_to_einsum`, `Scirs2Exec`, `.forward()`), and `tests/reexport_surface.rs` (7 tests, 5 feature-gated) verifying every re-exported sub-crate module (`tensorlogic::ir`, `::compiler`, `::infer`, `::adapters`, `::scirs_backend`, `::train`, `::oxirs_bridge`, `::quantrs_hooks`, `::sklears_kernels`, `::trustformers`) resolves and type-checks.
+- **Prelude extension** — `EinsumGraph`, `CompilationConfig`, and the 10 canonical sub-crate error types (`AdapterError`, `CompileError`, `ExecutorError`, `IrError`, `TlBackendError`, plus feature-gated `BridgeError`, `PgmError`, `KernelError`, `TrainError`, `TrustformerError`) are now in `tensorlogic::prelude` so downstream users don't have to know which sub-crate owns each type.
+- **Feature flags** — `default = ["full"]`, `full = ["train", "oxirs", "quantrs", "sklears", "trustformers"]`, `minimal = []`, plus one gate per optional integration. The 5 integration-layer sub-crate deps are marked `optional = true`; each corresponding `pub use` in `lib.rs` is `#[cfg]`-gated. `--features minimal` builds only the 5 mandatory-core crates (ir / infer / adapters / compiler / scirs-backend).
+- **Verification** — `cargo check --workspace --all-features` (0 warnings), `cargo clippy --workspace --all-targets --all-features -- -D warnings` (clean), `cargo nextest run --workspace --all-features` (6,407 tests, all green).
+
+## v0.2.0 / Future Work
+
+- Stabilize all feature-flag combinations in CI (`--features minimal` through `--all-features`).
+- Doc-book chapters for every sub-crate.
+- End-to-end tutorial examples covering the `full` → `minimal` feature spectrum.
+- Benchmarks at the flagship level (currently only sub-crates have benches/).

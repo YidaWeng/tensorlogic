@@ -40,7 +40,10 @@
 //!
 //! This generates 4 TensorLogic rules that can be compiled and executed.
 
+pub mod report_export;
 pub mod validation;
+
+pub use report_export::{ReportExportError, ShaclReportExporter, ShaclReportFormat};
 
 use anyhow::Result;
 use oxrdf::{Graph, NamedNode, NamedOrBlankNodeRef, TermRef};
@@ -721,7 +724,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // Should generate at least one rule for minCount
         assert!(!rules.is_empty());
@@ -744,7 +747,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // Should generate uniqueness rule for maxCount 1
         assert!(!rules.is_empty());
@@ -772,7 +775,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // Should generate rule for datatype constraint
         assert!(!rules.is_empty());
@@ -799,7 +802,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // Should generate rule for pattern constraint
         assert!(!rules.is_empty());
@@ -830,7 +833,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // Should generate multiple rules (minCount, maxCount, datatype, pattern)
         assert!(
@@ -861,7 +864,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // Should generate rules for both class and datatype
         assert!(rules.len() >= 2, "Expected at least 2 rules");
@@ -891,7 +894,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // Should generate rules for both minLength and maxLength
         assert!(rules.len() >= 2, "Expected at least 2 rules");
@@ -920,7 +923,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // Should generate rules for both minInclusive and maxInclusive
         assert!(rules.len() >= 2, "Expected at least 2 rules");
@@ -948,7 +951,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // Should generate at least one rule for the sh:in constraint
         assert!(!rules.is_empty(), "Expected at least 1 rule");
@@ -974,7 +977,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // Should generate rule for sh:node constraint
         assert!(!rules.is_empty(), "Expected at least 1 rule");
@@ -1001,7 +1004,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // RDF list parsing may not work with all parsers
         // Check that either we get rules or the structure was parsed
@@ -1030,7 +1033,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // RDF list parsing may not work with all parsers
         // Check that either we get rules or the structure was parsed
@@ -1057,7 +1060,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // Should generate rule for sh:not constraint
         assert!(!rules.is_empty(), "Expected at least 1 rule");
@@ -1085,7 +1088,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // RDF list parsing may not work with all parsers
         // Check that either we get rules or the structure was parsed
@@ -1126,7 +1129,7 @@ mod tests {
         let symbol_table = SymbolTable::new();
         let converter = ShaclConverter::new(symbol_table);
 
-        let rules = converter.convert_to_rules(shacl_turtle).unwrap();
+        let rules = converter.convert_to_rules(shacl_turtle).expect("unwrap");
 
         // Should generate multiple rules for combined constraints
         // RDF list parsing may not work perfectly, so we expect at least 6 rules

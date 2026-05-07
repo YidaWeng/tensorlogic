@@ -263,15 +263,15 @@ mod tests {
     #[test]
     fn test_optimization_level_from_str() {
         assert_eq!(
-            OptimizationLevel::from_str("none").unwrap(),
+            OptimizationLevel::from_str("none").expect("'none' is a valid level"),
             OptimizationLevel::None
         );
         assert_eq!(
-            OptimizationLevel::from_str("basic").unwrap(),
+            OptimizationLevel::from_str("basic").expect("'basic' is a valid level"),
             OptimizationLevel::Basic
         );
         assert_eq!(
-            OptimizationLevel::from_str("2").unwrap(),
+            OptimizationLevel::from_str("2").expect("'2' is a valid level"),
             OptimizationLevel::Standard
         );
         assert!(OptimizationLevel::from_str("invalid").is_err());

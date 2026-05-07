@@ -52,10 +52,10 @@ impl CacheKey {
 /// let y = vec![4.0, 5.0, 6.0];
 ///
 /// // First call computes and caches
-/// let result1 = cached.compute(&x, &y).unwrap();
+/// let result1 = cached.compute(&x, &y).expect("unwrap");
 ///
 /// // Second call retrieves from cache
-/// let result2 = cached.compute(&x, &y).unwrap();
+/// let result2 = cached.compute(&x, &y).expect("unwrap");
 /// assert_eq!(result1, result2);
 ///
 /// // Check cache statistics
@@ -106,13 +106,19 @@ impl CachedKernel {
 
     /// Get cache statistics
     pub fn stats(&self) -> CacheStats {
-        self.stats.lock().unwrap().clone()
+        self.stats
+            .lock()
+            .expect("lock should not be poisoned")
+            .clone()
     }
 
     /// Clear the cache
     pub fn clear(&mut self) {
-        self.cache.lock().unwrap().clear();
-        let mut stats = self.stats.lock().unwrap();
+        self.cache
+            .lock()
+            .expect("lock should not be poisoned")
+            .clear();
+        let mut stats = self.stats.lock().expect("lock should not be poisoned");
         stats.hits = 0;
         stats.misses = 0;
         stats.size = 0;
@@ -120,7 +126,10 @@ impl CachedKernel {
 
     /// Get cache size
     pub fn cache_size(&self) -> usize {
-        self.cache.lock().unwrap().len()
+        self.cache
+            .lock()
+            .expect("lock should not be poisoned")
+            .len()
     }
 }
 
@@ -130,9 +139,9 @@ impl Kernel for CachedKernel {
 
         // Check cache first
         {
-            let cache = self.cache.lock().unwrap();
+            let cache = self.cache.lock().expect("lock should not be poisoned");
             if let Some(&value) = cache.get(&key) {
-                let mut stats = self.stats.lock().unwrap();
+                let mut stats = self.stats.lock().expect("lock should not be poisoned");
                 stats.hits += 1;
                 return Ok(value);
             }
@@ -143,10 +152,10 @@ impl Kernel for CachedKernel {
 
         // Store in cache
         {
-            let mut cache = self.cache.lock().unwrap();
+            let mut cache = self.cache.lock().expect("lock should not be poisoned");
             cache.insert(key, value);
 
-            let mut stats = self.stats.lock().unwrap();
+            let mut stats = self.stats.lock().expect("lock should not be poisoned");
             stats.misses += 1;
             stats.size = cache.len();
         }
@@ -182,10 +191,10 @@ impl Kernel for CachedKernel {
 /// ];
 ///
 /// // Compute and cache
-/// let matrix1 = cache.get_or_compute(&data, &kernel).unwrap();
+/// let matrix1 = cache.get_or_compute(&data, &kernel).expect("unwrap");
 ///
 /// // Retrieve from cache
-/// let matrix2 = cache.get_or_compute(&data, &kernel).unwrap();
+/// let matrix2 = cache.get_or_compute(&data, &kernel).expect("unwrap");
 ///
 /// assert_eq!(matrix1.len(), matrix2.len());
 /// ```
@@ -263,13 +272,13 @@ mod tests {
         let y = vec![4.0, 5.0, 6.0];
 
         // First call - cache miss
-        let result1 = cached.compute(&x, &y).unwrap();
+        let result1 = cached.compute(&x, &y).expect("unwrap");
         let stats1 = cached.stats();
         assert_eq!(stats1.misses, 1);
         assert_eq!(stats1.hits, 0);
 
         // Second call - cache hit
-        let result2 = cached.compute(&x, &y).unwrap();
+        let result2 = cached.compute(&x, &y).expect("unwrap");
         let stats2 = cached.stats();
         assert_eq!(stats2.misses, 1);
         assert_eq!(stats2.hits, 1);
@@ -285,7 +294,7 @@ mod tests {
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        cached.compute(&x, &y).unwrap();
+        cached.compute(&x, &y).expect("unwrap");
         assert_eq!(cached.cache_size(), 1);
 
         cached.clear();
@@ -321,11 +330,11 @@ mod tests {
         let data = vec![vec![1.0, 2.0], vec![3.0, 4.0], vec![5.0, 6.0]];
 
         // First call - compute
-        let matrix1 = cache.get_or_compute(&data, &kernel).unwrap();
+        let matrix1 = cache.get_or_compute(&data, &kernel).expect("unwrap");
         assert_eq!(cache.size(), 1);
 
         // Second call - retrieve from cache
-        let matrix2 = cache.get_or_compute(&data, &kernel).unwrap();
+        let matrix2 = cache.get_or_compute(&data, &kernel).expect("unwrap");
         assert_eq!(cache.size(), 1);
 
         assert_eq!(matrix1.len(), matrix2.len());
@@ -343,7 +352,7 @@ mod tests {
 
         let data = vec![vec![1.0, 2.0], vec![3.0, 4.0]];
 
-        cache.get_or_compute(&data, &kernel).unwrap();
+        cache.get_or_compute(&data, &kernel).expect("unwrap");
         assert_eq!(cache.size(), 1);
 
         cache.clear();

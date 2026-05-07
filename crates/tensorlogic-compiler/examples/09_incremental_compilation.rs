@@ -21,7 +21,7 @@ fn main() {
     println!("1. Initial Compilation");
     println!("   Compiling: knows(x, y)");
     let expr1 = TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]);
-    let _graph1 = compiler.compile(&expr1).unwrap();
+    let _graph1 = compiler.compile(&expr1).expect("unwrap");
 
     let stats = compiler.stats();
     println!("   Cache misses: {}", stats.cache_misses);
@@ -30,7 +30,7 @@ fn main() {
 
     println!("2. Recompiling Same Expression (should hit cache)");
     println!("   Compiling: knows(x, y) again");
-    let _graph2 = compiler.compile(&expr1).unwrap();
+    let _graph2 = compiler.compile(&expr1).expect("unwrap");
 
     let stats = compiler.stats();
     println!("   Cache misses: {}", stats.cache_misses);
@@ -41,7 +41,7 @@ fn main() {
     println!("3. Compiling Different Expression");
     println!("   Compiling: likes(x, z)");
     let expr2 = TLExpr::pred("likes", vec![Term::var("x"), Term::var("z")]);
-    let _graph3 = compiler.compile(&expr2).unwrap();
+    let _graph3 = compiler.compile(&expr2).expect("unwrap");
 
     let stats = compiler.stats();
     println!("   Cache misses: {}", stats.cache_misses);
@@ -54,7 +54,7 @@ fn main() {
         TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]),
         TLExpr::pred("likes", vec![Term::var("x"), Term::var("z")]),
     );
-    let _graph4 = compiler.compile(&expr3).unwrap();
+    let _graph4 = compiler.compile(&expr3).expect("unwrap");
 
     let stats = compiler.stats();
     println!("   Total compilations: {}", stats.total_compilations());
@@ -67,7 +67,7 @@ fn main() {
     compiler.context_mut().add_domain("Person", 200);
 
     println!("   Recompiling: knows(x, y)");
-    let _graph5 = compiler.compile(&expr1).unwrap();
+    let _graph5 = compiler.compile(&expr1).expect("unwrap");
 
     let stats = compiler.stats();
     println!("   Cache invalidations: {}", stats.invalidations);

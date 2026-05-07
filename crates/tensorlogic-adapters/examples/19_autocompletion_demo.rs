@@ -153,9 +153,15 @@ fn main() {
     println!("=== 5. Learning from Existing Schema ===\n");
 
     let mut table = SymbolTable::new();
-    table.add_domain(DomainInfo::new("Employee", 1000)).unwrap();
-    table.add_domain(DomainInfo::new("Department", 50)).unwrap();
-    table.add_domain(DomainInfo::new("Project", 200)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Employee", 1000))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Department", 50))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Project", 200))
+        .expect("unwrap");
 
     println!("Indexing existing schema...");
     autocompleter.index_table(&table);

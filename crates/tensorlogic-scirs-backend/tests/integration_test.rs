@@ -16,7 +16,7 @@ fn test_simple_predicate_execution() {
     let expr = TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]);
 
     // Compile
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
 
     // Execute (input tensor should be provided externally in real usage)
     let mut executor = Scirs2Exec::new();
@@ -26,13 +26,13 @@ fn test_simple_predicate_execution() {
         vec![1.0, 0.0, 1.0, 0.0, 1.0, 0.0, 1.0, 1.0, 0.0],
         vec![3, 3],
     )
-    .unwrap();
+    .expect("unwrap");
 
     // Use dynamic tensor name from the compiled graph
     executor.add_tensor(graph.tensors[0].clone(), knows_matrix);
 
     // Forward pass
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify shape
     assert_eq!(result.shape(), &[3, 3]);
@@ -52,10 +52,11 @@ fn test_exists_quantifier_execution() {
     // Compile with domain context
     let mut ctx = CompilerContext::new();
     ctx.add_domain("Person", 3); // 3 persons
-    ctx.bind_var("x", "Person").unwrap();
-    ctx.bind_var("y", "Person").unwrap();
+    ctx.bind_var("x", "Person").expect("unwrap");
+    ctx.bind_var("y", "Person").expect("unwrap");
 
-    let graph = tensorlogic_compiler::compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+    let graph =
+        tensorlogic_compiler::compile_to_einsum_with_context(&expr, &mut ctx).expect("unwrap");
 
     // Execute
     let mut executor = Scirs2Exec::new();
@@ -69,12 +70,12 @@ fn test_exists_quantifier_execution() {
         ],
         vec![3, 3],
     )
-    .unwrap();
+    .expect("unwrap");
 
     executor.add_tensor("knows[ab]", knows_matrix);
 
     // Forward pass (should sum over axis 1 - the 'y' dimension)
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify shape: should be [3] (one value per person)
     assert_eq!(result.shape(), &[3]);
@@ -95,7 +96,7 @@ fn test_and_operation_execution() {
     let expr = TLExpr::and(p, q);
 
     // Compile
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     println!("Graph tensors: {:?}", graph.tensors);
     println!("Graph nodes: {:?}", graph.nodes);
 
@@ -103,16 +104,16 @@ fn test_and_operation_execution() {
     let mut executor = Scirs2Exec::new();
 
     // Input: P and Q matrices
-    let p_matrix = Scirs2Exec::from_vec(vec![1.0, 0.5, 0.5, 1.0], vec![2, 2]).unwrap();
+    let p_matrix = Scirs2Exec::from_vec(vec![1.0, 0.5, 0.5, 1.0], vec![2, 2]).expect("unwrap");
 
-    let q_matrix = Scirs2Exec::from_vec(vec![0.8, 0.6, 0.6, 0.8], vec![2, 2]).unwrap();
+    let q_matrix = Scirs2Exec::from_vec(vec![0.8, 0.6, 0.6, 0.8], vec![2, 2]).expect("unwrap");
 
     // Use dynamic tensor names from the compiled graph
     executor.add_tensor(graph.tensors[0].clone(), p_matrix);
     executor.add_tensor(graph.tensors[1].clone(), q_matrix);
 
     // Forward pass (einsum: "ab,ab->ab", element-wise product)
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify shape: should be [2, 2] (x, y dimensions)
     assert_eq!(result.shape(), &[2, 2]);
@@ -133,7 +134,7 @@ fn test_implication_execution() {
     let expr = TLExpr::imply(knows, friends);
 
     // Compile
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     println!("Implication graph tensors: {:?}", graph.tensors);
     println!("Implication graph nodes: {:?}", graph.nodes);
 
@@ -141,16 +142,17 @@ fn test_implication_execution() {
     let mut executor = Scirs2Exec::new();
 
     // Inputs
-    let knows_matrix = Scirs2Exec::from_vec(vec![0.8, 0.2, 0.1, 0.9], vec![2, 2]).unwrap();
+    let knows_matrix = Scirs2Exec::from_vec(vec![0.8, 0.2, 0.1, 0.9], vec![2, 2]).expect("unwrap");
 
-    let friends_matrix = Scirs2Exec::from_vec(vec![0.9, 0.1, 0.0, 1.0], vec![2, 2]).unwrap();
+    let friends_matrix =
+        Scirs2Exec::from_vec(vec![0.9, 0.1, 0.0, 1.0], vec![2, 2]).expect("unwrap");
 
     // Match compiler-generated names
     executor.add_tensor(graph.tensors[0].clone(), knows_matrix);
     executor.add_tensor(graph.tensors[1].clone(), friends_matrix);
 
     // Forward pass (ReLU(friends - knows))
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify shape
     assert_eq!(result.shape(), &[2, 2]);
@@ -173,18 +175,18 @@ fn test_arithmetic_add_execution() {
     let expr = TLExpr::add(score, bonus);
 
     // Compile
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
 
     // Execute
     let mut executor = Scirs2Exec::new();
 
-    let score_matrix = Scirs2Exec::from_vec(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).unwrap();
-    let bonus_matrix = Scirs2Exec::from_vec(vec![0.5, 0.5, 1.0, 1.0], vec![2, 2]).unwrap();
+    let score_matrix = Scirs2Exec::from_vec(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).expect("unwrap");
+    let bonus_matrix = Scirs2Exec::from_vec(vec![0.5, 0.5, 1.0, 1.0], vec![2, 2]).expect("unwrap");
 
     executor.add_tensor(graph.tensors[0].clone(), score_matrix);
     executor.add_tensor(graph.tensors[1].clone(), bonus_matrix);
 
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify element-wise addition
     assert_eq!(result.shape(), &[2, 2]);
@@ -202,18 +204,19 @@ fn test_arithmetic_sub_execution() {
     let expr = TLExpr::sub(total, penalty);
 
     // Compile
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
 
     // Execute
     let mut executor = Scirs2Exec::new();
 
-    let total_matrix = Scirs2Exec::from_vec(vec![10.0, 8.0, 6.0, 4.0], vec![2, 2]).unwrap();
-    let penalty_matrix = Scirs2Exec::from_vec(vec![1.0, 2.0, 3.0, 1.0], vec![2, 2]).unwrap();
+    let total_matrix = Scirs2Exec::from_vec(vec![10.0, 8.0, 6.0, 4.0], vec![2, 2]).expect("unwrap");
+    let penalty_matrix =
+        Scirs2Exec::from_vec(vec![1.0, 2.0, 3.0, 1.0], vec![2, 2]).expect("unwrap");
 
     executor.add_tensor(graph.tensors[0].clone(), total_matrix);
     executor.add_tensor(graph.tensors[1].clone(), penalty_matrix);
 
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify element-wise subtraction
     assert_eq!(result.shape(), &[2, 2]);
@@ -231,18 +234,18 @@ fn test_arithmetic_mul_execution() {
     let expr = TLExpr::mul(weight, value);
 
     // Compile
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
 
     // Execute
     let mut executor = Scirs2Exec::new();
 
-    let weight_matrix = Scirs2Exec::from_vec(vec![2.0, 3.0, 4.0, 5.0], vec![2, 2]).unwrap();
-    let value_matrix = Scirs2Exec::from_vec(vec![1.5, 2.0, 2.5, 3.0], vec![2, 2]).unwrap();
+    let weight_matrix = Scirs2Exec::from_vec(vec![2.0, 3.0, 4.0, 5.0], vec![2, 2]).expect("unwrap");
+    let value_matrix = Scirs2Exec::from_vec(vec![1.5, 2.0, 2.5, 3.0], vec![2, 2]).expect("unwrap");
 
     executor.add_tensor(graph.tensors[0].clone(), weight_matrix);
     executor.add_tensor(graph.tensors[1].clone(), value_matrix);
 
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify element-wise multiplication
     assert_eq!(result.shape(), &[2, 2]);
@@ -260,18 +263,20 @@ fn test_arithmetic_div_execution() {
     let expr = TLExpr::div(numerator, denominator);
 
     // Compile
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
 
     // Execute
     let mut executor = Scirs2Exec::new();
 
-    let numerator_matrix = Scirs2Exec::from_vec(vec![10.0, 15.0, 20.0, 25.0], vec![2, 2]).unwrap();
-    let denominator_matrix = Scirs2Exec::from_vec(vec![2.0, 3.0, 4.0, 5.0], vec![2, 2]).unwrap();
+    let numerator_matrix =
+        Scirs2Exec::from_vec(vec![10.0, 15.0, 20.0, 25.0], vec![2, 2]).expect("unwrap");
+    let denominator_matrix =
+        Scirs2Exec::from_vec(vec![2.0, 3.0, 4.0, 5.0], vec![2, 2]).expect("unwrap");
 
     executor.add_tensor(graph.tensors[0].clone(), numerator_matrix);
     executor.add_tensor(graph.tensors[1].clone(), denominator_matrix);
 
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify element-wise division
     assert_eq!(result.shape(), &[2, 2]);
@@ -289,18 +294,18 @@ fn test_comparison_eq_execution() {
     let expr = TLExpr::eq(score, target);
 
     // Compile
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
 
     // Execute
     let mut executor = Scirs2Exec::new();
 
-    let score_matrix = Scirs2Exec::from_vec(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).unwrap();
-    let target_matrix = Scirs2Exec::from_vec(vec![1.0, 2.5, 3.0, 4.5], vec![2, 2]).unwrap();
+    let score_matrix = Scirs2Exec::from_vec(vec![1.0, 2.0, 3.0, 4.0], vec![2, 2]).expect("unwrap");
+    let target_matrix = Scirs2Exec::from_vec(vec![1.0, 2.5, 3.0, 4.5], vec![2, 2]).expect("unwrap");
 
     executor.add_tensor(graph.tensors[0].clone(), score_matrix);
     executor.add_tensor(graph.tensors[1].clone(), target_matrix);
 
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify comparison returns 0.0 or 1.0
     assert_eq!(result.shape(), &[2, 2]);
@@ -318,18 +323,19 @@ fn test_comparison_lt_execution() {
     let expr = TLExpr::lt(actual, threshold);
 
     // Compile
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
 
     // Execute
     let mut executor = Scirs2Exec::new();
 
-    let actual_matrix = Scirs2Exec::from_vec(vec![1.0, 3.0, 5.0, 7.0], vec![2, 2]).unwrap();
-    let threshold_matrix = Scirs2Exec::from_vec(vec![2.0, 3.0, 4.0, 8.0], vec![2, 2]).unwrap();
+    let actual_matrix = Scirs2Exec::from_vec(vec![1.0, 3.0, 5.0, 7.0], vec![2, 2]).expect("unwrap");
+    let threshold_matrix =
+        Scirs2Exec::from_vec(vec![2.0, 3.0, 4.0, 8.0], vec![2, 2]).expect("unwrap");
 
     executor.add_tensor(graph.tensors[0].clone(), actual_matrix);
     executor.add_tensor(graph.tensors[1].clone(), threshold_matrix);
 
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify less-than comparison
     assert_eq!(result.shape(), &[2, 2]);
@@ -347,18 +353,19 @@ fn test_comparison_gt_execution() {
     let expr = TLExpr::gt(score, minimum);
 
     // Compile
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
 
     // Execute
     let mut executor = Scirs2Exec::new();
 
-    let score_matrix = Scirs2Exec::from_vec(vec![5.0, 3.0, 2.0, 8.0], vec![2, 2]).unwrap();
-    let minimum_matrix = Scirs2Exec::from_vec(vec![4.0, 3.0, 3.0, 7.0], vec![2, 2]).unwrap();
+    let score_matrix = Scirs2Exec::from_vec(vec![5.0, 3.0, 2.0, 8.0], vec![2, 2]).expect("unwrap");
+    let minimum_matrix =
+        Scirs2Exec::from_vec(vec![4.0, 3.0, 3.0, 7.0], vec![2, 2]).expect("unwrap");
 
     executor.add_tensor(graph.tensors[0].clone(), score_matrix);
     executor.add_tensor(graph.tensors[1].clone(), minimum_matrix);
 
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify greater-than comparison
     assert_eq!(result.shape(), &[2, 2]);
@@ -376,18 +383,18 @@ fn test_comparison_lte_execution() {
     let expr = TLExpr::lte(value, limit);
 
     // Compile
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
 
     // Execute
     let mut executor = Scirs2Exec::new();
 
-    let value_matrix = Scirs2Exec::from_vec(vec![1.0, 5.0, 5.0, 9.0], vec![2, 2]).unwrap();
-    let limit_matrix = Scirs2Exec::from_vec(vec![2.0, 5.0, 4.0, 8.0], vec![2, 2]).unwrap();
+    let value_matrix = Scirs2Exec::from_vec(vec![1.0, 5.0, 5.0, 9.0], vec![2, 2]).expect("unwrap");
+    let limit_matrix = Scirs2Exec::from_vec(vec![2.0, 5.0, 4.0, 8.0], vec![2, 2]).expect("unwrap");
 
     executor.add_tensor(graph.tensors[0].clone(), value_matrix);
     executor.add_tensor(graph.tensors[1].clone(), limit_matrix);
 
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify less-than-or-equal comparison
     assert_eq!(result.shape(), &[2, 2]);
@@ -405,18 +412,19 @@ fn test_comparison_gte_execution() {
     let expr = TLExpr::gte(result_pred, threshold);
 
     // Compile
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
 
     // Execute
     let mut executor = Scirs2Exec::new();
 
-    let result_matrix = Scirs2Exec::from_vec(vec![8.0, 5.0, 5.0, 3.0], vec![2, 2]).unwrap();
-    let threshold_matrix = Scirs2Exec::from_vec(vec![7.0, 5.0, 6.0, 4.0], vec![2, 2]).unwrap();
+    let result_matrix = Scirs2Exec::from_vec(vec![8.0, 5.0, 5.0, 3.0], vec![2, 2]).expect("unwrap");
+    let threshold_matrix =
+        Scirs2Exec::from_vec(vec![7.0, 5.0, 6.0, 4.0], vec![2, 2]).expect("unwrap");
 
     executor.add_tensor(graph.tensors[0].clone(), result_matrix);
     executor.add_tensor(graph.tensors[1].clone(), threshold_matrix);
 
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify greater-than-or-equal comparison
     assert_eq!(result.shape(), &[2, 2]);
@@ -435,7 +443,7 @@ fn test_conditional_if_then_else_execution() {
     let expr = TLExpr::if_then_else(condition, value_a, value_b);
 
     // Compile
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     println!("Conditional graph tensors: {:?}", graph.tensors);
     println!("Conditional graph nodes: {:?}", graph.nodes);
 
@@ -443,16 +451,19 @@ fn test_conditional_if_then_else_execution() {
     let mut executor = Scirs2Exec::new();
 
     // Condition: 0.0 or 1.0 (false or true)
-    let condition_matrix = Scirs2Exec::from_vec(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).unwrap();
-    let value_a_matrix = Scirs2Exec::from_vec(vec![10.0, 20.0, 30.0, 40.0], vec![2, 2]).unwrap();
-    let value_b_matrix = Scirs2Exec::from_vec(vec![5.0, 6.0, 7.0, 8.0], vec![2, 2]).unwrap();
+    let condition_matrix =
+        Scirs2Exec::from_vec(vec![1.0, 0.0, 0.0, 1.0], vec![2, 2]).expect("unwrap");
+    let value_a_matrix =
+        Scirs2Exec::from_vec(vec![10.0, 20.0, 30.0, 40.0], vec![2, 2]).expect("unwrap");
+    let value_b_matrix =
+        Scirs2Exec::from_vec(vec![5.0, 6.0, 7.0, 8.0], vec![2, 2]).expect("unwrap");
 
     executor.add_tensor(graph.tensors[0].clone(), condition_matrix);
     executor.add_tensor(graph.tensors[1].clone(), value_a_matrix);
     executor.add_tensor(graph.tensors[2].clone(), value_b_matrix);
 
     // Forward pass: condition * value_a + (1 - condition) * value_b
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("unwrap");
 
     // Verify conditional selection
     assert_eq!(result.shape(), &[2, 2]);

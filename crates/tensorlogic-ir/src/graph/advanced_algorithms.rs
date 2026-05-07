@@ -27,7 +27,7 @@
 //! let b = graph.add_tensor("B");
 //! let c = graph.add_tensor("C");
 //!
-//! graph.add_node(EinsumNode::einsum("ij,jk->ik", vec![a, b], vec![c])).unwrap();
+//! graph.add_node(EinsumNode::einsum("ij,jk->ik", vec![a, b], vec![c])).expect("unwrap");
 //!
 //! // Detect cycles
 //! let cycles = find_cycles(&graph);
@@ -37,7 +37,7 @@
 //! let sccs = strongly_connected_components(&graph);
 //!
 //! // Topological sort
-//! let topo_order = topological_sort(&graph).unwrap();
+//! let topo_order = topological_sort(&graph).expect("unwrap");
 //! ```
 
 use crate::graph::EinsumGraph;
@@ -198,12 +198,24 @@ impl<'a> TarjanSCC<'a> {
             for w in neighbors {
                 if !self.indices.contains_key(&w) {
                     self.strong_connect(w);
-                    let w_lowlink = *self.lowlinks.get(&w).unwrap();
-                    let v_lowlink = *self.lowlinks.get(&v).unwrap();
+                    let w_lowlink = *self
+                        .lowlinks
+                        .get(&w)
+                        .expect("lowlink must exist for visited node");
+                    let v_lowlink = *self
+                        .lowlinks
+                        .get(&v)
+                        .expect("lowlink must exist for visited node");
                     self.lowlinks.insert(v, v_lowlink.min(w_lowlink));
                 } else if self.on_stack.contains(&w) {
-                    let w_index = *self.indices.get(&w).unwrap();
-                    let v_lowlink = *self.lowlinks.get(&v).unwrap();
+                    let w_index = *self
+                        .indices
+                        .get(&w)
+                        .expect("index must exist for visited node");
+                    let v_lowlink = *self
+                        .lowlinks
+                        .get(&v)
+                        .expect("lowlink must exist for visited node");
                     self.lowlinks.insert(v, v_lowlink.min(w_index));
                 }
             }
@@ -213,7 +225,10 @@ impl<'a> TarjanSCC<'a> {
         if self.lowlinks[&v] == self.indices[&v] {
             let mut scc_tensors = Vec::new();
             loop {
-                let w = self.stack.pop().unwrap();
+                let w = self
+                    .stack
+                    .pop()
+                    .expect("stack must be non-empty when processing SCC");
                 self.on_stack.remove(&w);
                 scc_tensors.push(w);
                 if w == v {
@@ -447,7 +462,7 @@ pub fn critical_path_analysis(
     // Find the tensor with maximum distance (end of critical path)
     let (&end_tensor, &max_dist) = distances
         .iter()
-        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())?;
+        .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))?;
 
     // Reconstruct path
     let mut path = Vec::new();
@@ -576,7 +591,7 @@ mod tests {
             metadata: Default::default(),
         };
 
-        graph.add_node(node).unwrap();
+        graph.add_node(node).expect("unwrap");
         graph
     }
 
@@ -598,7 +613,7 @@ mod tests {
         let graph = create_simple_graph();
         let topo = topological_sort(&graph);
         assert!(topo.is_some());
-        let order = topo.unwrap();
+        let order = topo.expect("unwrap");
         assert_eq!(order.len(), 3);
     }
 
@@ -615,7 +630,7 @@ mod tests {
         let graph = create_simple_graph();
         let diameter = graph_diameter(&graph);
         assert!(diameter.is_some());
-        assert!(diameter.unwrap() >= 1);
+        assert!(diameter.expect("unwrap") >= 1);
     }
 
     #[test]

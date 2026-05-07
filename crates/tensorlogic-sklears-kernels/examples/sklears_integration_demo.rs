@@ -23,7 +23,7 @@ fn main() {
     // Example 1: Create RBF kernel adapter
     println!("1. RBF Kernel Adapter");
     println!("---------------------");
-    let rbf_kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+    let rbf_kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("Failed to create RbfKernel");
     let rbf_adapter = SklearsKernelAdapter::new(rbf_kernel);
 
     let x = vec![1.0, 2.0, 3.0];
@@ -46,7 +46,7 @@ fn main() {
     // Example 3: Polynomial kernel adapter
     println!("3. Polynomial Kernel Adapter");
     println!("----------------------------");
-    let poly_kernel = PolynomialKernel::new(2, 1.0).unwrap();
+    let poly_kernel = PolynomialKernel::new(2, 1.0).expect("Failed to create PolynomialKernel");
     let poly_adapter = SklearsKernelAdapter::new(poly_kernel);
 
     let similarity = poly_adapter.kernel(&x, &y);
@@ -56,7 +56,7 @@ fn main() {
     // Example 4: Laplacian kernel adapter
     println!("4. Laplacian Kernel Adapter");
     println!("---------------------------");
-    let laplacian_kernel = LaplacianKernel::new(0.5).unwrap();
+    let laplacian_kernel = LaplacianKernel::new(0.5).expect("Failed to create LaplacianKernel");
     let laplacian_adapter = SklearsKernelAdapter::new(laplacian_kernel);
 
     let similarity = laplacian_adapter.kernel(&x, &y);
@@ -99,15 +99,20 @@ fn main() {
 
     // Linear kernel matrix
     let linear_k = LinearKernel::new();
-    let linear_matrix = linear_k.compute_matrix(&test_data).unwrap();
+    let linear_matrix = linear_k
+        .compute_matrix(&test_data)
+        .expect("Failed to compute linear kernel matrix");
     println!("\nLinear Kernel Matrix:");
     for row in &linear_matrix {
         println!("  {:?}", row);
     }
 
     // RBF kernel matrix
-    let rbf_k = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
-    let rbf_matrix = rbf_k.compute_matrix(&test_data).unwrap();
+    let rbf_k =
+        RbfKernel::new(RbfKernelConfig::new(0.5)).expect("Failed to create RbfKernel for matrix");
+    let rbf_matrix = rbf_k
+        .compute_matrix(&test_data)
+        .expect("Failed to compute RBF kernel matrix");
     println!("\nRBF Kernel Matrix:");
     for row in &rbf_matrix {
         println!("  {:?}", row);

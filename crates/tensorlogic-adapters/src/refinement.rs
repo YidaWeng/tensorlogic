@@ -318,7 +318,10 @@ impl RefinementPredicate {
             RefinementPredicate::And(preds) => {
                 let simplified: Vec<_> = preds.iter().map(|p| p.simplify()).collect();
                 if simplified.len() == 1 {
-                    simplified.into_iter().next().unwrap()
+                    simplified
+                        .into_iter()
+                        .next()
+                        .expect("validated length == 1")
                 } else {
                     // Merge range constraints
                     let mut min_val = f64::NEG_INFINITY;
@@ -365,7 +368,7 @@ impl RefinementPredicate {
                     }
 
                     if others.len() == 1 {
-                        others.into_iter().next().unwrap()
+                        others.into_iter().next().expect("validated length == 1")
                     } else {
                         RefinementPredicate::And(others)
                     }
@@ -374,7 +377,10 @@ impl RefinementPredicate {
             RefinementPredicate::Or(preds) => {
                 let simplified: Vec<_> = preds.iter().map(|p| p.simplify()).collect();
                 if simplified.len() == 1 {
-                    simplified.into_iter().next().unwrap()
+                    simplified
+                        .into_iter()
+                        .next()
+                        .expect("validated length == 1")
                 } else {
                     RefinementPredicate::Or(simplified)
                 }
@@ -1021,16 +1027,16 @@ mod tests {
         let registry = RefinementRegistry::with_builtins();
 
         // Test PositiveInt
-        assert!(registry.check("PositiveInt", 5.0).unwrap());
-        assert!(!registry.check("PositiveInt", -1.0).unwrap());
+        assert!(registry.check("PositiveInt", 5.0).expect("unwrap"));
+        assert!(!registry.check("PositiveInt", -1.0).expect("unwrap"));
 
         // Test Probability
-        assert!(registry.check("Probability", 0.5).unwrap());
-        assert!(!registry.check("Probability", 1.5).unwrap());
+        assert!(registry.check("Probability", 0.5).expect("unwrap"));
+        assert!(!registry.check("Probability", 1.5).expect("unwrap"));
 
         // Test Even
-        assert!(registry.check("Even", 4.0).unwrap());
-        assert!(!registry.check("Even", 3.0).unwrap());
+        assert!(registry.check("Even", 4.0).expect("unwrap"));
+        assert!(!registry.check("Even", 3.0).expect("unwrap"));
     }
 
     #[test]
@@ -1155,8 +1161,8 @@ mod tests {
         );
 
         assert!(registry.contains("SmallPositive"));
-        assert!(registry.check("SmallPositive", 1e-7).unwrap());
-        assert!(!registry.check("SmallPositive", 1.0).unwrap());
+        assert!(registry.check("SmallPositive", 1e-7).expect("unwrap"));
+        assert!(!registry.check("SmallPositive", 1.0).expect("unwrap"));
     }
 
     // Tests for semantic subtyping implementation

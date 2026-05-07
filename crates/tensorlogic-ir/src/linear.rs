@@ -690,9 +690,9 @@ mod tests {
         ctx2.bind("x", LinearType::unrestricted("Int"));
 
         // Use in different amounts
-        ctx1.use_var("x").unwrap();
-        ctx2.use_var("x").unwrap();
-        ctx2.use_var("x").unwrap();
+        ctx1.use_var("x").expect("unwrap");
+        ctx2.use_var("x").expect("unwrap");
+        ctx2.use_var("x").expect("unwrap");
 
         // Merge should succeed
         let merged = ctx1.merge(&ctx2);
@@ -735,7 +735,7 @@ mod tests {
         let split = ctx.split(&["x".to_string()]);
         assert!(split.is_ok());
 
-        let split_ctx = split.unwrap();
+        let split_ctx = split.expect("unwrap");
         assert!(split_ctx.get_type("x").is_some());
         assert!(ctx.is_consumed("x"));
 

@@ -542,10 +542,11 @@ mod tests {
         );
 
         let initial = Array::from_vec(vec![0.6, 0.4]).into_dyn();
-        dbn.set_initial("state", initial).unwrap();
+        dbn.set_initial("state", initial).expect("unwrap");
 
-        let transition = ArrayD::from_shape_vec(IxDyn(&[2, 2]), vec![0.7, 0.3, 0.4, 0.6]).unwrap();
-        dbn.set_transition("state", transition).unwrap();
+        let transition =
+            ArrayD::from_shape_vec(IxDyn(&[2, 2]), vec![0.7, 0.3, 0.4, 0.6]).expect("unwrap");
+        dbn.set_transition("state", transition).expect("unwrap");
 
         assert!(dbn.initial_dists.contains_key("state"));
         assert!(dbn.transition_dists.contains_key("state"));
@@ -556,9 +557,9 @@ mod tests {
         let mut dbn = DynamicBayesianNetwork::new(vec![("state".to_string(), 2)], vec![]);
 
         let initial = Array::from_vec(vec![0.6, 0.4]).into_dyn();
-        dbn.set_initial("state", initial).unwrap();
+        dbn.set_initial("state", initial).expect("unwrap");
 
-        let graph = dbn.unroll(3).unwrap();
+        let graph = dbn.unroll(3).expect("unwrap");
 
         // Should have 3 time steps
         assert!(graph.get_variable("state_0").is_some());
@@ -574,10 +575,10 @@ mod tests {
             .set_initial("weather", Array::from_vec(vec![0.5, 0.5]).into_dyn())
             .set_transition(
                 "weather",
-                ArrayD::from_shape_vec(IxDyn(&[2, 2]), vec![0.7, 0.3, 0.3, 0.7]).unwrap(),
+                ArrayD::from_shape_vec(IxDyn(&[2, 2]), vec![0.7, 0.3, 0.3, 0.7]).expect("unwrap"),
             )
             .build()
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(dbn.state_vars.len(), 1);
         assert_eq!(dbn.observation_vars.len(), 1);
@@ -629,7 +630,7 @@ mod tests {
     fn test_dbn_filter_empty() {
         let dbn = DynamicBayesianNetwork::new(vec![("state".to_string(), 2)], vec![]);
 
-        let results = dbn.filter(&[]).unwrap();
+        let results = dbn.filter(&[]).expect("unwrap");
         assert!(results.is_empty());
     }
 
@@ -637,7 +638,7 @@ mod tests {
     fn test_dbn_viterbi_empty() {
         let dbn = DynamicBayesianNetwork::new(vec![("state".to_string(), 2)], vec![]);
 
-        let results = dbn.viterbi(&[]).unwrap();
+        let results = dbn.viterbi(&[]).expect("unwrap");
         assert!(results.is_empty());
     }
 

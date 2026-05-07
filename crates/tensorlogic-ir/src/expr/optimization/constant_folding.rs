@@ -411,6 +411,14 @@ pub fn constant_fold(expr: &TLExpr) -> TLExpr {
         ),
         TLExpr::Abducible { .. } => expr.clone(),
         TLExpr::Explain { formula } => TLExpr::explain(constant_fold(formula)),
+        TLExpr::SymbolLiteral(_) => expr.clone(),
+        TLExpr::Match { scrutinee, arms } => TLExpr::Match {
+            scrutinee: Box::new(constant_fold(scrutinee)),
+            arms: arms
+                .iter()
+                .map(|(p, b)| (p.clone(), Box::new(constant_fold(b))))
+                .collect(),
+        },
 
         // Leaves - no folding needed
         TLExpr::Pred { .. } | TLExpr::Constant(_) => expr.clone(),

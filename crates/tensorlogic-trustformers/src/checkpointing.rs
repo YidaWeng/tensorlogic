@@ -373,7 +373,7 @@ mod tests {
 
     #[test]
     fn test_dynamic_checkpointing() {
-        let config = CheckpointConfig::dynamic(12, 0.3).unwrap();
+        let config = CheckpointConfig::dynamic(12, 0.3).expect("unwrap");
         // With 12 layers and 30% memory target, checkpoint every ~4 layers
         assert!(config.validate().is_ok());
 
@@ -459,7 +459,7 @@ mod tests {
         let config = CheckpointConfig::selective(vec![0, 3, 7]);
         assert!(config.summary().contains("3 layers"));
 
-        let config = CheckpointConfig::dynamic(12, 0.3).unwrap();
+        let config = CheckpointConfig::dynamic(12, 0.3).expect("unwrap");
         assert!(config.summary().contains("30.0%"));
     }
 

@@ -322,7 +322,10 @@ impl OnnxConverter {
             .enumerate()
             .filter(|(idx, _)| !graph.outputs.contains(idx))
             .map(|(_, tensor)| {
-                let onnx_name = tensor_to_onnx_name.get(tensor).unwrap().clone();
+                let onnx_name = tensor_to_onnx_name
+                    .get(tensor)
+                    .expect("all tensors mapped to onnx names")
+                    .clone();
                 self.create_value_info(&onnx_name, &format!("Input tensor: {}", tensor))
             })
             .collect();
@@ -333,7 +336,10 @@ impl OnnxConverter {
             .iter()
             .map(|&idx| {
                 let tensor = &graph.tensors[idx];
-                let onnx_name = tensor_to_onnx_name.get(tensor).unwrap().clone();
+                let onnx_name = tensor_to_onnx_name
+                    .get(tensor)
+                    .expect("all tensors mapped to onnx names")
+                    .clone();
                 self.create_value_info(&onnx_name, &format!("Output tensor: {}", tensor))
             })
             .collect();
@@ -391,11 +397,21 @@ impl OnnxConverter {
     ) -> Result<NodeProto> {
         let input_names: Vec<String> = inputs
             .iter()
-            .map(|&i| tensor_names.values().nth(i).unwrap().clone())
+            .map(|&i| {
+                tensor_names
+                    .values()
+                    .nth(i)
+                    .expect("tensor index is valid")
+                    .clone()
+            })
             .collect();
 
         let output_name = if let Some(&out_idx) = outputs.first() {
-            tensor_names.values().nth(out_idx).unwrap().clone()
+            tensor_names
+                .values()
+                .nth(out_idx)
+                .expect("tensor index is valid")
+                .clone()
         } else {
             format!("node_{}_out", idx)
         };
@@ -426,8 +442,16 @@ impl OnnxConverter {
         idx: usize,
         tensor_names: &HashMap<String, String>,
     ) -> Result<NodeProto> {
-        let input_name = tensor_names.values().nth(input).unwrap().clone();
-        let output_name = tensor_names.values().nth(output).unwrap().clone();
+        let input_name = tensor_names
+            .values()
+            .nth(input)
+            .expect("tensor index is valid")
+            .clone();
+        let output_name = tensor_names
+            .values()
+            .nth(output)
+            .expect("tensor index is valid")
+            .clone();
 
         let op_type = match op {
             "relu" => "Relu",
@@ -461,9 +485,21 @@ impl OnnxConverter {
         idx: usize,
         tensor_names: &HashMap<String, String>,
     ) -> Result<NodeProto> {
-        let left_name = tensor_names.values().nth(left).unwrap().clone();
-        let right_name = tensor_names.values().nth(right).unwrap().clone();
-        let output_name = tensor_names.values().nth(output).unwrap().clone();
+        let left_name = tensor_names
+            .values()
+            .nth(left)
+            .expect("tensor index is valid")
+            .clone();
+        let right_name = tensor_names
+            .values()
+            .nth(right)
+            .expect("tensor index is valid")
+            .clone();
+        let output_name = tensor_names
+            .values()
+            .nth(output)
+            .expect("tensor index is valid")
+            .clone();
 
         let op_type = match op {
             "add" => "Add",
@@ -496,8 +532,16 @@ impl OnnxConverter {
         idx: usize,
         tensor_names: &HashMap<String, String>,
     ) -> Result<NodeProto> {
-        let input_name = tensor_names.values().nth(input).unwrap().clone();
-        let output_name = tensor_names.values().nth(output).unwrap().clone();
+        let input_name = tensor_names
+            .values()
+            .nth(input)
+            .expect("tensor index is valid")
+            .clone();
+        let output_name = tensor_names
+            .values()
+            .nth(output)
+            .expect("tensor index is valid")
+            .clone();
 
         let op_type = match op {
             "sum" => "ReduceSum",
@@ -583,7 +627,7 @@ mod tests {
         let result = export_to_onnx(&graph, "test_model");
         assert!(result.is_ok());
 
-        let bytes = result.unwrap();
+        let bytes = result.expect("unwrap");
         assert!(!bytes.is_empty());
         assert!(bytes.len() > 10); // Should have reasonable size
     }

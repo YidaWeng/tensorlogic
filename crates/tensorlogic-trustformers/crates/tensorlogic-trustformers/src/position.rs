@@ -322,7 +322,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sinusoidal_encoding() {
+    fn test_sinusoidal_encoding() -> Result<(), Box<dyn std::error::Error>> {
         let config = PositionEncodingConfig {
             encoding_type: PositionEncodingType::Sinusoidal,
             max_seq_len: 512,
@@ -330,15 +330,14 @@ mod tests {
             dropout: 0.1,
             base: 10000.0,
         };
-        let encoder = PositionEncoder::new(config).unwrap();
-        let graph = encoder.encode(32);
-        assert!(graph.is_ok());
-        let graph = graph.unwrap();
+        let encoder = PositionEncoder::new(config)?;
+        let graph = encoder.encode(32)?;
         assert!(graph.output().is_some());
+        Ok(())
     }
 
     #[test]
-    fn test_learned_encoding() {
+    fn test_learned_encoding() -> Result<(), Box<dyn std::error::Error>> {
         let config = PositionEncodingConfig {
             encoding_type: PositionEncodingType::Learned,
             max_seq_len: 512,
@@ -346,13 +345,14 @@ mod tests {
             dropout: 0.1,
             base: 10000.0,
         };
-        let encoder = PositionEncoder::new(config).unwrap();
+        let encoder = PositionEncoder::new(config)?;
         let graph = encoder.encode(32);
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_relative_encoding() {
+    fn test_relative_encoding() -> Result<(), Box<dyn std::error::Error>> {
         let config = PositionEncodingConfig {
             encoding_type: PositionEncodingType::Relative,
             max_seq_len: 512,
@@ -360,13 +360,14 @@ mod tests {
             dropout: 0.1,
             base: 10000.0,
         };
-        let encoder = PositionEncoder::new(config).unwrap();
+        let encoder = PositionEncoder::new(config)?;
         let graph = encoder.encode(32);
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_rope_encoding() {
+    fn test_rope_encoding() -> Result<(), Box<dyn std::error::Error>> {
         let config = PositionEncodingConfig {
             encoding_type: PositionEncodingType::RoPE,
             max_seq_len: 512,
@@ -374,13 +375,14 @@ mod tests {
             dropout: 0.1,
             base: 10000.0,
         };
-        let encoder = PositionEncoder::new(config).unwrap();
+        let encoder = PositionEncoder::new(config)?;
         let graph = encoder.encode(32);
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_alibi_encoding() {
+    fn test_alibi_encoding() -> Result<(), Box<dyn std::error::Error>> {
         let config = PositionEncodingConfig {
             encoding_type: PositionEncodingType::ALiBi,
             max_seq_len: 512,
@@ -388,13 +390,14 @@ mod tests {
             dropout: 0.1,
             base: 10000.0,
         };
-        let encoder = PositionEncoder::new(config).unwrap();
+        let encoder = PositionEncoder::new(config)?;
         let graph = encoder.encode(32);
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_no_encoding() {
+    fn test_no_encoding() -> Result<(), Box<dyn std::error::Error>> {
         let config = PositionEncodingConfig {
             encoding_type: PositionEncodingType::None,
             max_seq_len: 512,
@@ -402,13 +405,14 @@ mod tests {
             dropout: 0.1,
             base: 10000.0,
         };
-        let encoder = PositionEncoder::new(config).unwrap();
+        let encoder = PositionEncoder::new(config)?;
         let graph = encoder.encode(32);
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_sequence_too_long() {
+    fn test_sequence_too_long() -> Result<(), Box<dyn std::error::Error>> {
         let config = PositionEncodingConfig {
             encoding_type: PositionEncodingType::Sinusoidal,
             max_seq_len: 128,
@@ -416,19 +420,20 @@ mod tests {
             dropout: 0.1,
             base: 10000.0,
         };
-        let encoder = PositionEncoder::new(config).unwrap();
+        let encoder = PositionEncoder::new(config)?;
         let result = encoder.encode(256);
         assert!(result.is_err());
+        Ok(())
     }
 
     #[test]
-    fn test_output_shape_sinusoidal() {
+    fn test_output_shape_sinusoidal() -> Result<(), Box<dyn std::error::Error>> {
         let config = PositionEncodingConfig {
             encoding_type: PositionEncodingType::Sinusoidal,
             hidden_size: 128,
             ..Default::default()
         };
-        let encoder = PositionEncoder::new(config).unwrap();
+        let encoder = PositionEncoder::new(config)?;
         let shape = encoder.output_shape(32);
         match shape {
             TensorShape::Fixed(dims) => {
@@ -436,16 +441,17 @@ mod tests {
             }
             _ => panic!("Expected fixed shape"),
         }
+        Ok(())
     }
 
     #[test]
-    fn test_output_shape_relative() {
+    fn test_output_shape_relative() -> Result<(), Box<dyn std::error::Error>> {
         let config = PositionEncodingConfig {
             encoding_type: PositionEncodingType::Relative,
             hidden_size: 128,
             ..Default::default()
         };
-        let encoder = PositionEncoder::new(config).unwrap();
+        let encoder = PositionEncoder::new(config)?;
         let shape = encoder.output_shape(32);
         match shape {
             TensorShape::Fixed(dims) => {
@@ -453,16 +459,17 @@ mod tests {
             }
             _ => panic!("Expected fixed shape"),
         }
+        Ok(())
     }
 
     #[test]
-    fn test_output_shape_alibi() {
+    fn test_output_shape_alibi() -> Result<(), Box<dyn std::error::Error>> {
         let config = PositionEncodingConfig {
             encoding_type: PositionEncodingType::ALiBi,
             hidden_size: 8,
             ..Default::default()
         };
-        let encoder = PositionEncoder::new(config).unwrap();
+        let encoder = PositionEncoder::new(config)?;
         let shape = encoder.output_shape(32);
         match shape {
             TensorShape::Fixed(dims) => {
@@ -470,6 +477,7 @@ mod tests {
             }
             _ => panic!("Expected fixed shape"),
         }
+        Ok(())
     }
 
     #[test]

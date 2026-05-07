@@ -30,7 +30,7 @@ use crate::error::Result;
 ///     TLExpr::pred("smart", vec![]),
 /// );
 ///
-/// let features = extractor.extract(&expr).unwrap();
+/// let features = extractor.extract(&expr).expect("unwrap");
 /// println!("Feature vector: {:?}", features);
 /// ```
 #[derive(Clone, Debug)]
@@ -149,11 +149,9 @@ impl FeatureExtractor {
     /// Collect predicates from expression
     fn collect_predicates(&mut self, expr: &TLExpr, vocab_index: &mut usize) {
         match expr {
-            TLExpr::Pred { name, .. } => {
-                if !self.vocabulary.contains_key(name) {
-                    self.vocabulary.insert(name.clone(), *vocab_index);
-                    *vocab_index += 1;
-                }
+            TLExpr::Pred { name, .. } if !self.vocabulary.contains_key(name) => {
+                self.vocabulary.insert(name.clone(), *vocab_index);
+                *vocab_index += 1;
             }
             TLExpr::And(left, right) | TLExpr::Or(left, right) | TLExpr::Imply(left, right) => {
                 self.collect_predicates(left, vocab_index);
@@ -335,7 +333,7 @@ mod tests {
         let extractor = FeatureExtractor::new(config);
 
         let expr = TLExpr::pred("tall", vec![]);
-        let features = extractor.extract(&expr).unwrap();
+        let features = extractor.extract(&expr).expect("unwrap");
 
         assert!(!features.is_empty());
     }
@@ -347,7 +345,7 @@ mod tests {
 
         let expr = TLExpr::and(TLExpr::pred("tall", vec![]), TLExpr::pred("smart", vec![]));
 
-        let features = extractor.extract(&expr).unwrap();
+        let features = extractor.extract(&expr).expect("unwrap");
         assert!(!features.is_empty());
     }
 
@@ -361,7 +359,7 @@ mod tests {
             TLExpr::or(TLExpr::pred("b", vec![]), TLExpr::pred("c", vec![])),
         );
 
-        let features = extractor.extract(&expr).unwrap();
+        let features = extractor.extract(&expr).expect("unwrap");
 
         // Should have depth > 1
         assert!(features[0] > 1.0);
@@ -377,7 +375,7 @@ mod tests {
 
         let expr = TLExpr::exists("x", "Person", TLExpr::pred("likes", vec![]));
 
-        let features = extractor.extract(&expr).unwrap();
+        let features = extractor.extract(&expr).expect("unwrap");
         assert!(!features.is_empty());
     }
 
@@ -408,7 +406,7 @@ mod tests {
             TLExpr::and(TLExpr::pred("a", vec![]), TLExpr::pred("b", vec![])),
         ];
 
-        let features = extractor.extract_batch(&exprs).unwrap();
+        let features = extractor.extract_batch(&exprs).expect("unwrap");
         assert_eq!(features.len(), 3);
     }
 
@@ -418,7 +416,7 @@ mod tests {
         let extractor = FeatureExtractor::new(config);
 
         let expr = TLExpr::pred("test", vec![]);
-        let features = extractor.extract(&expr).unwrap();
+        let features = extractor.extract(&expr).expect("unwrap");
 
         assert_eq!(features.len(), 10);
     }

@@ -229,8 +229,11 @@ impl Optimizer for SophiaOptimizer {
                     .insert(name.clone(), Array::ones(param.raw_dim()) * eps);
             }
 
-            let m = self.m.get_mut(name).unwrap();
-            let h = self.h.get(name).unwrap();
+            let m = self
+                .m
+                .get_mut(name)
+                .expect("m initialized for all parameters");
+            let h = self.h.get(name).expect("h initialized for all parameters");
 
             // Update first moment (gradient EMA): m_t = β₁ * m_{t-1} + (1 - β₁) * g_t
             *m = &*m * beta1 + &(grad * (1.0 - beta1));
@@ -363,7 +366,7 @@ mod tests {
         grads.insert("w".to_string(), array![[0.1, 0.2, 0.3]]);
 
         let initial = params["w"].clone();
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         // Parameters should be updated (decreased for positive gradients)
         assert!(params["w"][[0, 0]] < initial[[0, 0]]);
@@ -386,7 +389,7 @@ mod tests {
         for _ in 0..50 {
             let mut grads = HashMap::new();
             grads.insert("w".to_string(), &params["w"] * 2.0); // Gradient of x²
-            optimizer.step(&mut params, &grads).unwrap();
+            optimizer.step(&mut params, &grads).expect("unwrap");
         }
 
         // Should converge close to zero
@@ -410,7 +413,7 @@ mod tests {
         grads.insert("w".to_string(), array![[0.1, 0.1, 0.1], [-0.1, -0.1, -0.1]]);
 
         let initial_shape = params["w"].shape().to_vec();
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         assert_eq!(params["w"].shape(), &initial_shape[..]);
     }
@@ -426,7 +429,7 @@ mod tests {
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), array![[0.1, 0.2]]);
 
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
         assert!(!optimizer.m.is_empty());
         assert_eq!(optimizer.t, 1);
 
@@ -452,12 +455,12 @@ mod tests {
         grads.insert("w".to_string(), array![[0.1, 0.2]]);
 
         // First step should update Hessian
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
         assert_eq!(optimizer.steps_since_hessian_update, 1);
 
         // Steps 2-4 should not update
         for _ in 0..4 {
-            optimizer.step(&mut params, &grads).unwrap();
+            optimizer.step(&mut params, &grads).expect("unwrap");
         }
         assert_eq!(optimizer.steps_since_hessian_update, 0); // Reset after 5 steps
 
@@ -484,7 +487,7 @@ mod tests {
         grads.insert("w".to_string(), array![[0.0, 0.0, 0.0]]); // Zero gradients
 
         let initial = params["w"].clone();
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         // With weight decay and zero gradients, parameters should decay
         assert!(params["w"][[0, 0]] < initial[[0, 0]]);
@@ -512,7 +515,7 @@ mod tests {
         grads.insert("w".to_string(), array![[1.0, -2.0]]); // Should be clipped to [0.5, -0.5]
 
         let initial = params["w"].clone();
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         // Effect should be limited by clipping
         let update_mag = (initial[[0, 0]] - params["w"][[0, 0]]).abs();
@@ -539,7 +542,7 @@ mod tests {
         grads.insert("w".to_string(), array![[10.0, 10.0, 10.0]]); // Large gradients
 
         let initial = params["w"].clone();
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         // Norm clipping should limit the total update
         let total_update: f64 = initial
@@ -579,7 +582,7 @@ mod tests {
         grads.insert("w".to_string(), array![[0.5, 0.5]]);
 
         let initial = params["w"].clone();
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
         assert!(params["w"][[0, 0]] < initial[[0, 0]]); // Should make progress
     }
 
@@ -598,7 +601,7 @@ mod tests {
         grads.insert("w".to_string(), array![[0.5, 0.5]]);
 
         let initial = params["w"].clone();
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
         assert!(params["w"][[0, 0]] < initial[[0, 0]]); // Should make progress
     }
 
@@ -622,7 +625,7 @@ mod tests {
         grads.insert("w".to_string(), array![[100.0]]); // Large gradient
 
         let initial = params["w"][[0, 0]];
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         // Even with large gradient, update should be bounded
         let update_size = (initial - params["w"][[0, 0]]).abs();
@@ -643,7 +646,7 @@ mod tests {
 
         // Take several steps with optimizer1
         for _ in 0..5 {
-            optimizer1.step(&mut params, &grads).unwrap();
+            optimizer1.step(&mut params, &grads).expect("unwrap");
         }
 
         // Save and load state

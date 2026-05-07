@@ -1,4 +1,4 @@
-# Quality Assurance Report - tensorlogic-adapters v0.1.0-beta.1
+# Quality Assurance Report - tensorlogic-adapters v0.1.0
 
 **Date**: 2025-11-17
 **Status**: ✅ **ALL CHECKS PASSED**
@@ -222,7 +222,7 @@ All quality gates **PASSED**:
 
 ### Version Information
 
-**Current Version**: 0.1.0-beta.1
+**Current Version**: 0.1.0
 **Crate Name**: tensorlogic-adapters
 **Description**: Symbol tables, axis metadata, and domain masks for TensorLogic
 
@@ -263,7 +263,7 @@ Total:                223 tests  (100%)
 ## 📝 Recommendations
 
 ### For Users
-1. ✅ Crate is production-ready for beta.1 release
+1. ✅ Crate is production-ready for rc.1 release
 2. ✅ All features are well-tested and documented
 3. ✅ Performance optimizations validated via benchmarks
 4. ✅ CLI tools ready for use
@@ -276,10 +276,10 @@ Total:                223 tests  (100%)
 
 ## 🎯 Next Steps
 
-**Current Status**: Ready for beta.1 release
+**Current Status**: ready for stable release
 
 **Suggested Actions**:
-1. Tag release v0.1.0-beta.1
+1. Tag release v0.1.0
 2. Publish to crates.io
 3. Update project TODO.md
 4. Announce new features

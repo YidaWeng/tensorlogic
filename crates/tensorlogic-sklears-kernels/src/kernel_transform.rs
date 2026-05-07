@@ -33,7 +33,7 @@ use crate::types::Kernel;
 ///     vec![1.0, 3.0, 16.0],
 /// ];
 ///
-/// let K_norm = normalize_kernel_matrix(&K).unwrap();
+/// let K_norm = normalize_kernel_matrix(&K).expect("unwrap");
 ///
 /// // All diagonal entries should be 1.0
 /// assert!((K_norm[0][0] - 1.0).abs() < 1e-10);
@@ -103,7 +103,7 @@ pub fn normalize_kernel_matrix(kernel_matrix: &[Vec<f64>]) -> Result<Vec<Vec<f64
 ///     vec![0.6, 0.7, 1.0],
 /// ];
 ///
-/// let K_centered = center_kernel_matrix(&K).unwrap();
+/// let K_centered = center_kernel_matrix(&K).expect("unwrap");
 ///
 /// // Row and column means should be approximately zero
 /// let row_mean: f64 = K_centered[0].iter().sum::<f64>() / 3.0;
@@ -172,7 +172,7 @@ pub fn center_kernel_matrix(kernel_matrix: &[Vec<f64>]) -> Result<Vec<Vec<f64>>>
 ///     vec![1.0, 3.0, 16.0],
 /// ];
 ///
-/// let K_std = standardize_kernel_matrix(&K).unwrap();
+/// let K_std = standardize_kernel_matrix(&K).expect("unwrap");
 /// ```
 pub fn standardize_kernel_matrix(kernel_matrix: &[Vec<f64>]) -> Result<Vec<Vec<f64>>> {
     let normalized = normalize_kernel_matrix(kernel_matrix)?;
@@ -202,10 +202,10 @@ impl NormalizedKernel {
     ///
     /// let x = vec![1.0, 2.0, 3.0];
     /// let y = vec![4.0, 5.0, 6.0];
-    /// let sim = normalized.compute(&x, &y).unwrap();
+    /// let sim = normalized.compute(&x, &y).expect("unwrap");
     ///
     /// // Self-similarity should be 1.0
-    /// let self_sim = normalized.compute(&x, &x).unwrap();
+    /// let self_sim = normalized.compute(&x, &x).expect("unwrap");
     /// assert!((self_sim - 1.0).abs() < 1e-10);
     /// ```
     pub fn new(base_kernel: Box<dyn Kernel>) -> Self {
@@ -233,7 +233,10 @@ impl NormalizedKernel {
 
         // Check cache
         {
-            let cache = self.diagonal_cache.lock().unwrap();
+            let cache = self
+                .diagonal_cache
+                .lock()
+                .expect("lock should not be poisoned");
             if let Some(&cached) = cache.get(&hash) {
                 return Ok(cached);
             }
@@ -241,7 +244,10 @@ impl NormalizedKernel {
 
         // Compute and cache
         let value = self.base_kernel.compute(x, x)?;
-        let mut cache = self.diagonal_cache.lock().unwrap();
+        let mut cache = self
+            .diagonal_cache
+            .lock()
+            .expect("lock should not be poisoned");
         cache.insert(hash, value);
         Ok(value)
     }
@@ -281,7 +287,7 @@ mod tests {
             vec![1.0, 3.0, 16.0],
         ];
 
-        let K_norm = normalize_kernel_matrix(&K).unwrap();
+        let K_norm = normalize_kernel_matrix(&K).expect("unwrap");
 
         // Check diagonal is all 1.0
         assert!((K_norm[0][0] - 1.0).abs() < 1e-10);
@@ -298,7 +304,7 @@ mod tests {
     fn test_normalize_kernel_matrix_correctness() {
         let K = vec![vec![4.0, 2.0], vec![2.0, 9.0]];
 
-        let K_norm = normalize_kernel_matrix(&K).unwrap();
+        let K_norm = normalize_kernel_matrix(&K).expect("unwrap");
 
         // K_norm[0][1] = K[0][1] / sqrt(K[0][0] * K[1][1])
         //              = 2.0 / sqrt(4.0 * 9.0)
@@ -309,7 +315,7 @@ mod tests {
     #[test]
     fn test_normalize_kernel_matrix_empty() {
         let K: Vec<Vec<f64>> = Vec::new();
-        let K_norm = normalize_kernel_matrix(&K).unwrap();
+        let K_norm = normalize_kernel_matrix(&K).expect("unwrap");
         assert!(K_norm.is_empty());
     }
 
@@ -337,7 +343,7 @@ mod tests {
             vec![0.6, 0.7, 1.0],
         ];
 
-        let K_centered = center_kernel_matrix(&K).unwrap();
+        let K_centered = center_kernel_matrix(&K).expect("unwrap");
 
         // Check row sums are approximately zero
         for row in &K_centered {
@@ -359,7 +365,7 @@ mod tests {
     #[test]
     fn test_center_kernel_matrix_empty() {
         let K: Vec<Vec<f64>> = Vec::new();
-        let K_centered = center_kernel_matrix(&K).unwrap();
+        let K_centered = center_kernel_matrix(&K).expect("unwrap");
         assert!(K_centered.is_empty());
     }
 
@@ -379,7 +385,7 @@ mod tests {
             vec![1.0, 3.0, 16.0],
         ];
 
-        let K_std = standardize_kernel_matrix(&K).unwrap();
+        let K_std = standardize_kernel_matrix(&K).expect("unwrap");
 
         // After standardization, row/column sums should be close to zero
         for row in &K_std {
@@ -397,30 +403,31 @@ mod tests {
         let y = vec![4.0, 5.0, 6.0];
 
         // Self-similarity should be 1.0
-        let self_sim = normalized.compute(&x, &x).unwrap();
+        let self_sim = normalized.compute(&x, &x).expect("unwrap");
         assert!((self_sim - 1.0).abs() < 1e-10);
 
         // Compute normalized similarity
-        let sim = normalized.compute(&x, &y).unwrap();
+        let sim = normalized.compute(&x, &y).expect("unwrap");
         assert!((-1.0..=1.0).contains(&sim));
     }
 
     #[test]
     fn test_normalized_kernel_rbf() {
-        let rbf = Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()) as Box<dyn Kernel>;
+        let rbf =
+            Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap")) as Box<dyn Kernel>;
         let normalized = NormalizedKernel::new(rbf);
 
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![2.0, 3.0, 4.0];
 
         // Self-similarity should be 1.0
-        let self_sim_x = normalized.compute(&x, &x).unwrap();
-        let self_sim_y = normalized.compute(&y, &y).unwrap();
+        let self_sim_x = normalized.compute(&x, &x).expect("unwrap");
+        let self_sim_y = normalized.compute(&y, &y).expect("unwrap");
         assert!((self_sim_x - 1.0).abs() < 1e-10);
         assert!((self_sim_y - 1.0).abs() < 1e-10);
 
         // Cross-similarity should be in (0, 1)
-        let sim = normalized.compute(&x, &y).unwrap();
+        let sim = normalized.compute(&x, &y).expect("unwrap");
         assert!(sim > 0.0 && sim < 1.0);
     }
 
@@ -432,8 +439,8 @@ mod tests {
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        let sim_xy = normalized.compute(&x, &y).unwrap();
-        let sim_yx = normalized.compute(&y, &x).unwrap();
+        let sim_xy = normalized.compute(&x, &y).expect("unwrap");
+        let sim_yx = normalized.compute(&y, &x).expect("unwrap");
 
         assert!((sim_xy - sim_yx).abs() < 1e-10);
     }
@@ -447,9 +454,9 @@ mod tests {
         let y = vec![4.0, 5.0, 6.0];
 
         // Multiple calls should use cache
-        let sim1 = normalized.compute(&x, &y).unwrap();
-        let sim2 = normalized.compute(&x, &y).unwrap();
-        let sim3 = normalized.compute(&x, &y).unwrap();
+        let sim1 = normalized.compute(&x, &y).expect("unwrap");
+        let sim2 = normalized.compute(&x, &y).expect("unwrap");
+        let sim3 = normalized.compute(&x, &y).expect("unwrap");
 
         assert!((sim1 - sim2).abs() < 1e-10);
         assert!((sim2 - sim3).abs() < 1e-10);
@@ -464,11 +471,11 @@ mod tests {
         ];
 
         // Method 1: Normalize then center
-        let K_norm = normalize_kernel_matrix(&K).unwrap();
-        let K_norm_cent = center_kernel_matrix(&K_norm).unwrap();
+        let K_norm = normalize_kernel_matrix(&K).expect("unwrap");
+        let K_norm_cent = center_kernel_matrix(&K_norm).expect("unwrap");
 
         // Method 2: Use standardize
-        let K_std = standardize_kernel_matrix(&K).unwrap();
+        let K_std = standardize_kernel_matrix(&K).expect("unwrap");
 
         // Should be identical
         for i in 0..3 {

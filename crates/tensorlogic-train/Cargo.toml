@@ -6,6 +6,10 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+documentation = "https://docs.rs/tensorlogic-train"
+readme = "README.md"
+keywords = ["tensor", "logic", "training", "optimization", "machine-learning"]
+categories = ["science", "algorithms", "mathematics"]
 
 [dependencies]
 # Core tensorlogic crates
@@ -35,27 +39,27 @@ serde.workspace = true
 serde_json.workspace = true
 
 # Compression for checkpoints
-flate2 = "1.1"
+oxiarc-deflate.workspace = true
 
 # Time for TensorBoard timestamps
-chrono = "0.4"
+chrono.workspace = true
 
 # CRC for TensorBoard event format
-crc32fast = "1.5"
+crc32fast.workspace = true
 
 # Byte order utilities
-byteorder = "1.5"
+byteorder.workspace = true
 
 # Hostname for TensorBoard filenames
-hostname = "0.4"
+hostname.workspace = true
 
 [features]
 default = []
 structured-logging = ["tracing", "tracing-subscriber"]
 
 [dev-dependencies]
-criterion = "0.8"
-approx = "0.5"
+criterion.workspace = true
+approx.workspace = true
 
 [[bench]]
 name = "training_performance"

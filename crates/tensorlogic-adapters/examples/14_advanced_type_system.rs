@@ -209,11 +209,11 @@ fn demo_dependent_types() {
     println!("  Dimension context:");
     println!(
         "    batch={}, seq_len={}, hidden={}, heads={}, head_dim={}",
-        ctx.get_dim("batch").unwrap(),
-        ctx.get_dim("seq_len").unwrap(),
-        ctx.get_dim("hidden").unwrap(),
-        ctx.get_dim("heads").unwrap(),
-        ctx.get_dim("head_dim").unwrap(),
+        ctx.get_dim("batch").expect("unwrap"),
+        ctx.get_dim("seq_len").expect("unwrap"),
+        ctx.get_dim("hidden").expect("unwrap"),
+        ctx.get_dim("heads").expect("unwrap"),
+        ctx.get_dim("head_dim").expect("unwrap"),
     );
 
     println!("\n  Tensor shapes:");
@@ -282,19 +282,22 @@ fn demo_linear_types() {
     // Track resources
     ctx.enter_scope();
     ctx.create_resource("weights", gpu_tensor.clone(), "model.rs:10")
-        .unwrap();
+        .expect("unwrap");
     ctx.create_resource("data_file", file_handle, "loader.rs:20")
-        .unwrap();
+        .expect("unwrap");
     ctx.create_resource("training_config", config, "main.rs:5")
-        .unwrap();
+        .expect("unwrap");
 
     println!("\n  Created resources:");
     println!("    weights (linear), data_file (affine), training_config (relevant)");
 
     // Use resources
-    ctx.use_resource("weights", "forward.rs:50").unwrap();
-    ctx.use_resource("training_config", "train.rs:100").unwrap();
-    ctx.use_resource("training_config", "eval.rs:200").unwrap(); // relevant can be used multiple times
+    ctx.use_resource("weights", "forward.rs:50")
+        .expect("unwrap");
+    ctx.use_resource("training_config", "train.rs:100")
+        .expect("unwrap");
+    ctx.use_resource("training_config", "eval.rs:200")
+        .expect("unwrap"); // relevant can be used multiple times
 
     // Check statistics
     let stats = ctx.statistics();
@@ -439,10 +442,10 @@ fn demo_combined_usage() {
     linear_ctx.enter_scope();
     linear_ctx
         .create_resource("weights", gpu_tensor.clone(), "layer.rs:1")
-        .unwrap();
+        .expect("unwrap");
     linear_ctx
         .create_resource("input", gpu_tensor.clone(), "layer.rs:2")
-        .unwrap();
+        .expect("unwrap");
 
     // 4. Effects: Operation tracking
     let layer_effects = EffectSet::new()
@@ -473,14 +476,18 @@ fn demo_combined_usage() {
         // Output shape would be [batch, out_features]
         println!(
             "    Output:  [{}, {}]",
-            dim_ctx.get_dim("batch").unwrap(),
-            dim_ctx.get_dim("out_features").unwrap()
+            dim_ctx.get_dim("batch").expect("unwrap"),
+            dim_ctx.get_dim("out_features").expect("unwrap")
         );
     }
 
     // Use resources
-    linear_ctx.use_resource("weights", "forward:1").unwrap();
-    linear_ctx.use_resource("input", "forward:2").unwrap();
+    linear_ctx
+        .use_resource("weights", "forward:1")
+        .expect("unwrap");
+    linear_ctx
+        .use_resource("input", "forward:2")
+        .expect("unwrap");
 
     println!("\n  Resource usage:");
     let stats = linear_ctx.statistics();

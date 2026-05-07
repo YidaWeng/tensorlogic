@@ -573,7 +573,7 @@ mod tests {
             [1.0, 0.0, 0.0]
         ];
 
-        let cm = ConfusionMatrix::compute(&predictions.view(), &targets.view()).unwrap();
+        let cm = ConfusionMatrix::compute(&predictions.view(), &targets.view()).expect("unwrap");
 
         assert_eq!(cm.get(0, 0), 2); // Class 0 correctly predicted
         assert_eq!(cm.get(1, 1), 1); // Class 1 correctly predicted
@@ -586,7 +586,7 @@ mod tests {
         let predictions = array![[0.9, 0.1], [0.2, 0.8], [0.7, 0.3], [0.1, 0.9]];
         let targets = array![[1.0, 0.0], [0.0, 1.0], [1.0, 0.0], [0.0, 1.0]];
 
-        let cm = ConfusionMatrix::compute(&predictions.view(), &targets.view()).unwrap();
+        let cm = ConfusionMatrix::compute(&predictions.view(), &targets.view()).expect("unwrap");
 
         let precision = cm.precision_per_class();
         let recall = cm.recall_per_class();
@@ -608,7 +608,7 @@ mod tests {
         let predictions = vec![0.9, 0.8, 0.4, 0.3, 0.1];
         let targets = vec![true, true, false, true, false];
 
-        let roc = RocCurve::compute(&predictions, &targets).unwrap();
+        let roc = RocCurve::compute(&predictions, &targets).expect("unwrap");
 
         assert!(!roc.fpr.is_empty());
         assert!(!roc.tpr.is_empty());
@@ -624,7 +624,7 @@ mod tests {
         let predictions = vec![0.9, 0.8, 0.3, 0.1];
         let targets = vec![true, true, false, false];
 
-        let roc = RocCurve::compute(&predictions, &targets).unwrap();
+        let roc = RocCurve::compute(&predictions, &targets).expect("unwrap");
         let auc = roc.auc();
 
         // Perfect classification should have AUC = 1.0
@@ -646,7 +646,8 @@ mod tests {
             [1.0, 0.0, 0.0]
         ];
 
-        let metrics = PerClassMetrics::compute(&predictions.view(), &targets.view()).unwrap();
+        let metrics =
+            PerClassMetrics::compute(&predictions.view(), &targets.view()).expect("unwrap");
 
         assert_eq!(metrics.precision.len(), 3);
         assert_eq!(metrics.recall.len(), 3);
@@ -669,7 +670,7 @@ mod tests {
 
         let mcc = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((mcc - 1.0).abs() < 1e-6);
 
         // Random classification
@@ -678,7 +679,7 @@ mod tests {
 
         let mcc = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!(mcc.abs() < 0.1);
     }
 
@@ -692,7 +693,7 @@ mod tests {
 
         let kappa = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((kappa - 1.0).abs() < 1e-6);
 
         // Random agreement
@@ -701,7 +702,7 @@ mod tests {
 
         let kappa = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((-1.0..=1.0).contains(&kappa));
     }
 
@@ -715,7 +716,7 @@ mod tests {
 
         let balanced_acc = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((balanced_acc - 1.0).abs() < 1e-6);
 
         // Imbalanced but perfect
@@ -724,7 +725,7 @@ mod tests {
 
         let balanced_acc = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((balanced_acc - 1.0).abs() < 1e-6);
     }
 }

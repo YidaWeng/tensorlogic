@@ -638,7 +638,7 @@ mod tests {
         let result = mf.run(&graph);
         assert!(result.is_ok());
 
-        let marginals = result.unwrap();
+        let marginals = result.expect("unwrap");
         assert!(marginals.contains_key("x"));
 
         // Should be uniform for single variable with no factors
@@ -664,7 +664,7 @@ mod tests {
         graph.add_variable_with_card("x".to_string(), "Binary".to_string(), 2);
 
         let mf = MeanFieldInference::default();
-        let marginals = mf.run(&graph).unwrap();
+        let marginals = mf.run(&graph).expect("unwrap");
 
         let elbo = mf.compute_elbo(&graph, &marginals);
         assert!(elbo.is_ok());
@@ -679,7 +679,7 @@ mod tests {
         let result = bethe.run(&graph);
         assert!(result.is_ok());
 
-        let marginals = result.unwrap();
+        let marginals = result.expect("unwrap");
         assert!(marginals.contains_key("x"));
 
         let dist = &marginals["x"];
@@ -697,7 +697,7 @@ mod tests {
         let result = bethe.run(&graph);
         assert!(result.is_ok());
 
-        let marginals = result.unwrap();
+        let marginals = result.expect("unwrap");
         assert_eq!(marginals.len(), 2);
     }
 
@@ -707,8 +707,10 @@ mod tests {
         graph.add_variable_with_card("x".to_string(), "Binary".to_string(), 2);
 
         let bethe = BetheApproximation::default();
-        let marginals = bethe.run(&graph).unwrap();
-        let factor_beliefs = bethe.compute_factor_beliefs(&graph, &marginals).unwrap();
+        let marginals = bethe.run(&graph).expect("unwrap");
+        let factor_beliefs = bethe
+            .compute_factor_beliefs(&graph, &marginals)
+            .expect("unwrap");
 
         let free_energy = bethe.compute_free_energy(&graph, &marginals, &factor_beliefs);
         assert!(free_energy.is_ok());
@@ -734,7 +736,7 @@ mod tests {
         let result = trw.run(&graph);
         assert!(result.is_ok());
 
-        let beliefs = result.unwrap();
+        let beliefs = result.expect("unwrap");
         assert!(beliefs.contains_key("x"));
 
         let dist = &beliefs["x"];
@@ -752,7 +754,7 @@ mod tests {
         let result = trw.run(&graph);
         assert!(result.is_ok());
 
-        let beliefs = result.unwrap();
+        let beliefs = result.expect("unwrap");
         assert_eq!(beliefs.len(), 2);
     }
 
@@ -787,7 +789,7 @@ mod tests {
         graph.add_variable_with_card("x".to_string(), "Binary".to_string(), 2);
 
         let mut trw = TreeReweightedBP::default();
-        let beliefs = trw.run(&graph).unwrap();
+        let beliefs = trw.run(&graph).expect("unwrap");
 
         let bound = trw.compute_log_partition_upper_bound(&graph, &beliefs);
         assert!(bound.is_ok());

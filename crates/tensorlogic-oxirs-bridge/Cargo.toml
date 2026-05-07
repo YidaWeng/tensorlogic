@@ -6,11 +6,17 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+documentation = "https://docs.rs/tensorlogic-oxirs-bridge"
+readme = "README.md"
+keywords = ["tensor", "logic", "rdf", "knowledge-graph", "sparql"]
+categories = ["science", "algorithms", "data-structures"]
 
 [dependencies]
 tensorlogic-ir.workspace = true
 tensorlogic-adapters.workspace = true
 tensorlogic-compiler.workspace = true
+tensorlogic-infer.workspace = true
+tensorlogic-scirs-backend.workspace = true
 
 # OxiRS integration - RDF/Knowledge Graph/SPARQL
 oxirs-core.workspace = true
@@ -18,8 +24,8 @@ oxirs-gql.workspace = true
 oxirs-ttl.workspace = true
 
 # Low-level RDF types (for compatibility with existing code)
-oxrdf = "0.3.2"
-oxttl = "0.2.2"
+oxrdf = "0.3.3"
+oxttl = "0.2.3"
 
 # Random number generation
 scirs2-core = { workspace = true, features = ["random"] }
@@ -30,7 +36,7 @@ thiserror.workspace = true
 serde.workspace = true
 serde_json.workspace = true
 indexmap.workspace = true
-chrono = { version = "0.4", features = ["serde"] }
+chrono = { workspace = true, features = ["serde"] }
 
 [dev-dependencies]
 proptest.workspace = true

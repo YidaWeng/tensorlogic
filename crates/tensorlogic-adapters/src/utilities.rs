@@ -43,7 +43,7 @@ impl BatchOperations {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, PredicateInfo, BatchOperations};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
     ///
     /// let predicates = vec![
     ///     PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()]),
@@ -70,7 +70,7 @@ impl BatchOperations {
     /// use std::collections::HashMap;
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
     ///
     /// let mut bindings = HashMap::new();
     /// bindings.insert("x".to_string(), "Person".to_string());
@@ -103,7 +103,7 @@ impl ConversionUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, ConversionUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
     ///
     /// let summary = ConversionUtils::to_summary(&table);
     /// assert!(summary.contains("Domains: 1"));
@@ -125,8 +125,8 @@ impl ConversionUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, ConversionUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    /// table.add_domain(DomainInfo::new("Organization", 50)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+    /// table.add_domain(DomainInfo::new("Organization", 50)).expect("unwrap");
     ///
     /// let names = ConversionUtils::extract_domain_names(&table);
     /// assert_eq!(names, vec!["Organization", "Person"]);
@@ -145,8 +145,8 @@ impl ConversionUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, PredicateInfo, ConversionUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string()])).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string()])).expect("unwrap");
     ///
     /// let names = ConversionUtils::extract_predicate_names(&table);
     /// assert_eq!(names, vec!["knows"]);
@@ -170,8 +170,8 @@ impl QueryUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, PredicateInfo, QueryUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])).expect("unwrap");
     ///
     /// let predicates = QueryUtils::find_predicates_using_domain(&table, "Person");
     /// assert_eq!(predicates.len(), 1);
@@ -197,8 +197,8 @@ impl QueryUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, QueryUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    /// table.add_domain(DomainInfo::new("Unused", 10)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+    /// table.add_domain(DomainInfo::new("Unused", 10)).expect("unwrap");
     ///
     /// let unused = QueryUtils::find_unused_domains(&table);
     /// assert_eq!(unused.len(), 2); // Both are unused as no predicates defined
@@ -226,9 +226,9 @@ impl QueryUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, PredicateInfo, QueryUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])).unwrap();
-    /// table.add_predicate(PredicateInfo::new("age", vec!["Person".to_string()])).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])).expect("unwrap");
+    /// table.add_predicate(PredicateInfo::new("age", vec!["Person".to_string()])).expect("unwrap");
     ///
     /// let binary = QueryUtils::find_predicates_by_arity(&table, 2);
     /// assert_eq!(binary.len(), 1);
@@ -251,13 +251,13 @@ impl QueryUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, PredicateInfo, QueryUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])).unwrap();
-    /// table.add_predicate(PredicateInfo::new("age", vec!["Person".to_string()])).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])).expect("unwrap");
+    /// table.add_predicate(PredicateInfo::new("age", vec!["Person".to_string()])).expect("unwrap");
     ///
     /// let grouped = QueryUtils::group_predicates_by_arity(&table);
-    /// assert_eq!(grouped.get(&1).unwrap().len(), 1);
-    /// assert_eq!(grouped.get(&2).unwrap().len(), 1);
+    /// assert_eq!(grouped.get(&1).expect("unwrap").len(), 1);
+    /// assert_eq!(grouped.get(&2).expect("unwrap").len(), 1);
     /// ```
     pub fn group_predicates_by_arity(table: &SymbolTable) -> HashMap<usize, Vec<PredicateInfo>> {
         let mut groups: HashMap<usize, Vec<PredicateInfo>> = HashMap::new();
@@ -281,7 +281,7 @@ impl ValidationUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, ValidationUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
     ///
     /// assert!(ValidationUtils::is_valid(&table));
     /// ```
@@ -313,7 +313,7 @@ impl ValidationUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, ValidationUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
     ///
     /// let report = ValidationUtils::detailed_validation(&table);
     /// assert!(report.is_ok());
@@ -332,8 +332,8 @@ impl ValidationUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, PredicateInfo, ValidationUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string()])).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string()])).expect("unwrap");
     ///
     /// assert!(ValidationUtils::is_domain_used(&table, "Person"));
     /// assert!(!ValidationUtils::is_domain_used(&table, "Nonexistent"));
@@ -369,7 +369,7 @@ impl StatisticsUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, StatisticsUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
     ///
     /// let stats = StatisticsUtils::compute_statistics(&table);
     /// assert!(stats.is_ok());
@@ -386,8 +386,8 @@ impl StatisticsUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, StatisticsUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    /// table.add_domain(DomainInfo::new("Organization", 50)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+    /// table.add_domain(DomainInfo::new("Organization", 50)).expect("unwrap");
     ///
     /// let total = StatisticsUtils::total_domain_cardinality(&table);
     /// assert_eq!(total, 150);
@@ -404,9 +404,9 @@ impl StatisticsUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, PredicateInfo, StatisticsUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])).unwrap();
-    /// table.add_predicate(PredicateInfo::new("age", vec!["Person".to_string()])).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])).expect("unwrap");
+    /// table.add_predicate(PredicateInfo::new("age", vec!["Person".to_string()])).expect("unwrap");
     ///
     /// let avg = StatisticsUtils::average_predicate_arity(&table);
     /// assert_eq!(avg, 1.5);
@@ -429,8 +429,8 @@ impl StatisticsUtils {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, PredicateInfo, StatisticsUtils};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
+    /// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])).expect("unwrap");
     ///
     /// let usage = StatisticsUtils::domain_usage_counts(&table);
     /// assert_eq!(usage.get("Person"), Some(&2));
@@ -458,20 +458,22 @@ mod tests {
 
     fn create_test_table() -> SymbolTable {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
         table
             .add_domain(DomainInfo::new("Organization", 50))
-            .unwrap();
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new(
                 "knows",
                 vec!["Person".to_string(), "Person".to_string()],
             ))
-            .unwrap();
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("age", vec!["Person".to_string()]))
-            .unwrap();
-        table.bind_variable("x", "Person").unwrap();
+            .expect("unwrap");
+        table.bind_variable("x", "Person").expect("unwrap");
         table
     }
 
@@ -483,7 +485,7 @@ mod tests {
             DomainInfo::new("Organization", 50),
         ];
 
-        BatchOperations::add_domains(&mut table, domains).unwrap();
+        BatchOperations::add_domains(&mut table, domains).expect("unwrap");
         assert_eq!(table.domains.len(), 2);
     }
 

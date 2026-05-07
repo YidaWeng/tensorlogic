@@ -196,8 +196,8 @@ mod tests {
         let expr = TLExpr::pred("test", vec![Term::var("x")]);
         let versioned = VersionedExpr::new(expr.clone());
 
-        let json = versioned.to_json_pretty().unwrap();
-        let deserialized = VersionedExpr::from_json(&json).unwrap();
+        let json = versioned.to_json_pretty().expect("unwrap");
+        let deserialized = VersionedExpr::from_json(&json).expect("unwrap");
 
         assert_eq!(deserialized.version, versioned.version);
         assert_eq!(deserialized.expr, versioned.expr);
@@ -208,8 +208,8 @@ mod tests {
         let expr = TLExpr::pred("test", vec![Term::var("x")]);
         let versioned = VersionedExpr::new(expr.clone());
 
-        let binary = versioned.to_binary().unwrap();
-        let deserialized = VersionedExpr::from_binary(&binary).unwrap();
+        let binary = versioned.to_binary().expect("unwrap");
+        let deserialized = VersionedExpr::from_binary(&binary).expect("unwrap");
 
         assert_eq!(deserialized.version, versioned.version);
         assert_eq!(deserialized.expr, versioned.expr);
@@ -243,8 +243,8 @@ mod tests {
         };
         let versioned = VersionedGraph::new(graph.clone());
 
-        let json = versioned.to_json_pretty().unwrap();
-        let deserialized = VersionedGraph::from_json(&json).unwrap();
+        let json = versioned.to_json_pretty().expect("unwrap");
+        let deserialized = VersionedGraph::from_json(&json).expect("unwrap");
 
         assert_eq!(deserialized.version, versioned.version);
         assert_eq!(deserialized.graph, versioned.graph);
@@ -261,8 +261,8 @@ mod tests {
         };
         let versioned = VersionedGraph::new(graph.clone());
 
-        let binary = versioned.to_binary().unwrap();
-        let deserialized = VersionedGraph::from_binary(&binary).unwrap();
+        let binary = versioned.to_binary().expect("unwrap");
+        let deserialized = VersionedGraph::from_binary(&binary).expect("unwrap");
 
         assert_eq!(deserialized.version, versioned.version);
         assert_eq!(deserialized.graph, versioned.graph);
@@ -295,7 +295,7 @@ mod tests {
         );
         let versioned = VersionedExpr::new(expr);
 
-        let json = versioned.to_json_pretty().unwrap();
+        let json = versioned.to_json_pretty().expect("unwrap");
 
         // Check that JSON contains human-readable structure
         assert!(json.contains("version"));
@@ -312,8 +312,8 @@ mod tests {
         );
         let versioned = VersionedExpr::new(expr);
 
-        let json = versioned.to_json_compact().unwrap();
-        let binary = versioned.to_binary().unwrap();
+        let json = versioned.to_json_compact().expect("unwrap");
+        let binary = versioned.to_binary().expect("unwrap");
 
         // Binary should typically be smaller than JSON
         // (though not guaranteed for very small structures)

@@ -19,7 +19,7 @@ fn main() {
 
     // Create sample tensors
     let data: Vec<f64> = (0..100).map(|i| (i as f64 - 50.0) * 0.1).collect();
-    let tensor = ArrayD::from_shape_vec(vec![100], data).unwrap();
+    let tensor = ArrayD::from_shape_vec(vec![100], data).expect("unwrap");
 
     println!("1. Original Tensor");
     println!("   --------------");
@@ -121,17 +121,17 @@ fn main() {
         vec![50],
         (0..50).map(|i| (i as f64 - 25.0) * 0.05).collect(),
     )
-    .unwrap();
+    .expect("unwrap");
     let sample2 = ArrayD::from_shape_vec(
         vec![50],
         (0..50).map(|i| (i as f64 - 20.0) * 0.08).collect(),
     )
-    .unwrap();
+    .expect("unwrap");
     let sample3 = ArrayD::from_shape_vec(
         vec![50],
         (0..50).map(|i| (i as f64 - 30.0) * 0.06).collect(),
     )
-    .unwrap();
+    .expect("unwrap");
 
     let samples = vec![sample1, sample2, sample3];
 
@@ -140,7 +140,7 @@ fn main() {
         QuantizationType::Int8,
         QuantizationScheme::Symmetric,
     )
-    .unwrap();
+    .expect("unwrap");
 
     println!("   Calibrated with {} samples", samples.len());
     println!("   Calibrated Scale: {:.6}", calibrated_params.scale[0]);

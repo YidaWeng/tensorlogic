@@ -414,5 +414,17 @@ pub(crate) fn substitute(expr: &TLExpr, var: &str, value: &TLExpr) -> TLExpr {
 
         // Constants remain unchanged
         TLExpr::Constant(_) => expr.clone(),
+
+        // Symbol literals are not variables — no substitution
+        TLExpr::SymbolLiteral(_) => expr.clone(),
+
+        // Pattern match — substitute in scrutinee and all arm bodies
+        TLExpr::Match { scrutinee, arms } => TLExpr::Match {
+            scrutinee: Box::new(substitute(scrutinee, var, value)),
+            arms: arms
+                .iter()
+                .map(|(pat, body)| (pat.clone(), Box::new(substitute(body, var, value))))
+                .collect(),
+        },
     }
 }

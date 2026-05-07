@@ -311,8 +311,8 @@ mod tests {
         let e_idx = graph.add_tensor("e"); // 4
 
         // Mark inputs
-        graph.add_input(a_idx).unwrap();
-        graph.add_input(b_idx).unwrap();
+        graph.add_input(a_idx).expect("unwrap");
+        graph.add_input(b_idx).expect("unwrap");
 
         // Op0: c = a + b
         graph
@@ -324,7 +324,7 @@ mod tests {
                 outputs: vec![c_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Op1: d = a * const (simplified)
         graph
@@ -336,7 +336,7 @@ mod tests {
                 outputs: vec![d_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Op2: e = c + d
         graph
@@ -348,10 +348,10 @@ mod tests {
                 outputs: vec![e_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Mark output
-        graph.add_output(e_idx).unwrap();
+        graph.add_output(e_idx).expect("unwrap");
 
         graph
     }
@@ -434,7 +434,7 @@ mod tests {
         let c_idx = graph.add_tensor("c"); // 2
         let d_idx = graph.add_tensor("d"); // 3
 
-        graph.add_input(a_idx).unwrap();
+        graph.add_input(a_idx).expect("unwrap");
 
         // Op0: b = relu(a)
         graph
@@ -446,7 +446,7 @@ mod tests {
                 outputs: vec![b_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Op1: c = sigmoid(b)
         graph
@@ -458,7 +458,7 @@ mod tests {
                 outputs: vec![c_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Op2: d = 1 - c
         graph
@@ -470,9 +470,9 @@ mod tests {
                 outputs: vec![d_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
-        graph.add_output(d_idx).unwrap();
+        graph.add_output(d_idx).expect("unwrap");
 
         let analysis = DependencyAnalysis::analyze(&graph);
 
@@ -487,10 +487,10 @@ mod tests {
         let graph = create_test_graph();
         let analysis = DependencyAnalysis::analyze(&graph);
 
-        let level0 = analysis.get_level(0).unwrap();
+        let level0 = analysis.get_level(0).expect("unwrap");
         assert_eq!(level0.len(), 2);
 
-        let level1 = analysis.get_level(1).unwrap();
+        let level1 = analysis.get_level(1).expect("unwrap");
         assert_eq!(level1.len(), 1);
 
         assert!(analysis.get_level(2).is_none());

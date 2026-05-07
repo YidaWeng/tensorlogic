@@ -177,10 +177,10 @@ impl LoggingBackend for FileLogger {
 /// use tensorlogic_train::TensorBoardLogger;
 /// use tensorlogic_train::LoggingBackend;
 ///
-/// let mut logger = TensorBoardLogger::new("./logs/run1").unwrap();
-/// logger.log_scalar("loss", 0.5, 1).unwrap();
-/// logger.log_scalar("accuracy", 0.95, 1).unwrap();
-/// logger.flush().unwrap();
+/// let mut logger = TensorBoardLogger::new("./logs/run1").expect("unwrap");
+/// logger.log_scalar("loss", 0.5, 1).expect("unwrap");
+/// logger.log_scalar("accuracy", 0.95, 1).expect("unwrap");
+/// logger.flush().expect("unwrap");
 /// ```
 #[derive(Debug)]
 pub struct TensorBoardLogger {
@@ -541,10 +541,10 @@ fn masked_crc32(data: &[u8]) -> u32 {
 /// use tensorlogic_train::CsvLogger;
 /// use tensorlogic_train::LoggingBackend;
 ///
-/// let mut logger = CsvLogger::new("/tmp/metrics.csv").unwrap();
-/// logger.log_scalar("loss", 0.5, 1).unwrap();
-/// logger.log_scalar("accuracy", 0.95, 1).unwrap();
-/// logger.flush().unwrap();
+/// let mut logger = CsvLogger::new("/tmp/metrics.csv").expect("unwrap");
+/// logger.log_scalar("loss", 0.5, 1).expect("unwrap");
+/// logger.log_scalar("accuracy", 0.95, 1).expect("unwrap");
+/// logger.flush().expect("unwrap");
 /// ```
 #[derive(Debug)]
 pub struct CsvLogger {
@@ -626,10 +626,10 @@ impl Clone for CsvLogger {
 /// use tensorlogic_train::JsonlLogger;
 /// use tensorlogic_train::LoggingBackend;
 ///
-/// let mut logger = JsonlLogger::new("/tmp/metrics.jsonl").unwrap();
-/// logger.log_scalar("loss", 0.5, 1).unwrap();
-/// logger.log_scalar("accuracy", 0.95, 1).unwrap();
-/// logger.flush().unwrap();
+/// let mut logger = JsonlLogger::new("/tmp/metrics.jsonl").expect("unwrap");
+/// logger.log_scalar("loss", 0.5, 1).expect("unwrap");
+/// logger.log_scalar("accuracy", 0.95, 1).expect("unwrap");
+/// logger.flush().expect("unwrap");
 /// ```
 #[derive(Debug)]
 pub struct JsonlLogger {
@@ -869,17 +869,17 @@ mod tests {
         let mut logger = ConsoleLogger::new();
 
         // These should not fail
-        logger.log_scalar("loss", 0.5, 1).unwrap();
-        logger.log_text("Test message").unwrap();
-        logger.flush().unwrap();
+        logger.log_scalar("loss", 0.5, 1).expect("unwrap");
+        logger.log_text("Test message").expect("unwrap");
+        logger.flush().expect("unwrap");
     }
 
     #[test]
     fn test_console_logger_without_timestamp() {
         let mut logger = ConsoleLogger::without_timestamp();
 
-        logger.log_scalar("accuracy", 0.95, 10).unwrap();
-        logger.log_text("Another test").unwrap();
+        logger.log_scalar("accuracy", 0.95, 10).expect("unwrap");
+        logger.log_text("Another test").expect("unwrap");
     }
 
     #[test]
@@ -890,24 +890,24 @@ mod tests {
         // Clean up if file exists
         let _ = fs::remove_file(&log_path);
 
-        let mut logger = FileLogger::new(&log_path).unwrap();
+        let mut logger = FileLogger::new(&log_path).expect("unwrap");
 
-        logger.log_scalar("loss", 0.5, 1).unwrap();
-        logger.log_scalar("accuracy", 0.9, 1).unwrap();
-        logger.log_text("Training started").unwrap();
-        logger.flush().unwrap();
+        logger.log_scalar("loss", 0.5, 1).expect("unwrap");
+        logger.log_scalar("accuracy", 0.9, 1).expect("unwrap");
+        logger.log_text("Training started").expect("unwrap");
+        logger.flush().expect("unwrap");
 
         // Verify file was created
         assert!(log_path.exists());
 
         // Read and verify contents
-        let contents = fs::read_to_string(&log_path).unwrap();
+        let contents = fs::read_to_string(&log_path).expect("unwrap");
         assert!(contents.contains("loss = 0.500000"));
         assert!(contents.contains("accuracy = 0.900000"));
         assert!(contents.contains("Training started"));
 
         // Clean up
-        fs::remove_file(&log_path).unwrap();
+        fs::remove_file(&log_path).expect("unwrap");
     }
 
     #[test]
@@ -917,25 +917,25 @@ mod tests {
 
         // Create file with some content
         {
-            let mut logger = FileLogger::new(&log_path).unwrap();
-            logger.log_text("Old content").unwrap();
-            logger.flush().unwrap();
+            let mut logger = FileLogger::new(&log_path).expect("unwrap");
+            logger.log_text("Old content").expect("unwrap");
+            logger.flush().expect("unwrap");
         }
 
         // Truncate and write new content
         {
-            let mut logger = FileLogger::new_truncate(&log_path).unwrap();
-            logger.log_text("New content").unwrap();
-            logger.flush().unwrap();
+            let mut logger = FileLogger::new_truncate(&log_path).expect("unwrap");
+            logger.log_text("New content").expect("unwrap");
+            logger.flush().expect("unwrap");
         }
 
         // Verify old content is gone
-        let contents = fs::read_to_string(&log_path).unwrap();
+        let contents = fs::read_to_string(&log_path).expect("unwrap");
         assert!(!contents.contains("Old content"));
         assert!(contents.contains("New content"));
 
         // Clean up
-        fs::remove_file(&log_path).unwrap();
+        fs::remove_file(&log_path).expect("unwrap");
     }
 
     #[test]
@@ -946,21 +946,21 @@ mod tests {
         // Clean up if directory exists
         let _ = fs::remove_dir_all(&tb_dir);
 
-        let mut logger = TensorBoardLogger::new(&tb_dir).unwrap();
+        let mut logger = TensorBoardLogger::new(&tb_dir).expect("unwrap");
 
         // Directory should be created
         assert!(tb_dir.exists());
 
         // Log some scalars
-        logger.log_scalar("loss", 0.5, 1).unwrap();
-        logger.log_scalar("accuracy", 0.95, 1).unwrap();
-        logger.log_text("Test message").unwrap();
+        logger.log_scalar("loss", 0.5, 1).expect("unwrap");
+        logger.log_scalar("accuracy", 0.95, 1).expect("unwrap");
+        logger.log_text("Test message").expect("unwrap");
 
         // Log a histogram
         let values = vec![0.1, 0.2, 0.3, 0.4, 0.5];
-        logger.log_histogram("weights", &values, 1).unwrap();
+        logger.log_histogram("weights", &values, 1).expect("unwrap");
 
-        logger.flush().unwrap();
+        logger.flush().expect("unwrap");
 
         // Verify event file was created
         let event_file = logger.file_path();
@@ -968,7 +968,7 @@ mod tests {
         assert!(event_file.to_string_lossy().contains("tfevents"));
 
         // Clean up
-        fs::remove_dir_all(&tb_dir).unwrap();
+        fs::remove_dir_all(&tb_dir).expect("unwrap");
     }
 
     #[test]
@@ -979,25 +979,25 @@ mod tests {
         // Clean up if file exists
         let _ = fs::remove_file(&csv_path);
 
-        let mut logger = CsvLogger::new(&csv_path).unwrap();
+        let mut logger = CsvLogger::new(&csv_path).expect("unwrap");
 
-        logger.log_scalar("loss", 0.5, 1).unwrap();
-        logger.log_scalar("accuracy", 0.95, 2).unwrap();
-        logger.log_text("Training started").unwrap();
-        logger.flush().unwrap();
+        logger.log_scalar("loss", 0.5, 1).expect("unwrap");
+        logger.log_scalar("accuracy", 0.95, 2).expect("unwrap");
+        logger.log_text("Training started").expect("unwrap");
+        logger.flush().expect("unwrap");
 
         // Verify file was created
         assert!(csv_path.exists());
 
         // Read and verify contents
-        let contents = fs::read_to_string(&csv_path).unwrap();
+        let contents = fs::read_to_string(&csv_path).expect("unwrap");
         assert!(contents.contains("step,metric,value,timestamp")); // Header
         assert!(contents.contains("1,loss,0.500000"));
         assert!(contents.contains("2,accuracy,0.950000"));
         assert!(contents.contains("Training started"));
 
         // Clean up
-        fs::remove_file(&csv_path).unwrap();
+        fs::remove_file(&csv_path).expect("unwrap");
     }
 
     #[test]
@@ -1008,18 +1008,18 @@ mod tests {
         // Clean up if file exists
         let _ = fs::remove_file(&jsonl_path);
 
-        let mut logger = JsonlLogger::new(&jsonl_path).unwrap();
+        let mut logger = JsonlLogger::new(&jsonl_path).expect("unwrap");
 
-        logger.log_scalar("loss", 0.5, 1).unwrap();
-        logger.log_scalar("accuracy", 0.95, 2).unwrap();
-        logger.log_text("Training started").unwrap();
-        logger.flush().unwrap();
+        logger.log_scalar("loss", 0.5, 1).expect("unwrap");
+        logger.log_scalar("accuracy", 0.95, 2).expect("unwrap");
+        logger.log_text("Training started").expect("unwrap");
+        logger.flush().expect("unwrap");
 
         // Verify file was created
         assert!(jsonl_path.exists());
 
         // Read and verify contents
-        let contents = fs::read_to_string(&jsonl_path).unwrap();
+        let contents = fs::read_to_string(&jsonl_path).expect("unwrap");
         let lines: Vec<&str> = contents.lines().collect();
         assert_eq!(lines.len(), 3);
 
@@ -1037,7 +1037,7 @@ mod tests {
         assert!(lines[2].contains("Training started"));
 
         // Clean up
-        fs::remove_file(&jsonl_path).unwrap();
+        fs::remove_file(&jsonl_path).expect("unwrap");
     }
 
     #[test]
@@ -1046,11 +1046,11 @@ mod tests {
         let csv_path = temp_dir.join("test_csv_path.csv");
         let _ = fs::remove_file(&csv_path);
 
-        let logger = CsvLogger::new(&csv_path).unwrap();
+        let logger = CsvLogger::new(&csv_path).expect("unwrap");
         assert_eq!(logger.path(), csv_path.as_path());
 
         // Clean up
-        fs::remove_file(&csv_path).unwrap();
+        fs::remove_file(&csv_path).expect("unwrap");
     }
 
     #[test]
@@ -1059,11 +1059,11 @@ mod tests {
         let jsonl_path = temp_dir.join("test_jsonl_path.jsonl");
         let _ = fs::remove_file(&jsonl_path);
 
-        let logger = JsonlLogger::new(&jsonl_path).unwrap();
+        let logger = JsonlLogger::new(&jsonl_path).expect("unwrap");
         assert_eq!(logger.path(), jsonl_path.as_path());
 
         // Clean up
-        fs::remove_file(&jsonl_path).unwrap();
+        fs::remove_file(&jsonl_path).expect("unwrap");
     }
 
     #[test]
@@ -1074,8 +1074,8 @@ mod tests {
         logger.add_backend(ConsoleLogger::without_timestamp());
         assert_eq!(logger.num_backends(), 1);
 
-        logger.log_metric("loss", 0.5).unwrap();
-        logger.log_message("Epoch 1").unwrap();
+        logger.log_metric("loss", 0.5).expect("unwrap");
+        logger.log_message("Epoch 1").expect("unwrap");
 
         assert_eq!(logger.current_step(), 0);
         logger.step();
@@ -1084,7 +1084,7 @@ mod tests {
         logger.set_step(10);
         assert_eq!(logger.current_step(), 10);
 
-        logger.flush().unwrap();
+        logger.flush().expect("unwrap");
     }
 
     #[test]
@@ -1098,10 +1098,10 @@ mod tests {
         logger.accumulate_metric("batch_loss", 0.6);
 
         // Log accumulated (should be average: 0.5)
-        logger.log_accumulated_metrics().unwrap();
+        logger.log_accumulated_metrics().expect("unwrap");
 
         // Accumulation should be cleared
-        logger.log_accumulated_metrics().unwrap(); // Should not fail even if empty
+        logger.log_accumulated_metrics().expect("unwrap"); // Should not fail even if empty
     }
 
     #[test]
@@ -1112,8 +1112,8 @@ mod tests {
 
         assert_eq!(logger.num_backends(), 2);
 
-        logger.log_metric("loss", 0.5).unwrap();
-        logger.flush().unwrap();
+        logger.log_metric("loss", 0.5).expect("unwrap");
+        logger.flush().expect("unwrap");
     }
 
     #[test]
@@ -1122,7 +1122,7 @@ mod tests {
         logger.add_backend(ConsoleLogger::without_timestamp());
 
         // Log without accumulating anything
-        logger.log_accumulated_metrics().unwrap();
+        logger.log_accumulated_metrics().expect("unwrap");
     }
 
     #[test]
@@ -1131,11 +1131,11 @@ mod tests {
         let log_path = temp_dir.join("test_path.log");
         let _ = fs::remove_file(&log_path);
 
-        let logger = FileLogger::new(&log_path).unwrap();
+        let logger = FileLogger::new(&log_path).expect("unwrap");
         assert_eq!(logger.path(), log_path.as_path());
 
         // Clean up
-        fs::remove_file(&log_path).unwrap();
+        fs::remove_file(&log_path).expect("unwrap");
     }
 
     #[test]
@@ -1144,10 +1144,10 @@ mod tests {
         let tb_dir = temp_dir.join("test_tb_path");
         let _ = fs::remove_dir_all(&tb_dir);
 
-        let logger = TensorBoardLogger::new(&tb_dir).unwrap();
+        let logger = TensorBoardLogger::new(&tb_dir).expect("unwrap");
         assert_eq!(logger.log_dir(), tb_dir.as_path());
 
         // Clean up
-        fs::remove_dir_all(&tb_dir).unwrap();
+        fs::remove_dir_all(&tb_dir).expect("unwrap");
     }
 }

@@ -23,12 +23,12 @@ fn main() {
     println!("1. K-Fold Cross-Validation");
     println!("   Split data into K equally-sized folds\n");
 
-    let kfold = KFold::new(5).unwrap();
+    let kfold = KFold::new(5).expect("unwrap");
     println!("   Configuration: {} folds", kfold.num_splits());
     println!("   Dataset size: {} samples\n", n_samples);
 
     for fold in 0..3 {
-        let (train_idx, val_idx) = kfold.get_split(fold, n_samples).unwrap();
+        let (train_idx, val_idx) = kfold.get_split(fold, n_samples).expect("unwrap");
 
         println!("   Fold {}:", fold);
         println!("     Training: {} samples", train_idx.len());
@@ -37,9 +37,9 @@ fn main() {
     }
 
     // With shuffling
-    let kfold_shuffled = KFold::new(5).unwrap().with_shuffle(42);
+    let kfold_shuffled = KFold::new(5).expect("unwrap").with_shuffle(42);
     println!("   With shuffling (seed=42):");
-    let (_train, val) = kfold_shuffled.get_split(0, n_samples).unwrap();
+    let (_train, val) = kfold_shuffled.get_split(0, n_samples).expect("unwrap");
     println!("     Fold 0 validation indices: {:?}\n", val);
 
     // Example 2: Stratified K-Fold
@@ -59,11 +59,13 @@ fn main() {
     println!("     Class 2: 2 samples (10%)");
     println!("     Total: 20 samples\n");
 
-    let stratified = StratifiedKFold::new(5).unwrap();
+    let stratified = StratifiedKFold::new(5).expect("unwrap");
 
     println!("   Stratified splits (5 folds):");
     for fold in 0..3 {
-        let (_train_idx, val_idx) = stratified.get_stratified_split(fold, &labels).unwrap();
+        let (_train_idx, val_idx) = stratified
+            .get_stratified_split(fold, &labels)
+            .expect("unwrap");
 
         // Count classes in validation set
         let mut class_counts = HashMap::new();
@@ -93,21 +95,25 @@ fn main() {
     println!("3. Time Series Split");
     println!("   Respects temporal order (no data leakage from future)\n");
 
-    let ts_split = TimeSeriesSplit::new(5).unwrap();
+    let ts_split = TimeSeriesSplit::new(5).expect("unwrap");
 
     println!("   Temporal dataset: 30 time steps");
     println!("   Configuration: 5 splits\n");
 
     for fold in 0..5 {
-        let (train_idx, val_idx) = ts_split.get_split(fold, 30).unwrap();
+        let (train_idx, val_idx) = ts_split.get_split(fold, 30).expect("unwrap");
 
         if !train_idx.is_empty() && !val_idx.is_empty() {
             let train_range = format!(
                 "{}-{}",
-                train_idx.first().unwrap(),
-                train_idx.last().unwrap()
+                train_idx.first().expect("unwrap"),
+                train_idx.last().expect("unwrap")
             );
-            let val_range = format!("{}-{}", val_idx.first().unwrap(), val_idx.last().unwrap());
+            let val_range = format!(
+                "{}-{}",
+                val_idx.first().expect("unwrap"),
+                val_idx.last().expect("unwrap")
+            );
 
             println!("   Fold {}:", fold);
             println!(
@@ -121,11 +127,13 @@ fn main() {
     }
 
     // With sliding window
-    let ts_split_window = TimeSeriesSplit::new(5).unwrap().with_max_train_size(10);
+    let ts_split_window = TimeSeriesSplit::new(5)
+        .expect("unwrap")
+        .with_max_train_size(10);
 
     println!("   With sliding window (max_train_size=10):");
     for fold in 2..4 {
-        let (train_idx, _val_idx) = ts_split_window.get_split(fold, 30).unwrap();
+        let (train_idx, _val_idx) = ts_split_window.get_split(fold, 30).expect("unwrap");
 
         println!("   Fold {}: Train size = {} (≤10)", fold, train_idx.len());
     }
@@ -141,7 +149,7 @@ fn main() {
     println!("   Number of folds: {} (= n_samples)\n", small_n);
 
     for fold in 0..4 {
-        let (train_idx, val_idx) = loo.get_split(fold, small_n).unwrap();
+        let (train_idx, val_idx) = loo.get_split(fold, small_n).expect("unwrap");
 
         println!("   Fold {}:", fold);
         println!("     Train: {} samples", train_idx.len());
@@ -177,7 +185,7 @@ fn main() {
     println!("     Std accuracy: {:.4}", cv_results.std_score());
     println!(
         "     Mean F1: {:.4}",
-        cv_results.mean_metric("f1_score").unwrap()
+        cv_results.mean_metric("f1_score").expect("unwrap")
     );
     println!(
         "     95% CI: [{:.4}, {:.4}]",

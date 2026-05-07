@@ -611,7 +611,10 @@ mod tests {
 
         // Should return error about not being implemented
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("shift"));
+        assert!(result
+            .expect_err("expected error for next/shift")
+            .to_string()
+            .contains("shift"));
     }
 
     #[test]
@@ -625,7 +628,10 @@ mod tests {
 
         // Should return error about not being implemented
         assert!(result.is_err());
-        assert!(result.unwrap_err().to_string().contains("scan"));
+        assert!(result
+            .expect_err("expected error for until/scan")
+            .to_string()
+            .contains("scan"));
     }
 
     #[test]

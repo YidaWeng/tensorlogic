@@ -21,7 +21,9 @@ fn generate_dataset(dim: usize, count: usize) -> Vec<Vec<f64>> {
 fn generate_kernel_matrix(size: usize) -> Vec<Vec<f64>> {
     let data = generate_dataset(50, size);
     let kernel = LinearKernel::new();
-    kernel.compute_matrix(&data).unwrap()
+    kernel
+        .compute_matrix(&data)
+        .expect("kernel matrix computation should succeed")
 }
 
 /// Benchmark weighted sum kernel with 2 components
@@ -30,13 +32,20 @@ fn bench_weighted_sum_two(c: &mut Criterion) {
 
     let data = generate_dataset(50, 2);
     let k1 = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
-    let k2 = Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()) as Box<dyn Kernel>;
+    let k2 = Box::new(
+        RbfKernel::new(RbfKernelConfig::new(0.5)).expect("RBF kernel construction should succeed"),
+    ) as Box<dyn Kernel>;
     let weights = vec![0.7, 0.3];
-    let kernel = WeightedSumKernel::new(vec![k1, k2], weights).unwrap();
+    let kernel = WeightedSumKernel::new(vec![k1, k2], weights)
+        .expect("weighted sum kernel construction should succeed");
 
     group.bench_function("compute", |b| {
         b.iter(|| {
-            black_box(kernel.compute(&data[0], &data[1]).unwrap());
+            black_box(
+                kernel
+                    .compute(&data[0], &data[1])
+                    .expect("kernel compute should succeed"),
+            );
         });
     });
 
@@ -62,14 +71,19 @@ fn bench_weighted_sum_many(c: &mut Criterion) {
             weights.push(1.0 / (*num_kernels as f64));
         }
 
-        let kernel = WeightedSumKernel::new(kernels, weights).unwrap();
+        let kernel = WeightedSumKernel::new(kernels, weights)
+            .expect("weighted sum kernel construction should succeed");
 
         group.bench_with_input(
             BenchmarkId::from_parameter(num_kernels),
             num_kernels,
             |b, _| {
                 b.iter(|| {
-                    black_box(kernel.compute(&data[0], &data[1]).unwrap());
+                    black_box(
+                        kernel
+                            .compute(&data[0], &data[1])
+                            .expect("kernel compute should succeed"),
+                    );
                 });
             },
         );
@@ -86,14 +100,22 @@ fn bench_weighted_sum_matrix(c: &mut Criterion) {
         let data = generate_dataset(50, *size);
 
         let k1 = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
-        let k2 = Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()) as Box<dyn Kernel>;
+        let k2 = Box::new(
+            RbfKernel::new(RbfKernelConfig::new(0.5))
+                .expect("RBF kernel construction should succeed"),
+        ) as Box<dyn Kernel>;
         let weights = vec![0.7, 0.3];
-        let kernel = WeightedSumKernel::new(vec![k1, k2], weights).unwrap();
+        let kernel = WeightedSumKernel::new(vec![k1, k2], weights)
+            .expect("weighted sum kernel construction should succeed");
 
         group.throughput(Throughput::Elements((size * size) as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute_matrix(&data).unwrap());
+                black_box(
+                    kernel
+                        .compute_matrix(&data)
+                        .expect("kernel matrix compute should succeed"),
+                );
             });
         });
     }
@@ -108,11 +130,16 @@ fn bench_product_kernel_two(c: &mut Criterion) {
     let data = generate_dataset(50, 2);
     let k1 = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
     let k2 = Box::new(CosineKernel::new()) as Box<dyn Kernel>;
-    let kernel = ProductKernel::new(vec![k1, k2]).unwrap();
+    let kernel =
+        ProductKernel::new(vec![k1, k2]).expect("product kernel construction should succeed");
 
     group.bench_function("compute", |b| {
         b.iter(|| {
-            black_box(kernel.compute(&data[0], &data[1]).unwrap());
+            black_box(
+                kernel
+                    .compute(&data[0], &data[1])
+                    .expect("kernel compute should succeed"),
+            );
         });
     });
 
@@ -134,18 +161,26 @@ fn bench_product_kernel_many(c: &mut Criterion) {
             } else if i % 3 == 1 {
                 kernels.push(Box::new(CosineKernel::new()));
             } else {
-                kernels.push(Box::new(PolynomialKernel::new(2, 1.0).unwrap()));
+                kernels.push(Box::new(
+                    PolynomialKernel::new(2, 1.0)
+                        .expect("polynomial kernel construction should succeed"),
+                ));
             }
         }
 
-        let kernel = ProductKernel::new(kernels).unwrap();
+        let kernel =
+            ProductKernel::new(kernels).expect("product kernel construction should succeed");
 
         group.bench_with_input(
             BenchmarkId::from_parameter(num_kernels),
             num_kernels,
             |b, _| {
                 b.iter(|| {
-                    black_box(kernel.compute(&data[0], &data[1]).unwrap());
+                    black_box(
+                        kernel
+                            .compute(&data[0], &data[1])
+                            .expect("kernel compute should succeed"),
+                    );
                 });
             },
         );
@@ -163,12 +198,17 @@ fn bench_product_kernel_matrix(c: &mut Criterion) {
 
         let k1 = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
         let k2 = Box::new(CosineKernel::new()) as Box<dyn Kernel>;
-        let kernel = ProductKernel::new(vec![k1, k2]).unwrap();
+        let kernel =
+            ProductKernel::new(vec![k1, k2]).expect("product kernel construction should succeed");
 
         group.throughput(Throughput::Elements((size * size) as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute_matrix(&data).unwrap());
+                black_box(
+                    kernel
+                        .compute_matrix(&data)
+                        .expect("kernel matrix compute should succeed"),
+                );
             });
         });
     }
@@ -187,7 +227,10 @@ fn bench_kernel_alignment(c: &mut Criterion) {
         group.throughput(Throughput::Elements((size * size) as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
-                black_box(KernelAlignment::compute_alignment(&k1, &k2).unwrap());
+                black_box(
+                    KernelAlignment::compute_alignment(&k1, &k2)
+                        .expect("kernel alignment computation should succeed"),
+                );
             });
         });
     }
@@ -206,7 +249,10 @@ fn bench_kernel_alignment_sizes(c: &mut Criterion) {
         group.throughput(Throughput::Elements((size * size) as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
-                black_box(KernelAlignment::compute_alignment(&k1, &k2).unwrap());
+                black_box(
+                    KernelAlignment::compute_alignment(&k1, &k2)
+                        .expect("kernel alignment computation should succeed"),
+                );
             });
         });
     }
@@ -224,37 +270,62 @@ fn bench_composition_overhead(c: &mut Criterion) {
     group.bench_function("linear_only", |b| {
         let kernel = LinearKernel::new();
         b.iter(|| {
-            black_box(kernel.compute_matrix(&data).unwrap());
+            black_box(
+                kernel
+                    .compute_matrix(&data)
+                    .expect("kernel matrix compute should succeed"),
+            );
         });
     });
 
     group.bench_function("rbf_only", |b| {
-        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5))
+            .expect("RBF kernel construction should succeed");
         b.iter(|| {
-            black_box(kernel.compute_matrix(&data).unwrap());
+            black_box(
+                kernel
+                    .compute_matrix(&data)
+                    .expect("kernel matrix compute should succeed"),
+            );
         });
     });
 
     // Weighted sum (70% linear + 30% RBF)
     group.bench_function("weighted_sum", |b| {
         let k1 = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
-        let k2 = Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()) as Box<dyn Kernel>;
+        let k2 = Box::new(
+            RbfKernel::new(RbfKernelConfig::new(0.5))
+                .expect("RBF kernel construction should succeed"),
+        ) as Box<dyn Kernel>;
         let weights = vec![0.7, 0.3];
-        let kernel = WeightedSumKernel::new(vec![k1, k2], weights).unwrap();
+        let kernel = WeightedSumKernel::new(vec![k1, k2], weights)
+            .expect("weighted sum kernel construction should succeed");
 
         b.iter(|| {
-            black_box(kernel.compute_matrix(&data).unwrap());
+            black_box(
+                kernel
+                    .compute_matrix(&data)
+                    .expect("kernel matrix compute should succeed"),
+            );
         });
     });
 
     // Product kernel (linear * RBF)
     group.bench_function("product", |b| {
         let k1 = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
-        let k2 = Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()) as Box<dyn Kernel>;
-        let kernel = ProductKernel::new(vec![k1, k2]).unwrap();
+        let k2 = Box::new(
+            RbfKernel::new(RbfKernelConfig::new(0.5))
+                .expect("RBF kernel construction should succeed"),
+        ) as Box<dyn Kernel>;
+        let kernel =
+            ProductKernel::new(vec![k1, k2]).expect("product kernel construction should succeed");
 
         b.iter(|| {
-            black_box(kernel.compute_matrix(&data).unwrap());
+            black_box(
+                kernel
+                    .compute_matrix(&data)
+                    .expect("kernel matrix compute should succeed"),
+            );
         });
     });
 
@@ -270,14 +341,24 @@ fn bench_complex_composition(c: &mut Criterion) {
     // Nested composition: (0.5*Linear + 0.3*RBF) * Cosine
     group.bench_function("nested_composition", |b| {
         let k1 = Box::new(LinearKernel::new()) as Box<dyn Kernel>;
-        let k2 = Box::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()) as Box<dyn Kernel>;
-        let weighted = Box::new(WeightedSumKernel::new(vec![k1, k2], vec![0.5, 0.3]).unwrap())
-            as Box<dyn Kernel>;
+        let k2 = Box::new(
+            RbfKernel::new(RbfKernelConfig::new(0.5))
+                .expect("RBF kernel construction should succeed"),
+        ) as Box<dyn Kernel>;
+        let weighted = Box::new(
+            WeightedSumKernel::new(vec![k1, k2], vec![0.5, 0.3])
+                .expect("weighted sum kernel construction should succeed"),
+        ) as Box<dyn Kernel>;
         let k3 = Box::new(CosineKernel::new()) as Box<dyn Kernel>;
-        let kernel = ProductKernel::new(vec![weighted, k3]).unwrap();
+        let kernel = ProductKernel::new(vec![weighted, k3])
+            .expect("product kernel construction should succeed");
 
         b.iter(|| {
-            black_box(kernel.compute_matrix(&data).unwrap());
+            black_box(
+                kernel
+                    .compute_matrix(&data)
+                    .expect("kernel matrix compute should succeed"),
+            );
         });
     });
 

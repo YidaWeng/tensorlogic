@@ -774,7 +774,7 @@ mod tests {
         let mut ctx = LinearContext::new();
         let ty = LinearType::linear("Tensor");
 
-        ctx.create_resource("x", ty, "line 1").unwrap();
+        ctx.create_resource("x", ty, "line 1").expect("unwrap");
 
         assert!(ctx.get_resource("x").is_some());
     }
@@ -784,10 +784,10 @@ mod tests {
         let mut ctx = LinearContext::new();
         let ty = LinearType::linear("Tensor");
 
-        ctx.create_resource("x", ty, "line 1").unwrap();
-        ctx.use_resource("x", "line 5").unwrap();
+        ctx.create_resource("x", ty, "line 1").expect("unwrap");
+        ctx.use_resource("x", "line 5").expect("unwrap");
 
-        let resource = ctx.get_resource("x").unwrap();
+        let resource = ctx.get_resource("x").expect("unwrap");
         assert_eq!(resource.use_count, 1);
     }
 
@@ -796,8 +796,8 @@ mod tests {
         let mut ctx = LinearContext::new();
         let ty = LinearType::linear("Tensor");
 
-        ctx.create_resource("x", ty, "line 1").unwrap();
-        ctx.use_resource("x", "line 5").unwrap();
+        ctx.create_resource("x", ty, "line 1").expect("unwrap");
+        ctx.use_resource("x", "line 5").expect("unwrap");
 
         let result = ctx.use_resource("x", "line 10");
         assert!(matches!(result, Err(LinearError::MultipleUse { .. })));
@@ -808,8 +808,8 @@ mod tests {
         let mut ctx = LinearContext::new();
         let ty = LinearType::affine("Handle");
 
-        ctx.create_resource("h", ty, "line 1").unwrap();
-        ctx.drop_resource("h").unwrap();
+        ctx.create_resource("h", ty, "line 1").expect("unwrap");
+        ctx.drop_resource("h").expect("unwrap");
     }
 
     #[test]
@@ -817,7 +817,7 @@ mod tests {
         let mut ctx = LinearContext::new();
         let ty = LinearType::linear("Tensor");
 
-        ctx.create_resource("x", ty, "line 1").unwrap();
+        ctx.create_resource("x", ty, "line 1").expect("unwrap");
 
         let result = ctx.validate_all();
         assert!(result.is_err());
@@ -828,12 +828,12 @@ mod tests {
         let mut ctx = LinearContext::new();
         let ty = LinearType::relevant("Value");
 
-        ctx.create_resource("v", ty, "line 1").unwrap();
-        ctx.use_resource("v", "line 5").unwrap();
-        ctx.use_resource("v", "line 10").unwrap();
-        ctx.use_resource("v", "line 15").unwrap();
+        ctx.create_resource("v", ty, "line 1").expect("unwrap");
+        ctx.use_resource("v", "line 5").expect("unwrap");
+        ctx.use_resource("v", "line 10").expect("unwrap");
+        ctx.use_resource("v", "line 15").expect("unwrap");
 
-        let resource = ctx.get_resource("v").unwrap();
+        let resource = ctx.get_resource("v").expect("unwrap");
         assert_eq!(resource.use_count, 3);
     }
 
@@ -842,11 +842,11 @@ mod tests {
         let mut ctx = LinearContext::new();
         let ty = LinearType::linear("Tensor");
 
-        ctx.create_resource("x", ty, "line 1").unwrap();
-        ctx.move_resource("x", "y", "line 5").unwrap();
+        ctx.create_resource("x", ty, "line 1").expect("unwrap");
+        ctx.move_resource("x", "y", "line 5").expect("unwrap");
 
         // x should be moved
-        let x = ctx.get_resource("x").unwrap();
+        let x = ctx.get_resource("x").expect("unwrap");
         assert_eq!(x.ownership, Ownership::Moved);
     }
 
@@ -855,8 +855,8 @@ mod tests {
         let mut ctx = LinearContext::new();
         let ty = LinearType::linear("Tensor");
 
-        ctx.create_resource("x", ty, "line 1").unwrap();
-        ctx.move_resource("x", "y", "line 5").unwrap();
+        ctx.create_resource("x", ty, "line 1").expect("unwrap");
+        ctx.move_resource("x", "y", "line 5").expect("unwrap");
 
         let result = ctx.use_resource("x", "line 10");
         assert!(matches!(result, Err(LinearError::UseAfterMove { .. })));
@@ -869,10 +869,10 @@ mod tests {
         ctx.enter_scope();
 
         let ty = LinearType::linear("Tensor");
-        ctx.create_resource("x", ty, "line 1").unwrap();
-        ctx.use_resource("x", "line 5").unwrap();
+        ctx.create_resource("x", ty, "line 1").expect("unwrap");
+        ctx.use_resource("x", "line 5").expect("unwrap");
 
-        ctx.exit_scope().unwrap();
+        ctx.exit_scope().expect("unwrap");
     }
 
     #[test]
@@ -882,7 +882,7 @@ mod tests {
         ctx.enter_scope();
 
         let ty = LinearType::linear("Tensor");
-        ctx.create_resource("x", ty, "line 1").unwrap();
+        ctx.create_resource("x", ty, "line 1").expect("unwrap");
         // Not using x
 
         let result = ctx.exit_scope();
@@ -894,14 +894,14 @@ mod tests {
         let mut ctx = LinearContext::new();
 
         ctx.create_resource("a", LinearType::linear("T"), "1")
-            .unwrap();
+            .expect("unwrap");
         ctx.create_resource("b", LinearType::linear("T"), "2")
-            .unwrap();
+            .expect("unwrap");
         ctx.create_resource("c", LinearType::linear("T"), "3")
-            .unwrap();
+            .expect("unwrap");
 
-        ctx.use_resource("a", "10").unwrap();
-        ctx.move_resource("b", "d", "20").unwrap();
+        ctx.use_resource("a", "10").expect("unwrap");
+        ctx.move_resource("b", "d", "20").expect("unwrap");
 
         let stats = ctx.statistics();
         assert_eq!(stats.total, 3);
@@ -918,7 +918,7 @@ mod tests {
         assert!(registry.contains("FileHandle"));
         assert!(registry.contains("NetworkConnection"));
 
-        let gpu = registry.get("GpuTensor").unwrap();
+        let gpu = registry.get("GpuTensor").expect("unwrap");
         assert_eq!(gpu.kind, LinearKind::Linear);
     }
 
@@ -927,7 +927,8 @@ mod tests {
         let mut ctx = LinearContext::new();
         let ty = LinearType::linear("Tensor");
 
-        ctx.create_resource("x", ty.clone(), "line 1").unwrap();
+        ctx.create_resource("x", ty.clone(), "line 1")
+            .expect("unwrap");
         let result = ctx.create_resource("x", ty, "line 5");
 
         assert!(matches!(result, Err(LinearError::DuplicateResource { .. })));

@@ -570,7 +570,7 @@ impl SparseTensor {
         if self.csr.is_none() {
             self.csr = Some(SparseCSR::from_coo(&self.coo)?);
         }
-        Ok(self.csr.as_ref().unwrap())
+        Ok(self.csr.as_ref().expect("csr was just set above when None"))
     }
 
     /// Get value at the given indices.
@@ -992,15 +992,16 @@ mod tests {
     }
 
     #[test]
-    fn test_coo_from_dense() {
+    fn test_coo_from_dense() -> Result<(), Box<dyn std::error::Error>> {
         let dense = Array::from_shape_vec(IxDyn(&[2, 3]), vec![1.0, 0.0, 2.0, 0.0, 3.0, 0.0])
-            .unwrap();
+            .map_err(|e| format!("{e}"))?;
 
         let coo = SparseCOO::from_dense(&dense);
 
         assert_eq!(coo.shape, vec![2, 3]);
         assert_eq!(coo.nnz(), 3);
         assert!((coo.sparsity() - 0.5).abs() < 0.01);
+        Ok(())
     }
 
     #[test]
@@ -1017,13 +1018,13 @@ mod tests {
     }
 
     #[test]
-    fn test_csr_from_coo() {
+    fn test_csr_from_coo() -> Result<(), Box<dyn std::error::Error>> {
         let coo = SparseCOO::from_triplets(
             vec![3, 4],
             vec![(0, 0, 1.0), (0, 2, 2.0), (1, 1, 3.0), (2, 3, 4.0)],
         );
 
-        let csr = SparseCSR::from_coo(&coo).unwrap();
+        let csr = SparseCSR::from_coo(&coo)?;
 
         assert_eq!(csr.shape, (3, 4));
         assert_eq!(csr.nnz(), 4);
@@ -1032,28 +1033,30 @@ mod tests {
         assert_eq!(csr.get(1, 1), 3.0);
         assert_eq!(csr.get(2, 3), 4.0);
         assert_eq!(csr.get(0, 1), 0.0);
+        Ok(())
     }
 
     #[test]
-    fn test_csr_matvec() {
+    fn test_csr_matvec() -> Result<(), Box<dyn std::error::Error>> {
         // Matrix: [[1, 2], [3, 4]]
         let coo = SparseCOO::from_triplets(
             vec![2, 2],
             vec![(0, 0, 1.0), (0, 1, 2.0), (1, 0, 3.0), (1, 1, 4.0)],
         );
-        let csr = SparseCSR::from_coo(&coo).unwrap();
+        let csr = SparseCSR::from_coo(&coo)?;
 
         // Vector: [1, 2]
         let x = vec![1.0, 2.0];
-        let y = csr.matvec(&x).unwrap();
+        let y = csr.matvec(&x)?;
 
         // Expected: [1*1 + 2*2, 3*1 + 4*2] = [5, 11]
         assert!((y[0] - 5.0).abs() < 1e-10);
         assert!((y[1] - 11.0).abs() < 1e-10);
+        Ok(())
     }
 
     #[test]
-    fn test_sparse_tensor_add() {
+    fn test_sparse_tensor_add() -> Result<(), Box<dyn std::error::Error>> {
         let a = SparseTensor::from_coo(SparseCOO::from_triplets(
             vec![2, 2],
             vec![(0, 0, 1.0), (0, 1, 2.0)],
@@ -1063,15 +1066,16 @@ mod tests {
             vec![(0, 0, 3.0), (1, 1, 4.0)],
         ));
 
-        let c = a.add(&b).unwrap();
+        let c = a.add(&b)?;
 
         assert_eq!(c.get(&[0, 0]), 4.0); // 1 + 3
         assert_eq!(c.get(&[0, 1]), 2.0); // 2 + 0
         assert_eq!(c.get(&[1, 1]), 4.0); // 0 + 4
+        Ok(())
     }
 
     #[test]
-    fn test_sparse_tensor_hadamard() {
+    fn test_sparse_tensor_hadamard() -> Result<(), Box<dyn std::error::Error>> {
         let a = SparseTensor::from_coo(SparseCOO::from_triplets(
             vec![2, 2],
             vec![(0, 0, 2.0), (0, 1, 3.0), (1, 0, 4.0)],
@@ -1081,16 +1085,17 @@ mod tests {
             vec![(0, 0, 5.0), (1, 0, 2.0), (1, 1, 3.0)],
         ));
 
-        let c = a.hadamard(&b).unwrap();
+        let c = a.hadamard(&b)?;
 
         assert_eq!(c.get(&[0, 0]), 10.0); // 2 * 5
         assert_eq!(c.get(&[0, 1]), 0.0); // 3 * 0
         assert_eq!(c.get(&[1, 0]), 8.0); // 4 * 2
         assert_eq!(c.get(&[1, 1]), 0.0); // 0 * 3
+        Ok(())
     }
 
     #[test]
-    fn test_sparse_tensor_maximum() {
+    fn test_sparse_tensor_maximum() -> Result<(), Box<dyn std::error::Error>> {
         let a = SparseTensor::from_coo(SparseCOO::from_triplets(
             vec![2, 2],
             vec![(0, 0, 1.0), (0, 1, 5.0)],
@@ -1100,25 +1105,27 @@ mod tests {
             vec![(0, 0, 3.0), (1, 1, 4.0)],
         ));
 
-        let c = a.maximum(&b).unwrap();
+        let c = a.maximum(&b)?;
 
         assert_eq!(c.get(&[0, 0]), 3.0); // max(1, 3)
         assert_eq!(c.get(&[0, 1]), 5.0); // max(5, 0)
         assert_eq!(c.get(&[1, 1]), 4.0); // max(0, 4)
+        Ok(())
     }
 
     #[test]
-    fn test_sparse_tensor_sum() {
+    fn test_sparse_tensor_sum() -> Result<(), Box<dyn std::error::Error>> {
         let sparse = SparseTensor::from_coo(SparseCOO::from_triplets(
             vec![2, 3],
             vec![(0, 0, 1.0), (0, 1, 2.0), (1, 0, 3.0), (1, 2, 4.0)],
         ));
 
         // Sum over axis 1
-        let summed = sparse.sum(&[1]).unwrap();
+        let summed = sparse.sum(&[1])?;
         assert_eq!(summed.shape(), &[2]);
         assert_eq!(summed.get(&[0]), 3.0); // 1 + 2
         assert_eq!(summed.get(&[1]), 7.0); // 3 + 4
+        Ok(())
     }
 
     #[test]
@@ -1175,7 +1182,7 @@ mod tests {
     }
 
     #[test]
-    fn test_sparse_config() {
+    fn test_sparse_config() -> Result<(), Box<dyn std::error::Error>> {
         let config = SparseConfig::default();
 
         // 90% zeros should be sparse
@@ -1183,12 +1190,14 @@ mod tests {
             IxDyn(&[10]),
             vec![1.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0],
         )
-        .unwrap();
+        .map_err(|e| format!("{e}"))?;
         assert!(config.should_use_sparse(&sparse_data));
 
         // 50% zeros should not be sparse (at threshold)
         let dense_data =
-            Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 0.0, 2.0, 0.0]).unwrap();
+            Array::from_shape_vec(IxDyn(&[4]), vec![1.0, 0.0, 2.0, 0.0])
+                .map_err(|e| format!("{e}"))?;
         assert!(!config.should_use_sparse(&dense_data));
+        Ok(())
     }
 }

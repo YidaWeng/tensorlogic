@@ -397,7 +397,7 @@ mod tests {
 
     #[test]
     fn test_flash_config_creation() {
-        let config = FlashAttentionConfig::new(512, 8).unwrap();
+        let config = FlashAttentionConfig::new(512, 8).expect("unwrap");
         assert_eq!(config.d_model, 512);
         assert_eq!(config.n_heads, 8);
         assert_eq!(config.d_k, 64);
@@ -408,7 +408,7 @@ mod tests {
     #[test]
     fn test_flash_config_builder() {
         let config = FlashAttentionConfig::new(512, 8)
-            .unwrap()
+            .expect("unwrap")
             .with_block_sizes(64, 64)
             .with_causal(true)
             .with_dropout(0.1)
@@ -429,7 +429,7 @@ mod tests {
 
     #[test]
     fn test_flash_sram_usage() {
-        let config = FlashAttentionConfig::new(512, 8).unwrap();
+        let config = FlashAttentionConfig::new(512, 8).expect("unwrap");
         let sram = config.sram_usage_per_block();
 
         // Q: 128 * 64 = 8192
@@ -443,7 +443,7 @@ mod tests {
 
     #[test]
     fn test_flash_memory_savings() {
-        let config = FlashAttentionConfig::new(512, 8).unwrap();
+        let config = FlashAttentionConfig::new(512, 8).expect("unwrap");
         let savings = config.memory_savings(4096);
 
         // For long sequences, flash attention saves significant memory
@@ -452,7 +452,7 @@ mod tests {
 
     #[test]
     fn test_flash_num_passes() {
-        let config = FlashAttentionConfig::new(512, 8).unwrap();
+        let config = FlashAttentionConfig::new(512, 8).expect("unwrap");
 
         // 4096 / 128 = 32 passes
         assert_eq!(config.num_kv_passes(4096), 32);
@@ -464,36 +464,38 @@ mod tests {
 
     #[test]
     fn test_flash_graph_building() {
-        let config = FlashAttentionConfig::new(512, 8).unwrap();
-        let flash = FlashAttention::new(config).unwrap();
+        let config = FlashAttentionConfig::new(512, 8).expect("unwrap");
+        let flash = FlashAttention::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("Q");
         graph.add_tensor("K");
         graph.add_tensor("V");
 
-        let outputs = flash.build_flash_graph(&mut graph).unwrap();
+        let outputs = flash.build_flash_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
     }
 
     #[test]
     fn test_flash_causal_graph() {
-        let config = FlashAttentionConfig::new(512, 8).unwrap().with_causal(true);
-        let flash = FlashAttention::new(config).unwrap();
+        let config = FlashAttentionConfig::new(512, 8)
+            .expect("unwrap")
+            .with_causal(true);
+        let flash = FlashAttention::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("Q");
         graph.add_tensor("K");
         graph.add_tensor("V");
 
-        let outputs = flash.build_flash_graph(&mut graph).unwrap();
+        let outputs = flash.build_flash_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
     }
 
     #[test]
     fn test_flash_v2_config() {
         let config = FlashAttentionV2Config::new(512, 8)
-            .unwrap()
+            .expect("unwrap")
             .with_sequence_parallel(true)
             .with_window(4096)
             .with_causal(true);
@@ -520,7 +522,9 @@ mod tests {
 
     #[test]
     fn test_flash_preset_config() {
-        let config = FlashAttentionPreset::Standard.config(512, 8).unwrap();
+        let config = FlashAttentionPreset::Standard
+            .config(512, 8)
+            .expect("unwrap");
         assert_eq!(config.block_size_q, 128);
         assert_eq!(config.block_size_kv, 128);
     }
@@ -533,7 +537,7 @@ mod tests {
 
     #[test]
     fn test_flash_stats() {
-        let config = FlashAttentionConfig::new(512, 8).unwrap();
+        let config = FlashAttentionConfig::new(512, 8).expect("unwrap");
         let stats = FlashAttentionStats::from_config(&config, 4096);
 
         assert!(stats.memory_savings > 0.9);
@@ -544,7 +548,7 @@ mod tests {
 
     #[test]
     fn test_flash_validate() {
-        let config = FlashAttentionConfig::new(512, 8).unwrap();
+        let config = FlashAttentionConfig::new(512, 8).expect("unwrap");
         assert!(config.validate().is_ok());
 
         // Invalid dropout

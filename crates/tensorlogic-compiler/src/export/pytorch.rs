@@ -568,13 +568,13 @@ mod tests {
 
         let _node = graph
             .add_node(EinsumNode::einsum("ab,bc->ac", vec![a, b], vec![c]))
-            .unwrap();
+            .expect("unwrap");
         graph.outputs.push(c);
 
         let result = export_to_pytorch(&graph, "SimpleModel");
         assert!(result.is_ok());
 
-        let code = result.unwrap();
+        let code = result.expect("unwrap");
         assert!(code.contains("class SimpleModel(nn.Module):"));
         assert!(code.contains("torch.einsum"));
         assert!(code.contains("ab,bc->ac"));
@@ -590,13 +590,13 @@ mod tests {
 
         let _node = graph
             .add_node(EinsumNode::elem_binary("add", t1, t2, t3))
-            .unwrap();
+            .expect("unwrap");
         graph.outputs.push(t3);
 
         let result = export_to_pytorch(&graph, "AddModel");
         assert!(result.is_ok());
 
-        let code = result.unwrap();
+        let code = result.expect("unwrap");
         assert!(code.contains("tensor_1 + tensor_2"));
     }
 
@@ -609,13 +609,13 @@ mod tests {
 
         let _node = graph
             .add_node(EinsumNode::elem_unary("exp", t1, t2))
-            .unwrap();
+            .expect("unwrap");
         graph.outputs.push(t2);
 
         let result = export_to_pytorch(&graph, "ExpModel");
         assert!(result.is_ok());
 
-        let code = result.unwrap();
+        let code = result.expect("unwrap");
         assert!(code.contains("torch.exp"));
     }
 
@@ -628,13 +628,13 @@ mod tests {
 
         let _node = graph
             .add_node(EinsumNode::reduce("sum", vec![1], t1, t2))
-            .unwrap();
+            .expect("unwrap");
         graph.outputs.push(t2);
 
         let result = export_to_pytorch(&graph, "SumModel");
         assert!(result.is_ok());
 
-        let code = result.unwrap();
+        let code = result.expect("unwrap");
         assert!(code.contains("torch.sum"));
         assert!(code.contains("dim=1"));
     }
@@ -655,7 +655,7 @@ mod tests {
         let result = export_to_pytorch_with_config(&graph, config);
         assert!(result.is_ok());
 
-        let code = result.unwrap();
+        let code = result.expect("unwrap");
         assert!(code.contains("class CustomModel(nn.Module):"));
         assert!(code.contains("torch.float64"));
         assert!(code.contains("@torch.jit.export"));
@@ -669,7 +669,7 @@ mod tests {
 
         let _node = graph
             .add_node(EinsumNode::elem_unary("invalid_op", t1, t2))
-            .unwrap();
+            .expect("unwrap");
         graph.outputs.push(t2);
 
         let result = export_to_pytorch(&graph, "InvalidModel");
@@ -685,7 +685,7 @@ mod tests {
 
         let _node = graph
             .add_node(EinsumNode::elem_binary("invalid_op", t1, t2, t3))
-            .unwrap();
+            .expect("unwrap");
         graph.outputs.push(t3);
 
         let result = export_to_pytorch(&graph, "InvalidModel");
@@ -700,13 +700,13 @@ mod tests {
 
         let _node = graph
             .add_node(EinsumNode::elem_unary("one_minus", t1, t2))
-            .unwrap();
+            .expect("unwrap");
         graph.outputs.push(t2);
 
         let result = export_to_pytorch(&graph, "OneMinusModel");
         assert!(result.is_ok());
 
-        let code = result.unwrap();
+        let code = result.expect("unwrap");
         assert!(code.contains("1.0 - "));
     }
 }

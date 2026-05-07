@@ -33,7 +33,11 @@ fn bench_cache_hits(c: &mut Criterion) {
 
     group.bench_function("cached_hits", |b| {
         b.iter(|| {
-            black_box(cached.compute(&data[0], &data[1]).unwrap());
+            black_box(
+                cached
+                    .compute(&data[0], &data[1])
+                    .expect("cached kernel compute should succeed"),
+            );
         });
     });
 
@@ -61,7 +65,11 @@ fn bench_cache_misses(c: &mut Criterion) {
                 .collect();
             counter += 1;
 
-            black_box(cached.compute(&x, &y).unwrap());
+            black_box(
+                cached
+                    .compute(&x, &y)
+                    .expect("cached kernel compute should succeed"),
+            );
         });
     });
 
@@ -81,7 +89,11 @@ fn bench_cached_vs_uncached(c: &mut Criterion) {
             // Compute same pairs repeatedly
             for i in 0..10 {
                 for j in 0..10 {
-                    black_box(kernel.compute(&data[i], &data[j]).unwrap());
+                    black_box(
+                        kernel
+                            .compute(&data[i], &data[j])
+                            .expect("kernel compute should succeed"),
+                    );
                 }
             }
         });
@@ -95,7 +107,11 @@ fn bench_cached_vs_uncached(c: &mut Criterion) {
             // Compute same pairs repeatedly
             for i in 0..10 {
                 for j in 0..10 {
-                    black_box(cached.compute(&data[i], &data[j]).unwrap());
+                    black_box(
+                        cached
+                            .compute(&data[i], &data[j])
+                            .expect("cached kernel compute should succeed"),
+                    );
                 }
             }
         });
@@ -117,7 +133,11 @@ fn bench_cached_vs_uncached(c: &mut Criterion) {
             // Compute same pairs repeatedly (cache hits)
             for i in 0..10 {
                 for j in 0..10 {
-                    black_box(cached.compute(&data[i], &data[j]).unwrap());
+                    black_box(
+                        cached
+                            .compute(&data[i], &data[j])
+                            .expect("cached kernel compute should succeed"),
+                    );
                 }
             }
         });
@@ -135,29 +155,44 @@ fn bench_cache_overhead_expensive(c: &mut Criterion) {
 
     // Uncached RBF kernel
     group.bench_function("rbf_uncached", |b| {
-        let kernel = RbfKernel::new(config.clone()).unwrap();
+        let kernel =
+            RbfKernel::new(config.clone()).expect("RBF kernel construction should succeed");
         b.iter(|| {
-            black_box(kernel.compute(&data[0], &data[1]).unwrap());
+            black_box(
+                kernel
+                    .compute(&data[0], &data[1])
+                    .expect("kernel compute should succeed"),
+            );
         });
     });
 
     // Cached RBF kernel (first call - miss)
     group.bench_function("rbf_cached_miss", |b| {
         b.iter(|| {
-            let kernel = RbfKernel::new(config.clone()).unwrap();
+            let kernel =
+                RbfKernel::new(config.clone()).expect("RBF kernel construction should succeed");
             let cached = CachedKernel::new(Box::new(kernel));
-            black_box(cached.compute(&data[0], &data[1]).unwrap());
+            black_box(
+                cached
+                    .compute(&data[0], &data[1])
+                    .expect("cached kernel compute should succeed"),
+            );
         });
     });
 
     // Cached RBF kernel (subsequent calls - hits)
     group.bench_function("rbf_cached_hit", |b| {
-        let kernel = RbfKernel::new(config.clone()).unwrap();
+        let kernel =
+            RbfKernel::new(config.clone()).expect("RBF kernel construction should succeed");
         let cached = CachedKernel::new(Box::new(kernel));
         let _ = cached.compute(&data[0], &data[1]); // Warm up
 
         b.iter(|| {
-            black_box(cached.compute(&data[0], &data[1]).unwrap());
+            black_box(
+                cached
+                    .compute(&data[0], &data[1])
+                    .expect("cached kernel compute should succeed"),
+            );
         });
     });
 
@@ -179,7 +214,11 @@ fn bench_kernel_matrix_cache(c: &mut Criterion) {
             size,
             |b, _| {
                 b.iter(|| {
-                    black_box(kernel.compute_matrix(&data).unwrap());
+                    black_box(
+                        kernel
+                            .compute_matrix(&data)
+                            .expect("kernel matrix compute should succeed"),
+                    );
                 });
             },
         );
@@ -191,7 +230,11 @@ fn bench_kernel_matrix_cache(c: &mut Criterion) {
             |b, _| {
                 b.iter(|| {
                     let mut cache = KernelMatrixCache::new();
-                    black_box(cache.get_or_compute(&data, &kernel).unwrap());
+                    black_box(
+                        cache
+                            .get_or_compute(&data, &kernel)
+                            .expect("cache get-or-compute should succeed"),
+                    );
                 });
             },
         );
@@ -205,7 +248,11 @@ fn bench_kernel_matrix_cache(c: &mut Criterion) {
                 let _ = cache.get_or_compute(&data, &kernel); // Warm up
 
                 b.iter(|| {
-                    black_box(cache.get_or_compute(&data, &kernel).unwrap());
+                    black_box(
+                        cache
+                            .get_or_compute(&data, &kernel)
+                            .expect("cache get-or-compute should succeed"),
+                    );
                 });
             },
         );
@@ -231,14 +278,22 @@ fn bench_cache_stats(c: &mut Criterion) {
 
     group.bench_function("compute_with_stats", |b| {
         b.iter(|| {
-            black_box(cached.compute(&data[0], &data[1]).unwrap());
+            black_box(
+                cached
+                    .compute(&data[0], &data[1])
+                    .expect("cached kernel compute should succeed"),
+            );
             let _ = black_box(cached.stats());
         });
     });
 
     group.bench_function("compute_only", |b| {
         b.iter(|| {
-            black_box(cached.compute(&data[0], &data[1]).unwrap());
+            black_box(
+                cached
+                    .compute(&data[0], &data[1])
+                    .expect("cached kernel compute should succeed"),
+            );
         });
     });
 
@@ -262,7 +317,11 @@ fn bench_cache_size_impact(c: &mut Criterion) {
                     let cached = CachedKernel::new(Box::new(kernel));
                     // Access different pairs to fill cache
                     for i in 0..*num_unique {
-                        black_box(cached.compute(&data[i], &data[0]).unwrap());
+                        black_box(
+                            cached
+                                .compute(&data[i], &data[0])
+                                .expect("cached kernel compute should succeed"),
+                        );
                     }
                 });
             },
@@ -285,7 +344,11 @@ fn bench_cache_hit_rates(c: &mut Criterion) {
         let _ = cached.compute(&data[0], &data[1]); // Prime cache
 
         b.iter(|| {
-            black_box(cached.compute(&data[0], &data[1]).unwrap());
+            black_box(
+                cached
+                    .compute(&data[0], &data[1])
+                    .expect("cached kernel compute should succeed"),
+            );
         });
     });
 
@@ -298,9 +361,17 @@ fn bench_cache_hit_rates(c: &mut Criterion) {
         let mut counter = 0;
         b.iter(|| {
             if counter % 2 == 0 {
-                black_box(cached.compute(&data[0], &data[1]).unwrap()); // Hit
+                black_box(
+                    cached
+                        .compute(&data[0], &data[1])
+                        .expect("cached kernel compute should succeed"),
+                ); // Hit
             } else {
-                black_box(cached.compute(&data[0], &data[counter % 10 + 2]).unwrap());
+                black_box(
+                    cached
+                        .compute(&data[0], &data[counter % 10 + 2])
+                        .expect("cached kernel compute should succeed"),
+                );
                 // Miss
             }
             counter += 1;
@@ -318,7 +389,7 @@ fn bench_cache_hit_rates(c: &mut Criterion) {
             black_box(
                 cached
                     .compute(&data[idx], &data[(idx + 1) % data.len()])
-                    .unwrap(),
+                    .expect("cached kernel compute should succeed"),
             );
             counter += 1;
         });

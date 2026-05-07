@@ -158,7 +158,7 @@ impl GraphOptStats {
 /// // ... compile logic expressions into graph ...
 ///
 /// let config = GraphOptConfig::default();
-/// let (optimized, stats) = apply_graph_optimizations(&graph, &config).unwrap();
+/// let (optimized, stats) = apply_graph_optimizations(&graph, &config).expect("unwrap");
 ///
 /// println!("Applied {} optimizations", stats.total_optimizations());
 /// println!("Estimated speedup: {:.2}x", stats.estimated_speedup);
@@ -240,7 +240,7 @@ pub fn apply_graph_optimizations(
 /// use tensorlogic_ir::EinsumGraph;
 ///
 /// let graph = EinsumGraph::new();
-/// let (optimized, count) = apply_pattern_optimizations(&graph).unwrap();
+/// let (optimized, count) = apply_pattern_optimizations(&graph).expect("unwrap");
 /// println!("Applied {} pattern-based optimizations", count);
 /// ```
 pub fn apply_pattern_optimizations(graph: &EinsumGraph) -> Result<(EinsumGraph, usize)> {
@@ -262,7 +262,7 @@ pub fn apply_pattern_optimizations(graph: &EinsumGraph) -> Result<(EinsumGraph, 
 /// use tensorlogic_ir::EinsumGraph;
 ///
 /// let graph = EinsumGraph::new();
-/// let optimized = quick_optimize(&graph).unwrap();
+/// let optimized = quick_optimize(&graph).expect("unwrap");
 /// ```
 pub fn quick_optimize(graph: &EinsumGraph) -> Result<EinsumGraph> {
     let config = GraphOptConfig {
@@ -445,7 +445,7 @@ mod tests {
         let result = apply_graph_optimizations(&graph, &config);
         assert!(result.is_ok());
 
-        let (_optimized, stats) = result.unwrap();
+        let (_optimized, stats) = result.expect("unwrap");
         assert!(stats.estimated_speedup >= 1.0);
     }
 

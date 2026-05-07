@@ -14,7 +14,7 @@ fn create_schema(domains: usize, predicates_per_domain: usize) -> SymbolTable {
     for i in 0..domains {
         table
             .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-            .unwrap();
+            .expect("unwrap");
     }
 
     for i in 0..domains {
@@ -24,7 +24,7 @@ fn create_schema(domains: usize, predicates_per_domain: usize) -> SymbolTable {
                 format!("pred_{}_{}", i, j),
                 vec![domain_name.clone(), domain_name.clone()],
             );
-            table.add_predicate(pred).unwrap();
+            table.add_predicate(pred).expect("unwrap");
         }
     }
 
@@ -44,7 +44,7 @@ fn create_modified_schema(
     for i in 0..additions {
         table
             .add_domain(DomainInfo::new(format!("NewDomain{}", i), 50))
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Modify existing domains (change cardinality)
@@ -83,7 +83,7 @@ fn analysis_by_schema_size(c: &mut Criterion) {
             |b, (old, new)| {
                 b.iter(|| {
                     let analyzer = EvolutionAnalyzer::new(old, new);
-                    let report = analyzer.analyze().unwrap();
+                    let report = analyzer.analyze().expect("unwrap");
                     black_box(report);
                 });
             },
@@ -109,7 +109,7 @@ fn analysis_by_change_percentage(c: &mut Criterion) {
             |b, (old, new)| {
                 b.iter(|| {
                     let analyzer = EvolutionAnalyzer::new(old, new);
-                    let report = analyzer.analyze().unwrap();
+                    let report = analyzer.analyze().expect("unwrap");
                     black_box(report);
                 });
             },
@@ -131,7 +131,7 @@ fn domain_analysis(c: &mut Criterion) {
         for i in 0..(*size / 10) {
             new_with_additions
                 .add_domain(DomainInfo::new(format!("NewDomain{}", i), 50))
-                .unwrap();
+                .expect("unwrap");
         }
 
         group.bench_with_input(
@@ -140,7 +140,7 @@ fn domain_analysis(c: &mut Criterion) {
             |b, (old, new)| {
                 b.iter(|| {
                     let analyzer = EvolutionAnalyzer::new(old, new);
-                    let report = analyzer.analyze().unwrap();
+                    let report = analyzer.analyze().expect("unwrap");
                     black_box(report);
                 });
             },
@@ -156,7 +156,7 @@ fn domain_analysis(c: &mut Criterion) {
             |b, (old, new)| {
                 b.iter(|| {
                     let analyzer = EvolutionAnalyzer::new(old, new);
-                    let report = analyzer.analyze().unwrap();
+                    let report = analyzer.analyze().expect("unwrap");
                     black_box(report);
                 });
             },
@@ -180,7 +180,7 @@ fn predicate_analysis(c: &mut Criterion) {
                 format!("new_pred_{}", i),
                 vec!["Domain0".to_string(), "Domain1".to_string()],
             );
-            new_schema.add_predicate(pred).unwrap();
+            new_schema.add_predicate(pred).expect("unwrap");
         }
 
         group.bench_with_input(
@@ -189,7 +189,7 @@ fn predicate_analysis(c: &mut Criterion) {
             |b, (old, new)| {
                 b.iter(|| {
                     let analyzer = EvolutionAnalyzer::new(old, new);
-                    let report = analyzer.analyze().unwrap();
+                    let report = analyzer.analyze().expect("unwrap");
                     black_box(report);
                 });
             },
@@ -213,7 +213,7 @@ fn migration_plan_generation(c: &mut Criterion) {
             |b, (old, new)| {
                 b.iter(|| {
                     let analyzer = EvolutionAnalyzer::new(old, new);
-                    let report = analyzer.analyze().unwrap();
+                    let report = analyzer.analyze().expect("unwrap");
                     black_box(&report.migration_plan);
                 });
             },
@@ -234,7 +234,7 @@ fn breaking_change_detection(c: &mut Criterion) {
         let mut compatible_schema = old_schema.clone();
         compatible_schema
             .add_domain(DomainInfo::new("Compatible", 100))
-            .unwrap();
+            .expect("unwrap");
 
         group.bench_with_input(
             BenchmarkId::new("no_breaking", size),
@@ -242,7 +242,7 @@ fn breaking_change_detection(c: &mut Criterion) {
             |b, (old, new)| {
                 b.iter(|| {
                     let analyzer = EvolutionAnalyzer::new(old, new);
-                    let report = analyzer.analyze().unwrap();
+                    let report = analyzer.analyze().expect("unwrap");
                     black_box(report.has_breaking_changes());
                 });
             },
@@ -257,7 +257,7 @@ fn breaking_change_detection(c: &mut Criterion) {
             |b, (old, new)| {
                 b.iter(|| {
                     let analyzer = EvolutionAnalyzer::new(old, new);
-                    let report = analyzer.analyze().unwrap();
+                    let report = analyzer.analyze().expect("unwrap");
                     black_box(report.has_breaking_changes());
                 });
             },
@@ -281,7 +281,7 @@ fn compatibility_report(c: &mut Criterion) {
             |b, (old, new)| {
                 b.iter(|| {
                     let analyzer = EvolutionAnalyzer::new(old, new);
-                    let report = analyzer.analyze().unwrap();
+                    let report = analyzer.analyze().expect("unwrap");
 
                     // Access all report components
                     black_box(report.has_breaking_changes());
@@ -309,7 +309,7 @@ fn affected_predicate_detection(c: &mut Criterion) {
         for i in 0..*size {
             old_schema
                 .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-                .unwrap();
+                .expect("unwrap");
         }
 
         // Create predicates that reference multiple domains
@@ -317,7 +317,7 @@ fn affected_predicate_detection(c: &mut Criterion) {
             for j in 0..5 {
                 let domains = vec![format!("Domain{}", i), format!("Domain{}", (i + 1) % size)];
                 let pred = PredicateInfo::new(format!("pred_{}_{}", i, j), domains);
-                old_schema.add_predicate(pred).unwrap();
+                old_schema.add_predicate(pred).expect("unwrap");
             }
         }
 
@@ -330,7 +330,7 @@ fn affected_predicate_detection(c: &mut Criterion) {
             |b, (old, new)| {
                 b.iter(|| {
                     let analyzer = EvolutionAnalyzer::new(old, new);
-                    let report = analyzer.analyze().unwrap();
+                    let report = analyzer.analyze().expect("unwrap");
                     black_box(&report.breaking_changes);
                 });
             },

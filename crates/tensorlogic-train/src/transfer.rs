@@ -481,7 +481,7 @@ mod tests {
             "layer2".to_string(),
             "layer3".to_string(),
         ];
-        let mut unfreezing = ProgressiveUnfreezing::new(layers, 5).unwrap();
+        let mut unfreezing = ProgressiveUnfreezing::new(layers, 5).expect("unwrap");
 
         // Stage 0: all frozen
         assert_eq!(unfreezing.get_trainable_layers().len(), 0);
@@ -517,7 +517,7 @@ mod tests {
 
     #[test]
     fn test_discriminative_finetuning() {
-        let mut finetuning = DiscriminativeFineTuning::new(1e-3, 0.5).unwrap();
+        let mut finetuning = DiscriminativeFineTuning::new(1e-3, 0.5).expect("unwrap");
 
         let layers = vec![
             "layer1".to_string(),
@@ -588,7 +588,7 @@ mod tests {
             "layer2".to_string(),
             "layer3".to_string(),
         ];
-        let unfreezing = ProgressiveUnfreezing::new(layers.clone(), 5).unwrap();
+        let unfreezing = ProgressiveUnfreezing::new(layers.clone(), 5).expect("unwrap");
 
         let mut manager = TransferLearningManager::new().with_progressive_unfreezing(unfreezing);
 
@@ -612,7 +612,7 @@ mod tests {
             "layer2".to_string(),
             "layer3".to_string(),
         ];
-        let mut finetuning = DiscriminativeFineTuning::new(1e-3, 0.5).unwrap();
+        let mut finetuning = DiscriminativeFineTuning::new(1e-3, 0.5).expect("unwrap");
         finetuning.compute_layer_lrs(&layers);
 
         let manager = TransferLearningManager::new().with_discriminative_finetuning(finetuning);
@@ -656,7 +656,7 @@ mod tests {
     #[test]
     fn test_progressive_unfreezing_total_stages() {
         let layers = vec!["layer1".to_string(), "layer2".to_string()];
-        let unfreezing = ProgressiveUnfreezing::new(layers, 5).unwrap();
+        let unfreezing = ProgressiveUnfreezing::new(layers, 5).expect("unwrap");
 
         assert_eq!(unfreezing.total_stages(), 2);
     }

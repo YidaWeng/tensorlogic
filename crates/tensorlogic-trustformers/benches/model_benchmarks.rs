@@ -22,8 +22,9 @@ fn bench_self_attention(c: &mut Criterion) {
     for d_model in [256, 512, 768, 1024].iter() {
         group.throughput(Throughput::Elements(*d_model as u64));
 
-        let config = AttentionConfig::new(*d_model, 8).unwrap();
-        let attention = SelfAttention::new(config).unwrap();
+        let config = AttentionConfig::new(*d_model, 8).expect("valid attention config parameters");
+        let attention = SelfAttention::new(config)
+            .expect("valid attention config should construct self-attention");
 
         group.bench_with_input(BenchmarkId::from_parameter(d_model), d_model, |b, _| {
             b.iter(|| {
@@ -31,7 +32,11 @@ fn bench_self_attention(c: &mut Criterion) {
                 graph.add_tensor("Q");
                 graph.add_tensor("K");
                 graph.add_tensor("V");
-                black_box(attention.build_attention_graph(&mut graph).unwrap());
+                black_box(
+                    attention
+                        .build_attention_graph(&mut graph)
+                        .expect("attention graph construction should succeed"),
+                );
             });
         });
     }
@@ -46,8 +51,10 @@ fn bench_multi_head_attention(c: &mut Criterion) {
     for (d_model, n_heads) in [(512, 8), (768, 12), (1024, 16)].iter() {
         group.throughput(Throughput::Elements(*d_model as u64));
 
-        let config = AttentionConfig::new(*d_model, *n_heads).unwrap();
-        let mha = MultiHeadAttention::new(config).unwrap();
+        let config =
+            AttentionConfig::new(*d_model, *n_heads).expect("valid attention config parameters");
+        let mha = MultiHeadAttention::new(config)
+            .expect("valid attention config should construct multi-head attention");
 
         group.bench_with_input(
             BenchmarkId::new("d_model", d_model),
@@ -58,7 +65,10 @@ fn bench_multi_head_attention(c: &mut Criterion) {
                     graph.add_tensor("Q");
                     graph.add_tensor("K");
                     graph.add_tensor("V");
-                    black_box(mha.build_mha_graph(&mut graph).unwrap());
+                    black_box(
+                        mha.build_mha_graph(&mut graph)
+                            .expect("MHA graph construction should succeed"),
+                    );
                 });
             },
         );
@@ -75,7 +85,8 @@ fn bench_feed_forward(c: &mut Criterion) {
         group.throughput(Throughput::Elements(*d_model as u64));
 
         let config = FeedForwardConfig::new(*d_model, *d_ff);
-        let ffn = tensorlogic_trustformers::FeedForward::new(config).unwrap();
+        let ffn = tensorlogic_trustformers::FeedForward::new(config)
+            .expect("valid FFN config should construct feed-forward");
 
         group.bench_with_input(
             BenchmarkId::new("d_model", d_model),
@@ -88,7 +99,10 @@ fn bench_feed_forward(c: &mut Criterion) {
                     graph.add_tensor("b1");
                     graph.add_tensor("W2");
                     graph.add_tensor("b2");
-                    black_box(ffn.build_ffn_graph(&mut graph).unwrap());
+                    black_box(
+                        ffn.build_ffn_graph(&mut graph)
+                            .expect("FFN graph construction should succeed"),
+                    );
                 });
             },
         );
@@ -103,8 +117,10 @@ fn bench_encoder_stack(c: &mut Criterion) {
     group.sample_size(10); // Reduce sample size for expensive operations
 
     for (n_layers, d_model) in [(6, 512), (12, 768), (24, 1024)].iter() {
-        let config = EncoderStackConfig::new(*n_layers, *d_model, 8, d_model * 4, 512).unwrap();
-        let encoder = tensorlogic_trustformers::EncoderStack::new(config).unwrap();
+        let config = EncoderStackConfig::new(*n_layers, *d_model, 8, d_model * 4, 512)
+            .expect("valid encoder stack config parameters");
+        let encoder = tensorlogic_trustformers::EncoderStack::new(config)
+            .expect("valid encoder stack config should construct encoder");
 
         group.bench_with_input(
             BenchmarkId::new("layers", n_layers),
@@ -113,7 +129,11 @@ fn bench_encoder_stack(c: &mut Criterion) {
                 b.iter(|| {
                     let mut graph = EinsumGraph::new();
                     graph.add_tensor("input");
-                    black_box(encoder.build_encoder_stack_graph(&mut graph).unwrap());
+                    black_box(
+                        encoder
+                            .build_encoder_stack_graph(&mut graph)
+                            .expect("encoder stack graph construction should succeed"),
+                    );
                 });
             },
         );
@@ -126,11 +146,13 @@ fn bench_encoder_stack(c: &mut Criterion) {
 fn bench_config_validation(c: &mut Criterion) {
     let mut group = c.benchmark_group("config_validation");
 
-    let config = AttentionConfig::new(512, 8).unwrap();
+    let config = AttentionConfig::new(512, 8).expect("valid attention config parameters");
 
     group.bench_function("attention_config_validate", |b| {
         b.iter(|| {
-            config.validate().unwrap();
+            config
+                .validate()
+                .expect("valid config should pass validation");
             black_box(())
         });
     });

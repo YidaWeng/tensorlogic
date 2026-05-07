@@ -306,7 +306,7 @@ mod tests {
             },
             metadata: None,
         })
-        .unwrap();
+        .expect("unwrap");
 
         // Node 1: uses t1, produces t5
         g.add_node(EinsumNode {
@@ -317,7 +317,7 @@ mod tests {
             },
             metadata: None,
         })
-        .unwrap();
+        .expect("unwrap");
 
         // Node 2: uses t2, produces t6
         g.add_node(EinsumNode {
@@ -328,9 +328,9 @@ mod tests {
             },
             metadata: None,
         })
-        .unwrap();
+        .expect("unwrap");
 
-        g.add_output(t6).unwrap();
+        g.add_output(t6).expect("unwrap");
 
         g
     }
@@ -340,7 +340,7 @@ mod tests {
         let graph = create_test_graph();
 
         // Extract nodes 0 and 1
-        let subgraph = graph.extract_subgraph(&[0, 1]).unwrap();
+        let subgraph = graph.extract_subgraph(&[0, 1]).expect("unwrap");
 
         assert_eq!(subgraph.nodes.len(), 2);
         assert!(subgraph.tensors.len() >= 2);
@@ -359,7 +359,7 @@ mod tests {
             },
             metadata: None,
         })
-        .unwrap();
+        .expect("unwrap");
 
         let mut g2 = EinsumGraph::new();
         let t0_2 = g2.add_tensor("shared");
@@ -372,9 +372,9 @@ mod tests {
             },
             metadata: None,
         })
-        .unwrap();
+        .expect("unwrap");
 
-        let tensor_map = g1.merge(&g2).unwrap();
+        let tensor_map = g1.merge(&g2).expect("unwrap");
 
         // Should reuse "shared" tensor
         assert_eq!(tensor_map[&0], 0); // "shared" mapped to same index
@@ -439,7 +439,7 @@ mod tests {
                     None
                 }
             })
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(rewrites, 3);
 
@@ -475,7 +475,7 @@ mod tests {
                 },
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Node 1: produces t2 from t1 (depends on node 0)
         graph
@@ -487,7 +487,7 @@ mod tests {
                 },
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         let deps = graph.dependencies(1);
         // Node 1 depends on node 0 (which produces t1)

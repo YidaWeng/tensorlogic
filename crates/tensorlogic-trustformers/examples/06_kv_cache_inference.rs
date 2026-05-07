@@ -60,21 +60,33 @@ fn demonstrate_basic_caching() {
     for layer_idx in 0..12 {
         cache
             .update_layer(layer_idx, keys.clone(), values.clone())
-            .unwrap();
+            .expect("layer index is within bounds and update should succeed");
     }
     cache.next_step();
 
     println!("  Cached layers: {}", cache.num_cached_layers());
-    println!("  Sequence length: {}", cache.get_seq_len(0).unwrap());
+    println!(
+        "  Sequence length: {}",
+        cache
+            .get_seq_len(0)
+            .expect("layer 0 should exist after update")
+    );
     println!("  Memory usage: {:.2} MB", cache.current_memory_usage_mb());
     println!();
 
     // Add second token
     println!("Step 2: Processing second token...");
-    cache.update_layer(0, keys.clone(), values.clone()).unwrap();
+    cache
+        .update_layer(0, keys.clone(), values.clone())
+        .expect("layer 0 update should succeed");
     cache.next_step();
 
-    println!("  Sequence length: {}", cache.get_seq_len(0).unwrap());
+    println!(
+        "  Sequence length: {}",
+        cache
+            .get_seq_len(0)
+            .expect("layer 0 should exist after update")
+    );
     println!(
         "  Memory usage: {:.2} MB\n",
         cache.current_memory_usage_mb()
@@ -135,7 +147,7 @@ fn demonstrate_generation_simulation() {
         for layer_idx in 0..num_layers {
             cache
                 .update_layer(layer_idx, keys.clone(), values.clone())
-                .unwrap();
+                .expect("layer index is within bounds and update should succeed");
         }
 
         cache.next_step();

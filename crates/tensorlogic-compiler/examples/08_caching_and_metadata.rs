@@ -32,7 +32,7 @@ fn main() {
             println!("   Compiling: {:?}", e);
             compile_to_einsum_with_context(e, c)
         })
-        .unwrap();
+        .expect("unwrap");
 
     let stats = cache.stats();
     println!(
@@ -52,7 +52,7 @@ fn main() {
             println!("   Compiling: {:?}", e);
             compile_to_einsum_with_context(e, c)
         })
-        .unwrap();
+        .expect("unwrap");
 
     let stats = cache.stats();
     println!(
@@ -94,7 +94,7 @@ fn main() {
     println!("     Hit rate: {:.1}%", stats.hit_rate() * 100.0);
     println!(
         "     Current size: {}/{}",
-        stats.current_size,
+        stats.current_entries,
         cache.max_size()
     );
 
@@ -119,7 +119,7 @@ fn main() {
         .get_or_compile(&expr_with_meta, &mut ctx, |e, c| {
             compile_to_einsum_with_context(e, c)
         })
-        .unwrap();
+        .expect("unwrap");
 
     // Add metadata after compilation (even from cache)
     let mut metadata_builder = MetadataBuilder::new()

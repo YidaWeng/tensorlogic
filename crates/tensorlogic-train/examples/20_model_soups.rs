@@ -57,9 +57,9 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("  Recipe: {:?}", uniform_soup.recipe());
     println!("  Number of models: {}", uniform_soup.num_models());
     println!("  Averaged weights:");
-    let soup_weight = uniform_soup.get_parameter("weight").unwrap();
+    let soup_weight = uniform_soup.get_parameter("weight").expect("unwrap");
     println!("    weight = {:?}", soup_weight);
-    let soup_bias = uniform_soup.get_parameter("bias").unwrap();
+    let soup_bias = uniform_soup.get_parameter("bias").expect("unwrap");
     println!("    bias = {:?}", soup_bias);
     println!("  Expected validation accuracy: 0.87 (improved!)");
     println!();
@@ -117,7 +117,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("Weighted Soup:");
     println!("  Recipe: {:?}", weighted_soup.recipe());
     println!("  Weights: [0.82, 0.85, 0.83] (normalized)");
-    let weighted_weight = weighted_soup.get_parameter("weight").unwrap();
+    let weighted_weight = weighted_soup.get_parameter("weight").expect("unwrap");
     println!("  Averaged weights:");
     println!("    weight = {:?}", weighted_weight);
     println!("  (Better models get more influence)");

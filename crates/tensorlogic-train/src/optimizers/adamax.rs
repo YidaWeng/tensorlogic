@@ -81,8 +81,14 @@ impl Optimizer for AdaMaxOptimizer {
                 self.m.insert(name.clone(), Array::zeros(param.raw_dim()));
                 self.u.insert(name.clone(), Array::zeros(param.raw_dim()));
             }
-            let m = self.m.get_mut(name).unwrap();
-            let u = self.u.get_mut(name).unwrap();
+            let m = self
+                .m
+                .get_mut(name)
+                .expect("m initialized for all parameters");
+            let u = self
+                .u
+                .get_mut(name)
+                .expect("u initialized for all parameters");
             *m = &*m * beta1 + &(grad * (1.0 - beta1));
             for i in 0..u.nrows() {
                 for j in 0..u.ncols() {
@@ -164,9 +170,9 @@ mod tests {
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), array![[0.1, 0.2], [0.3, 0.4]]);
         for _ in 0..3 {
-            optimizer.step(&mut params, &grads).unwrap();
+            optimizer.step(&mut params, &grads).expect("unwrap");
         }
-        let w = params.get("w").unwrap();
+        let w = params.get("w").expect("unwrap");
         assert!(w[[0, 0]] < 1.0);
         assert!(w[[0, 1]] < 2.0);
         assert!(w[[1, 0]] < 3.0);

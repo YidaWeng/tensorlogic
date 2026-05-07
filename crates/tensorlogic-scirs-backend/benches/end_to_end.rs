@@ -15,7 +15,8 @@ fn create_test_tensor(shape: &[usize]) -> scirs2_core::ndarray::ArrayD<f64> {
     let data: Vec<f64> = (0..size)
         .map(|i| if i % 2 == 0 { 1.0 } else { 0.0 })
         .collect();
-    scirs2_core::ndarray::ArrayD::from_shape_vec(scirs2_core::ndarray::IxDyn(shape), data).unwrap()
+    scirs2_core::ndarray::ArrayD::from_shape_vec(scirs2_core::ndarray::IxDyn(shape), data)
+        .expect("unwrap")
 }
 
 /// Benchmark simple predicate evaluation.
@@ -31,14 +32,14 @@ fn bench_simple_predicate(c: &mut Criterion) {
             |b, &size| {
                 // Create expression: P(x)
                 let expr = TLExpr::pred("P", vec![Term::var("x")]);
-                let graph = compile_to_einsum(&expr).unwrap();
+                let graph = compile_to_einsum(&expr).expect("unwrap");
 
                 let mut executor = Scirs2Exec::new();
                 let tensor = create_test_tensor(&[size]);
                 executor.add_tensor("P[a]", tensor);
 
                 b.iter(|| {
-                    let result = executor.forward(&graph).unwrap();
+                    let result = executor.forward(&graph).expect("unwrap");
                     black_box(result);
                 });
             },
@@ -64,14 +65,14 @@ fn bench_and_operation(c: &mut Criterion) {
                     TLExpr::pred("P", vec![Term::var("x")]),
                     TLExpr::pred("Q", vec![Term::var("x")]),
                 );
-                let graph = compile_to_einsum(&expr).unwrap();
+                let graph = compile_to_einsum(&expr).expect("unwrap");
 
                 let mut executor = Scirs2Exec::new();
                 executor.add_tensor("P[a]", create_test_tensor(&[size]));
                 executor.add_tensor("Q[a]", create_test_tensor(&[size]));
 
                 b.iter(|| {
-                    let result = executor.forward(&graph).unwrap();
+                    let result = executor.forward(&graph).expect("unwrap");
                     black_box(result);
                 });
             },
@@ -100,14 +101,14 @@ fn bench_exists_quantifier(c: &mut Criterion) {
                 let mut ctx = CompilerContext::new();
                 ctx.add_domain("Person".to_string(), size);
 
-                let graph = compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+                let graph = compile_to_einsum_with_context(&expr, &mut ctx).expect("unwrap");
 
                 let mut executor = Scirs2Exec::new();
                 let tensor = create_test_tensor(&[size, size]);
                 executor.add_tensor("knows[ab]", tensor);
 
                 b.iter(|| {
-                    let result = executor.forward(&graph).unwrap();
+                    let result = executor.forward(&graph).expect("unwrap");
                     black_box(result);
                 });
             },
@@ -133,7 +134,7 @@ fn bench_training_iteration(c: &mut Criterion) {
                     TLExpr::pred("P", vec![Term::var("x")]),
                     TLExpr::pred("Q", vec![Term::var("x")]),
                 );
-                let graph = compile_to_einsum(&expr).unwrap();
+                let graph = compile_to_einsum(&expr).expect("unwrap");
 
                 let p_tensor = create_test_tensor(&[size]);
                 let q_tensor = create_test_tensor(&[size]);
@@ -145,11 +146,11 @@ fn bench_training_iteration(c: &mut Criterion) {
                     executor.add_tensor("Q[a]", q_tensor.clone());
 
                     // Forward pass
-                    let result = executor.forward(&graph).unwrap();
+                    let result = executor.forward(&graph).expect("unwrap");
 
                     // Backward pass
                     let grad_out = Scirs2Exec::ones(result.shape().to_vec());
-                    let _input_grads = executor.backward(&graph, &grad_out).unwrap();
+                    let _input_grads = executor.backward(&graph, &grad_out).expect("unwrap");
 
                     black_box(());
                 });
@@ -173,13 +174,13 @@ fn bench_batch_processing(c: &mut Criterion) {
             |b, &batch_size| {
                 let domain_size = 100;
                 let expr = TLExpr::pred("P", vec![Term::var("x")]);
-                let graph = compile_to_einsum(&expr).unwrap();
+                let graph = compile_to_einsum(&expr).expect("unwrap");
 
                 b.iter(|| {
                     for _ in 0..batch_size {
                         let mut executor = Scirs2Exec::new();
                         executor.add_tensor("P[a]", create_test_tensor(&[domain_size]));
-                        let result = executor.forward(&graph).unwrap();
+                        let result = executor.forward(&graph).expect("unwrap");
                         black_box(result);
                     }
                 });
@@ -208,7 +209,7 @@ fn bench_graph_scaling(c: &mut Criterion) {
                 for i in 1..num_ops {
                     expr = TLExpr::and(expr, TLExpr::pred(format!("P{}", i), vec![Term::var("x")]));
                 }
-                let graph = compile_to_einsum(&expr).unwrap();
+                let graph = compile_to_einsum(&expr).expect("unwrap");
 
                 let mut executor = Scirs2Exec::new();
                 for i in 0..num_ops {
@@ -216,7 +217,7 @@ fn bench_graph_scaling(c: &mut Criterion) {
                 }
 
                 b.iter(|| {
-                    let result = executor.forward(&graph).unwrap();
+                    let result = executor.forward(&graph).expect("unwrap");
                     black_box(result);
                 });
             },
@@ -242,14 +243,14 @@ fn bench_or_operation(c: &mut Criterion) {
                     TLExpr::pred("P", vec![Term::var("x")]),
                     TLExpr::pred("Q", vec![Term::var("x")]),
                 );
-                let graph = compile_to_einsum(&expr).unwrap();
+                let graph = compile_to_einsum(&expr).expect("unwrap");
 
                 let mut executor = Scirs2Exec::new();
                 executor.add_tensor("P[a]", create_test_tensor(&[size]));
                 executor.add_tensor("Q[a]", create_test_tensor(&[size]));
 
                 b.iter(|| {
-                    let result = executor.forward(&graph).unwrap();
+                    let result = executor.forward(&graph).expect("unwrap");
                     black_box(result);
                 });
             },
@@ -272,13 +273,13 @@ fn bench_not_operation(c: &mut Criterion) {
             |b, &size| {
                 // NOT P(x)
                 let expr = TLExpr::negate(TLExpr::pred("P", vec![Term::var("x")]));
-                let graph = compile_to_einsum(&expr).unwrap();
+                let graph = compile_to_einsum(&expr).expect("unwrap");
 
                 let mut executor = Scirs2Exec::new();
                 executor.add_tensor("P[a]", create_test_tensor(&[size]));
 
                 b.iter(|| {
-                    let result = executor.forward(&graph).unwrap();
+                    let result = executor.forward(&graph).expect("unwrap");
                     black_box(result);
                 });
             },
@@ -307,14 +308,14 @@ fn bench_forall_quantifier(c: &mut Criterion) {
                 let mut ctx = CompilerContext::new();
                 ctx.add_domain("Person".to_string(), size);
 
-                let graph = compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+                let graph = compile_to_einsum_with_context(&expr, &mut ctx).expect("unwrap");
 
                 let mut executor = Scirs2Exec::new();
                 let tensor = create_test_tensor(&[size, size]);
                 executor.add_tensor("knows[ab]", tensor);
 
                 b.iter(|| {
-                    let result = executor.forward(&graph).unwrap();
+                    let result = executor.forward(&graph).expect("unwrap");
                     black_box(result);
                 });
             },
@@ -340,14 +341,14 @@ fn bench_implication(c: &mut Criterion) {
                     TLExpr::pred("P", vec![Term::var("x")]),
                     TLExpr::pred("Q", vec![Term::var("x")]),
                 );
-                let graph = compile_to_einsum(&expr).unwrap();
+                let graph = compile_to_einsum(&expr).expect("unwrap");
 
                 let mut executor = Scirs2Exec::new();
                 executor.add_tensor("P[a]", create_test_tensor(&[size]));
                 executor.add_tensor("Q[a]", create_test_tensor(&[size]));
 
                 b.iter(|| {
-                    let result = executor.forward(&graph).unwrap();
+                    let result = executor.forward(&graph).expect("unwrap");
                     black_box(result);
                 });
             },
@@ -378,7 +379,7 @@ fn bench_complex_nested(c: &mut Criterion) {
                     TLExpr::pred("S", vec![Term::var("x")]),
                 );
                 let expr = TLExpr::or(left, right);
-                let graph = compile_to_einsum(&expr).unwrap();
+                let graph = compile_to_einsum(&expr).expect("unwrap");
 
                 let mut executor = Scirs2Exec::new();
                 executor.add_tensor("P[a]", create_test_tensor(&[size]));
@@ -387,7 +388,7 @@ fn bench_complex_nested(c: &mut Criterion) {
                 executor.add_tensor("S[a]", create_test_tensor(&[size]));
 
                 b.iter(|| {
-                    let result = executor.forward(&graph).unwrap();
+                    let result = executor.forward(&graph).expect("unwrap");
                     black_box(result);
                 });
             },

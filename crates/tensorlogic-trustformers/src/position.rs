@@ -710,7 +710,7 @@ mod tests {
     #[test]
     fn test_sinusoidal_encoding_creation() {
         let config = PositionEncodingConfig::sinusoidal(512, 2048);
-        let encoding = SinusoidalPositionEncoding::new(config).unwrap();
+        let encoding = SinusoidalPositionEncoding::new(config).expect("unwrap");
         assert_eq!(encoding.config.d_model, 512);
         assert_eq!(encoding.base(), 10000.0);
     }
@@ -718,14 +718,14 @@ mod tests {
     #[test]
     fn test_learned_encoding_creation() {
         let config = PositionEncodingConfig::learned(512, 2048);
-        let encoding = LearnedPositionEncoding::new(config).unwrap();
+        let encoding = LearnedPositionEncoding::new(config).expect("unwrap");
         assert_eq!(encoding.max_seq_len(), 2048);
     }
 
     #[test]
     fn test_relative_encoding_creation() {
         let config = PositionEncodingConfig::relative(512, 32, 128);
-        let encoding = RelativePositionEncoding::new(config).unwrap();
+        let encoding = RelativePositionEncoding::new(config).expect("unwrap");
         assert_eq!(encoding.num_buckets(), 32);
         assert_eq!(encoding.max_distance(), 128);
     }
@@ -733,12 +733,12 @@ mod tests {
     #[test]
     fn test_sinusoidal_graph_building() {
         let config = PositionEncodingConfig::sinusoidal(512, 2048);
-        let encoding = SinusoidalPositionEncoding::new(config).unwrap();
+        let encoding = SinusoidalPositionEncoding::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("x");
 
-        let outputs = encoding.build_encoding_graph(&mut graph).unwrap();
+        let outputs = encoding.build_encoding_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
@@ -746,13 +746,13 @@ mod tests {
     #[test]
     fn test_learned_graph_building() {
         let config = PositionEncodingConfig::learned(512, 2048);
-        let encoding = LearnedPositionEncoding::new(config).unwrap();
+        let encoding = LearnedPositionEncoding::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("x");
         graph.add_tensor("position_embeddings");
 
-        let outputs = encoding.build_encoding_graph(&mut graph).unwrap();
+        let outputs = encoding.build_encoding_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
@@ -760,14 +760,14 @@ mod tests {
     #[test]
     fn test_relative_bias_graph_building() {
         let config = PositionEncodingConfig::relative(512, 32, 128);
-        let encoding = RelativePositionEncoding::new(config).unwrap();
+        let encoding = RelativePositionEncoding::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("attention_scores");
         graph.add_tensor("relative_position_bias");
         graph.add_tensor("relative_position_indices");
 
-        let outputs = encoding.build_bias_graph(&mut graph).unwrap();
+        let outputs = encoding.build_bias_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
@@ -828,7 +828,7 @@ mod tests {
     #[test]
     fn test_rotary_encoding_creation() {
         let config = PositionEncodingConfig::rotary(512, 2048);
-        let encoding = RotaryPositionEncoding::new(config).unwrap();
+        let encoding = RotaryPositionEncoding::new(config).expect("unwrap");
         assert_eq!(encoding.config.d_model, 512);
         assert_eq!(encoding.base(), 10000.0);
         assert_eq!(encoding.scaling_factor(), 1.0);
@@ -837,14 +837,14 @@ mod tests {
     #[test]
     fn test_rotary_graph_building() {
         let config = PositionEncodingConfig::rotary(512, 2048);
-        let encoding = RotaryPositionEncoding::new(config).unwrap();
+        let encoding = RotaryPositionEncoding::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("x");
         graph.add_tensor("cos_cached");
         graph.add_tensor("sin_cached");
 
-        let outputs = encoding.build_encoding_graph(&mut graph).unwrap();
+        let outputs = encoding.build_encoding_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
@@ -873,14 +873,14 @@ mod tests {
     #[test]
     fn test_alibi_encoding_creation() {
         let config = PositionEncodingConfig::alibi(512, 8, 2048);
-        let encoding = AlibiPositionEncoding::new(config).unwrap();
+        let encoding = AlibiPositionEncoding::new(config).expect("unwrap");
         assert_eq!(encoding.n_heads(), 8);
     }
 
     #[test]
     fn test_alibi_slopes_computation() {
         let config = PositionEncodingConfig::alibi(512, 8, 2048);
-        let encoding = AlibiPositionEncoding::new(config).unwrap();
+        let encoding = AlibiPositionEncoding::new(config).expect("unwrap");
         let slopes = encoding.compute_slopes();
 
         assert_eq!(slopes.len(), 8);
@@ -896,14 +896,14 @@ mod tests {
     #[test]
     fn test_alibi_graph_building() {
         let config = PositionEncodingConfig::alibi(512, 8, 2048);
-        let encoding = AlibiPositionEncoding::new(config).unwrap();
+        let encoding = AlibiPositionEncoding::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("attention_scores");
         graph.add_tensor("alibi_slopes");
         graph.add_tensor("distance_matrix");
 
-        let outputs = encoding.build_bias_graph(&mut graph).unwrap();
+        let outputs = encoding.build_bias_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }

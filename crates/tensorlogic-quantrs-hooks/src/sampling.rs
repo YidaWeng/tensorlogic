@@ -10,7 +10,7 @@
 //! - **Particle Filter**: Sequential Monte Carlo for temporal models
 
 use scirs2_core::ndarray::ArrayD;
-use scirs2_core::random::{thread_rng, Rng};
+use scirs2_core::random::{thread_rng, Rng, RngExt};
 use std::collections::HashMap;
 
 use crate::error::{PgmError, Result};
@@ -1032,7 +1032,7 @@ mod tests {
         let result = sampler.run(&graph);
         assert!(result.is_ok());
 
-        let marginals = result.unwrap();
+        let marginals = result.expect("unwrap");
         assert!(marginals.contains_key("x"));
 
         // Should be approximately uniform
@@ -1051,7 +1051,7 @@ mod tests {
         let result = sampler.run(&graph);
         assert!(result.is_ok());
 
-        let marginals = result.unwrap();
+        let marginals = result.expect("unwrap");
         assert_eq!(marginals.len(), 2);
     }
 
@@ -1063,7 +1063,7 @@ mod tests {
         let sampler = GibbsSampler::new(10, 50, 1);
         let samples = sampler.get_samples(&graph);
         assert!(samples.is_ok());
-        assert_eq!(samples.unwrap().len(), 50);
+        assert_eq!(samples.expect("unwrap").len(), 50);
     }
 
     #[test]
@@ -1074,7 +1074,7 @@ mod tests {
         let sampler = GibbsSampler::new(10, 50, 5);
         let samples = sampler.get_samples(&graph);
         assert!(samples.is_ok());
-        assert_eq!(samples.unwrap().len(), 50);
+        assert_eq!(samples.expect("unwrap").len(), 50);
     }
 
     #[test]
@@ -1086,7 +1086,7 @@ mod tests {
         let result = sampler.run(&graph, ProposalDistribution::Uniform);
         assert!(result.is_ok());
 
-        let marginals = result.unwrap();
+        let marginals = result.expect("unwrap");
         assert!(marginals.contains_key("x"));
 
         let dist = &marginals["x"];
@@ -1106,7 +1106,7 @@ mod tests {
         let result = sampler.run(&graph, ProposalDistribution::Custom(custom_weights));
         assert!(result.is_ok());
 
-        let marginals = result.unwrap();
+        let marginals = result.expect("unwrap");
         let sum: f64 = marginals["x"].iter().sum();
         assert_abs_diff_eq!(sum, 1.0, epsilon = 1e-6);
     }
@@ -1206,7 +1206,7 @@ mod tests {
         let result = lw.run(&graph, &evidence);
         assert!(result.is_ok());
 
-        let marginals = result.unwrap();
+        let marginals = result.expect("unwrap");
         assert!(marginals.contains_key("x"));
     }
 
@@ -1218,7 +1218,7 @@ mod tests {
         let sampler = ImportanceSampler::new(50);
         let samples = sampler
             .get_weighted_samples(&graph, &ProposalDistribution::Uniform)
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(samples.len(), 50);
 

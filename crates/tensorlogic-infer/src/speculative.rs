@@ -513,7 +513,7 @@ mod tests {
             .with_strategy(PredictionStrategy::AlwaysTrue)
             .with_confidence_threshold(0.5);
 
-        let task_id = executor.speculate("test".to_string()).unwrap();
+        let task_id = executor.speculate("test".to_string()).expect("unwrap");
         assert_eq!(executor.stats.total_speculations, 1);
         assert!(executor.active_tasks.contains_key(&task_id));
     }
@@ -524,8 +524,10 @@ mod tests {
             .with_strategy(PredictionStrategy::AlwaysTrue)
             .with_confidence_threshold(0.5);
 
-        let task_id = executor.speculate("test".to_string()).unwrap();
-        let correct = executor.validate(task_id, BranchOutcome::True).unwrap();
+        let task_id = executor.speculate("test".to_string()).expect("unwrap");
+        let correct = executor
+            .validate(task_id, BranchOutcome::True)
+            .expect("unwrap");
 
         assert!(correct);
         assert_eq!(executor.stats.correct_speculations, 1);
@@ -538,8 +540,10 @@ mod tests {
             .with_strategy(PredictionStrategy::AlwaysTrue)
             .with_confidence_threshold(0.5);
 
-        let task_id = executor.speculate("test".to_string()).unwrap();
-        let correct = executor.validate(task_id, BranchOutcome::False).unwrap();
+        let task_id = executor.speculate("test".to_string()).expect("unwrap");
+        let correct = executor
+            .validate(task_id, BranchOutcome::False)
+            .expect("unwrap");
 
         assert!(!correct);
         assert_eq!(executor.stats.correct_speculations, 0);
@@ -555,13 +559,17 @@ mod tests {
 
         // Build history with mostly true outcomes
         for _ in 0..8 {
-            let task_id = executor.speculate("node1".to_string()).unwrap();
-            executor.validate(task_id, BranchOutcome::True).unwrap();
+            let task_id = executor.speculate("node1".to_string()).expect("unwrap");
+            executor
+                .validate(task_id, BranchOutcome::True)
+                .expect("unwrap");
         }
 
         for _ in 0..2 {
-            let task_id = executor.speculate("node1".to_string()).unwrap();
-            executor.validate(task_id, BranchOutcome::False).unwrap();
+            let task_id = executor.speculate("node1".to_string()).expect("unwrap");
+            executor
+                .validate(task_id, BranchOutcome::False)
+                .expect("unwrap");
         }
 
         // Switch to history-based after building history
@@ -580,8 +588,8 @@ mod tests {
             .with_confidence_threshold(0.5)
             .with_max_depth(2);
 
-        executor.speculate("node1".to_string()).unwrap();
-        executor.speculate("node2".to_string()).unwrap();
+        executor.speculate("node1".to_string()).expect("unwrap");
+        executor.speculate("node2".to_string()).expect("unwrap");
 
         // Third speculation should fail
         let result = executor.speculate("node3".to_string());
@@ -602,8 +610,10 @@ mod tests {
             .with_strategy(PredictionStrategy::AlwaysTrue)
             .with_confidence_threshold(0.5);
 
-        let task_id = executor.speculate("test".to_string()).unwrap();
-        executor.validate(task_id, BranchOutcome::True).unwrap();
+        let task_id = executor.speculate("test".to_string()).expect("unwrap");
+        executor
+            .validate(task_id, BranchOutcome::True)
+            .expect("unwrap");
 
         assert!(executor.active_tasks.contains_key(&task_id));
         executor.cleanup();
@@ -618,12 +628,16 @@ mod tests {
 
         // 3 correct, 1 incorrect = 75% success rate
         for _ in 0..3 {
-            let task_id = executor.speculate("test".to_string()).unwrap();
-            executor.validate(task_id, BranchOutcome::True).unwrap();
+            let task_id = executor.speculate("test".to_string()).expect("unwrap");
+            executor
+                .validate(task_id, BranchOutcome::True)
+                .expect("unwrap");
         }
 
-        let task_id = executor.speculate("test".to_string()).unwrap();
-        executor.validate(task_id, BranchOutcome::False).unwrap();
+        let task_id = executor.speculate("test".to_string()).expect("unwrap");
+        executor
+            .validate(task_id, BranchOutcome::False)
+            .expect("unwrap");
 
         assert!((executor.stats.success_rate - 0.75).abs() < 0.01);
     }
@@ -634,8 +648,10 @@ mod tests {
             .with_strategy(PredictionStrategy::AlwaysTrue)
             .with_confidence_threshold(0.5);
 
-        let task_id = executor.speculate("test".to_string()).unwrap();
-        executor.validate(task_id, BranchOutcome::True).unwrap();
+        let task_id = executor.speculate("test".to_string()).expect("unwrap");
+        executor
+            .validate(task_id, BranchOutcome::True)
+            .expect("unwrap");
 
         assert_eq!(executor.stats.total_speculations, 1);
 
@@ -654,7 +670,7 @@ mod tests {
 
         // Fill up speculation depth
         for i in 0..executor.max_speculation_depth {
-            executor.speculate(format!("node{}", i)).unwrap();
+            executor.speculate(format!("node{}", i)).expect("unwrap");
         }
 
         assert!(!executor.should_speculate(&"test".to_string()));
@@ -668,10 +684,10 @@ mod tests {
 
         assert_eq!(executor.active_speculation_count(), 0);
 
-        executor.speculate("node1".to_string()).unwrap();
+        executor.speculate("node1".to_string()).expect("unwrap");
         assert_eq!(executor.active_speculation_count(), 1);
 
-        executor.speculate("node2".to_string()).unwrap();
+        executor.speculate("node2".to_string()).expect("unwrap");
         assert_eq!(executor.active_speculation_count(), 2);
     }
 
@@ -689,8 +705,10 @@ mod tests {
                 .with_rollback_policy(policy)
                 .with_confidence_threshold(0.5);
 
-            let task_id = executor.speculate("test".to_string()).unwrap();
-            executor.validate(task_id, BranchOutcome::False).unwrap();
+            let task_id = executor.speculate("test".to_string()).expect("unwrap");
+            executor
+                .validate(task_id, BranchOutcome::False)
+                .expect("unwrap");
 
             assert_eq!(executor.stats.rollbacks, 1);
         }

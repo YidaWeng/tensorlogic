@@ -19,7 +19,7 @@
 //! });
 //!
 //! let graph = EinsumGraph::new();
-//! let compiled = compiler.compile(&graph).unwrap();
+//! let compiled = compiler.compile(&graph).expect("unwrap");
 //! ```
 
 use crate::error::ExecutorError;
@@ -411,11 +411,11 @@ impl CompilationCache {
 
     /// Get a compiled graph from the cache.
     pub fn get(&self, key: &CompilationKey) -> Option<Arc<CompiledGraph>> {
-        let cache = self.cache.read().unwrap();
+        let cache = self.cache.read().expect("lock should not be poisoned");
         let result = cache.get(key).cloned();
 
         // Update stats
-        let mut stats = self.stats.write().unwrap();
+        let mut stats = self.stats.write().expect("lock should not be poisoned");
         if let Some(ref compiled) = result {
             stats.hits += 1;
             stats.time_saved += compiled.stats.compilation_time;
@@ -428,7 +428,7 @@ impl CompilationCache {
 
     /// Insert a compiled graph into the cache.
     pub fn insert(&self, key: CompilationKey, compiled: CompiledGraph) {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("lock should not be poisoned");
 
         // Evict oldest entry if at capacity
         if cache.len() >= self.max_size && !cache.contains_key(&key) {
@@ -440,27 +440,33 @@ impl CompilationCache {
         cache.insert(key, Arc::new(compiled));
 
         // Update size stat
-        let mut stats = self.stats.write().unwrap();
+        let mut stats = self.stats.write().expect("lock should not be poisoned");
         stats.size = cache.len();
     }
 
     /// Clear the cache.
     pub fn clear(&self) {
-        let mut cache = self.cache.write().unwrap();
+        let mut cache = self.cache.write().expect("lock should not be poisoned");
         cache.clear();
 
-        let mut stats = self.stats.write().unwrap();
+        let mut stats = self.stats.write().expect("lock should not be poisoned");
         stats.size = 0;
     }
 
     /// Get cache statistics.
     pub fn stats(&self) -> CacheStats {
-        self.stats.read().unwrap().clone()
+        self.stats
+            .read()
+            .expect("lock should not be poisoned")
+            .clone()
     }
 
     /// Get the number of entries in the cache.
     pub fn len(&self) -> usize {
-        self.cache.read().unwrap().len()
+        self.cache
+            .read()
+            .expect("lock should not be poisoned")
+            .len()
     }
 
     /// Check if the cache is empty.
@@ -587,7 +593,7 @@ mod tests {
         let result = compiler.compile(&graph);
         assert!(result.is_ok());
 
-        let compiled = result.unwrap();
+        let compiled = result.expect("unwrap");
         assert!(compiled.is_valid());
         assert_eq!(compiled.stats.original_nodes, 3);
     }
@@ -603,7 +609,7 @@ mod tests {
         let result = compiler.compile(&graph);
         assert!(result.is_ok());
 
-        let compiled = result.unwrap();
+        let compiled = result.expect("unwrap");
         assert!(compiled.is_valid());
         assert!(compiled.stats.compilation_time > Duration::from_secs(0));
     }
@@ -619,7 +625,7 @@ mod tests {
         let result = compiler.compile(&graph);
         assert!(result.is_ok());
 
-        let compiled = result.unwrap();
+        let compiled = result.expect("unwrap");
         assert!(compiled.is_valid());
         assert_eq!(compiled.node_count(), compiled.stats.optimized_nodes);
     }
@@ -628,7 +634,7 @@ mod tests {
     fn test_compiled_graph_summary() {
         let graph = create_test_graph();
         let mut compiler = GraphCompiler::with_default_config();
-        let compiled = compiler.compile(&graph).unwrap();
+        let compiled = compiler.compile(&graph).expect("unwrap");
 
         let summary = compiled.summary();
         assert!(summary.contains("CompiledGraph"));
@@ -651,7 +657,7 @@ mod tests {
 
         // Insert and retrieve
         let mut compiler = GraphCompiler::with_default_config();
-        let compiled = compiler.compile(&graph).unwrap();
+        let compiled = compiler.compile(&graph).expect("unwrap");
         cache.insert(key.clone(), compiled);
 
         assert_eq!(cache.len(), 1);
@@ -682,12 +688,12 @@ mod tests {
         let key3 = CompilationKey::new(&graph3, &config);
 
         // Fill cache
-        cache.insert(key1.clone(), compiler.compile(&graph1).unwrap());
-        cache.insert(key2.clone(), compiler.compile(&graph2).unwrap());
+        cache.insert(key1.clone(), compiler.compile(&graph1).expect("unwrap"));
+        cache.insert(key2.clone(), compiler.compile(&graph2).expect("unwrap"));
         assert_eq!(cache.len(), 2);
 
         // Add third entry - should evict first
-        cache.insert(key3.clone(), compiler.compile(&graph3).unwrap());
+        cache.insert(key3.clone(), compiler.compile(&graph3).expect("unwrap"));
         assert_eq!(cache.len(), 2);
     }
 
@@ -712,7 +718,7 @@ mod tests {
 
         // Insert and hit
         let mut compiler = GraphCompiler::with_default_config();
-        let compiled = compiler.compile(&graph).unwrap();
+        let compiled = compiler.compile(&graph).expect("unwrap");
         cache.insert(key.clone(), compiled);
         cache.get(&key);
 
@@ -730,7 +736,7 @@ mod tests {
         let key = CompilationKey::new(&graph, &config);
 
         let mut compiler = GraphCompiler::with_default_config();
-        let compiled = compiler.compile(&graph).unwrap();
+        let compiled = compiler.compile(&graph).expect("unwrap");
         cache.insert(key.clone(), compiled);
 
         assert_eq!(cache.len(), 1);
@@ -760,7 +766,7 @@ mod tests {
             let result = compiler.compile(&graph);
             assert!(result.is_ok(), "Compilation failed for level {:?}", level);
 
-            let compiled = result.unwrap();
+            let compiled = result.expect("unwrap");
             assert!(compiled.is_valid());
         }
     }
@@ -773,7 +779,7 @@ mod tests {
             ..Default::default()
         });
 
-        let compiled = compiler.compile(&graph).unwrap();
+        let compiled = compiler.compile(&graph).expect("unwrap");
         // Memory estimation should return a value (usize is always non-negative)
         let _memory = compiled.total_memory();
     }

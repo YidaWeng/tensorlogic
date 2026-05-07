@@ -252,6 +252,14 @@ impl fmt::Display for TLExpr {
             TLExpr::Abducible { name, cost } => write!(f, "abd({}:{})", name, cost),
             TLExpr::Explain { formula } => write!(f, "explain({})", formula),
             TLExpr::Constant(value) => write!(f, "{}", value),
+            TLExpr::SymbolLiteral(s) => write!(f, ":{s}"),
+            TLExpr::Match { scrutinee, arms } => {
+                write!(f, "(match {scrutinee}")?;
+                for (pat, body) in arms {
+                    write!(f, " [{pat} => {body}]")?;
+                }
+                write!(f, ")")
+            }
         }
     }
 }
@@ -427,8 +435,8 @@ mod tests {
 
         graph
             .add_node(EinsumNode::new("i->i", vec![t0], vec![t1]))
-            .unwrap();
-        graph.add_output(t1).unwrap();
+            .expect("unwrap");
+        graph.add_output(t1).expect("unwrap");
 
         let display = format!("{}", graph);
         assert!(display.contains("EinsumGraph"));

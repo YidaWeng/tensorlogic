@@ -820,7 +820,7 @@ mod tests {
         let (_, stats) = pipeline.optimize(&expr);
 
         // Should identify the most productive iteration
-        let (iter_idx, iter_stats) = stats.most_productive_iteration().unwrap();
+        let (iter_idx, iter_stats) = stats.most_productive_iteration().expect("unwrap");
         assert!(iter_stats.total_optimizations() > 0);
         assert!(iter_idx < stats.total_iterations);
     }

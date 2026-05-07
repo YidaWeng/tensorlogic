@@ -204,7 +204,7 @@ fn main() -> anyhow::Result<()> {
     let graph_coloring = vec![edge1, edge2, edge3, edge4, edge5]
         .into_iter()
         .reduce(TLExpr::and)
-        .unwrap();
+        .expect("unwrap");
 
     let mut ctx6 = CompilerContext::new();
     let graph = compile_to_einsum_with_context(&graph_coloring, &mut ctx6)?;
@@ -364,7 +364,7 @@ fn main() -> anyhow::Result<()> {
     let tournament = vec![round1, round2, round3, appearances]
         .into_iter()
         .reduce(TLExpr::and)
-        .unwrap();
+        .expect("unwrap");
 
     let mut ctx10 = CompilerContext::new();
     let graph = compile_to_einsum_with_context(&tournament, &mut ctx10)?;

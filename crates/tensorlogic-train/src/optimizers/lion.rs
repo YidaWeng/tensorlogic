@@ -173,7 +173,7 @@ mod tests {
     #[test]
     fn test_lion_optimizer() {
         let config = LionConfig::default();
-        let mut optimizer = LionOptimizer::new(config).unwrap();
+        let mut optimizer = LionOptimizer::new(config).expect("unwrap");
 
         let mut params = HashMap::new();
         params.insert("w".to_string(), Array1::from_vec(vec![1.0, 2.0, 3.0]));
@@ -182,10 +182,10 @@ mod tests {
         gradients.insert("w".to_string(), Array1::from_vec(vec![0.1, 0.2, 0.3]));
 
         // Perform optimization step
-        optimizer.step(&mut params, &gradients).unwrap();
+        optimizer.step(&mut params, &gradients).expect("unwrap");
 
         // Parameters should have changed
-        let w = params.get("w").unwrap();
+        let w = params.get("w").expect("unwrap");
         assert!(w[0] < 1.0);
         assert!(w[1] < 2.0);
         assert!(w[2] < 3.0);
@@ -199,7 +199,7 @@ mod tests {
             beta2: 0.99,
             weight_decay: 0.01,
         };
-        let mut optimizer = LionOptimizer::new(config).unwrap();
+        let mut optimizer = LionOptimizer::new(config).expect("unwrap");
 
         let mut params = HashMap::new();
         params.insert("w".to_string(), Array1::from_vec(vec![1.0, 1.0]));
@@ -207,11 +207,11 @@ mod tests {
         let mut gradients = HashMap::new();
         gradients.insert("w".to_string(), Array1::from_vec(vec![0.1, 0.1]));
 
-        let initial_w = params.get("w").unwrap()[0];
+        let initial_w = params.get("w").expect("unwrap")[0];
 
-        optimizer.step(&mut params, &gradients).unwrap();
+        optimizer.step(&mut params, &gradients).expect("unwrap");
 
-        let updated_w = params.get("w").unwrap()[0];
+        let updated_w = params.get("w").expect("unwrap")[0];
         // With weight decay, the update should be larger
         assert!(updated_w < initial_w);
     }
@@ -224,7 +224,7 @@ mod tests {
             beta2: 0.0,
             weight_decay: 0.0,
         };
-        let mut optimizer = LionOptimizer::new(config).unwrap();
+        let mut optimizer = LionOptimizer::new(config).expect("unwrap");
 
         let mut params = HashMap::new();
         params.insert("w".to_string(), Array1::from_vec(vec![1.0, 1.0, 1.0]));
@@ -235,9 +235,9 @@ mod tests {
             Array1::from_vec(vec![0.1, 1.0, 100.0]), // Different magnitudes
         );
 
-        optimizer.step(&mut params, &gradients).unwrap();
+        optimizer.step(&mut params, &gradients).expect("unwrap");
 
-        let w = params.get("w").unwrap();
+        let w = params.get("w").expect("unwrap");
         // All updates should be the same magnitude (sign-based)
         let delta0 = 1.0 - w[0];
         let delta1 = 1.0 - w[1];
@@ -250,7 +250,7 @@ mod tests {
     #[test]
     fn test_lion_state_dict() {
         let config = LionConfig::default();
-        let mut optimizer = LionOptimizer::new(config).unwrap();
+        let mut optimizer = LionOptimizer::new(config).expect("unwrap");
 
         let mut params = HashMap::new();
         params.insert("w".to_string(), Array1::from_vec(vec![1.0, 2.0]));
@@ -258,27 +258,27 @@ mod tests {
         let mut gradients = HashMap::new();
         gradients.insert("w".to_string(), Array1::from_vec(vec![0.1, 0.2]));
 
-        optimizer.step(&mut params, &gradients).unwrap();
+        optimizer.step(&mut params, &gradients).expect("unwrap");
 
         // Save state
         let state = optimizer.state_dict();
         assert!(state.contains_key("momentum.w"));
 
         // Create new optimizer and load state
-        let mut optimizer2 = LionOptimizer::new(LionConfig::default()).unwrap();
-        optimizer2.load_state_dict(&state).unwrap();
+        let mut optimizer2 = LionOptimizer::new(LionConfig::default()).expect("unwrap");
+        optimizer2.load_state_dict(&state).expect("unwrap");
 
         // States should match
         assert_eq!(
-            optimizer.momentum.get("w").unwrap().to_vec(),
-            optimizer2.momentum.get("w").unwrap().to_vec()
+            optimizer.momentum.get("w").expect("unwrap").to_vec(),
+            optimizer2.momentum.get("w").expect("unwrap").to_vec()
         );
     }
 
     #[test]
     fn test_lion_lr_schedule() {
         let config = LionConfig::default();
-        let mut optimizer = LionOptimizer::new(config).unwrap();
+        let mut optimizer = LionOptimizer::new(config).expect("unwrap");
 
         assert!((optimizer.get_lr() - 1e-4).abs() < 1e-10);
 
@@ -316,7 +316,7 @@ mod tests {
     #[test]
     fn test_lion_reset() {
         let config = LionConfig::default();
-        let mut optimizer = LionOptimizer::new(config).unwrap();
+        let mut optimizer = LionOptimizer::new(config).expect("unwrap");
 
         let mut params = HashMap::new();
         params.insert("w".to_string(), Array1::from_vec(vec![1.0]));
@@ -324,7 +324,7 @@ mod tests {
         let mut gradients = HashMap::new();
         gradients.insert("w".to_string(), Array1::from_vec(vec![0.1]));
 
-        optimizer.step(&mut params, &gradients).unwrap();
+        optimizer.step(&mut params, &gradients).expect("unwrap");
         assert!(!optimizer.momentum.is_empty());
 
         optimizer.reset();

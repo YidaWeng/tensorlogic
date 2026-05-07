@@ -607,7 +607,7 @@ mod tests {
         let a_idx = graph.add_tensor("a");
         let b_idx = graph.add_tensor("b");
 
-        graph.add_input(a_idx).unwrap();
+        graph.add_input(a_idx).expect("unwrap");
         graph
             .add_node(EinsumNode {
                 op: OpType::ElemUnary {
@@ -617,8 +617,8 @@ mod tests {
                 outputs: vec![b_idx],
                 metadata: None,
             })
-            .unwrap();
-        graph.add_output(b_idx).unwrap();
+            .expect("unwrap");
+        graph.add_output(b_idx).expect("unwrap");
 
         let compiled = CompiledGraph::compile(graph);
 
@@ -696,7 +696,7 @@ mod tests {
         let b_idx = graph.add_tensor("b");
         let c_idx = graph.add_tensor("c");
 
-        graph.add_input(a_idx).unwrap();
+        graph.add_input(a_idx).expect("unwrap");
 
         // Add a ReLU node
         graph
@@ -708,7 +708,7 @@ mod tests {
                 outputs: vec![b_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Add another ReLU node (duplicate for CSE testing)
         graph
@@ -720,9 +720,9 @@ mod tests {
                 outputs: vec![c_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
-        graph.add_output(b_idx).unwrap();
+        graph.add_output(b_idx).expect("unwrap");
 
         let compiled = CompiledGraph::compile(graph);
 
@@ -739,7 +739,7 @@ mod tests {
         let a_idx = graph.add_tensor("a");
         let b_idx = graph.add_tensor("b");
 
-        graph.add_input(a_idx).unwrap();
+        graph.add_input(a_idx).expect("unwrap");
         graph
             .add_node(EinsumNode {
                 op: OpType::ElemUnary {
@@ -749,8 +749,8 @@ mod tests {
                 outputs: vec![b_idx],
                 metadata: None,
             })
-            .unwrap();
-        graph.add_output(b_idx).unwrap();
+            .expect("unwrap");
+        graph.add_output(b_idx).expect("unwrap");
 
         let config = OptimizationConfig::none();
         let compiled = CompiledGraph::compile_with_config(graph, &config);
@@ -771,7 +771,7 @@ mod tests {
         let b_idx = graph.add_tensor("b");
         let c_idx = graph.add_tensor("c");
 
-        graph.add_input(a_idx).unwrap();
+        graph.add_input(a_idx).expect("unwrap");
         graph
             .add_node(EinsumNode {
                 op: OpType::ElemUnary {
@@ -781,7 +781,7 @@ mod tests {
                 outputs: vec![b_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode {
                 op: OpType::ElemUnary {
@@ -791,13 +791,13 @@ mod tests {
                 outputs: vec![c_idx],
                 metadata: None,
             })
-            .unwrap();
-        graph.add_output(c_idx).unwrap();
+            .expect("unwrap");
+        graph.add_output(c_idx).expect("unwrap");
 
         let compiled = CompiledGraph::compile(graph);
 
         assert!(compiled.memory_plan.is_some());
-        let plan = compiled.memory_plan.unwrap();
+        let plan = compiled.memory_plan.expect("unwrap");
         assert!(plan.max_live_tensors > 0);
         assert!(plan.peak_memory_bytes > 0);
     }
@@ -812,7 +812,7 @@ mod tests {
         let c_idx = graph.add_tensor("c");
         let d_idx = graph.add_tensor("d");
 
-        graph.add_input(a_idx).unwrap();
+        graph.add_input(a_idx).expect("unwrap");
 
         // Node that produces b (will be used)
         graph
@@ -824,7 +824,7 @@ mod tests {
                 outputs: vec![b_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Dead node that produces c (not used)
         graph
@@ -836,7 +836,7 @@ mod tests {
                 outputs: vec![c_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Node that uses b to produce d
         graph
@@ -848,12 +848,12 @@ mod tests {
                 outputs: vec![d_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
-        graph.add_output(d_idx).unwrap();
+        graph.add_output(d_idx).expect("unwrap");
 
         let initial_nodes = graph.nodes.len();
-        let removed = eliminate_dead_code(&mut graph).unwrap();
+        let removed = eliminate_dead_code(&mut graph).expect("unwrap");
 
         // Should remove the dead sigmoid node
         assert!(removed > 0 || graph.nodes.len() < initial_nodes);
@@ -868,7 +868,7 @@ mod tests {
         let b_idx = graph.add_tensor("b");
         let c_idx = graph.add_tensor("c");
 
-        graph.add_input(a_idx).unwrap();
+        graph.add_input(a_idx).expect("unwrap");
 
         // First ReLU
         graph
@@ -880,7 +880,7 @@ mod tests {
                 outputs: vec![b_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Duplicate ReLU (same operation, same input)
         graph
@@ -892,12 +892,12 @@ mod tests {
                 outputs: vec![c_idx],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
-        graph.add_output(b_idx).unwrap();
-        graph.add_output(c_idx).unwrap();
+        graph.add_output(b_idx).expect("unwrap");
+        graph.add_output(c_idx).expect("unwrap");
 
-        let eliminated = eliminate_common_subexpressions(&mut graph).unwrap();
+        let eliminated = eliminate_common_subexpressions(&mut graph).expect("unwrap");
 
         // Should detect the duplicate (CSE may or may not eliminate it depending on implementation)
         // At minimum, the function should not error

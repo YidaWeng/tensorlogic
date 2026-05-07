@@ -454,7 +454,8 @@ mod tests {
 
     #[test]
     fn test_int8_symmetric_quantization() {
-        let tensor = Array2::from_shape_vec((2, 3), vec![-1.0, 0.0, 1.0, -2.0, 2.0, 0.5]).unwrap();
+        let tensor =
+            Array2::from_shape_vec((2, 3), vec![-1.0, 0.0, 1.0, -2.0, 2.0, 0.5]).expect("unwrap");
         let config = QuantizationConfig::int8_symmetric();
 
         let quantized = Quantizer::quantize_tensor(&tensor.view(), &config);
@@ -471,7 +472,7 @@ mod tests {
 
     #[test]
     fn test_int8_asymmetric_quantization() {
-        let tensor = Array2::from_shape_vec((2, 2), vec![0.0, 1.0, 2.0, 3.0]).unwrap();
+        let tensor = Array2::from_shape_vec((2, 2), vec![0.0, 1.0, 2.0, 3.0]).expect("unwrap");
         let config = QuantizationConfig::int8_asymmetric();
 
         let quantized = Quantizer::quantize_tensor(&tensor.view(), &config);
@@ -486,7 +487,7 @@ mod tests {
     fn test_int4_per_channel_quantization() {
         let tensor =
             Array2::from_shape_vec((2, 4), vec![-1.0, 0.0, 1.0, 2.0, -10.0, -5.0, 5.0, 10.0])
-                .unwrap();
+                .expect("unwrap");
         let config = QuantizationConfig::int4_per_channel();
 
         let quantized = Quantizer::quantize_tensor(&tensor.view(), &config);
@@ -529,7 +530,7 @@ mod tests {
 
     #[test]
     fn test_quantization_error() {
-        let tensor = Array2::from_shape_vec((3, 3), vec![1.0; 9]).unwrap();
+        let tensor = Array2::from_shape_vec((3, 3), vec![1.0; 9]).expect("unwrap");
         let config = QuantizationConfig::int8_symmetric();
 
         let quantized = Quantizer::quantize_tensor(&tensor.view(), &config);
@@ -555,7 +556,7 @@ mod tests {
         let mut qat = QuantizationAwareTraining::new(true);
         qat.register_layer("fc1".to_string(), QuantizationConfig::int8_symmetric());
 
-        let tensor = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).unwrap();
+        let tensor = Array2::from_shape_vec((2, 2), vec![1.0, 2.0, 3.0, 4.0]).expect("unwrap");
         let fake_quantized = qat.fake_quantize(&tensor, "fc1");
 
         // Should be similar but not identical due to quantization
@@ -566,13 +567,13 @@ mod tests {
     fn test_dynamic_range_calibrator() {
         let mut calibrator = DynamicRangeCalibrator::new();
 
-        let tensor1 = Array2::from_shape_vec((2, 2), vec![0.0, 1.0, 2.0, 3.0]).unwrap();
-        let tensor2 = Array2::from_shape_vec((2, 2), vec![-1.0, 0.0, 1.0, 4.0]).unwrap();
+        let tensor1 = Array2::from_shape_vec((2, 2), vec![0.0, 1.0, 2.0, 3.0]).expect("unwrap");
+        let tensor2 = Array2::from_shape_vec((2, 2), vec![-1.0, 0.0, 1.0, 4.0]).expect("unwrap");
 
         calibrator.collect("layer1".to_string(), &tensor1.view());
         calibrator.collect("layer1".to_string(), &tensor2.view());
 
-        let (min, max) = calibrator.get_range("layer1").unwrap();
+        let (min, max) = calibrator.get_range("layer1").expect("unwrap");
         assert_eq!(min, -1.0);
         assert_eq!(max, 4.0);
     }
@@ -580,7 +581,7 @@ mod tests {
     #[test]
     fn test_calibrator_finalize() {
         let mut calibrator = DynamicRangeCalibrator::new();
-        let tensor = Array2::from_shape_vec((2, 2), vec![1.0; 4]).unwrap();
+        let tensor = Array2::from_shape_vec((2, 2), vec![1.0; 4]).expect("unwrap");
 
         calibrator.collect("layer1".to_string(), &tensor.view());
         calibrator.collect("layer2".to_string(), &tensor.view());
@@ -596,7 +597,7 @@ mod tests {
     #[test]
     fn test_calibrator_reset() {
         let mut calibrator = DynamicRangeCalibrator::new();
-        let tensor = Array2::from_shape_vec((2, 2), vec![1.0; 4]).unwrap();
+        let tensor = Array2::from_shape_vec((2, 2), vec![1.0; 4]).expect("unwrap");
 
         calibrator.collect("layer1".to_string(), &tensor.view());
         assert_eq!(calibrator.num_samples, 1);
@@ -623,7 +624,7 @@ mod tests {
             (2, 2),
             vec![f32::MIN / 1e6, f32::MAX / 1e6, -1000.0, 1000.0],
         )
-        .unwrap();
+        .expect("unwrap");
         let config = QuantizationConfig::int8_symmetric();
 
         let quantized = Quantizer::quantize_tensor(&tensor.view(), &config);

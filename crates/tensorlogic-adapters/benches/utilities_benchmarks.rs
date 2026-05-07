@@ -22,7 +22,7 @@ fn create_large_symbol_table(num_domains: usize, num_predicates: usize) -> Symbo
     for i in 0..num_domains {
         table
             .add_domain(DomainInfo::new(format!("Domain{}", i), 100 + i))
-            .unwrap();
+            .expect("unwrap");
     }
 
     for i in 0..num_predicates {
@@ -32,7 +32,7 @@ fn create_large_symbol_table(num_domains: usize, num_predicates: usize) -> Symbo
             .collect();
         table
             .add_predicate(PredicateInfo::new(format!("pred{}", i), domains))
-            .unwrap();
+            .expect("unwrap");
     }
 
     table
@@ -55,7 +55,7 @@ fn bench_batch_add_domains(c: &mut Criterion) {
                     std_black_box(&mut table),
                     std_black_box(domains.clone()),
                 )
-                .unwrap();
+                .expect("unwrap");
                 std_black_box(table);
             });
         });
@@ -74,7 +74,7 @@ fn bench_batch_add_predicates(c: &mut Criterion) {
         for i in 0..10 {
             table
                 .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-                .unwrap();
+                .expect("unwrap");
         }
 
         let predicates: Vec<PredicateInfo> = (0..*size)
@@ -89,7 +89,7 @@ fn bench_batch_add_predicates(c: &mut Criterion) {
                     std_black_box(&mut table),
                     std_black_box(predicates.clone()),
                 )
-                .unwrap();
+                .expect("unwrap");
                 std_black_box(table);
             });
         });
@@ -104,7 +104,9 @@ fn bench_batch_bind_variables(c: &mut Criterion) {
 
     for size in [10, 50, 100, 500].iter() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Domain", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Domain", 100))
+            .expect("unwrap");
 
         let mut bindings = HashMap::new();
         for i in 0..*size {
@@ -119,7 +121,7 @@ fn bench_batch_bind_variables(c: &mut Criterion) {
                     std_black_box(&mut table),
                     std_black_box(bindings.clone()),
                 )
-                .unwrap();
+                .expect("unwrap");
                 std_black_box(table);
             });
         });
@@ -255,7 +257,7 @@ fn bench_validation_comprehensive(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(size), &table, |b, table| {
             b.iter(|| {
                 let validator = SchemaValidator::new(std_black_box(table));
-                let report = validator.validate().unwrap();
+                let report = validator.validate().expect("unwrap");
                 std_black_box(report);
             });
         });
@@ -334,7 +336,7 @@ fn bench_combined_operations(c: &mut Criterion) {
                 let domains: Vec<DomainInfo> = (0..size)
                     .map(|i| DomainInfo::new(format!("Domain{}", i), 100))
                     .collect();
-                BatchOperations::add_domains(&mut table, domains).unwrap();
+                BatchOperations::add_domains(&mut table, domains).expect("unwrap");
 
                 let predicates: Vec<PredicateInfo> = (0..size)
                     .map(|i| {
@@ -344,7 +346,7 @@ fn bench_combined_operations(c: &mut Criterion) {
                         )
                     })
                     .collect();
-                BatchOperations::add_predicates(&mut table, predicates).unwrap();
+                BatchOperations::add_predicates(&mut table, predicates).expect("unwrap");
 
                 // Query operations
                 let _ = QueryUtils::find_predicates_by_arity(&table, 1);

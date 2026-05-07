@@ -334,7 +334,7 @@ mod tests {
     fn test_sanitize_tensor_permissive() {
         let tensor = array![1.0, f64::NAN, f64::INFINITY, -3.0].into_dyn();
         let config = FallbackConfig::permissive();
-        let result = sanitize_tensor(&tensor, &config, "test").unwrap();
+        let result = sanitize_tensor(&tensor, &config, "test").expect("unwrap");
 
         assert_eq!(result[[0]], 1.0);
         assert_eq!(result[[1]], 0.0); // NaN replaced with 0.0
@@ -398,7 +398,7 @@ mod tests {
         let nan_issue = issues
             .iter()
             .find(|i| matches!(i.kind, NumericalErrorKind::NaN))
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(nan_issue.count, 2);
     }
 

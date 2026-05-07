@@ -1,22 +1,11 @@
-# Beta.1 Release Status ✅
+# TensorLogic SklearRS Kernels — TODO
 
-**Version**: 0.1.0-beta.1
-**Status**: Production Ready (Further Enhanced)
+**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
-This crate is part of the TensorLogic v0.1.0-beta.1 release with:
-- Zero compiler warnings
-- 100% test pass rate (391 tests)
-- Complete documentation
-- Production-ready quality
-- **New: Advanced GP kernels, kernel selection, Random Fourier Features, and KPCA utilities**
+Kernel methods bridging tensor logic with sklearRS kernel approximations.
 
-See main [TODO.md](../../TODO.md) for overall project status.
-
----
-
-# tensorlogic-sklears-kernels TODO
-
-## Completed ✓
+## Completed
 
 - [x] Basic crate structure
 - [x] **Logic-derived similarity kernels**
@@ -31,7 +20,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Sigmoid (Tanh) kernel
   - [x] Chi-squared kernel
   - [x] Histogram Intersection kernel
-  - [x] Matérn kernel (nu=0.5, 1.5, 2.5)
+  - [x] Matern kernel (nu=0.5, 1.5, 2.5)
   - [x] Rational Quadratic kernel
   - [x] Periodic kernel
 - [x] **Kernel transformation utilities**
@@ -47,66 +36,59 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Row normalization
 - [x] Implement SkleaRS-compatible kernel trait
 - [x] Efficient kernel matrix computation
-- [x] Comprehensive test suite (334 tests) **UPDATED**
+- [x] Comprehensive test suite (408 tests)
 - [x] Extensive documentation and examples
 - [x] Zero warnings (clippy clean)
 
-## High Priority 🔴 ✅ COMPLETED
+## Advanced Kernel Types - COMPLETE
 
-### Advanced Kernel Types ✅ COMPLETE
 - [x] **Graph kernels from TLExpr**
-  - [x] Subgraph matching kernel
-  - [x] Walk-based kernels (Random walk)
-  - [x] Weisfeiler-Lehman kernel
-- [x] **Tree kernels for structured data** ✅
-  - [x] Subtree kernel
-  - [x] Subset tree kernel
-  - [x] Partial tree kernel
+  - [x] Subgraph matching kernel (SubgraphMatchingKernel)
+  - [x] Walk-based kernels (RandomWalkKernel)
+  - [x] Weisfeiler-Lehman kernel (WeisfeilerLehmanKernel)
+- [x] **Tree kernels for structured data**
+  - [x] Subtree kernel (SubtreeKernel)
+  - [x] Subset tree kernel (SubsetTreeKernel)
+  - [x] Partial tree kernel (PartialTreeKernel)
 - [x] **Composite kernels**
-  - [x] Weighted sum of kernels
-  - [x] Product kernels
-  - [x] Kernel alignment
+  - [x] Weighted sum of kernels (WeightedSumKernel)
+  - [x] Product kernels (ProductKernel)
+  - [x] Kernel alignment (KernelAlignment)
 
-### Performance Optimizations ✅ COMPLETE
-- [x] Sparse kernel matrix support (CSR format, builder pattern)
+## Performance Optimizations - COMPLETE
+
+- [x] Sparse kernel matrix support (SparseKernelMatrix, CSR format, builder pattern)
 - [x] Kernel caching (CachedKernel, KernelMatrixCache)
-- [x] **Low-rank approximations (Nyström method)** ✅
+- [x] **Low-rank approximations (Nystrom method)**
   - [x] Three sampling methods (Uniform, First, K-means++)
   - [x] Configurable regularization
   - [x] Compression ratio tracking
-- [x] **Performance benchmarks** ✅
+- [x] **Performance benchmarks** (5 benchmark suites, 47 groups)
   - [x] Kernel computation benchmarks (10 groups)
   - [x] Matrix operations benchmarks (10 groups)
   - [x] Caching performance benchmarks (8 groups)
   - [x] Composite kernels benchmarks (10 groups)
   - [x] Graph kernels benchmarks (9 groups)
-- [x] **Online kernel updates** ✅
+- [x] **Online kernel updates**
   - [x] OnlineKernelMatrix - Incremental O(n) updates
   - [x] WindowedKernelMatrix - Sliding window for time series
   - [x] ForgetfulKernelMatrix - Exponential decay for concept drift
   - [x] AdaptiveKernelMatrix - Automatic bandwidth adjustment
   - [x] Comprehensive tests (25 tests)
-  - [x] Example: online_kernel_updates.rs
-- [ ] GPU acceleration (FUTURE)
 
-## Medium Priority 🟡 ✅ COMPLETE
+## Advanced Kernel Methods - COMPLETE
 
-### Advanced Kernel Methods
-- [x] **String kernels for text data** (NGram, Subsequence, EditDistance) ✅
-- [x] **Tree kernels for structured data** (Subtree, Subset, Partial) ✅
-- [x] **Multi-task kernel learning** ✅
+- [x] **String kernels for text data** (NGramKernel, SubsequenceKernel, EditDistanceKernel)
+- [x] **Tree kernels for structured data** (Subtree, Subset, Partial)
+- [x] **Multi-task kernel learning**
   - [x] IndexKernel - Task-based similarity
-  - [x] ICMKernel - Intrinsic Coregionalization Model (B ⊗ K)
-  - [x] LMCKernel - Linear Model of Coregionalization (Σ B_q ⊗ K_q)
+  - [x] ICMKernel - Intrinsic Coregionalization Model (B tensor K)
+  - [x] LMCKernel - Linear Model of Coregionalization (Sigma B_q tensor K_q)
   - [x] HadamardTaskKernel - Element-wise product
   - [x] MultiTaskKernelBuilder - Builder pattern
   - [x] Comprehensive tests (30 tests)
-  - [x] Example: multitask_learning.rs
-- [ ] Deep kernel learning (FUTURE)
-
-### Integration Enhancements
-- [x] **Automatic feature extraction** from TLExpr (FeatureExtractor) ✅
-- [x] **Provenance tracking for kernel computations** ✅
+- [x] **Automatic feature extraction** from TLExpr (FeatureExtractor)
+- [x] **Provenance tracking for kernel computations**
   - [x] ProvenanceRecord with rich metadata
   - [x] ProvenanceTracker with query interface
   - [x] ProvenanceKernel wrapper
@@ -114,49 +96,43 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Performance statistics
   - [x] Tagged experiments
   - [x] Comprehensive tests (15 tests)
-  - [x] Example: provenance_tracking.rs
-- [x] **Symbolic kernel composition** ✅
+- [x] **Symbolic kernel composition**
   - [x] KernelExpr with algebraic operations (scale, add, multiply, power)
   - [x] SymbolicKernel for expression evaluation
   - [x] KernelBuilder for declarative construction
   - [x] Expression simplification
   - [x] PSD property checking
   - [x] Comprehensive tests (14 tests)
-  - [x] Example: symbolic_kernels.rs
 
-## Beta.1 Enhancements 🆕 ✅ NEW
+## Beta.1 Enhancements - COMPLETE
 
-### ARD (Automatic Relevance Determination) Kernels ✅ NEW
-Per-dimension length scales for automatic feature relevance learning:
+### ARD (Automatic Relevance Determination) Kernels
 - [x] **ArdRbfKernel** - ARD version of RBF/Gaussian kernel
   - [x] Per-dimension length scales
   - [x] Signal variance parameter
   - [x] Gradient computation for hyperparameter optimization
-- [x] **ArdMaternKernel** - ARD Matérn kernel (nu=0.5, 1.5, 2.5)
+- [x] **ArdMaternKernel** - ARD Matern kernel (nu=0.5, 1.5, 2.5)
   - [x] Exponential, nu_3_2, nu_5_2 convenience constructors
 - [x] **ArdRationalQuadraticKernel** - ARD Rational Quadratic
 - [x] Comprehensive tests (35+ tests)
 
-### GP Utility Kernels ✅ NEW
-Essential kernels for Gaussian Process modeling:
-- [x] **WhiteNoiseKernel** - i.i.d. observation noise (K(x,y) = σ² if x==y, else 0)
-- [x] **ConstantKernel** - Constant covariance (K(x,y) = σ²)
+### GP Utility Kernels
+- [x] **WhiteNoiseKernel** - i.i.d. observation noise
+- [x] **ConstantKernel** - Constant covariance
 - [x] **DotProductKernel** - Linear kernel with variance and bias
-- [x] **ScaledKernel<K>** - Generic wrapper to scale any kernel
+- [x] **ScaledKernel** - Generic wrapper to scale any kernel
 
-### Spectral Kernels ✅ NEW
-Kernels for discovering periodic patterns:
+### Spectral Kernels
 - [x] **SpectralMixtureKernel** - Mixture of spectral components
   - [x] SpectralComponent with weight, mean frequency, variance
   - [x] Multi-dimensional support
   - [x] Multiple component composition
 - [x] **ExpSineSquaredKernel** - Periodic kernel (scikit-learn compatible)
-- [x] **LocallyPeriodicKernel** - RBF × Periodic for decaying periodicity
-- [x] **RbfLinearKernel** - RBF × Linear product kernel
+- [x] **LocallyPeriodicKernel** - RBF x Periodic for decaying periodicity
+- [x] **RbfLinearKernel** - RBF x Linear product kernel
 - [x] Comprehensive tests (25+ tests)
 
-### Kernel Selection & Cross-Validation ✅ NEW
-Tools for hyperparameter tuning and model selection:
+### Kernel Selection and Cross-Validation
 - [x] **KernelSelector** - Comprehensive kernel selection utilities
   - [x] kernel_target_alignment() - KTA metric
   - [x] centered_kernel_target_alignment() - Centered KTA
@@ -170,20 +146,18 @@ Tools for hyperparameter tuning and model selection:
 - [x] **GammaSearchResult** - Grid search results
 - [x] Comprehensive tests (20+ tests)
 
-### Random Fourier Features (RFF) ✅ NEW
-Scalable kernel approximation for large datasets:
+### Random Fourier Features (RFF)
 - [x] **RandomFourierFeatures** - O(nd) approximate kernel computation
-  - [x] Support for RBF, Laplacian, Matérn kernels
+  - [x] Support for RBF, Laplacian, Matern kernels
   - [x] Configurable number of components
   - [x] Transform and approximate_kernel methods
 - [x] **OrthogonalRandomFeatures** - Improved variance via orthogonal projection
-- [x] **NystroemFeatures** - Nyström-based feature approximation
+- [x] **NystroemFeatures** - Nystrom-based feature approximation
 - [x] **RffConfig** - Configuration with seed support
-- [x] **KernelType** - Enum for supported kernel types
+- [x] **KernelType** (RffKernelType) - Enum for supported kernel types
 - [x] Comprehensive tests (10+ tests)
 
-### Kernel Gradient Computation ✅ NEW
-Gradients for hyperparameter optimization:
+### Kernel Gradient Computation
 - [x] **Element-wise gradients** for standard kernels
   - [x] RbfKernel: compute_with_gradient(), compute_with_length_scale_gradient()
   - [x] PolynomialKernel: compute_with_constant_gradient(), compute_with_all_gradients()
@@ -191,7 +165,7 @@ Gradients for hyperparameter optimization:
   - [x] LaplacianKernel: compute_with_gradient(), compute_with_sigma_gradient()
   - [x] RationalQuadraticKernel: compute_with_length_scale_gradient(), compute_with_alpha_gradient()
 - [x] **Matrix-level gradient computation** (gradient module)
-  - [x] compute_rbf_gradient_matrix() - Full N×N gradient matrices
+  - [x] compute_rbf_gradient_matrix() - Full NxN gradient matrices
   - [x] compute_polynomial_gradient_matrix()
   - [x] compute_matern_gradient_matrix()
   - [x] compute_laplacian_gradient_matrix()
@@ -200,8 +174,7 @@ Gradients for hyperparameter optimization:
   - [x] trace_product(), frobenius_norm() utilities
 - [x] Comprehensive tests (30+ tests)
 
-### Kernel PCA (KPCA) ✅ NEW
-Nonlinear dimensionality reduction:
+### Kernel PCA (KPCA)
 - [x] **KernelPCA** - Full KPCA implementation
   - [x] fit() - Fit model to training data
   - [x] transform() - Project new data
@@ -215,72 +188,82 @@ Nonlinear dimensionality reduction:
 - [x] **reconstruction_error()** - Error analysis
 - [x] Comprehensive tests (11 tests)
 
-## Low Priority 🟢 ✅ COMPLETE
+## Documentation - COMPLETE
 
-### Documentation
-- [x] Add README.md with architecture overview ✅
-- [x] Kernel design guide ✅
-- [x] **Performance benchmarks** (5 benchmark suites, 47 groups) ✅
+- [x] Add README.md with architecture overview
+- [x] Kernel design guide
+- [x] **Performance benchmarks** (5 benchmark suites, 47 groups)
 - [ ] Case studies (SVM, GP, etc.) (FUTURE)
 
 ---
 
-**Total Items:** 52 tasks (38 original + 14 new)
-**Completion:** 🎉 **100% (52/52)** 🎉 **ALL TASKS COMPLETE!**
+**Total Items:** 54 tasks (all complete)
+**Completion:** 100% (54/54) - ALL TASKS COMPLETE
 
-**Beta.1 New Features Summary:**
-- ✅ **ARD Kernels** (3 kernels + gradient support, 35+ tests)
-  - ArdRbfKernel with per-dimension length scales
-  - ArdMaternKernel with ARD support
-  - ArdRationalQuadraticKernel
-  - KernelGradient for hyperparameter optimization
+**Test Count:** 451 tests (100% passing, zero warnings)
 
-- ✅ **GP Utility Kernels** (4 kernels, 10+ tests)
-  - WhiteNoiseKernel for observation noise
-  - ConstantKernel for constant covariance
-  - DotProductKernel for linear models
-  - ScaledKernel<K> for variance scaling
+**Status:** Production-ready (v0.1.0 Stable)
+**Release Date:** 2026-03-06 (stable: 2026-04-06)
 
-- ✅ **Spectral Kernels** (4 kernels, 25+ tests)
-  - SpectralMixtureKernel for pattern discovery
-  - ExpSineSquaredKernel (periodic)
-  - LocallyPeriodicKernel (decaying periodicity)
-  - RbfLinearKernel (product kernel)
+## v0.1.6 Enhancements (2026-03-30)
 
-- ✅ **Kernel Selection** (comprehensive module, 20+ tests)
-  - KernelSelector with KTA, LOO, K-fold CV
-  - Grid search for RBF gamma
-  - Kernel comparison utilities
+- [x] **Kernel Matrix Cache + Batch Compute** (`batch.rs`): `KernelCache` (LRU with symmetric key normalization), `BatchKernelComputer` (O(n²/2) with optional caching), `GramMatrix` (symmetry check, trace, Frobenius norm, PSD diagonal check), `KernelMatrixStats`. 18 new tests.
 
-- ✅ **Random Fourier Features** (3 classes, 10+ tests) **NEW**
-  - RandomFourierFeatures for O(nd) kernel approximation
-  - OrthogonalRandomFeatures for improved variance
-  - NystroemFeatures for landmark-based approximation
-  - Support for RBF, Laplacian, Matérn kernels
+## v0.1.18 (2026-04-06)
 
-- ✅ **Kernel Gradient Computation** (comprehensive, 30+ tests) **NEW**
-  - Element-wise gradients for RBF, Polynomial, Matérn, Laplacian, RationalQuadratic
-  - Matrix-level gradient computation (dK/dθ)
-  - Utilities for GP hyperparameter optimization
+- [x] **Kernel Alignment** (`kernel_alignment.rs`): `KernelMatrix` with centering (`center()`), Frobenius inner product (`frobenius_inner()`), Frobenius norm, and trace operations; `KernelTargetAlignment` (KTA) — uncentered alignment between a kernel matrix and an ideal label kernel; `CenteredKernelAlignment` (CKA) — HSIC-normalized centered KTA robust to different-scale kernels; `HilbertSchmidtIndependenceCriterion` (HSIC) — statistical independence criterion between two kernel matrices; `AlignmentResult` carrying raw score, centered score, and HSIC value; `KernelAlignmentGridSearch` exhausts a parameter grid scoring each candidate by CKA; `KernelAlignmentGradientAscent` performs gradient-free gradient-ascent over a scalar parameter using finite differences to maximize alignment; `AlignmentError` typed error enum for dimension mismatches and degenerate (zero-norm) matrices.
 
-- ✅ **Kernel PCA (KPCA)** (full implementation, 11 tests) **NEW**
-  - KernelPCA with fit/transform interface
-  - Eigenvalue-based variance analysis
-  - Automatic component selection
+## Future Enhancements
 
-**Test Count: 391 tests (100% passing, zero warnings)**
+- [ ] GPU acceleration
+- [ ] Case studies (SVM, Gaussian Process, etc.)
+- [ ] SkleaRS integration (feature-gated, currently behind `sklears` feature)
 
----
+## v0.2.0 Research Preview (2026-04-15)
 
-**Previous Features:**
-- ✅ Multi-task Kernel Learning (30 tests)
-- ✅ Online Kernel Updates (25 tests)
-- ✅ Symbolic Kernel Composition (14 tests)
-- ✅ Provenance Tracking System (15 tests)
-- ✅ Performance benchmarks (5 benchmark suites)
-- ✅ Tree kernels (16 tests)
-- ✅ Low-rank approximations (10 tests)
-- ✅ String kernels
-- ✅ Graph kernels
-- ✅ Kernel caching
-- ✅ Sparse kernel matrices
+- [x] **Learned kernel composition** (`learned_composition/`):
+  `LearnedMixtureKernel` computes `K_mix = sum_i softmax(w)_i * K_i` over
+  any library of `Arc<dyn Kernel>` (including `SymbolicKernel` from
+  `KernelBuilder`). Gradient with respect to logits uses the clean
+  softmax identity `dK_mix/dw_i = p_i * (K_i - K_mix)`, validated against
+  central-difference finite differences to `< 1e-4`. `TrainableKernelMixture`
+  adapter exposes `evaluate_with_gradient`, `step(grad, lr)` for
+  `tensorlogic-train`-style outer loops; `LearnedMixtureBuilder` provides
+  fluent assembly. 12 unit tests + 1 end-to-end integration test
+  (mixture over RBF(γ=0.5) + RBF(γ=2.0) converges toward the target
+  bandwidth over 400 gradient-descent steps).
+
+- [x] **Deep Kernel Learning** (`deep_kernel/`): `DeepKernel<F, K>`
+  composes a base `Kernel` with a differentiable `NeuralFeatureMap`
+  feature extractor, evaluating `K_DKL(x, y) = K_base(g_θ(x), g_θ(y))`
+  (Wilson et al., 2016). Reference extractor is `MLPFeatureExtractor`:
+  stacked `DenseLayer`s with ReLU / Tanh / Identity activations,
+  Xavier/Glorot-normal init via `scirs2_core::random::StdRng`, biases
+  initialised to zero, and a flat-parameter / per-layer-weights
+  double view (`parameters_mut` + `sync_from_flat`) usable by outer
+  optimisers. Analytical gradient `∂K_DKL/∂θ` is provided for the
+  RBF-base case (`rbf_dkl_gradient`) via MLP backprop; every extractor
+  supports `finite_difference_gradient` as a reference / fallback.
+  `DeepKernelBuilder` offers fluent topology assembly. 28 unit tests
+  (MLP forward, ReLU, Xavier bounds, identity-MLP equals base, finite-
+  difference gradient check `< 1e-3`, PSD propagation, empty-extractor
+  errors, sync round-trip) + 1 integration test (2-layer MLP + RBF on a
+  6-point dataset — Gram matrix symmetric, diagonal = 1, Cholesky
+  succeeds after a `1e-9` ridge).
+
+- [x] **Kernel PCA** (`kernel_pca/`): Scholkopf-Smola-Muller (1998)
+  implementation. `KernelPCA<K: Kernel + Clone + 'static>` with
+  `fit` / `fit_transform` / `transform`. Double-centering via
+  `centering::double_center`, symmetric eigendecomp via
+  `scirs2_linalg::eigh` selecting top-k eigenpairs, and Scholkopf-style
+  scaling `alpha_k = v_k / sqrt(lambda_k)` for out-of-sample projection.
+  `FittedKernelPCA` stores the kernel as `Box<dyn Kernel>`, training
+  data, centering stats, and provides `explained_variance_ratio()`.
+  8 unit tests (linear KPCA recovers PCA, RBF two-cluster separation,
+  double-center sums, transform-vs-fit_transform consistency, error paths,
+  explained-variance-ratio summation) + 2 integration tests (Swiss-roll
+  RBF 80-point embedding, collinear linear-KPCA dominance).
+
+## v0.2.0 / Future Work
+
+- Multi-output / vector-valued kernels.

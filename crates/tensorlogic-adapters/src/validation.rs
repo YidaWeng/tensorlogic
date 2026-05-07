@@ -232,16 +232,18 @@ mod tests {
     #[test]
     fn test_validation_complete_schema() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 10)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 10))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new(
                 "Parent",
                 vec!["Person".into(), "Person".into()],
             ))
-            .unwrap();
+            .expect("unwrap");
 
         let validator = SchemaValidator::new(&table);
-        let report = validator.validate().unwrap();
+        let report = validator.validate().expect("unwrap");
 
         assert!(report.is_valid());
     }
@@ -256,7 +258,7 @@ mod tests {
         );
 
         let validator = SchemaValidator::new(&table);
-        let report = validator.validate().unwrap();
+        let report = validator.validate().expect("unwrap");
 
         assert!(!report.is_valid());
         assert!(!report.errors.is_empty());
@@ -265,17 +267,21 @@ mod tests {
     #[test]
     fn test_validation_unused_domain() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 10)).unwrap();
-        table.add_domain(DomainInfo::new("City", 5)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 10))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("City", 5))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new(
                 "Parent",
                 vec!["Person".into(), "Person".into()],
             ))
-            .unwrap();
+            .expect("unwrap");
 
         let validator = SchemaValidator::new(&table);
-        let report = validator.validate().unwrap();
+        let report = validator.validate().expect("unwrap");
 
         assert!(report.is_valid());
         assert!(!report.warnings.is_empty());
@@ -284,14 +290,16 @@ mod tests {
     #[test]
     fn test_validation_unknown_domains() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 10)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 10))
+            .expect("unwrap");
         table.predicates.insert(
             "Test".into(),
             PredicateInfo::new("Test", vec!["Unknown".into()]),
         );
 
         let validator = SchemaValidator::new(&table);
-        let report = validator.validate().unwrap();
+        let report = validator.validate().expect("unwrap");
 
         assert!(report.is_valid());
         assert!(!report.warnings.is_empty());

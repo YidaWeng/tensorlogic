@@ -206,14 +206,16 @@ mod tests {
         let x = TLExpr::pred("x", vec![Term::var("i"), Term::var("j")]);
         let y = TLExpr::pred("y", vec![Term::var("i"), Term::var("j")]);
         let expr = TLExpr::add(x, y);
-        let graph = compile_to_einsum(&expr).unwrap();
+        let graph = compile_to_einsum(&expr).expect("unwrap");
 
         let mut executor = Scirs2Exec::new();
         executor.add_tensor(graph.tensors[0].clone(), create_test_tensor(&[3, 4]));
         executor.add_tensor(graph.tensors[1].clone(), create_test_tensor(&[3, 4]));
 
         let mut inference = Scirs2ShapeInference::new();
-        let context = inference.infer_graph_shapes(&graph, &executor).unwrap();
+        let context = inference
+            .infer_graph_shapes(&graph, &executor)
+            .expect("unwrap");
 
         // Check that shapes were inferred
         assert!(context.get_tensor_shape(0).is_some());
@@ -264,9 +266,11 @@ mod tests {
         let mut context = ShapeInferenceContext::new();
         context.set_tensor_shape(0, input_shape.clone());
 
-        inference.infer_node_shape(&node, &mut context).unwrap();
+        inference
+            .infer_node_shape(&node, &mut context)
+            .expect("unwrap");
 
-        let output_shape = context.get_tensor_shape(1).unwrap();
+        let output_shape = context.get_tensor_shape(1).expect("unwrap");
         assert_eq!(output_shape, &input_shape);
     }
 
@@ -277,9 +281,9 @@ mod tests {
         // Reduce along axis 1: [2, 3, 4] -> [2, 4]
         let result = inference
             .infer_reduce_shape(&TensorShape::static_shape(vec![2, 3, 4]), &[1])
-            .unwrap();
+            .expect("unwrap");
 
-        let result_dims = result.as_static().unwrap();
+        let result_dims = result.as_static().expect("unwrap");
         assert_eq!(result_dims, vec![2, 4]);
     }
 
@@ -290,9 +294,11 @@ mod tests {
         let shape1 = TensorShape::static_shape(vec![2, 3]);
         let shape2 = TensorShape::static_shape(vec![2, 3]);
 
-        let result = inference.infer_binary_shape(&shape1, &shape2).unwrap();
+        let result = inference
+            .infer_binary_shape(&shape1, &shape2)
+            .expect("unwrap");
 
-        let result_dims = result.as_static().unwrap();
+        let result_dims = result.as_static().expect("unwrap");
         assert_eq!(result_dims, vec![2, 3]);
     }
 
@@ -303,9 +309,11 @@ mod tests {
         let shape1 = TensorShape::static_shape(vec![]); // Scalar
         let shape2 = TensorShape::static_shape(vec![2, 3]);
 
-        let result = inference.infer_binary_shape(&shape1, &shape2).unwrap();
+        let result = inference
+            .infer_binary_shape(&shape1, &shape2)
+            .expect("unwrap");
 
-        let result_dims = result.as_static().unwrap();
+        let result_dims = result.as_static().expect("unwrap");
         assert_eq!(result_dims, vec![2, 3]);
     }
 

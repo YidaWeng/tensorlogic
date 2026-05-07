@@ -380,7 +380,7 @@ mod tests {
 
         ctx.bind("x", pos_int.clone());
         assert!(ctx.get_type("x").is_some());
-        assert_eq!(ctx.get_type("x").unwrap(), &pos_int);
+        assert_eq!(ctx.get_type("x").expect("unwrap"), &pos_int);
     }
 
     #[test]

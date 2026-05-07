@@ -82,7 +82,7 @@ fn train_model(use_gc: bool, gc_strategy: GcStrategy, n_epochs: usize) -> Vec<f6
 
     for _epoch in 0..n_epochs {
         let grads = compute_gradients(&params, &x, &y_true);
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         let loss = compute_loss(&params, &x, &y_true);
         loss_history.push(loss);
@@ -198,11 +198,11 @@ fn main() {
     );
     println!("╚══════════════════════════════════════════════════════════════╝\n");
 
-    let baseline_final = baseline_losses.last().unwrap();
-    let layerwise_final = layerwise_losses.last().unwrap();
-    let perrow_final = perrow_losses.last().unwrap();
-    let percol_final = percol_losses.last().unwrap();
-    let global_final = global_losses.last().unwrap();
+    let baseline_final = baseline_losses.last().expect("unwrap");
+    let layerwise_final = layerwise_losses.last().expect("unwrap");
+    let perrow_final = perrow_losses.last().expect("unwrap");
+    let percol_final = percol_losses.last().expect("unwrap");
+    let global_final = global_losses.last().expect("unwrap");
 
     println!("Final Loss:");
     println!("  • Baseline (no GC):     {:.6}", baseline_final);
@@ -223,8 +223,8 @@ fn main() {
 
     let best = strategies
         .iter()
-        .min_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
-        .unwrap();
+        .min_by(|a, b| a.1.partial_cmp(&b.1).expect("unwrap"))
+        .expect("unwrap");
 
     println!("Best strategy: {} (loss = {:.6})", best.0, best.1);
 
@@ -264,7 +264,7 @@ fn main() {
 
     for i in 0..5 {
         let grads = compute_gradients(&params, &x, &y);
-        gc_optimizer.step(&mut params, &grads).unwrap();
+        gc_optimizer.step(&mut params, &grads).expect("unwrap");
 
         let stats = gc_optimizer.stats();
         println!("Step {}: ", i);

@@ -224,7 +224,7 @@ mod tests {
         let metadata = StatementMetadata::new(qt).with_confidence(0.95);
         store.add_metadata(metadata);
 
-        let json = store.to_json().unwrap();
+        let json = store.to_json().expect("unwrap");
         assert!(json.contains("alice"));
         assert!(json.contains("knows"));
         assert!(json.contains("0.95"));

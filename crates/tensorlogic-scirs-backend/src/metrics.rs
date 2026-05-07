@@ -32,7 +32,7 @@
 //! println!("{}", summary);
 //!
 //! // Export to JSON
-//! let json = metrics.export_json().unwrap();
+//! let json = metrics.export_json().expect("unwrap");
 //! ```
 
 use std::collections::HashMap;
@@ -432,10 +432,10 @@ impl MetricsCollector {
     /// Get a summary of all metrics.
     pub fn summary(&self) -> MetricsSummary {
         let mut slowest_ops: Vec<_> = self.operation_stats.iter().collect();
-        slowest_ops.sort_by(|a, b| b.1.avg_time().cmp(&a.1.avg_time()));
+        slowest_ops.sort_by_key(|entry| std::cmp::Reverse(entry.1.avg_time()));
 
         let mut most_called: Vec<_> = self.operation_stats.iter().collect();
-        most_called.sort_by(|a, b| b.1.call_count.cmp(&a.1.call_count));
+        most_called.sort_by_key(|entry| std::cmp::Reverse(entry.1.call_count));
 
         MetricsSummary {
             total_operations: self.throughput_stats.total_operations,
@@ -921,7 +921,7 @@ mod tests {
         let mut collector = MetricsCollector::new(MetricsConfig::default());
         collector.time_operation("test", || {});
 
-        let json = collector.export_json().unwrap();
+        let json = collector.export_json().expect("unwrap");
         assert!(json.contains("test"));
         assert!(json.contains("total_operations"));
     }

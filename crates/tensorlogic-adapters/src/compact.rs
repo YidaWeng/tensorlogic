@@ -55,10 +55,10 @@ impl CompactSchema {
     /// use tensorlogic_adapters::{SymbolTable, DomainInfo, CompactSchema};
     ///
     /// let mut table = SymbolTable::new();
-    /// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    /// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
     ///
     /// let compact = CompactSchema::from_symbol_table(&table);
-    /// let recovered = compact.to_symbol_table().unwrap();
+    /// let recovered = compact.to_symbol_table().expect("unwrap");
     ///
     /// assert_eq!(table.domains.len(), recovered.domains.len());
     /// ```
@@ -296,18 +296,22 @@ mod tests {
     #[test]
     fn test_compact_round_trip() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.add_domain(DomainInfo::new("Location", 50)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Location", 50))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new(
                 "at",
                 vec!["Person".to_string(), "Location".to_string()],
             ))
-            .unwrap();
-        table.bind_variable("x", "Person").unwrap();
+            .expect("unwrap");
+        table.bind_variable("x", "Person").expect("unwrap");
 
         let compact = CompactSchema::from_symbol_table(&table);
-        let recovered = compact.to_symbol_table().unwrap();
+        let recovered = compact.to_symbol_table().expect("unwrap");
 
         assert_eq!(table.domains.len(), recovered.domains.len());
         assert_eq!(table.predicates.len(), recovered.predicates.len());
@@ -317,13 +321,15 @@ mod tests {
     #[test]
     fn test_string_deduplication() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("knows", vec!["Person".to_string()]))
-            .unwrap();
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("likes", vec!["Person".to_string()]))
-            .unwrap();
+            .expect("unwrap");
 
         let compact = CompactSchema::from_symbol_table(&table);
 
@@ -335,21 +341,27 @@ mod tests {
     #[test]
     fn test_binary_serialization() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let compact = CompactSchema::from_symbol_table(&table);
-        let binary = compact.to_binary().unwrap();
-        let recovered = CompactSchema::from_binary(&binary).unwrap();
+        let binary = compact.to_binary().expect("unwrap");
+        let recovered = CompactSchema::from_binary(&binary).expect("unwrap");
 
-        let table2 = recovered.to_symbol_table().unwrap();
+        let table2 = recovered.to_symbol_table().expect("unwrap");
         assert_eq!(table.domains.len(), table2.domains.len());
     }
 
     #[test]
     fn test_compression_stats() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.add_domain(DomainInfo::new("Location", 50)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Location", 50))
+            .expect("unwrap");
 
         let compact = CompactSchema::from_symbol_table(&table);
         let stats = compact.compression_stats();
@@ -365,7 +377,7 @@ mod tests {
     fn test_empty_table() {
         let table = SymbolTable::new();
         let compact = CompactSchema::from_symbol_table(&table);
-        let recovered = compact.to_symbol_table().unwrap();
+        let recovered = compact.to_symbol_table().expect("unwrap");
 
         assert_eq!(recovered.domains.len(), 0);
         assert_eq!(recovered.predicates.len(), 0);

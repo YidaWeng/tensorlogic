@@ -6,15 +6,21 @@ edition.workspace = true
 license.workspace = true
 homepage.workspace = true
 repository.workspace = true
+documentation = "https://docs.rs/tensorlogic-sklears-kernels"
+readme = "README.md"
+keywords = ["tensor", "logic", "machine-learning", "kernels", "sklearn"]
+categories = ["science", "algorithms", "mathematics"]
 
 [dependencies]
 anyhow.workspace = true
+thiserror.workspace = true
 serde = { workspace = true, features = ["derive"] }
 serde_json.workspace = true
 tensorlogic-ir.workspace = true
 tensorlogic-compiler.workspace = true
 tensorlogic-infer.workspace = true
-scirs2-core.workspace = true
+scirs2-core = { workspace = true, features = ["random"] }
+scirs2-linalg.workspace = true
 rayon.workspace = true
 
 # SkleaRS integration (optional feature)

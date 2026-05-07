@@ -128,7 +128,7 @@ fn demonstrate_unification() {
     match unify(&t, &int_type) {
         Ok(subst) => {
             println!("\n  Unify T with Int:");
-            println!("    Success! T = {}", subst.get("T").unwrap());
+            println!("    Success! T = {}", subst.get("T").expect("unwrap"));
         }
         Err(e) => println!("    Failed: {}", e),
     }
@@ -140,7 +140,7 @@ fn demonstrate_unification() {
     match unify(&list_t, &list_int) {
         Ok(subst) => {
             println!("\n  Unify List<T> with List<Int>:");
-            println!("    Success! T = {}", subst.get("T").unwrap());
+            println!("    Success! T = {}", subst.get("T").expect("unwrap"));
         }
         Err(e) => println!("    Failed: {}", e),
     }
@@ -178,7 +178,7 @@ fn demonstrate_parametric_signatures() {
     match contains_sig.unify_parametric(&[list_int, int_type.clone()]) {
         Ok(subst) => {
             println!("\n  Unifying contains signature with (List<Int>, Int):");
-            println!("    Success! T = {}", subst.get("T").unwrap());
+            println!("    Success! T = {}", subst.get("T").expect("unwrap"));
 
             // Instantiate the signature
             let instantiated = contains_sig.instantiate(&subst);
@@ -218,8 +218,8 @@ fn demonstrate_parametric_signatures() {
             println!("\n  Unifying map_over with ((Int->String), List<Int>, List<String>):");
             println!(
                 "    Success! T = {}, U = {}",
-                subst.get("T").unwrap(),
-                subst.get("U").unwrap()
+                subst.get("T").expect("unwrap"),
+                subst.get("U").expect("unwrap")
             );
         }
         Err(e) => println!("    Failed: {}", e),
@@ -241,8 +241,8 @@ fn demonstrate_complex_unification() {
             println!("  Unify Tuple<T, U> with Tuple<Int, Int>:");
             println!(
                 "    Success! T = {}, U = {}",
-                subst.get("T").unwrap(),
-                subst.get("U").unwrap()
+                subst.get("T").expect("unwrap"),
+                subst.get("U").expect("unwrap")
             );
         }
         Err(e) => println!("    Failed: {}", e),
@@ -256,7 +256,7 @@ fn demonstrate_complex_unification() {
     match unify(&list_list_t, &list_list_int) {
         Ok(subst) => {
             println!("\n  Unify List<List<T>> with List<List<Int>>:");
-            println!("    Success! T = {}", subst.get("T").unwrap());
+            println!("    Success! T = {}", subst.get("T").expect("unwrap"));
         }
         Err(e) => println!("    Failed: {}", e),
     }
@@ -272,7 +272,7 @@ fn demonstrate_complex_unification() {
     println!("\n  Compose substitutions:");
     println!("    subst1: T -> U");
     println!("    subst2: U -> Int");
-    println!("    composed: T -> {}", composed.get("T").unwrap());
+    println!("    composed: T -> {}", composed.get("T").expect("unwrap"));
 }
 
 fn demonstrate_generalization() {

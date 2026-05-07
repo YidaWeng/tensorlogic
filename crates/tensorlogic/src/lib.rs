@@ -1,6 +1,6 @@
 //! Tensorlogic - Logic-as-Tensor planning layer
 //!
-//! **Version**: 0.1.0-beta.1 | **Status**: Production Ready
+//! **Version**: 0.1.0 | **Status**: Production Ready
 //!
 //! This is the top-level umbrella crate that re-exports all TensorLogic components.
 //!
@@ -47,26 +47,67 @@
 //! # Ok::<(), Box<dyn std::error::Error>>(())
 //! ```
 
-// Core planning layer (engine-agnostic)
+// Core planning layer (engine-agnostic) — always available
 pub use tensorlogic_adapters as adapters;
 pub use tensorlogic_compiler as compiler;
 pub use tensorlogic_infer as infer;
 pub use tensorlogic_ir as ir;
 
-// Execution layer (SciRS2-powered)
+// Execution layer — scirs-backend is mandatory; train is feature-gated
 pub use tensorlogic_scirs_backend as scirs_backend;
+#[cfg(feature = "train")]
 pub use tensorlogic_train as train;
 
-// Integration layer
+// Integration layer — each crate is gated behind its own feature flag
+#[cfg(feature = "oxirs")]
 pub use tensorlogic_oxirs_bridge as oxirs_bridge;
+#[cfg(feature = "quantrs")]
 pub use tensorlogic_quantrs_hooks as quantrs_hooks;
+#[cfg(feature = "sklears")]
 pub use tensorlogic_sklears_kernels as sklears_kernels;
+#[cfg(feature = "trustformers")]
 pub use tensorlogic_trustformers as trustformers;
 
-/// Prelude module for convenient imports
+// Round 5 sub-feature crates
+#[cfg(feature = "rng")]
+pub use tensorlogic_oxicuda_rng as oxicuda_rng;
+#[cfg(feature = "solver")]
+pub use tensorlogic_oxicuda_solver as oxicuda_solver;
+#[cfg(feature = "sparse")]
+pub use tensorlogic_oxicuda_sparse as oxicuda_sparse;
+
+/// Prelude module for convenient imports.
+///
+/// Re-exports the smallest set of types needed to build, compile, and
+/// execute a TensorLogic expression end-to-end.
 pub mod prelude {
+    // Core construction + compilation + execution entry points.
     pub use crate::compiler::compile_to_einsum;
     pub use crate::infer::{TlAutodiff, TlExecutor};
     pub use crate::ir::{TLExpr, Term};
     pub use crate::scirs_backend::Scirs2Exec;
+
+    /// Convenience: tunable compilation strategies (AND/OR/quantifier semantics).
+    pub use crate::compiler::CompilationConfig;
+    /// Convenience: the compiled execution graph type returned by `compile_to_einsum`.
+    pub use crate::ir::EinsumGraph;
+
+    // Canonical top-level error types from each mandatory sub-crate.
+    pub use crate::adapters::AdapterError;
+    pub use crate::compiler::CompileError;
+    pub use crate::infer::ExecutorError;
+    pub use crate::ir::IrError;
+    pub use crate::scirs_backend::TlBackendError;
+
+    // Canonical error types from optional sub-crates (feature-gated).
+    #[cfg(feature = "oxirs")]
+    pub use crate::oxirs_bridge::BridgeError;
+    #[cfg(feature = "quantrs")]
+    pub use crate::quantrs_hooks::PgmError;
+    #[cfg(feature = "sklears")]
+    pub use crate::sklears_kernels::KernelError;
+    #[cfg(feature = "train")]
+    pub use crate::train::TrainError;
+    #[cfg(feature = "trustformers")]
+    pub use crate::trustformers::TrustformerError;
 }

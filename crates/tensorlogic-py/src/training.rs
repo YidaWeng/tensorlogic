@@ -424,7 +424,7 @@ impl PyTrainingHistory {
         self.train_losses
             .iter()
             .enumerate()
-            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(idx, &loss)| (idx, loss))
     }
 
@@ -433,7 +433,7 @@ impl PyTrainingHistory {
         self.val_losses
             .iter()
             .enumerate()
-            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(idx, &loss)| (idx, loss))
     }
 
@@ -699,9 +699,10 @@ impl PyTrainer {
                     &self.history.val_losses[self.history.val_losses.len() - *patience as usize..];
                 let best_loss = recent_losses
                     .iter()
-                    .min_by(|a, b| a.partial_cmp(b).unwrap())
-                    .unwrap();
-                let current_loss = self.history.val_losses.last().unwrap();
+                    .min_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
+                    .copied()
+                    .unwrap_or(f64::INFINITY);
+                let current_loss = self.history.val_losses.last().copied().unwrap_or(f64::INFINITY);
 
                 if current_loss - best_loss > *min_delta {
                     return false;

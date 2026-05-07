@@ -396,6 +396,14 @@ pub fn apply_temporal_equivalences(expr: &TLExpr) -> TLExpr {
         ),
         TLExpr::Abducible { .. } => expr.clone(),
         TLExpr::Explain { formula } => TLExpr::explain(apply_temporal_equivalences(formula)),
+        TLExpr::SymbolLiteral(_) => expr.clone(),
+        TLExpr::Match { scrutinee, arms } => TLExpr::Match {
+            scrutinee: Box::new(apply_temporal_equivalences(scrutinee)),
+            arms: arms
+                .iter()
+                .map(|(p, b)| (p.clone(), Box::new(apply_temporal_equivalences(b))))
+                .collect(),
+        },
 
         // Leaves
         TLExpr::Pred { .. } | TLExpr::Constant(_) => expr.clone(),

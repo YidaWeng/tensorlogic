@@ -226,7 +226,7 @@ mod tests {
 
         let top_k = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!((0.0..=1.0).contains(&top_k));
         assert!(top_k >= 0.66); // At least 2/3 should be in top-2
     }
@@ -245,7 +245,7 @@ mod tests {
 
         let ndcg = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         // Perfect ranking should give NDCG = 1.0
         assert!(
@@ -269,7 +269,7 @@ mod tests {
 
         let ndcg = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         // Worst ranking should give low NDCG
         assert!(
@@ -293,7 +293,7 @@ mod tests {
 
         let ndcg = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         // Should be between 0 and 1
         assert!(
@@ -320,7 +320,7 @@ mod tests {
 
         let ndcg = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         // Average of perfect (1.0) and poor ranking
         assert!((0.0..=1.0).contains(&ndcg));
@@ -337,10 +337,10 @@ mod tests {
 
         let ndcg_k3 = metric_k3
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         let ndcg_k5 = metric_k5
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         // k=3 should be perfect (top 3 are correct)
         assert!((ndcg_k3 - 1.0).abs() < 1e-6);
@@ -360,7 +360,7 @@ mod tests {
 
         let ndcg = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         // Should handle gracefully (IDCG = 0)
         assert!(ndcg.is_finite());
@@ -377,7 +377,7 @@ mod tests {
 
         let ndcg = metric
             .compute(&empty_predictions.view(), &empty_targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(ndcg, 0.0);
     }
@@ -403,7 +403,7 @@ mod tests {
 
         let ndcg = metric
             .compute(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
 
         // Should be in valid range
         assert!((0.0..=1.0).contains(&ndcg));

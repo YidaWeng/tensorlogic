@@ -15,7 +15,8 @@ use tensorlogic_scirs_backend::Scirs2Exec;
 #[allow(dead_code)]
 fn create_tensor(shape: &[usize]) -> ArrayD<f64> {
     let size: usize = shape.iter().product();
-    ArrayD::from_shape_vec(shape.to_vec(), (0..size).map(|i| i as f64 * 0.01).collect()).unwrap()
+    ArrayD::from_shape_vec(shape.to_vec(), (0..size).map(|i| i as f64 * 0.01).collect())
+        .expect("unwrap")
 }
 
 // NOTE: Disabled - uses einsum_raw which no longer exists
@@ -34,7 +35,7 @@ fn bench_einsum_matmul(c: &mut Criterion) {
             bench.iter(|| {
                 let mut exec = Scirs2Exec::new();
                 exec.einsum_raw(black_box("ij,jk->ik"), black_box(&[a.clone(), b.clone()]))
-                    .unwrap()
+                    .expect("unwrap")
             });
         });
     }
@@ -61,7 +62,7 @@ fn bench_einsum_batch_matmul(c: &mut Criterion) {
                     black_box("bij,bjk->bik"),
                     black_box(&[a.clone(), b.clone()]),
                 )
-                .unwrap()
+                .expect("unwrap")
             });
         });
     }
@@ -84,7 +85,7 @@ fn bench_einsum_transpose(c: &mut Criterion) {
             bench.iter(|| {
                 let mut exec = Scirs2Exec::new();
                 exec.einsum_raw(black_box("ij->ji"), black_box(&[a.clone()]))
-                    .unwrap()
+                    .expect("unwrap")
             });
         });
     }
@@ -107,7 +108,7 @@ fn bench_einsum_trace(c: &mut Criterion) {
             bench.iter(|| {
                 let mut exec = Scirs2Exec::new();
                 exec.einsum_raw(black_box("ii->"), black_box(&[a.clone()]))
-                    .unwrap()
+                    .expect("unwrap")
             });
         });
     }
@@ -130,7 +131,8 @@ fn bench_unary_ops(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(op), &op, |bench, op| {
             bench.iter(|| {
                 let mut exec = Scirs2Exec::new();
-                exec.unary_op(black_box(op), black_box(&tensor)).unwrap()
+                exec.unary_op(black_box(op), black_box(&tensor))
+                    .expect("unwrap")
             });
         });
     }
@@ -155,7 +157,7 @@ fn bench_binary_ops(c: &mut Criterion) {
             bench.iter(|| {
                 let mut exec = Scirs2Exec::new();
                 exec.binary_op(black_box(op), black_box(&a), black_box(&b))
-                    .unwrap()
+                    .expect("unwrap")
             });
         });
     }
@@ -180,7 +182,7 @@ fn bench_reduce_ops(c: &mut Criterion) {
                 bench.iter(|| {
                     let mut exec = Scirs2Exec::new();
                     exec.reduce_op(black_box(op), black_box(&tensor), black_box(&[0]))
-                        .unwrap()
+                        .expect("unwrap")
                 });
             });
         }
@@ -205,7 +207,7 @@ fn bench_reduce_2d(c: &mut Criterion) {
         bench.iter(|| {
             let mut exec = Scirs2Exec::new();
             exec.reduce_op(black_box("sum"), black_box(&tensor), black_box(&[0]))
-                .unwrap()
+                .expect("unwrap")
         });
     });
 
@@ -214,7 +216,7 @@ fn bench_reduce_2d(c: &mut Criterion) {
         bench.iter(|| {
             let mut exec = Scirs2Exec::new();
             exec.reduce_op(black_box("sum"), black_box(&tensor), black_box(&[1]))
-                .unwrap()
+                .expect("unwrap")
         });
     });
 
@@ -223,7 +225,7 @@ fn bench_reduce_2d(c: &mut Criterion) {
         bench.iter(|| {
             let mut exec = Scirs2Exec::new();
             exec.reduce_op(black_box("sum"), black_box(&tensor), black_box(&[0, 1]))
-                .unwrap()
+                .expect("unwrap")
         });
     });
 
@@ -248,7 +250,7 @@ fn bench_memory_pool(c: &mut Criterion) {
             for _ in 0..10 {
                 let _ = exec
                     .unary_op(black_box("relu"), black_box(&tensor))
-                    .unwrap();
+                    .expect("unwrap");
             }
         });
     });
@@ -260,7 +262,7 @@ fn bench_memory_pool(c: &mut Criterion) {
             for _ in 0..10 {
                 let _ = exec
                     .unary_op(black_box("relu"), black_box(&tensor))
-                    .unwrap();
+                    .expect("unwrap");
             }
         });
     });
@@ -280,12 +282,12 @@ fn bench_logical_ops(c: &mut Criterion) {
         vec![size],
         (0..size).map(|i| i as f64 / size as f64).collect(),
     )
-    .unwrap();
+    .expect("unwrap");
     let b = ArrayD::from_shape_vec(
         vec![size],
         (0..size).map(|i| 1.0 - i as f64 / size as f64).collect(),
     )
-    .unwrap();
+    .expect("unwrap");
 
     group.throughput(Throughput::Elements(size as u64));
 
@@ -294,7 +296,7 @@ fn bench_logical_ops(c: &mut Criterion) {
             bench.iter(|| {
                 let mut exec = Scirs2Exec::new();
                 exec.binary_op(black_box(op), black_box(&a), black_box(&b))
-                    .unwrap()
+                    .expect("unwrap")
             });
         });
     }
@@ -328,7 +330,7 @@ fn bench_complex_einsum(c: &mut Criterion) {
                 black_box("bhqd,bhkd->bhqk"),
                 black_box(&[q.clone(), k.clone()]),
             )
-            .unwrap()
+            .expect("unwrap")
         });
     });
 
@@ -342,7 +344,7 @@ fn bench_complex_einsum(c: &mut Criterion) {
         bench.iter(|| {
             let mut exec = Scirs2Exec::new();
             exec.einsum_raw(black_box("i,j->ij"), black_box(&[v1.clone(), v2.clone()]))
-                .unwrap()
+                .expect("unwrap")
         });
     });
 

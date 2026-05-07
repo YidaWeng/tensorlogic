@@ -604,9 +604,9 @@ pub fn linear_chain_to_mps(
                             // Incorporate into MPS tensor
                             let tensor = &mut mps.tensors[t];
                             let left_dim = tensor.shape()[0];
-                            let right_dim = tensor.shape()[2];
+
                             if s_prev < left_dim && s_curr < num_states {
-                                tensor[[s_prev.min(left_dim - 1), s_curr, 0.min(right_dim - 1)]] =
+                                tensor[[s_prev.min(left_dim - 1), s_curr, 0]] =
                                     Complex64::new(val.sqrt(), 0.0);
                             }
                         }

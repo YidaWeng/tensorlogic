@@ -390,7 +390,11 @@ impl InfluenceDiagram {
 
         // Compute expected utility with perfect information
         // For each possible value of the node, find optimal policy
-        let node_card = self.nodes.get(node).unwrap().cardinality;
+        let node_card = self
+            .nodes
+            .get(node)
+            .expect("node must exist in influence diagram nodes")
+            .cardinality;
 
         // Get marginal probability of the node
         let graph = self.to_factor_graph()?;
@@ -647,7 +651,7 @@ mod tests {
         let mut id = InfluenceDiagram::new();
         id.add_chance_node("x".to_string(), 2, vec![]);
 
-        let cpt = ArrayD::from_shape_vec(IxDyn(&[2]), vec![0.3, 0.7]).unwrap();
+        let cpt = ArrayD::from_shape_vec(IxDyn(&[2]), vec![0.3, 0.7]).expect("unwrap");
         let result = id.set_cpt("x", cpt);
         assert!(result.is_ok());
     }
@@ -657,7 +661,7 @@ mod tests {
         let mut id = InfluenceDiagram::new();
         id.add_decision_node("d".to_string(), 2, vec![]);
 
-        let cpt = ArrayD::from_shape_vec(IxDyn(&[2]), vec![0.3, 0.7]).unwrap();
+        let cpt = ArrayD::from_shape_vec(IxDyn(&[2]), vec![0.3, 0.7]).expect("unwrap");
         let result = id.set_cpt("d", cpt);
         assert!(result.is_err());
     }
@@ -668,7 +672,7 @@ mod tests {
         id.add_chance_node("x".to_string(), 2, vec![]);
         id.add_utility_node("u".to_string(), vec!["x".to_string()]);
 
-        let utility = ArrayD::from_shape_vec(IxDyn(&[2]), vec![10.0, 20.0]).unwrap();
+        let utility = ArrayD::from_shape_vec(IxDyn(&[2]), vec![10.0, 20.0]).expect("unwrap");
         let result = id.set_utility("u", utility);
         assert!(result.is_ok());
     }
@@ -679,10 +683,10 @@ mod tests {
         id.add_chance_node("x".to_string(), 2, vec![]);
         id.add_decision_node("d".to_string(), 2, vec![]);
 
-        let cpt = ArrayD::from_shape_vec(IxDyn(&[2]), vec![0.5, 0.5]).unwrap();
-        id.set_cpt("x", cpt).unwrap();
+        let cpt = ArrayD::from_shape_vec(IxDyn(&[2]), vec![0.5, 0.5]).expect("unwrap");
+        id.set_cpt("x", cpt).expect("unwrap");
 
-        let graph = id.to_factor_graph().unwrap();
+        let graph = id.to_factor_graph().expect("unwrap");
         assert_eq!(graph.num_variables(), 2);
     }
 
@@ -751,13 +755,13 @@ mod tests {
         id.add_utility_node("u".to_string(), vec!["d".to_string()]);
 
         // Utility: d=0 -> 10, d=1 -> 20
-        let utility = ArrayD::from_shape_vec(IxDyn(&[2]), vec![10.0, 20.0]).unwrap();
-        id.set_utility("u", utility).unwrap();
+        let utility = ArrayD::from_shape_vec(IxDyn(&[2]), vec![10.0, 20.0]).expect("unwrap");
+        id.set_utility("u", utility).expect("unwrap");
 
         let mut policy = HashMap::new();
         policy.insert("d".to_string(), 1);
 
-        let eu = id.expected_utility(&policy).unwrap();
+        let eu = id.expected_utility(&policy).expect("unwrap");
         assert!((eu - 20.0).abs() < 1e-6);
     }
 
@@ -768,10 +772,10 @@ mod tests {
         id.add_utility_node("u".to_string(), vec!["d".to_string()]);
 
         // Utility: d=0 -> 10, d=1 -> 20
-        let utility = ArrayD::from_shape_vec(IxDyn(&[2]), vec![10.0, 20.0]).unwrap();
-        id.set_utility("u", utility).unwrap();
+        let utility = ArrayD::from_shape_vec(IxDyn(&[2]), vec![10.0, 20.0]).expect("unwrap");
+        id.set_utility("u", utility).expect("unwrap");
 
-        let (policy, eu) = id.optimal_policy().unwrap();
+        let (policy, eu) = id.optimal_policy().expect("unwrap");
         assert_eq!(policy.get("d"), Some(&1));
         assert!((eu - 20.0).abs() < 1e-6);
     }

@@ -62,24 +62,27 @@ fn main() {
 fn scenario_no_conflicts() {
     // Create two non-overlapping schemas
     let mut base = SymbolTable::new();
-    base.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    base.add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
     base.add_predicate(PredicateInfo::new(
         "knows",
         vec!["Person".to_string(), "Person".to_string()],
     ))
-    .unwrap();
+    .expect("unwrap");
 
     let mut incoming = SymbolTable::new();
-    incoming.add_domain(DomainInfo::new("Person", 100)).unwrap(); // Add Person domain for works_at predicate
+    incoming
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap"); // Add Person domain for works_at predicate
     incoming
         .add_domain(DomainInfo::new("Organization", 50))
-        .unwrap();
+        .expect("unwrap");
     incoming
         .add_predicate(PredicateInfo::new(
             "works_at",
             vec!["Person".to_string(), "Organization".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     println!("Base schema:");
     println!("  - Domains: Person");
@@ -91,7 +94,7 @@ fn scenario_no_conflicts() {
 
     // Merge with KeepFirst strategy
     let merger = SchemaMerger::new(MergeStrategy::KeepFirst);
-    let result = merger.merge(&base, &incoming).unwrap();
+    let result = merger.merge(&base, &incoming).expect("unwrap");
 
     println!("Merged schema:");
     println!("  - Total domains: {}", result.merged.domains.len());
@@ -112,15 +115,17 @@ fn scenario_keep_first() {
     // Create schemas with overlapping domains
     let mut base = SymbolTable::new();
     base.add_domain(DomainInfo::new("Person", 100).with_description("Base version"))
-        .unwrap();
+        .expect("unwrap");
     base.add_domain(DomainInfo::new("Organization", 30))
-        .unwrap();
+        .expect("unwrap");
 
     let mut incoming = SymbolTable::new();
     incoming
         .add_domain(DomainInfo::new("Person", 200).with_description("Incoming version"))
-        .unwrap();
-    incoming.add_domain(DomainInfo::new("Event", 50)).unwrap();
+        .expect("unwrap");
+    incoming
+        .add_domain(DomainInfo::new("Event", 50))
+        .expect("unwrap");
 
     println!("Base schema:");
     println!("  - Person (cardinality: 100, description: 'Base version')");
@@ -132,13 +137,13 @@ fn scenario_keep_first() {
 
     // Merge with KeepFirst strategy
     let merger = SchemaMerger::new(MergeStrategy::KeepFirst);
-    let result = merger.merge(&base, &incoming).unwrap();
+    let result = merger.merge(&base, &incoming).expect("unwrap");
 
     println!("Merge strategy: KeepFirst");
     println!("Result:");
 
     // Check that base version of Person is kept
-    let person = result.merged.get_domain("Person").unwrap();
+    let person = result.merged.get_domain("Person").expect("unwrap");
     println!("  - Person kept from base:");
     println!("    • Cardinality: {} (from base)", person.cardinality);
     println!(
@@ -157,21 +162,24 @@ fn scenario_keep_first() {
 fn scenario_keep_second() {
     // Create schemas with overlapping predicates
     let mut base = SymbolTable::new();
-    base.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    base.add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
     base.add_predicate(
         PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])
             .with_description("Base version"),
     )
-    .unwrap();
+    .expect("unwrap");
 
     let mut incoming = SymbolTable::new();
-    incoming.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    incoming
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
     incoming
         .add_predicate(
             PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])
                 .with_description("Incoming version with improvements"),
         )
-        .unwrap();
+        .expect("unwrap");
 
     println!("Base schema:");
     println!("  - Predicate 'knows' (description: 'Base version')");
@@ -181,13 +189,13 @@ fn scenario_keep_second() {
 
     // Merge with KeepSecond strategy
     let merger = SchemaMerger::new(MergeStrategy::KeepSecond);
-    let result = merger.merge(&base, &incoming).unwrap();
+    let result = merger.merge(&base, &incoming).expect("unwrap");
 
     println!("Merge strategy: KeepSecond");
     println!("Result:");
 
     // Check that incoming version is kept
-    let knows = result.merged.get_predicate("knows").unwrap();
+    let knows = result.merged.get_predicate("knows").expect("unwrap");
     println!("  - Predicate 'knows' kept from incoming:");
     println!(
         "    • Description: '{}'",
@@ -204,10 +212,13 @@ fn scenario_keep_second() {
 fn scenario_fail_on_conflict() {
     // Create schemas with conflicts
     let mut base = SymbolTable::new();
-    base.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    base.add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
 
     let mut incoming = SymbolTable::new();
-    incoming.add_domain(DomainInfo::new("Person", 200)).unwrap();
+    incoming
+        .add_domain(DomainInfo::new("Person", 200))
+        .expect("unwrap");
 
     println!("Base schema:");
     println!("  - Person (cardinality: 100)");
@@ -233,24 +244,29 @@ fn scenario_fail_on_conflict() {
 fn scenario_union() {
     // Create schemas with some overlap
     let mut base = SymbolTable::new();
-    base.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    base.add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
     base.add_domain(DomainInfo::new("Organization", 50))
-        .unwrap();
+        .expect("unwrap");
     base.add_predicate(PredicateInfo::new(
         "knows",
         vec!["Person".to_string(), "Person".to_string()],
     ))
-    .unwrap();
+    .expect("unwrap");
 
     let mut incoming = SymbolTable::new();
-    incoming.add_domain(DomainInfo::new("Person", 100)).unwrap(); // Same cardinality - compatible
-    incoming.add_domain(DomainInfo::new("Event", 75)).unwrap();
+    incoming
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap"); // Same cardinality - compatible
+    incoming
+        .add_domain(DomainInfo::new("Event", 75))
+        .expect("unwrap");
     incoming
         .add_predicate(PredicateInfo::new(
             "attends",
             vec!["Person".to_string(), "Event".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     println!("Base schema:");
     println!("  - Domains: Person (100), Organization (50)");
@@ -262,7 +278,7 @@ fn scenario_union() {
 
     // Merge with Union strategy
     let merger = SchemaMerger::new(MergeStrategy::Union);
-    let result = merger.merge(&base, &incoming).unwrap();
+    let result = merger.merge(&base, &incoming).expect("unwrap");
 
     println!("Merge strategy: Union");
     println!("Result:");
@@ -281,24 +297,29 @@ fn scenario_union() {
 fn scenario_intersection() {
     // Create schemas with overlap
     let mut base = SymbolTable::new();
-    base.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    base.add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
     base.add_domain(DomainInfo::new("Organization", 50))
-        .unwrap();
+        .expect("unwrap");
     base.add_predicate(PredicateInfo::new(
         "knows",
         vec!["Person".to_string(), "Person".to_string()],
     ))
-    .unwrap();
+    .expect("unwrap");
 
     let mut incoming = SymbolTable::new();
-    incoming.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    incoming.add_domain(DomainInfo::new("Event", 75)).unwrap();
+    incoming
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
+    incoming
+        .add_domain(DomainInfo::new("Event", 75))
+        .expect("unwrap");
     incoming
         .add_predicate(PredicateInfo::new(
             "knows",
             vec!["Person".to_string(), "Person".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     println!("Base schema:");
     println!("  - Domains: Person (100), Organization (50)");
@@ -310,7 +331,7 @@ fn scenario_intersection() {
 
     // Merge with Intersection strategy
     let merger = SchemaMerger::new(MergeStrategy::Intersection);
-    let result = merger.merge(&base, &incoming).unwrap();
+    let result = merger.merge(&base, &incoming).expect("unwrap");
 
     println!("Merge strategy: Intersection");
     println!("Result:");
@@ -339,64 +360,70 @@ fn scenario_complex_merge() {
 
     // Base schema: Academic system
     base.add_domain(DomainInfo::new("Person", 1000).with_description("Base academic system"))
-        .unwrap();
-    base.add_domain(DomainInfo::new("Course", 200)).unwrap();
-    base.add_domain(DomainInfo::new("Department", 20)).unwrap();
+        .expect("unwrap");
+    base.add_domain(DomainInfo::new("Course", 200))
+        .expect("unwrap");
+    base.add_domain(DomainInfo::new("Department", 20))
+        .expect("unwrap");
 
     base.add_predicate(PredicateInfo::new(
         "teaches",
         vec!["Person".to_string(), "Course".to_string()],
     ))
-    .unwrap();
+    .expect("unwrap");
     base.add_predicate(PredicateInfo::new(
         "enrolled",
         vec!["Person".to_string(), "Course".to_string()],
     ))
-    .unwrap();
+    .expect("unwrap");
     base.add_predicate(PredicateInfo::new(
         "member_of",
         vec!["Person".to_string(), "Department".to_string()],
     ))
-    .unwrap();
+    .expect("unwrap");
 
-    base.bind_variable("professor", "Person").unwrap();
-    base.bind_variable("student", "Person").unwrap();
+    base.bind_variable("professor", "Person").expect("unwrap");
+    base.bind_variable("student", "Person").expect("unwrap");
 
     let mut incoming = SymbolTable::new();
 
     // Incoming schema: Extended academic system with research
     incoming
         .add_domain(DomainInfo::new("Person", 1500).with_description("Extended with researchers"))
-        .unwrap();
-    incoming.add_domain(DomainInfo::new("Course", 200)).unwrap(); // Same
+        .expect("unwrap");
+    incoming
+        .add_domain(DomainInfo::new("Course", 200))
+        .expect("unwrap"); // Same
     incoming
         .add_domain(DomainInfo::new("ResearchProject", 100))
-        .unwrap();
+        .expect("unwrap");
     incoming
         .add_domain(DomainInfo::new("Publication", 500))
-        .unwrap();
+        .expect("unwrap");
 
     incoming
         .add_predicate(PredicateInfo::new(
             "teaches",
             vec!["Person".to_string(), "Course".to_string()],
         ))
-        .unwrap(); // Same
+        .expect("unwrap"); // Same
     incoming
         .add_predicate(PredicateInfo::new(
             "works_on",
             vec!["Person".to_string(), "ResearchProject".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
     incoming
         .add_predicate(PredicateInfo::new(
             "authored",
             vec!["Person".to_string(), "Publication".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
-    incoming.bind_variable("researcher", "Person").unwrap();
-    incoming.bind_variable("student", "Person").unwrap(); // Same
+    incoming
+        .bind_variable("researcher", "Person")
+        .expect("unwrap");
+    incoming.bind_variable("student", "Person").expect("unwrap"); // Same
 
     println!("Base schema (Academic System):");
     println!("  - Domains: Person (1000), Course (200), Department (20)");
@@ -412,7 +439,7 @@ fn scenario_complex_merge() {
 
     // Merge with Union strategy (prefer larger cardinality)
     let merger = SchemaMerger::new(MergeStrategy::Union);
-    let result = merger.merge(&base, &incoming).unwrap();
+    let result = merger.merge(&base, &incoming).expect("unwrap");
 
     println!("Merge strategy: Union");
     println!();
@@ -423,11 +450,19 @@ fn scenario_complex_merge() {
     println!("  - Total domains: {}", result.merged.domains.len());
     println!(
         "    • Person (cardinality: {})",
-        result.merged.get_domain("Person").unwrap().cardinality
+        result
+            .merged
+            .get_domain("Person")
+            .expect("unwrap")
+            .cardinality
     );
     println!(
         "    • Course (cardinality: {})",
-        result.merged.get_domain("Course").unwrap().cardinality
+        result
+            .merged
+            .get_domain("Course")
+            .expect("unwrap")
+            .cardinality
     );
     println!("    • Department, ResearchProject, Publication");
     println!();

@@ -450,7 +450,7 @@ mod tests {
         let mut ctx = CompilerContext::new();
         let mut graph = EinsumGraph::new();
 
-        let result = compile_empty_set(&mut ctx, &mut graph).unwrap();
+        let result = compile_empty_set(&mut ctx, &mut graph).expect("unwrap");
 
         // Empty set should be a scalar (no axes)
         assert!(result.axes.is_empty());
@@ -465,8 +465,8 @@ mod tests {
         // { x : Person | P(x) }
         let condition = TLExpr::pred("P", vec![Term::var("x")]);
 
-        let result =
-            compile_set_comprehension("x", "Person", &condition, &mut ctx, &mut graph).unwrap();
+        let result = compile_set_comprehension("x", "Person", &condition, &mut ctx, &mut graph)
+            .expect("unwrap");
 
         // Should have axes for the variable
         assert!(!result.axes.is_empty());
@@ -491,7 +491,7 @@ mod tests {
             condition: Box::new(TLExpr::pred("B", vec![Term::var("x")])),
         };
 
-        let result = compile_set_union(&set_a, &set_b, &mut ctx, &mut graph).unwrap();
+        let result = compile_set_union(&set_a, &set_b, &mut ctx, &mut graph).expect("unwrap");
 
         // Should have axes
         assert!(!result.axes.is_empty());
@@ -515,7 +515,8 @@ mod tests {
             condition: Box::new(TLExpr::pred("B", vec![Term::var("x")])),
         };
 
-        let result = compile_set_intersection(&set_a, &set_b, &mut ctx, &mut graph).unwrap();
+        let result =
+            compile_set_intersection(&set_a, &set_b, &mut ctx, &mut graph).expect("unwrap");
 
         assert!(!result.axes.is_empty());
     }
@@ -538,7 +539,7 @@ mod tests {
             condition: Box::new(TLExpr::pred("B", vec![Term::var("x")])),
         };
 
-        let result = compile_set_difference(&set_a, &set_b, &mut ctx, &mut graph).unwrap();
+        let result = compile_set_difference(&set_a, &set_b, &mut ctx, &mut graph).expect("unwrap");
 
         assert!(!result.axes.is_empty());
     }
@@ -555,7 +556,7 @@ mod tests {
             condition: Box::new(TLExpr::pred("Adult", vec![Term::var("x")])),
         };
 
-        let result = compile_set_cardinality(&set_expr, &mut ctx, &mut graph).unwrap();
+        let result = compile_set_cardinality(&set_expr, &mut ctx, &mut graph).expect("unwrap");
 
         // Cardinality should be a scalar (no axes)
         assert!(result.axes.is_empty());
@@ -577,7 +578,8 @@ mod tests {
         // Element to check
         let elem = TLExpr::pred("IsAlice", vec![Term::var("y")]);
 
-        let result = compile_set_membership(&elem, &set_expr, &mut ctx, &mut graph).unwrap();
+        let result =
+            compile_set_membership(&elem, &set_expr, &mut ctx, &mut graph).expect("unwrap");
 
         // Should have axes
         assert!(!result.axes.is_empty());

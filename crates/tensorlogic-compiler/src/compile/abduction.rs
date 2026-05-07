@@ -407,7 +407,7 @@ fn create_constant_tensor(
     graph
         .tensors
         .get_mut(const_idx)
-        .unwrap()
+        .expect("const_idx from add_tensor is always valid")
         .push_str(&format!("#{}", metadata));
 
     Ok(const_idx)
@@ -423,7 +423,7 @@ mod tests {
         let mut ctx = CompilerContext::new();
         let mut graph = EinsumGraph::new();
 
-        let result = compile_abducible("has_flu", 0.3, &mut ctx, &mut graph).unwrap();
+        let result = compile_abducible("has_flu", 0.3, &mut ctx, &mut graph).expect("unwrap");
 
         // Should have created a tensor
         assert!(!graph.tensors.is_empty());
@@ -441,7 +441,7 @@ mod tests {
         // Explain(Safe) with no abducibles
         let safe = TLExpr::pred("Safe", vec![]);
 
-        let _result = compile_explain(&safe, &mut ctx, &mut graph).unwrap();
+        let _result = compile_explain(&safe, &mut ctx, &mut graph).expect("unwrap");
 
         // Should compile successfully (degenerates to just the formula)
         assert!(!graph.tensors.is_empty());
@@ -453,12 +453,12 @@ mod tests {
         let mut graph = EinsumGraph::new();
 
         // First register an abducible
-        compile_abducible("has_flu", 0.3, &mut ctx, &mut graph).unwrap();
+        compile_abducible("has_flu", 0.3, &mut ctx, &mut graph).expect("unwrap");
 
         // Then explain a formula
         let fever = TLExpr::pred("Fever", vec![]);
 
-        let _result = compile_explain(&fever, &mut ctx, &mut graph).unwrap();
+        let _result = compile_explain(&fever, &mut ctx, &mut graph).expect("unwrap");
 
         // Should have created nodes for the explanation objective
         assert!(!graph.nodes.is_empty());
@@ -471,16 +471,16 @@ mod tests {
         let mut graph = EinsumGraph::new();
 
         // Register multiple abducibles
-        compile_abducible("has_flu", 0.3, &mut ctx, &mut graph).unwrap();
-        compile_abducible("has_cold", 0.2, &mut ctx, &mut graph).unwrap();
-        compile_abducible("has_covid", 0.5, &mut ctx, &mut graph).unwrap();
+        compile_abducible("has_flu", 0.3, &mut ctx, &mut graph).expect("unwrap");
+        compile_abducible("has_cold", 0.2, &mut ctx, &mut graph).expect("unwrap");
+        compile_abducible("has_covid", 0.5, &mut ctx, &mut graph).expect("unwrap");
 
         // Explain a complex formula
         let fever = TLExpr::pred("Fever", vec![]);
         let cough = TLExpr::pred("Cough", vec![]);
         let symptoms = TLExpr::and(fever, cough);
 
-        let _result = compile_explain(&symptoms, &mut ctx, &mut graph).unwrap();
+        let _result = compile_explain(&symptoms, &mut ctx, &mut graph).expect("unwrap");
 
         // Should have created a complex graph
         assert!(graph.nodes.len() >= 3);
@@ -492,7 +492,8 @@ mod tests {
         let mut ctx = CompilerContext::new();
         let mut graph = EinsumGraph::new();
 
-        let result = compile_abducible("free_assumption", 0.0, &mut ctx, &mut graph).unwrap();
+        let result =
+            compile_abducible("free_assumption", 0.0, &mut ctx, &mut graph).expect("unwrap");
 
         // Zero cost abducibles should still compile
         assert!(!graph.tensors.is_empty());
@@ -505,7 +506,7 @@ mod tests {
         let mut graph = EinsumGraph::new();
 
         let result =
-            compile_abducible("expensive_hypothesis", 100.0, &mut ctx, &mut graph).unwrap();
+            compile_abducible("expensive_hypothesis", 100.0, &mut ctx, &mut graph).expect("unwrap");
 
         // High cost abducibles should still compile
         assert!(!graph.tensors.is_empty());
@@ -518,15 +519,15 @@ mod tests {
         let mut graph = EinsumGraph::new();
 
         // Register abducibles
-        compile_abducible("H1", 1.0, &mut ctx, &mut graph).unwrap();
-        compile_abducible("H2", 2.0, &mut ctx, &mut graph).unwrap();
+        compile_abducible("H1", 1.0, &mut ctx, &mut graph).expect("unwrap");
+        compile_abducible("H2", 2.0, &mut ctx, &mut graph).expect("unwrap");
 
         // Multiple explain calls
         let formula1 = TLExpr::pred("P", vec![]);
         let formula2 = TLExpr::pred("Q", vec![]);
 
-        let _result1 = compile_explain(&formula1, &mut ctx, &mut graph).unwrap();
-        let _result2 = compile_explain(&formula2, &mut ctx, &mut graph).unwrap();
+        let _result1 = compile_explain(&formula1, &mut ctx, &mut graph).expect("unwrap");
+        let _result2 = compile_explain(&formula2, &mut ctx, &mut graph).expect("unwrap");
 
         // Both should compile successfully
         assert!(graph.nodes.len() >= 2);
@@ -539,14 +540,14 @@ mod tests {
         let mut graph = EinsumGraph::new();
 
         // Register abducibles
-        compile_abducible("knows_someone", 1.0, &mut ctx, &mut graph).unwrap();
+        compile_abducible("knows_someone", 1.0, &mut ctx, &mut graph).expect("unwrap");
 
         // Explain(Knows(x, y))
         let knows = TLExpr::pred("Knows", vec![Term::var("x"), Term::var("y")]);
-        ctx.bind_var("x", "Person").unwrap();
-        ctx.bind_var("y", "Person").unwrap();
+        ctx.bind_var("x", "Person").expect("unwrap");
+        ctx.bind_var("y", "Person").expect("unwrap");
 
-        let result = compile_explain(&knows, &mut ctx, &mut graph).unwrap();
+        let result = compile_explain(&knows, &mut ctx, &mut graph).expect("unwrap");
 
         // Should preserve axes from formula
         assert!(!result.axes.is_empty());
@@ -558,7 +559,7 @@ mod tests {
         let mut ctx = CompilerContext::new();
         let mut graph = EinsumGraph::new();
 
-        compile_abducible("H", 1.0, &mut ctx, &mut graph).unwrap();
+        compile_abducible("H", 1.0, &mut ctx, &mut graph).expect("unwrap");
 
         // Nested explain: Explain(Explain(P))
         // This is semantically unusual but should compile
@@ -578,8 +579,8 @@ mod tests {
         let mut ctx = CompilerContext::new();
         let mut graph = EinsumGraph::new();
 
-        let result1 = compile_abducible("H", 1.0, &mut ctx, &mut graph).unwrap();
-        let result2 = compile_abducible("H", 1.0, &mut ctx, &mut graph).unwrap();
+        let result1 = compile_abducible("H", 1.0, &mut ctx, &mut graph).expect("unwrap");
+        let result2 = compile_abducible("H", 1.0, &mut ctx, &mut graph).expect("unwrap");
 
         // Second abducible with same name should create a different tensor
         // (or reuse the same one - implementation dependent)
@@ -595,18 +596,27 @@ mod tests {
         let mut graph = EinsumGraph::new();
 
         // Create abducibles with different costs
-        let result1 = compile_abducible("cheap", 0.5, &mut ctx, &mut graph).unwrap();
-        let result2 = compile_abducible("expensive", 10.0, &mut ctx, &mut graph).unwrap();
-        let result3 = compile_abducible("moderate", 2.5, &mut ctx, &mut graph).unwrap();
+        let result1 = compile_abducible("cheap", 0.5, &mut ctx, &mut graph).expect("unwrap");
+        let result2 = compile_abducible("expensive", 10.0, &mut ctx, &mut graph).expect("unwrap");
+        let result3 = compile_abducible("moderate", 2.5, &mut ctx, &mut graph).expect("unwrap");
 
         // Verify costs are stored in metadata
-        let meta1 = graph.tensor_metadata.get(&result1.tensor_idx).unwrap();
+        let meta1 = graph
+            .tensor_metadata
+            .get(&result1.tensor_idx)
+            .expect("unwrap");
         assert_eq!(meta1.get_attribute("abducible_cost"), Some("0.5"));
 
-        let meta2 = graph.tensor_metadata.get(&result2.tensor_idx).unwrap();
+        let meta2 = graph
+            .tensor_metadata
+            .get(&result2.tensor_idx)
+            .expect("unwrap");
         assert_eq!(meta2.get_attribute("abducible_cost"), Some("10"));
 
-        let meta3 = graph.tensor_metadata.get(&result3.tensor_idx).unwrap();
+        let meta3 = graph
+            .tensor_metadata
+            .get(&result3.tensor_idx)
+            .expect("unwrap");
         assert_eq!(meta3.get_attribute("abducible_cost"), Some("2.5"));
     }
 
@@ -616,12 +626,12 @@ mod tests {
         let mut graph = EinsumGraph::new();
 
         // Create abducibles with known costs
-        compile_abducible("H1", 1.0, &mut ctx, &mut graph).unwrap();
-        compile_abducible("H2", 2.5, &mut ctx, &mut graph).unwrap();
-        compile_abducible("H3", 0.3, &mut ctx, &mut graph).unwrap();
+        compile_abducible("H1", 1.0, &mut ctx, &mut graph).expect("unwrap");
+        compile_abducible("H2", 2.5, &mut ctx, &mut graph).expect("unwrap");
+        compile_abducible("H3", 0.3, &mut ctx, &mut graph).expect("unwrap");
 
         // Get registered abducibles
-        let abducibles = get_registered_abducibles(&ctx, &graph).unwrap();
+        let abducibles = get_registered_abducibles(&ctx, &graph).expect("unwrap");
 
         // Should have 3 abducibles
         assert_eq!(abducibles.len(), 3);
@@ -644,14 +654,14 @@ mod tests {
         let mut graph = EinsumGraph::new();
 
         // Register abducibles with specific costs
-        compile_abducible("H1", 1.0, &mut ctx, &mut graph).unwrap();
-        compile_abducible("H2", 5.0, &mut ctx, &mut graph).unwrap();
+        compile_abducible("H1", 1.0, &mut ctx, &mut graph).expect("unwrap");
+        compile_abducible("H2", 5.0, &mut ctx, &mut graph).expect("unwrap");
 
         // Create a formula to explain
         let formula = TLExpr::pred("Safe", vec![]);
 
         // Compile the explanation
-        compile_explain(&formula, &mut ctx, &mut graph).unwrap();
+        compile_explain(&formula, &mut ctx, &mut graph).expect("unwrap");
 
         // The graph should have computed cost terms
         // We can't easily verify the exact computation here,
@@ -659,7 +669,7 @@ mod tests {
         assert!(!graph.nodes.is_empty());
 
         // Verify that the abducibles still have their correct costs in metadata
-        let abducibles = get_registered_abducibles(&ctx, &graph).unwrap();
+        let abducibles = get_registered_abducibles(&ctx, &graph).expect("unwrap");
         assert_eq!(abducibles.len(), 2);
 
         for (name, cost, _) in &abducibles {

@@ -138,7 +138,11 @@ pub(crate) fn compile_soft_exists(
     let temp_idx = if !graph.tensors.contains(&temp_name) {
         graph.add_tensor(temp_name.clone())
     } else {
-        graph.tensors.iter().position(|t| t == &temp_name).unwrap()
+        graph
+            .tensors
+            .iter()
+            .position(|t| t == &temp_name)
+            .expect("temp tensor was just registered")
     };
 
     let scaled_idx = graph.add_tensor(format!("scaled_{}", graph.tensors.len()));
@@ -246,7 +250,11 @@ pub(crate) fn compile_soft_forall(
     let temp_idx = if !graph.tensors.contains(&temp_name) {
         graph.add_tensor(temp_name.clone())
     } else {
-        graph.tensors.iter().position(|t| t == &temp_name).unwrap()
+        graph
+            .tensors
+            .iter()
+            .position(|t| t == &temp_name)
+            .expect("temp tensor was just registered")
     };
 
     let scaled_idx = graph.add_tensor(format!("scaled_{}", graph.tensors.len()));

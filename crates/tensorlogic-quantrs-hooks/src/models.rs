@@ -568,15 +568,15 @@ mod tests {
         bn.add_variable("y".to_string(), 2);
 
         let prior = Array::from_shape_vec(vec![2], vec![0.6, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        bn.add_prior("x".to_string(), prior).unwrap();
+        bn.add_prior("x".to_string(), prior).expect("unwrap");
 
         let cpd = Array::from_shape_vec(vec![2, 2], vec![0.9, 0.1, 0.2, 0.8])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         bn.add_cpd("y".to_string(), vec!["x".to_string()], cpd)
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(bn.graph().num_factors(), 2);
     }
@@ -588,10 +588,10 @@ mod tests {
         bn.add_variable("y".to_string(), 2);
 
         let cpd = Array::from_shape_vec(vec![2, 2], vec![0.9, 0.1, 0.2, 0.8])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         bn.add_cpd("y".to_string(), vec!["x".to_string()], cpd)
-            .unwrap();
+            .expect("unwrap");
 
         assert!(bn.is_acyclic());
     }
@@ -604,18 +604,18 @@ mod tests {
         bn.add_variable("z".to_string(), 2);
 
         let cpd_y = Array::from_shape_vec(vec![2, 2], vec![0.9, 0.1, 0.2, 0.8])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         bn.add_cpd("y".to_string(), vec!["x".to_string()], cpd_y)
-            .unwrap();
+            .expect("unwrap");
 
         let cpd_z = Array::from_shape_vec(vec![2, 2], vec![0.8, 0.2, 0.3, 0.7])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         bn.add_cpd("z".to_string(), vec!["y".to_string()], cpd_z)
-            .unwrap();
+            .expect("unwrap");
 
-        let order = bn.topological_order().unwrap();
+        let order = bn.topological_order().expect("unwrap");
         assert_eq!(order.len(), 3);
     }
 
@@ -630,19 +630,19 @@ mod tests {
         let mut hmm = HiddenMarkovModel::new(2, 2, 3);
 
         let initial = Array::from_shape_vec(vec![2], vec![0.6, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        hmm.set_initial_distribution(initial).unwrap();
+        hmm.set_initial_distribution(initial).expect("unwrap");
 
         let transition = Array::from_shape_vec(vec![2, 2], vec![0.7, 0.3, 0.4, 0.6])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        hmm.set_transition_matrix(transition).unwrap();
+        hmm.set_transition_matrix(transition).expect("unwrap");
 
         let emission = Array::from_shape_vec(vec![2, 2], vec![0.9, 0.1, 0.2, 0.8])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        hmm.set_emission_matrix(emission).unwrap();
+        hmm.set_emission_matrix(emission).expect("unwrap");
 
         assert!(hmm.graph().num_factors() > 0);
     }
@@ -652,26 +652,26 @@ mod tests {
         let mut hmm = HiddenMarkovModel::new(2, 2, 3);
 
         let initial = Array::from_shape_vec(vec![2], vec![0.6, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        hmm.set_initial_distribution(initial).unwrap();
+        hmm.set_initial_distribution(initial).expect("unwrap");
 
         let transition = Array::from_shape_vec(vec![2, 2], vec![0.7, 0.3, 0.4, 0.6])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        hmm.set_transition_matrix(transition).unwrap();
+        hmm.set_transition_matrix(transition).expect("unwrap");
 
         let emission = Array::from_shape_vec(vec![2, 2], vec![0.9, 0.1, 0.2, 0.8])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        hmm.set_emission_matrix(emission).unwrap();
+        hmm.set_emission_matrix(emission).expect("unwrap");
 
         // Filter with observations
         let observations = vec![0, 1, 0];
         let result = hmm.filter(&observations, 1);
         assert!(result.is_ok());
 
-        let marginal = result.unwrap();
+        let marginal = result.expect("unwrap");
         assert_eq!(marginal.len(), 2);
         // Should be normalized
         let sum: f64 = marginal.iter().sum();
@@ -683,26 +683,26 @@ mod tests {
         let mut hmm = HiddenMarkovModel::new(2, 2, 3);
 
         let initial = Array::from_shape_vec(vec![2], vec![0.6, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        hmm.set_initial_distribution(initial).unwrap();
+        hmm.set_initial_distribution(initial).expect("unwrap");
 
         let transition = Array::from_shape_vec(vec![2, 2], vec![0.7, 0.3, 0.4, 0.6])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        hmm.set_transition_matrix(transition).unwrap();
+        hmm.set_transition_matrix(transition).expect("unwrap");
 
         let emission = Array::from_shape_vec(vec![2, 2], vec![0.9, 0.1, 0.2, 0.8])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        hmm.set_emission_matrix(emission).unwrap();
+        hmm.set_emission_matrix(emission).expect("unwrap");
 
         // Smooth with all observations
         let observations = vec![0, 1, 0];
         let result = hmm.smooth(&observations, 1);
         assert!(result.is_ok());
 
-        let marginal = result.unwrap();
+        let marginal = result.expect("unwrap");
         assert_eq!(marginal.len(), 2);
         let sum: f64 = marginal.iter().sum();
         assert!((sum - 1.0).abs() < 1e-6);
@@ -713,26 +713,26 @@ mod tests {
         let mut hmm = HiddenMarkovModel::new(2, 2, 3);
 
         let initial = Array::from_shape_vec(vec![2], vec![0.6, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        hmm.set_initial_distribution(initial).unwrap();
+        hmm.set_initial_distribution(initial).expect("unwrap");
 
         let transition = Array::from_shape_vec(vec![2, 2], vec![0.7, 0.3, 0.4, 0.6])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        hmm.set_transition_matrix(transition).unwrap();
+        hmm.set_transition_matrix(transition).expect("unwrap");
 
         let emission = Array::from_shape_vec(vec![2, 2], vec![0.9, 0.1, 0.2, 0.8])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        hmm.set_emission_matrix(emission).unwrap();
+        hmm.set_emission_matrix(emission).expect("unwrap");
 
         // Run Viterbi
         let observations = vec![0, 1, 0];
         let result = hmm.viterbi(&observations);
         assert!(result.is_ok());
 
-        let sequence = result.unwrap();
+        let sequence = result.expect("unwrap");
         assert_eq!(sequence.len(), 3);
         // Each state should be valid (0 or 1)
         for state in sequence {
@@ -747,10 +747,10 @@ mod tests {
         mrf.add_variable("y".to_string(), 2);
 
         let potential = Array::from_shape_vec(vec![2, 2], vec![1.0, 0.5, 0.5, 1.0])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         mrf.add_pairwise_potential("x".to_string(), "y".to_string(), potential)
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(mrf.graph().num_factors(), 1);
     }
@@ -762,14 +762,14 @@ mod tests {
         crf.add_output_variable("y".to_string(), 2);
 
         let feature = Array::from_shape_vec(vec![3, 2], vec![1.0, 0.5, 0.8, 0.2, 0.6, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         crf.add_feature(
             "f1".to_string(),
             vec!["x".to_string(), "y".to_string()],
             feature,
         )
-        .unwrap();
+        .expect("unwrap");
 
         assert_eq!(crf.graph().num_factors(), 1);
     }

@@ -23,7 +23,7 @@ fn create_large_symbol_table(num_domains: usize, num_predicates: usize) -> Symbo
     for i in 0..num_domains {
         table
             .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Add predicates with varying arities
@@ -34,7 +34,7 @@ fn create_large_symbol_table(num_domains: usize, num_predicates: usize) -> Symbo
             .collect();
         table
             .add_predicate(PredicateInfo::new(format!("pred{}", i), domains))
-            .unwrap();
+            .expect("unwrap");
     }
 
     table

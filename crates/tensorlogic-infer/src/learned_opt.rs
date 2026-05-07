@@ -29,13 +29,11 @@
 //!
 //! ## SCIRS2 Policy Note
 //!
-//! This module uses `rand` for epsilon-greedy exploration in Q-learning, which is
-//! acceptable under the SCIRS2 policy exception for planning layer crates
-//! (tensorlogic-infer). The planning layer may avoid heavy SciRS2 dependencies to
-//! remain lightweight and engine-agnostic. The rand usage here is minimal (only
-//! for exploration strategy) and does not involve heavy tensor operations.
+//! This module uses `scirs2_core::random` for epsilon-greedy exploration in Q-learning,
+//! following the SCIRS2 policy. All random number generation is routed through the
+//! `scirs2_core::random` module rather than depending on `rand` directly.
 
-use rand::Rng;
+use scirs2_core::random::RngExt;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use thiserror::Error;
@@ -264,7 +262,7 @@ impl QLearningAgent {
     }
 
     fn select_action(&self, state: &str, explore: bool) -> OptimizationAction {
-        if explore && rand::random::<f64>() < self.epsilon {
+        if explore && scirs2_core::random::random::<f64>() < self.epsilon {
             // Random exploration
             let actions = [
                 OptimizationAction::Fuse,
@@ -272,7 +270,7 @@ impl QLearningAgent {
                 OptimizationAction::Parallelize,
                 OptimizationAction::Sequential,
             ];
-            actions[rand::rng().random_range(0..actions.len())]
+            actions[scirs2_core::random::rng().random_range(0..actions.len())]
         } else {
             // Greedy exploitation
             let actions = [
@@ -296,7 +294,7 @@ impl QLearningAgent {
 
             actions
                 .iter()
-                .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap())
+                .max_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal))
                 .map(|(action, _)| *action)
                 .unwrap_or(OptimizationAction::DontFuse)
         }
@@ -634,7 +632,7 @@ mod tests {
         graph_desc.insert("num_nodes".to_string(), 10.0);
         graph_desc.insert("num_edges".to_string(), 15.0);
 
-        let features = optimizer.extract_features(&graph_desc).unwrap();
+        let features = optimizer.extract_features(&graph_desc).expect("unwrap");
         assert!(features.features.len() > 0);
     }
 
@@ -643,8 +641,8 @@ mod tests {
         let mut optimizer = LearnedOptimizer::new();
         let features = create_test_features();
 
-        optimizer.observe(features.clone(), 100.0).unwrap();
-        optimizer.observe(features.clone(), 95.0).unwrap();
+        optimizer.observe(features.clone(), 100.0).expect("unwrap");
+        optimizer.observe(features.clone(), 95.0).expect("unwrap");
 
         assert_eq!(optimizer.stats.training_examples, 2);
         assert_eq!(optimizer.stats.total_updates, 2);
@@ -668,10 +666,10 @@ mod tests {
         for i in 0..15 {
             let mut f = create_test_features();
             f.features[0] = i as f64;
-            optimizer.observe(f, 100.0 + i as f64).unwrap();
+            optimizer.observe(f, 100.0 + i as f64).expect("unwrap");
         }
 
-        let prediction = optimizer.predict_cost(&features).unwrap();
+        let prediction = optimizer.predict_cost(&features).expect("unwrap");
         assert!(prediction.predicted_cost_us >= 0.0);
         assert!(prediction.model_confidence > 0.0);
     }
@@ -688,7 +686,7 @@ mod tests {
             next_state_features: Some(create_test_features()),
         };
 
-        optimizer.observe_reward(signal).unwrap();
+        optimizer.observe_reward(signal).expect("unwrap");
         assert_eq!(optimizer.stats.total_updates, 1);
     }
 
@@ -701,10 +699,10 @@ mod tests {
         for i in 0..15 {
             let mut f = create_test_features();
             f.features[0] = i as f64;
-            optimizer.observe(f, 50.0 + i as f64).unwrap(); // Low cost -> should recommend fusion
+            optimizer.observe(f, 50.0 + i as f64).expect("unwrap"); // Low cost -> should recommend fusion
         }
 
-        let recommendation = optimizer.recommend_fusion(&features).unwrap();
+        let recommendation = optimizer.recommend_fusion(&features).expect("unwrap");
         assert!(recommendation.confidence >= 0.0);
     }
 
@@ -723,10 +721,10 @@ mod tests {
                 reward: 15.0,
                 next_state_features: None,
             };
-            optimizer.observe_reward(signal).unwrap();
+            optimizer.observe_reward(signal).expect("unwrap");
         }
 
-        let recommendation = optimizer.recommend_fusion(&features).unwrap();
+        let recommendation = optimizer.recommend_fusion(&features).expect("unwrap");
         // Just check it returns a valid recommendation
         assert!(recommendation.confidence >= 0.0);
     }
@@ -739,10 +737,10 @@ mod tests {
         for i in 0..20 {
             let mut features = FeatureVector::new();
             features.add_feature("x".to_string(), i as f64);
-            optimizer.observe(features, i as f64 * 2.0).unwrap(); // y = 2x
+            optimizer.observe(features, i as f64 * 2.0).expect("unwrap"); // y = 2x
         }
 
-        let accuracy = optimizer.evaluate_accuracy().unwrap();
+        let accuracy = optimizer.evaluate_accuracy().expect("unwrap");
         assert!(accuracy >= 0.0 && accuracy <= 1.0);
     }
 
@@ -751,7 +749,7 @@ mod tests {
         let mut optimizer = LearnedOptimizer::new();
         let features = create_test_features();
 
-        optimizer.observe(features, 100.0).unwrap();
+        optimizer.observe(features, 100.0).expect("unwrap");
         assert_eq!(optimizer.stats.training_examples, 1);
 
         optimizer.reset();

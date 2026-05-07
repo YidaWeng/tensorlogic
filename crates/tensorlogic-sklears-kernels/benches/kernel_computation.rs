@@ -37,7 +37,11 @@ fn bench_linear_kernel(c: &mut Criterion) {
         group.throughput(Throughput::Elements(*size as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute(&vectors[0], &vectors[1]).unwrap());
+                black_box(
+                    kernel
+                        .compute(&vectors[0], &vectors[1])
+                        .expect("linear kernel compute failed"),
+                );
             });
         });
     }
@@ -52,12 +56,16 @@ fn bench_rbf_kernel(c: &mut Criterion) {
     for size in [10, 50, 100, 500, 1000].iter() {
         let vectors = generate_vectors(*size, 2);
         let config = RbfKernelConfig::new(0.5);
-        let kernel = RbfKernel::new(config).unwrap();
+        let kernel = RbfKernel::new(config).expect("Failed to create RbfKernel");
 
         group.throughput(Throughput::Elements(*size as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute(&vectors[0], &vectors[1]).unwrap());
+                black_box(
+                    kernel
+                        .compute(&vectors[0], &vectors[1])
+                        .expect("rbf kernel compute failed"),
+                );
             });
         });
     }
@@ -71,11 +79,16 @@ fn bench_polynomial_kernel(c: &mut Criterion) {
 
     for degree in [2, 3, 4, 5].iter() {
         let vectors = generate_vectors(100, 2);
-        let kernel = PolynomialKernel::new(*degree, 1.0).unwrap();
+        let kernel =
+            PolynomialKernel::new(*degree, 1.0).expect("Failed to create PolynomialKernel");
 
         group.bench_with_input(BenchmarkId::from_parameter(degree), degree, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute(&vectors[0], &vectors[1]).unwrap());
+                black_box(
+                    kernel
+                        .compute(&vectors[0], &vectors[1])
+                        .expect("polynomial kernel compute failed"),
+                );
             });
         });
     }
@@ -94,7 +107,11 @@ fn bench_cosine_kernel(c: &mut Criterion) {
         group.throughput(Throughput::Elements(*size as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute(&vectors[0], &vectors[1]).unwrap());
+                black_box(
+                    kernel
+                        .compute(&vectors[0], &vectors[1])
+                        .expect("cosine kernel compute failed"),
+                );
             });
         });
     }
@@ -109,7 +126,8 @@ fn bench_rule_similarity_kernel(c: &mut Criterion) {
     for num_rules in [5, 10, 20, 50, 100].iter() {
         let rules = generate_rules(*num_rules);
         let config = RuleSimilarityConfig::new();
-        let kernel = RuleSimilarityKernel::new(rules, config).unwrap();
+        let kernel = RuleSimilarityKernel::new(rules, config)
+            .expect("Failed to create RuleSimilarityKernel");
 
         let x = vec![1.0; *num_rules];
         let y = vec![0.5; *num_rules];
@@ -117,7 +135,11 @@ fn bench_rule_similarity_kernel(c: &mut Criterion) {
         group.throughput(Throughput::Elements(*num_rules as u64));
         group.bench_with_input(BenchmarkId::from_parameter(num_rules), num_rules, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute(&x, &y).unwrap());
+                black_box(
+                    kernel
+                        .compute(&x, &y)
+                        .expect("rule similarity kernel compute failed"),
+                );
             });
         });
     }
@@ -137,7 +159,11 @@ fn bench_predicate_overlap_kernel(c: &mut Criterion) {
         group.throughput(Throughput::Elements(*num_preds as u64));
         group.bench_with_input(BenchmarkId::from_parameter(num_preds), num_preds, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute(&x, &y).unwrap());
+                black_box(
+                    kernel
+                        .compute(&x, &y)
+                        .expect("predicate overlap kernel compute failed"),
+                );
             });
         });
     }
@@ -153,12 +179,16 @@ fn bench_ngram_kernel(c: &mut Criterion) {
     let text2 = "the quick brown cat jumps over the lazy dog";
 
     for n in [2, 3, 4, 5].iter() {
-        let config = NGramKernelConfig::new(*n).unwrap();
+        let config = NGramKernelConfig::new(*n).expect("Failed to create NGramKernelConfig");
         let kernel = NGramKernel::new(config);
 
         group.bench_with_input(BenchmarkId::from_parameter(n), n, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute_strings(text1, text2).unwrap());
+                black_box(
+                    kernel
+                        .compute_strings(text1, text2)
+                        .expect("ngram kernel compute_strings failed"),
+                );
             });
         });
     }
@@ -176,14 +206,18 @@ fn bench_subsequence_kernel(c: &mut Criterion) {
     for max_len in [2, 3, 4].iter() {
         let config = SubsequenceKernelConfig::new()
             .with_max_length(*max_len)
-            .unwrap()
+            .expect("Failed to set max_length on SubsequenceKernelConfig")
             .with_decay(0.5)
-            .unwrap();
+            .expect("Failed to set decay on SubsequenceKernelConfig");
         let kernel = SubsequenceKernel::new(config);
 
         group.bench_with_input(BenchmarkId::from_parameter(max_len), max_len, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute_strings(text1, text2).unwrap());
+                black_box(
+                    kernel
+                        .compute_strings(text1, text2)
+                        .expect("subsequence kernel compute_strings failed"),
+                );
             });
         });
     }
@@ -202,14 +236,18 @@ fn bench_edit_distance_kernel(c: &mut Criterion) {
     ];
 
     for (i, (text1, text2)) in texts.iter().enumerate() {
-        let kernel = EditDistanceKernel::new(0.1).unwrap();
+        let kernel = EditDistanceKernel::new(0.1).expect("Failed to create EditDistanceKernel");
 
         group.bench_with_input(
             BenchmarkId::from_parameter(format!("pair_{}", i)),
             &(text1, text2),
             |b, (t1, t2)| {
                 b.iter(|| {
-                    black_box(kernel.compute_strings(t1, t2).unwrap());
+                    black_box(
+                        kernel
+                            .compute_strings(t1, t2)
+                            .expect("edit distance kernel compute_strings failed"),
+                    );
                 });
             },
         );
@@ -229,23 +267,37 @@ fn bench_kernel_comparison(c: &mut Criterion) {
     group.bench_function("linear", |b| {
         let kernel = LinearKernel::new();
         b.iter(|| {
-            black_box(kernel.compute(&vectors[0], &vectors[1]).unwrap());
+            black_box(
+                kernel
+                    .compute(&vectors[0], &vectors[1])
+                    .expect("linear kernel compute failed in comparison"),
+            );
         });
     });
 
     // RBF
     group.bench_function("rbf", |b| {
-        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let kernel = RbfKernel::new(RbfKernelConfig::new(0.5))
+            .expect("Failed to create RbfKernel for comparison");
         b.iter(|| {
-            black_box(kernel.compute(&vectors[0], &vectors[1]).unwrap());
+            black_box(
+                kernel
+                    .compute(&vectors[0], &vectors[1])
+                    .expect("rbf kernel compute failed in comparison"),
+            );
         });
     });
 
     // Polynomial (degree 3)
     group.bench_function("polynomial", |b| {
-        let kernel = PolynomialKernel::new(3, 1.0).unwrap();
+        let kernel = PolynomialKernel::new(3, 1.0)
+            .expect("Failed to create PolynomialKernel for comparison");
         b.iter(|| {
-            black_box(kernel.compute(&vectors[0], &vectors[1]).unwrap());
+            black_box(
+                kernel
+                    .compute(&vectors[0], &vectors[1])
+                    .expect("polynomial kernel compute failed in comparison"),
+            );
         });
     });
 
@@ -253,7 +305,11 @@ fn bench_kernel_comparison(c: &mut Criterion) {
     group.bench_function("cosine", |b| {
         let kernel = CosineKernel::new();
         b.iter(|| {
-            black_box(kernel.compute(&vectors[0], &vectors[1]).unwrap());
+            black_box(
+                kernel
+                    .compute(&vectors[0], &vectors[1])
+                    .expect("cosine kernel compute failed in comparison"),
+            );
         });
     });
 

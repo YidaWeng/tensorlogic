@@ -756,25 +756,25 @@ mod tests {
 
     #[test]
     fn test_tensorlogic_model_from_encoder_layer() {
-        let config = EncoderLayerConfig::new(512, 8, 2048).unwrap();
-        let layer = EncoderLayer::new(config.clone()).unwrap();
+        let config = EncoderLayerConfig::new(512, 8, 2048).expect("unwrap");
+        let layer = EncoderLayer::new(config.clone()).expect("unwrap");
         let model = TensorLogicModel::from_encoder_layer(layer, config);
         assert!(model.is_ok());
     }
 
     #[test]
     fn test_tensorlogic_model_from_encoder_stack() {
-        let config = EncoderStackConfig::new(6, 512, 8, 2048, 1024).unwrap();
-        let stack = EncoderStack::new(config.clone()).unwrap();
+        let config = EncoderStackConfig::new(6, 512, 8, 2048, 1024).expect("unwrap");
+        let stack = EncoderStack::new(config.clone()).expect("unwrap");
         let model = TensorLogicModel::from_encoder_stack(stack, config);
         assert!(model.is_ok());
     }
 
     #[test]
     fn test_tensorlogic_model_build_graph() {
-        let config = EncoderLayerConfig::new(512, 8, 2048).unwrap();
-        let layer = EncoderLayer::new(config.clone()).unwrap();
-        let model = TensorLogicModel::from_encoder_layer(layer, config).unwrap();
+        let config = EncoderLayerConfig::new(512, 8, 2048).expect("unwrap");
+        let layer = EncoderLayer::new(config.clone()).expect("unwrap");
+        let model = TensorLogicModel::from_encoder_layer(layer, config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("input");
@@ -785,9 +785,9 @@ mod tests {
 
     #[test]
     fn test_tensorlogic_model_to_tlexpr() {
-        let config = EncoderLayerConfig::new(512, 8, 2048).unwrap();
-        let layer = EncoderLayer::new(config.clone()).unwrap();
-        let model = TensorLogicModel::from_encoder_layer(layer, config).unwrap();
+        let config = EncoderLayerConfig::new(512, 8, 2048).expect("unwrap");
+        let layer = EncoderLayer::new(config.clone()).expect("unwrap");
+        let model = TensorLogicModel::from_encoder_layer(layer, config).expect("unwrap");
 
         let expr = model.to_tlexpr();
         assert!(expr.is_ok());
@@ -795,9 +795,9 @@ mod tests {
 
     #[test]
     fn test_tensorlogic_model_config() {
-        let config = EncoderLayerConfig::new(512, 8, 2048).unwrap();
-        let layer = EncoderLayer::new(config.clone()).unwrap();
-        let model = TensorLogicModel::from_encoder_layer(layer, config).unwrap();
+        let config = EncoderLayerConfig::new(512, 8, 2048).expect("unwrap");
+        let layer = EncoderLayer::new(config.clone()).expect("unwrap");
+        let model = TensorLogicModel::from_encoder_layer(layer, config).expect("unwrap");
 
         let model_config = model.config();
         match model_config {
@@ -834,7 +834,7 @@ mod tests {
         let expr = converter.convert_bert_encoder(6, 512, 8, 2048);
         assert!(expr.is_ok());
 
-        let expr = expr.unwrap();
+        let expr = expr.expect("unwrap");
         match expr {
             TLExpr::ForAll { var, body, .. } => {
                 assert_eq!(var, "layer");
@@ -876,7 +876,7 @@ mod tests {
         let expr = converter.convert_transformer(6, 6, 512, 8, 2048);
         assert!(expr.is_ok());
 
-        let expr = expr.unwrap();
+        let expr = expr.expect("unwrap");
         match expr {
             TLExpr::And(..) => {
                 // Correctly represents encoder AND decoder composition
@@ -912,12 +912,12 @@ mod tests {
 
         let mapped = loader
             .map_layer_name("encoder.layer.0.attention.query.weight")
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(mapped, "encoder_0_attn_query_weight");
 
         let mapped = loader
             .map_layer_name("decoder.layer.5.feed_forward.weight")
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(mapped, "decoder_5_ffn_weight");
     }
 

@@ -597,8 +597,16 @@ impl MultiTaskKernelBuilder {
             });
         }
 
-        let kernel = self.base_kernels.into_iter().next().unwrap();
-        let cov = self.task_covariances.into_iter().next().unwrap();
+        let kernel = self
+            .base_kernels
+            .into_iter()
+            .next()
+            .expect("validated non-empty");
+        let cov = self
+            .task_covariances
+            .into_iter()
+            .next()
+            .expect("validated non-empty");
         ICMKernel::new(kernel, cov)
     }
 
@@ -625,29 +633,29 @@ mod tests {
     #[test]
     fn test_index_kernel_basic() {
         let cov = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
-        let kernel = IndexKernel::new(cov).unwrap();
+        let kernel = IndexKernel::new(cov).expect("unwrap");
 
         assert_eq!(kernel.num_tasks(), 2);
-        assert!((kernel.get_task_covariance(0, 1).unwrap() - 0.5).abs() < 1e-10);
-        assert!((kernel.get_task_covariance(1, 1).unwrap() - 1.0).abs() < 1e-10);
+        assert!((kernel.get_task_covariance(0, 1).expect("unwrap") - 0.5).abs() < 1e-10);
+        assert!((kernel.get_task_covariance(1, 1).expect("unwrap") - 1.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_index_kernel_identity() {
-        let kernel = IndexKernel::identity(3).unwrap();
+        let kernel = IndexKernel::identity(3).expect("unwrap");
 
-        assert!((kernel.get_task_covariance(0, 0).unwrap() - 1.0).abs() < 1e-10);
-        assert!((kernel.get_task_covariance(0, 1).unwrap()).abs() < 1e-10);
-        assert!((kernel.get_task_covariance(1, 2).unwrap()).abs() < 1e-10);
+        assert!((kernel.get_task_covariance(0, 0).expect("unwrap") - 1.0).abs() < 1e-10);
+        assert!((kernel.get_task_covariance(0, 1).expect("unwrap")).abs() < 1e-10);
+        assert!((kernel.get_task_covariance(1, 2).expect("unwrap")).abs() < 1e-10);
     }
 
     #[test]
     fn test_index_kernel_uniform() {
-        let kernel = IndexKernel::uniform(3, 0.5).unwrap();
+        let kernel = IndexKernel::uniform(3, 0.5).expect("unwrap");
 
-        assert!((kernel.get_task_covariance(0, 0).unwrap() - 1.0).abs() < 1e-10);
-        assert!((kernel.get_task_covariance(0, 1).unwrap() - 0.5).abs() < 1e-10);
-        assert!((kernel.get_task_covariance(1, 2).unwrap() - 0.5).abs() < 1e-10);
+        assert!((kernel.get_task_covariance(0, 0).expect("unwrap") - 1.0).abs() < 1e-10);
+        assert!((kernel.get_task_covariance(0, 1).expect("unwrap") - 0.5).abs() < 1e-10);
+        assert!((kernel.get_task_covariance(1, 2).expect("unwrap") - 0.5).abs() < 1e-10);
     }
 
     #[test]
@@ -667,7 +675,7 @@ mod tests {
 
     #[test]
     fn test_index_kernel_out_of_bounds() {
-        let kernel = IndexKernel::identity(2).unwrap();
+        let kernel = IndexKernel::identity(2).expect("unwrap");
         assert!(kernel.get_task_covariance(2, 0).is_err());
     }
 
@@ -677,7 +685,7 @@ mod tests {
     fn test_icm_kernel_basic() {
         let base = LinearKernel::new();
         let cov = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
-        let icm = ICMKernel::new(Box::new(base), cov).unwrap();
+        let icm = ICMKernel::new(Box::new(base), cov).expect("unwrap");
 
         assert_eq!(icm.num_tasks(), 2);
     }
@@ -686,12 +694,12 @@ mod tests {
     fn test_icm_kernel_compute() {
         let base = LinearKernel::new();
         let cov = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
-        let icm = ICMKernel::new(Box::new(base), cov).unwrap();
+        let icm = ICMKernel::new(Box::new(base), cov).expect("unwrap");
 
         let x = TaskInput::new(vec![1.0, 2.0], 0);
         let y = TaskInput::new(vec![3.0, 4.0], 1);
 
-        let k = icm.compute_tasks(&x, &y).unwrap();
+        let k = icm.compute_tasks(&x, &y).expect("unwrap");
         // Linear: 1*3 + 2*4 = 11
         // Task covariance: 0.5
         // Result: 0.5 * 11 = 5.5
@@ -702,12 +710,12 @@ mod tests {
     fn test_icm_kernel_same_task() {
         let base = LinearKernel::new();
         let cov = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
-        let icm = ICMKernel::new(Box::new(base), cov).unwrap();
+        let icm = ICMKernel::new(Box::new(base), cov).expect("unwrap");
 
         let x = TaskInput::new(vec![1.0, 2.0], 0);
         let y = TaskInput::new(vec![3.0, 4.0], 0);
 
-        let k = icm.compute_tasks(&x, &y).unwrap();
+        let k = icm.compute_tasks(&x, &y).expect("unwrap");
         // Linear: 11, Task: 1.0, Result: 11.0
         assert!((k - 11.0).abs() < 1e-10);
     }
@@ -715,30 +723,30 @@ mod tests {
     #[test]
     fn test_icm_kernel_independent() {
         let base = LinearKernel::new();
-        let icm = ICMKernel::independent(Box::new(base), 3).unwrap();
+        let icm = ICMKernel::independent(Box::new(base), 3).expect("unwrap");
 
         let x = TaskInput::new(vec![1.0], 0);
         let y = TaskInput::new(vec![1.0], 1);
 
         // Different tasks, independent => 0
-        let k = icm.compute_tasks(&x, &y).unwrap();
+        let k = icm.compute_tasks(&x, &y).expect("unwrap");
         assert!(k.abs() < 1e-10);
 
         // Same task => base kernel value
         let z = TaskInput::new(vec![1.0], 0);
-        let k = icm.compute_tasks(&x, &z).unwrap();
+        let k = icm.compute_tasks(&x, &z).expect("unwrap");
         assert!((k - 1.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_icm_kernel_uniform() {
         let base = LinearKernel::new();
-        let icm = ICMKernel::uniform(Box::new(base), 2, 0.8).unwrap();
+        let icm = ICMKernel::uniform(Box::new(base), 2, 0.8).expect("unwrap");
 
         let x = TaskInput::new(vec![1.0], 0);
         let y = TaskInput::new(vec![1.0], 1);
 
-        let k = icm.compute_tasks(&x, &y).unwrap();
+        let k = icm.compute_tasks(&x, &y).expect("unwrap");
         // Linear: 1.0, Task: 0.8, Result: 0.8
         assert!((k - 0.8).abs() < 1e-10);
     }
@@ -747,13 +755,13 @@ mod tests {
     fn test_icm_kernel_rank1() {
         let base = LinearKernel::new();
         let variances = vec![1.0, 4.0]; // sqrt gives [1.0, 2.0]
-        let icm = ICMKernel::from_rank1(Box::new(base), variances).unwrap();
+        let icm = ICMKernel::from_rank1(Box::new(base), variances).expect("unwrap");
 
         // B[0,1] = sqrt(1) * sqrt(4) = 2.0
         let x = TaskInput::new(vec![1.0], 0);
         let y = TaskInput::new(vec![1.0], 1);
 
-        let k = icm.compute_tasks(&x, &y).unwrap();
+        let k = icm.compute_tasks(&x, &y).expect("unwrap");
         assert!((k - 2.0).abs() < 1e-10);
     }
 
@@ -761,7 +769,7 @@ mod tests {
     fn test_icm_kernel_matrix() {
         let base = LinearKernel::new();
         let cov = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
-        let icm = ICMKernel::new(Box::new(base), cov).unwrap();
+        let icm = ICMKernel::new(Box::new(base), cov).expect("unwrap");
 
         let inputs = vec![
             TaskInput::new(vec![1.0], 0),
@@ -769,7 +777,7 @@ mod tests {
             TaskInput::new(vec![2.0], 0),
         ];
 
-        let matrix = icm.compute_task_matrix(&inputs).unwrap();
+        let matrix = icm.compute_task_matrix(&inputs).expect("unwrap");
 
         assert_eq!(matrix.len(), 3);
         // Symmetric
@@ -789,7 +797,7 @@ mod tests {
     fn test_icm_kernel_invalid_task() {
         let base = LinearKernel::new();
         let cov = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
-        let icm = ICMKernel::new(Box::new(base), cov).unwrap();
+        let icm = ICMKernel::new(Box::new(base), cov).expect("unwrap");
 
         let x = TaskInput::new(vec![1.0], 0);
         let y = TaskInput::new(vec![1.0], 5); // Out of bounds
@@ -805,7 +813,7 @@ mod tests {
 
         let base1 = LinearKernel::new();
         let cov1 = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
-        lmc.add_component(Box::new(base1), cov1).unwrap();
+        lmc.add_component(Box::new(base1), cov1).expect("unwrap");
 
         assert_eq!(lmc.num_tasks(), 2);
         assert_eq!(lmc.num_components(), 1);
@@ -818,17 +826,17 @@ mod tests {
         // Component 1: Linear with correlation
         let base1 = LinearKernel::new();
         let cov1 = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
-        lmc.add_component(Box::new(base1), cov1).unwrap();
+        lmc.add_component(Box::new(base1), cov1).expect("unwrap");
 
         // Component 2: RBF with different correlation
-        let base2 = RbfKernel::new(RbfKernelConfig::new(1.0)).unwrap();
+        let base2 = RbfKernel::new(RbfKernelConfig::new(1.0)).expect("unwrap");
         let cov2 = vec![vec![2.0, 1.0], vec![1.0, 2.0]];
-        lmc.add_component(Box::new(base2), cov2).unwrap();
+        lmc.add_component(Box::new(base2), cov2).expect("unwrap");
 
         let x = TaskInput::new(vec![1.0, 0.0], 0);
         let y = TaskInput::new(vec![1.0, 0.0], 1);
 
-        let k = lmc.compute_tasks(&x, &y).unwrap();
+        let k = lmc.compute_tasks(&x, &y).expect("unwrap");
         // Linear: 1.0, Task cov1: 0.5 => 0.5
         // RBF: 1.0, Task cov2: 1.0 => 1.0
         // Sum: 1.5
@@ -841,11 +849,11 @@ mod tests {
 
         let base = LinearKernel::new();
         let cov = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
-        lmc.add_component(Box::new(base), cov).unwrap();
+        lmc.add_component(Box::new(base), cov).expect("unwrap");
 
         let inputs = vec![TaskInput::new(vec![1.0], 0), TaskInput::new(vec![1.0], 1)];
 
-        let matrix = lmc.compute_task_matrix(&inputs).unwrap();
+        let matrix = lmc.compute_task_matrix(&inputs).expect("unwrap");
         assert_eq!(matrix.len(), 2);
 
         // Check symmetry
@@ -873,14 +881,14 @@ mod tests {
     fn test_icm_wrapper() {
         let base = LinearKernel::new();
         let cov = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
-        let icm = ICMKernel::new(Box::new(base), cov).unwrap();
+        let icm = ICMKernel::new(Box::new(base), cov).expect("unwrap");
         let wrapper = ICMKernelWrapper::new(icm);
 
         // [task, features...]
         let x = vec![0.0, 1.0, 2.0]; // Task 0
         let y = vec![1.0, 3.0, 4.0]; // Task 1
 
-        let k = wrapper.compute(&x, &y).unwrap();
+        let k = wrapper.compute(&x, &y).expect("unwrap");
         // Linear: 11, Task: 0.5, Result: 5.5
         assert!((k - 5.5).abs() < 1e-10);
 
@@ -892,14 +900,14 @@ mod tests {
         let mut lmc = LMCKernel::new(2);
         let base = LinearKernel::new();
         let cov = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
-        lmc.add_component(Box::new(base), cov).unwrap();
+        lmc.add_component(Box::new(base), cov).expect("unwrap");
 
         let wrapper = LMCKernelWrapper::new(lmc);
 
         let x = vec![0.0, 1.0]; // Task 0
         let y = vec![1.0, 1.0]; // Task 1
 
-        let k = wrapper.compute(&x, &y).unwrap();
+        let k = wrapper.compute(&x, &y).expect("unwrap");
         assert!((k - 0.5).abs() < 1e-10);
 
         assert_eq!(wrapper.name(), "LMC");
@@ -909,7 +917,7 @@ mod tests {
     fn test_wrapper_empty_input() {
         let base = LinearKernel::new();
         let cov = vec![vec![1.0]];
-        let icm = ICMKernel::new(Box::new(base), cov).unwrap();
+        let icm = ICMKernel::new(Box::new(base), cov).expect("unwrap");
         let wrapper = ICMKernelWrapper::new(icm);
 
         assert!(wrapper.compute(&[], &[0.0, 1.0]).is_err());
@@ -923,18 +931,18 @@ mod tests {
 
         let base1 = LinearKernel::new();
         let cov1 = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
-        let icm1 = ICMKernel::new(Box::new(base1), cov1).unwrap();
-        hadamard.add_kernel(icm1).unwrap();
+        let icm1 = ICMKernel::new(Box::new(base1), cov1).expect("unwrap");
+        hadamard.add_kernel(icm1).expect("unwrap");
 
         let base2 = LinearKernel::new();
         let cov2 = vec![vec![2.0, 1.0], vec![1.0, 2.0]];
-        let icm2 = ICMKernel::new(Box::new(base2), cov2).unwrap();
-        hadamard.add_kernel(icm2).unwrap();
+        let icm2 = ICMKernel::new(Box::new(base2), cov2).expect("unwrap");
+        hadamard.add_kernel(icm2).expect("unwrap");
 
         let x = TaskInput::new(vec![1.0], 0);
         let y = TaskInput::new(vec![1.0], 1);
 
-        let k = hadamard.compute_tasks(&x, &y).unwrap();
+        let k = hadamard.compute_tasks(&x, &y).expect("unwrap");
         // ICM1: 0.5 * 1.0 = 0.5
         // ICM2: 1.0 * 1.0 = 1.0
         // Product: 0.5
@@ -956,8 +964,8 @@ mod tests {
 
         let base1 = LinearKernel::new();
         let cov1 = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
-        let icm1 = ICMKernel::new(Box::new(base1), cov1).unwrap();
-        hadamard.add_kernel(icm1).unwrap();
+        let icm1 = ICMKernel::new(Box::new(base1), cov1).expect("unwrap");
+        hadamard.add_kernel(icm1).expect("unwrap");
 
         // Different number of tasks
         let base2 = LinearKernel::new();
@@ -966,7 +974,7 @@ mod tests {
             vec![0.5, 1.0, 0.4],
             vec![0.3, 0.4, 1.0],
         ];
-        let icm2 = ICMKernel::new(Box::new(base2), cov2).unwrap();
+        let icm2 = ICMKernel::new(Box::new(base2), cov2).expect("unwrap");
 
         assert!(hadamard.add_kernel(icm2).is_err());
     }
@@ -981,7 +989,7 @@ mod tests {
         let icm = MultiTaskKernelBuilder::new(2)
             .add_component(Box::new(base), cov)
             .build_icm()
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(icm.num_tasks(), 2);
     }
@@ -991,14 +999,14 @@ mod tests {
         let base1 = LinearKernel::new();
         let cov1 = vec![vec![1.0, 0.5], vec![0.5, 1.0]];
 
-        let base2 = RbfKernel::new(RbfKernelConfig::new(1.0)).unwrap();
+        let base2 = RbfKernel::new(RbfKernelConfig::new(1.0)).expect("unwrap");
         let cov2 = vec![vec![2.0, 1.0], vec![1.0, 2.0]];
 
         let lmc = MultiTaskKernelBuilder::new(2)
             .add_component(Box::new(base1), cov1)
             .add_component(Box::new(base2), cov2)
             .build_lmc()
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(lmc.num_tasks(), 2);
         assert_eq!(lmc.num_components(), 2);
@@ -1024,27 +1032,27 @@ mod tests {
 
     #[test]
     fn test_multitask_with_rbf() {
-        let base = RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap();
+        let base = RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap");
         let cov = vec![
             vec![1.0, 0.8, 0.6],
             vec![0.8, 1.0, 0.7],
             vec![0.6, 0.7, 1.0],
         ];
-        let icm = ICMKernel::new(Box::new(base), cov).unwrap();
+        let icm = ICMKernel::new(Box::new(base), cov).expect("unwrap");
 
         // Same point, same task
         let x = TaskInput::new(vec![1.0, 2.0], 0);
-        let k = icm.compute_tasks(&x, &x).unwrap();
+        let k = icm.compute_tasks(&x, &x).expect("unwrap");
         assert!((k - 1.0).abs() < 1e-10);
 
         // Same point, different task
         let y = TaskInput::new(vec![1.0, 2.0], 1);
-        let k = icm.compute_tasks(&x, &y).unwrap();
+        let k = icm.compute_tasks(&x, &y).expect("unwrap");
         assert!((k - 0.8).abs() < 1e-10);
 
         // Different point, same task
         let z = TaskInput::new(vec![1.0, 3.0], 0);
-        let k = icm.compute_tasks(&x, &z).unwrap();
+        let k = icm.compute_tasks(&x, &z).expect("unwrap");
         // RBF with distance 1.0: exp(-0.5 * 1) ≈ 0.6065
         assert!(k > 0.5 && k < 0.7);
     }

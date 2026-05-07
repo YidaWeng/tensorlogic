@@ -20,17 +20,18 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(rdfs_turtle).unwrap();
+        analyzer.load_turtle(rdfs_turtle).expect("unwrap");
 
         let mut engine = RdfsInferenceEngine::new(analyzer.graph.clone());
-        engine.materialize().unwrap();
+        engine.materialize().expect("unwrap");
 
         let complete_graph = engine.get_complete_graph();
 
         // Check that fluffy is inferred to be an Animal (transitive closure)
-        let fluffy = NamedNode::new("http://example.org/fluffy").unwrap();
-        let rdf_type = NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").unwrap();
-        let animal = NamedNode::new("http://example.org/Animal").unwrap();
+        let fluffy = NamedNode::new("http://example.org/fluffy").expect("unwrap");
+        let rdf_type =
+            NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").expect("unwrap");
+        let animal = NamedNode::new("http://example.org/Animal").expect("unwrap");
 
         let expected = Triple::new(fluffy.clone(), rdf_type.clone(), animal.clone());
         assert!(
@@ -39,7 +40,7 @@ mod tests {
         );
 
         // Check that fluffy is also a Mammal
-        let mammal = NamedNode::new("http://example.org/Mammal").unwrap();
+        let mammal = NamedNode::new("http://example.org/Mammal").expect("unwrap");
         let mammal_triple = Triple::new(fluffy.clone(), rdf_type.clone(), mammal.clone());
         assert!(
             complete_graph.contains(&mammal_triple),
@@ -47,7 +48,7 @@ mod tests {
         );
 
         // Check that fluffy is also a Dog
-        let dog = NamedNode::new("http://example.org/Dog").unwrap();
+        let dog = NamedNode::new("http://example.org/Dog").expect("unwrap");
         let dog_triple = Triple::new(fluffy.clone(), rdf_type.clone(), dog.clone());
         assert!(
             complete_graph.contains(&dog_triple),
@@ -68,17 +69,18 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(rdfs_turtle).unwrap();
+        analyzer.load_turtle(rdfs_turtle).expect("unwrap");
 
         let mut engine = RdfsInferenceEngine::new(analyzer.graph.clone());
-        engine.materialize().unwrap();
+        engine.materialize().expect("unwrap");
 
         let complete_graph = engine.get_complete_graph();
 
         // Check that john is inferred to be a Person
-        let john = NamedNode::new("http://example.org/john").unwrap();
-        let rdf_type = NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").unwrap();
-        let person = NamedNode::new("http://example.org/Person").unwrap();
+        let john = NamedNode::new("http://example.org/john").expect("unwrap");
+        let rdf_type =
+            NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").expect("unwrap");
+        let person = NamedNode::new("http://example.org/Person").expect("unwrap");
 
         let expected = Triple::new(john.clone(), rdf_type.clone(), person.clone());
         assert!(
@@ -100,17 +102,18 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(rdfs_turtle).unwrap();
+        analyzer.load_turtle(rdfs_turtle).expect("unwrap");
 
         let mut engine = RdfsInferenceEngine::new(analyzer.graph.clone());
-        engine.materialize().unwrap();
+        engine.materialize().expect("unwrap");
 
         let complete_graph = engine.get_complete_graph();
 
         // Check that bob is inferred to be a Person
-        let bob = NamedNode::new("http://example.org/bob").unwrap();
-        let rdf_type = NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").unwrap();
-        let person = NamedNode::new("http://example.org/Person").unwrap();
+        let bob = NamedNode::new("http://example.org/bob").expect("unwrap");
+        let rdf_type =
+            NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").expect("unwrap");
+        let person = NamedNode::new("http://example.org/Person").expect("unwrap");
 
         let expected = Triple::new(bob.clone(), rdf_type.clone(), person.clone());
         assert!(
@@ -133,17 +136,17 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(rdfs_turtle).unwrap();
+        analyzer.load_turtle(rdfs_turtle).expect("unwrap");
 
         let mut engine = RdfsInferenceEngine::new(analyzer.graph.clone());
-        engine.materialize().unwrap();
+        engine.materialize().expect("unwrap");
 
         let complete_graph = engine.get_complete_graph();
 
         // Check that john hasParent bob is inferred
-        let john = NamedNode::new("http://example.org/john").unwrap();
-        let has_parent = NamedNode::new("http://example.org/hasParent").unwrap();
-        let bob = NamedNode::new("http://example.org/bob").unwrap();
+        let john = NamedNode::new("http://example.org/john").expect("unwrap");
+        let has_parent = NamedNode::new("http://example.org/hasParent").expect("unwrap");
+        let bob = NamedNode::new("http://example.org/bob").expect("unwrap");
 
         let parent_triple = Triple::new(john.clone(), has_parent.clone(), bob.clone());
         assert!(
@@ -152,7 +155,7 @@ mod tests {
         );
 
         // Check that john hasAncestor bob is inferred (transitive)
-        let has_ancestor = NamedNode::new("http://example.org/hasAncestor").unwrap();
+        let has_ancestor = NamedNode::new("http://example.org/hasAncestor").expect("unwrap");
         let ancestor_triple = Triple::new(john.clone(), has_ancestor.clone(), bob.clone());
         assert!(
             complete_graph.contains(&ancestor_triple),
@@ -177,17 +180,18 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(rdfs_turtle).unwrap();
+        analyzer.load_turtle(rdfs_turtle).expect("unwrap");
 
         let mut engine = RdfsInferenceEngine::new(analyzer.graph.clone());
-        engine.materialize().unwrap();
+        engine.materialize().expect("unwrap");
 
         let complete_graph = engine.get_complete_graph();
-        let rdf_type = NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").unwrap();
+        let rdf_type =
+            NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").expect("unwrap");
 
         // Check domain inference: john is an Employee
-        let john = NamedNode::new("http://example.org/john").unwrap();
-        let employee = NamedNode::new("http://example.org/Employee").unwrap();
+        let john = NamedNode::new("http://example.org/john").expect("unwrap");
+        let employee = NamedNode::new("http://example.org/Employee").expect("unwrap");
         let employee_triple = Triple::new(john.clone(), rdf_type.clone(), employee.clone());
         assert!(
             complete_graph.contains(&employee_triple),
@@ -195,7 +199,7 @@ mod tests {
         );
 
         // Check subclass inference: john is a Person
-        let person = NamedNode::new("http://example.org/Person").unwrap();
+        let person = NamedNode::new("http://example.org/Person").expect("unwrap");
         let person_triple = Triple::new(john.clone(), rdf_type.clone(), person.clone());
         assert!(
             complete_graph.contains(&person_triple),
@@ -203,7 +207,7 @@ mod tests {
         );
 
         // Check transitive subclass: john is a LegalEntity
-        let legal_entity = NamedNode::new("http://example.org/LegalEntity").unwrap();
+        let legal_entity = NamedNode::new("http://example.org/LegalEntity").expect("unwrap");
         let entity_triple = Triple::new(john.clone(), rdf_type.clone(), legal_entity.clone());
         assert!(
             complete_graph.contains(&entity_triple),
@@ -211,8 +215,8 @@ mod tests {
         );
 
         // Check range inference: acme is an Organization
-        let acme = NamedNode::new("http://example.org/acme").unwrap();
-        let organization = NamedNode::new("http://example.org/Organization").unwrap();
+        let acme = NamedNode::new("http://example.org/acme").expect("unwrap");
+        let organization = NamedNode::new("http://example.org/Organization").expect("unwrap");
         let org_triple = Triple::new(acme.clone(), rdf_type.clone(), organization.clone());
         assert!(
             complete_graph.contains(&org_triple),
@@ -232,10 +236,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(rdfs_turtle).unwrap();
+        analyzer.load_turtle(rdfs_turtle).expect("unwrap");
 
         let mut engine = RdfsInferenceEngine::new(analyzer.graph.clone());
-        engine.materialize().unwrap();
+        engine.materialize().expect("unwrap");
 
         // Direct subclass
         assert!(engine.is_subclass_of("http://example.org/Poodle", "http://example.org/Dog"));
@@ -260,10 +264,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(rdfs_turtle).unwrap();
+        analyzer.load_turtle(rdfs_turtle).expect("unwrap");
 
         let mut engine = RdfsInferenceEngine::new(analyzer.graph.clone());
-        engine.materialize().unwrap();
+        engine.materialize().expect("unwrap");
 
         // Direct subproperty
         assert!(engine.is_subproperty_of(
@@ -300,10 +304,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(rdfs_turtle).unwrap();
+        analyzer.load_turtle(rdfs_turtle).expect("unwrap");
 
         let mut engine = RdfsInferenceEngine::new(analyzer.graph.clone());
-        engine.materialize().unwrap();
+        engine.materialize().expect("unwrap");
 
         let superclasses = engine.get_all_superclasses("http://example.org/Poodle");
 
@@ -324,10 +328,10 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(rdfs_turtle).unwrap();
+        analyzer.load_turtle(rdfs_turtle).expect("unwrap");
 
         let mut engine = RdfsInferenceEngine::new(analyzer.graph.clone());
-        engine.materialize().unwrap();
+        engine.materialize().expect("unwrap");
 
         let superprops = engine.get_all_superproperties("http://example.org/hasMother");
 
@@ -353,12 +357,12 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(rdfs_turtle).unwrap();
+        analyzer.load_turtle(rdfs_turtle).expect("unwrap");
 
         let original_count = analyzer.graph.len();
 
         let mut engine = RdfsInferenceEngine::new(analyzer.graph.clone());
-        engine.materialize().unwrap();
+        engine.materialize().expect("unwrap");
 
         let stats = engine.get_inference_stats();
 
@@ -389,20 +393,22 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(rdfs_turtle).unwrap();
+        analyzer.load_turtle(rdfs_turtle).expect("unwrap");
 
         let mut engine = RdfsInferenceEngine::new(analyzer.graph.clone());
-        engine.materialize().unwrap();
+        engine.materialize().expect("unwrap");
 
         let complete_graph = engine.get_complete_graph();
-        let rdf_type = NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").unwrap();
-        let stella = NamedNode::new("http://example.org/stella").unwrap();
+        let rdf_type =
+            NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").expect("unwrap");
+        let stella = NamedNode::new("http://example.org/stella").expect("unwrap");
 
         // stella should be inferred to be all parent classes
         let types_to_check = vec!["FlyingMammal", "Mammal", "FlyingAnimal", "Animal"];
 
         for type_name in types_to_check {
-            let type_node = NamedNode::new(format!("http://example.org/{}", type_name)).unwrap();
+            let type_node =
+                NamedNode::new(format!("http://example.org/{}", type_name)).expect("unwrap");
             let type_triple = Triple::new(stella.clone(), rdf_type.clone(), type_node.clone());
             assert!(
                 complete_graph.contains(&type_triple),
@@ -426,7 +432,7 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(rdfs_turtle).unwrap();
+        analyzer.load_turtle(rdfs_turtle).expect("unwrap");
 
         let mut engine = RdfsInferenceEngine::new(analyzer.graph.clone());
 
@@ -458,14 +464,15 @@ mod tests {
         "#;
 
         let mut analyzer = SchemaAnalyzer::new();
-        analyzer.load_turtle(rdfs_turtle).unwrap();
+        analyzer.load_turtle(rdfs_turtle).expect("unwrap");
 
-        let materialized = analyzer.materialize_rdfs_entailments().unwrap();
+        let materialized = analyzer.materialize_rdfs_entailments().expect("unwrap");
 
         // Check that john is inferred to be a Person
-        let john = NamedNode::new("http://example.org/john").unwrap();
-        let rdf_type = NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").unwrap();
-        let person = NamedNode::new("http://example.org/Person").unwrap();
+        let john = NamedNode::new("http://example.org/john").expect("unwrap");
+        let rdf_type =
+            NamedNode::new("http://www.w3.org/1999/02/22-rdf-syntax-ns#type").expect("unwrap");
+        let person = NamedNode::new("http://example.org/Person").expect("unwrap");
 
         let person_triple = Triple::new(john.clone(), rdf_type.clone(), person.clone());
         assert!(

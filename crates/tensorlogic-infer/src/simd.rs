@@ -344,7 +344,7 @@ impl<T> AlignedBuffer<T> {
         }
 
         Ok(Self {
-            ptr: NonNull::new(ptr).unwrap(),
+            ptr: NonNull::new(ptr).expect("ptr is non-null after null check above"),
             len,
             alignment,
         })
@@ -399,7 +399,8 @@ impl<T> AlignedBuffer<T> {
 impl<T> Drop for AlignedBuffer<T> {
     fn drop(&mut self) {
         let size = self.len * std::mem::size_of::<T>();
-        let layout = Layout::from_size_align(size, self.alignment).unwrap();
+        let layout =
+            Layout::from_size_align(size, self.alignment).expect("alignment is valid power of two");
         unsafe {
             dealloc(self.ptr.as_ptr() as *mut u8, layout);
         }
@@ -534,7 +535,7 @@ mod tests {
 
     #[test]
     fn test_aligned_buffer_creation() {
-        let buffer = AlignedBuffer::<f32>::new(1024).unwrap();
+        let buffer = AlignedBuffer::<f32>::new(1024).expect("unwrap");
         assert_eq!(buffer.len(), 1024);
         assert_eq!(buffer.alignment(), 64);
         assert!(buffer.is_aligned());
@@ -542,7 +543,7 @@ mod tests {
 
     #[test]
     fn test_aligned_buffer_custom_alignment() {
-        let buffer = AlignedBuffer::<f32>::new_with_alignment(512, 32).unwrap();
+        let buffer = AlignedBuffer::<f32>::new_with_alignment(512, 32).expect("unwrap");
         assert_eq!(buffer.len(), 512);
         assert_eq!(buffer.alignment(), 32);
         assert!(buffer.is_aligned());
@@ -550,7 +551,7 @@ mod tests {
 
     #[test]
     fn test_aligned_buffer_slice() {
-        let mut buffer = AlignedBuffer::<f32>::new(10).unwrap();
+        let mut buffer = AlignedBuffer::<f32>::new(10).expect("unwrap");
         let slice = buffer.as_mut_slice();
         slice[0] = 1.0;
         slice[1] = 2.0;
@@ -562,7 +563,7 @@ mod tests {
 
     #[test]
     fn test_is_simd_aligned() {
-        let buffer = AlignedBuffer::<f32>::new(1024).unwrap();
+        let buffer = AlignedBuffer::<f32>::new(1024).expect("unwrap");
         assert!(is_simd_aligned(buffer.as_ptr(), 64));
         assert!(is_simd_aligned(buffer.as_ptr(), 32));
         assert!(is_simd_aligned(buffer.as_ptr(), 16));
@@ -570,7 +571,7 @@ mod tests {
 
     #[test]
     fn test_alignment_offset() {
-        let buffer = AlignedBuffer::<u8>::new(1024).unwrap();
+        let buffer = AlignedBuffer::<u8>::new(1024).expect("unwrap");
         let offset = alignment_offset(buffer.as_ptr(), 64);
         assert_eq!(offset, 0); // Already aligned
     }

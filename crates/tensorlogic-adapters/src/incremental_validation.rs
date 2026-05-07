@@ -25,19 +25,19 @@
 //! let mut tracker = ChangeTracker::new();
 //!
 //! // Initial validation
-//! table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+//! table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
 //! tracker.record_domain_addition("Person");
 //!
 //! let mut validator = IncrementalValidator::new(&table, &tracker);
-//! let report = validator.validate_incremental().unwrap();
+//! let report = validator.validate_incremental().expect("unwrap");
 //! assert!(report.is_valid());
 //!
 //! // Incremental update - only validates affected parts
 //! tracker.record_domain_addition("Location");
-//! table.add_domain(DomainInfo::new("Location", 50)).unwrap();
+//! table.add_domain(DomainInfo::new("Location", 50)).expect("unwrap");
 //!
 //! let mut validator2 = IncrementalValidator::new(&table, &tracker);
-//! let report = validator2.validate_incremental().unwrap();
+//! let report = validator2.validate_incremental().expect("unwrap");
 //! assert!(report.is_valid());
 //! ```
 
@@ -795,14 +795,18 @@ mod tests {
     #[test]
     fn test_dependency_graph() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.add_domain(DomainInfo::new("Location", 50)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Location", 50))
+            .expect("unwrap");
 
         let knows = PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()]);
-        table.add_predicate(knows).unwrap();
+        table.add_predicate(knows).expect("unwrap");
 
         let at = PredicateInfo::new("at", vec!["Person".to_string(), "Location".to_string()]);
-        table.add_predicate(at).unwrap();
+        table.add_predicate(at).expect("unwrap");
 
         let graph = DependencyGraph::from_symbol_table(&table);
 
@@ -819,12 +823,14 @@ mod tests {
     #[test]
     fn test_affected_components() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let knows = PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()]);
-        table.add_predicate(knows).unwrap();
+        table.add_predicate(knows).expect("unwrap");
 
-        table.bind_variable("x", "Person").unwrap();
+        table.bind_variable("x", "Person").expect("unwrap");
 
         let graph = DependencyGraph::from_symbol_table(&table);
 
@@ -865,11 +871,13 @@ mod tests {
         let mut table = SymbolTable::new();
         let mut tracker = ChangeTracker::new();
 
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
         tracker.record_domain_addition("Person");
 
         let mut validator = IncrementalValidator::new(&table, &tracker);
-        let report = validator.validate_incremental().unwrap();
+        let report = validator.validate_incremental().expect("unwrap");
 
         assert!(report.is_valid());
         assert_eq!(report.components_validated, 1);
@@ -881,11 +889,13 @@ mod tests {
         let mut tracker = ChangeTracker::new();
 
         // First validation
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
         tracker.record_domain_addition("Person");
 
         let mut validator = IncrementalValidator::new(&table, &tracker);
-        let report1 = validator.validate_incremental().unwrap();
+        let report1 = validator.validate_incremental().expect("unwrap");
         assert_eq!(report1.components_validated, 1);
 
         // Extract cache before second validation
@@ -893,11 +903,13 @@ mod tests {
 
         // Second validation with cache (use fresh references)
         let mut tracker2 = ChangeTracker::new();
-        table.add_domain(DomainInfo::new("Location", 50)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Location", 50))
+            .expect("unwrap");
         tracker2.record_domain_addition("Location");
 
         let mut validator2 = IncrementalValidator::new(&table, &tracker2).with_cache(cache);
-        let report2 = validator2.validate_incremental().unwrap();
+        let report2 = validator2.validate_incremental().expect("unwrap");
 
         // Only Location should be validated, Person should be cached
         assert_eq!(report2.components_validated, 1);
@@ -927,7 +939,7 @@ mod tests {
         let tracker = ChangeTracker::new();
 
         let mut validator = IncrementalValidator::new(&table, &tracker);
-        let report = validator.validate_incremental().unwrap();
+        let report = validator.validate_incremental().expect("unwrap");
 
         assert!(report.is_valid());
         assert_eq!(report.components_validated, 0);

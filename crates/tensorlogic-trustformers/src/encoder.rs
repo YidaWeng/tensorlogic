@@ -239,7 +239,7 @@ mod tests {
 
     #[test]
     fn test_encoder_config_creation() {
-        let config = EncoderConfig::new(512, 8, 2048).unwrap();
+        let config = EncoderConfig::new(512, 8, 2048).expect("unwrap");
         assert_eq!(config.attention.d_model, 512);
         assert_eq!(config.attention.n_heads, 8);
         assert_eq!(config.feed_forward.d_ff, 2048);
@@ -249,7 +249,9 @@ mod tests {
 
     #[test]
     fn test_encoder_config_with_dropout() {
-        let config = EncoderConfig::new(512, 8, 2048).unwrap().with_dropout(0.1);
+        let config = EncoderConfig::new(512, 8, 2048)
+            .expect("unwrap")
+            .with_dropout(0.1);
         assert!((config.attention.dropout - 0.1).abs() < 1e-10);
         assert!((config.feed_forward.dropout - 0.1).abs() < 1e-10);
     }
@@ -257,27 +259,27 @@ mod tests {
     #[test]
     fn test_encoder_config_pre_norm() {
         let config = EncoderConfig::new(512, 8, 2048)
-            .unwrap()
+            .expect("unwrap")
             .with_pre_norm(false);
         assert!(!config.pre_norm);
     }
 
     #[test]
     fn test_encoder_creation() {
-        let config = EncoderConfig::new(512, 8, 2048).unwrap();
-        let encoder = Encoder::new(config).unwrap();
+        let config = EncoderConfig::new(512, 8, 2048).expect("unwrap");
+        let encoder = Encoder::new(config).expect("unwrap");
         assert_eq!(encoder.config.attention.d_model, 512);
     }
 
     #[test]
     fn test_encoder_graph_building_pre_norm() {
-        let config = EncoderConfig::new(512, 8, 2048).unwrap();
-        let encoder = Encoder::new(config).unwrap();
+        let config = EncoderConfig::new(512, 8, 2048).expect("unwrap");
+        let encoder = Encoder::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("x");
 
-        let outputs = encoder.build_encoder_graph(&mut graph).unwrap();
+        let outputs = encoder.build_encoder_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
@@ -285,21 +287,21 @@ mod tests {
     #[test]
     fn test_encoder_graph_building_post_norm() {
         let config = EncoderConfig::new(512, 8, 2048)
-            .unwrap()
+            .expect("unwrap")
             .with_pre_norm(false);
-        let encoder = Encoder::new(config).unwrap();
+        let encoder = Encoder::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("x");
 
-        let outputs = encoder.build_encoder_graph(&mut graph).unwrap();
+        let outputs = encoder.build_encoder_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
 
     #[test]
     fn test_encoder_config_validation() {
-        let config = EncoderConfig::new(512, 8, 2048).unwrap();
+        let config = EncoderConfig::new(512, 8, 2048).expect("unwrap");
         assert!(config.validate().is_ok());
 
         // Invalid head count
@@ -309,7 +311,9 @@ mod tests {
 
     #[test]
     fn test_encoder_with_causal() {
-        let config = EncoderConfig::new(512, 8, 2048).unwrap().with_causal(true);
+        let config = EncoderConfig::new(512, 8, 2048)
+            .expect("unwrap")
+            .with_causal(true);
         assert!(config.attention.causal);
     }
 }

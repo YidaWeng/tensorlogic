@@ -21,7 +21,7 @@ use crate::{DomainHierarchy, DomainInfo, Metadata, PredicateInfo, SymbolTable};
 ///     .domain("Location", 50)
 ///     .predicate("at", vec!["Person", "Location"])
 ///     .build()
-///     .unwrap();
+///     .expect("unwrap");
 ///
 /// assert_eq!(table.domains.len(), 2);
 /// assert_eq!(table.predicates.len(), 1);
@@ -287,7 +287,7 @@ mod tests {
             .domain("Location", 50)
             .predicate("at", vec!["Person", "Location"])
             .build()
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(table.domains.len(), 2);
         assert_eq!(table.predicates.len(), 1);
@@ -303,7 +303,7 @@ mod tests {
             .variable("x", "Person")
             .variable("y", "Person")
             .build()
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(table.variables.len(), 2);
         assert_eq!(table.get_variable_domain("x"), Some("Person"));
@@ -316,13 +316,19 @@ mod tests {
             .domain_with_desc("Person", 100, "Human entities")
             .predicate_with_desc("knows", vec!["Person", "Person"], "Knows relation")
             .build()
-            .unwrap();
+            .expect("unwrap");
 
-        let domain = table.get_domain("Person").unwrap();
-        assert_eq!(domain.description.as_ref().unwrap(), "Human entities");
+        let domain = table.get_domain("Person").expect("unwrap");
+        assert_eq!(
+            domain.description.as_ref().expect("unwrap"),
+            "Human entities"
+        );
 
-        let predicate = table.get_predicate("knows").unwrap();
-        assert_eq!(predicate.description.as_ref().unwrap(), "Knows relation");
+        let predicate = table.get_predicate("knows").expect("unwrap");
+        assert_eq!(
+            predicate.description.as_ref().expect("unwrap"),
+            "Knows relation"
+        );
     }
 
     #[test]
@@ -348,7 +354,7 @@ mod tests {
             .variable("y", "B")
             .variable("z", "C")
             .build()
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(table.domains.len(), 3);
         assert_eq!(table.predicates.len(), 3);
@@ -364,11 +370,11 @@ mod tests {
         let table = SchemaBuilder::new()
             .domain_with_metadata("Person", 100, meta)
             .build()
-            .unwrap();
+            .expect("unwrap");
 
-        let domain = table.get_domain("Person").unwrap();
+        let domain = table.get_domain("Person").expect("unwrap");
         assert!(domain.metadata.is_some());
-        let metadata = domain.metadata.as_ref().unwrap();
+        let metadata = domain.metadata.as_ref().expect("unwrap");
         assert!(metadata.tags.contains("core"));
         assert!(metadata.tags.contains("reasoning"));
     }

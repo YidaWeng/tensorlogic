@@ -109,7 +109,7 @@ fn main() -> Result<()> {
 
     println!(
         "   Tracked {} statements with provenance\n",
-        tracker.rdfstar_store().unwrap().len()
+        tracker.rdfstar_store().expect("unwrap").len()
     );
 
     // 4. Query provenance by confidence

@@ -91,7 +91,7 @@ impl ModelPreset {
             3072, // d_ff (4 * d_model)
             1024, // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.1)
     }
 
@@ -104,7 +104,7 @@ impl ModelPreset {
             4096, // d_ff
             1024, // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.1)
     }
 
@@ -117,7 +117,7 @@ impl ModelPreset {
             5120, // d_ff
             1024, // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.1)
     }
 
@@ -130,7 +130,7 @@ impl ModelPreset {
             6400, // d_ff
             1024, // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.1)
     }
 
@@ -143,7 +143,7 @@ impl ModelPreset {
             3072, // d_ff
             2048, // max_seq_len (longer than GPT-2)
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
     }
 
@@ -156,7 +156,7 @@ impl ModelPreset {
             11008, // d_ff (uses SwiGLU, ~2.7x d_model)
             2048,  // max_seq_len (can be extended with RoPE)
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
         .with_learned_position_encoding() // Would use RoPE in practice
     }
@@ -170,7 +170,7 @@ impl ModelPreset {
             13824, // d_ff
             2048,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
         .with_learned_position_encoding()
     }
@@ -184,7 +184,7 @@ impl ModelPreset {
             17920, // d_ff
             2048,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
         .with_learned_position_encoding()
     }
@@ -198,7 +198,7 @@ impl ModelPreset {
             22016, // d_ff
             2048,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
         .with_learned_position_encoding()
     }
@@ -212,7 +212,7 @@ impl ModelPreset {
             57344, // d_ff (4 * d_model)
             2048,  // max_seq_len
         )
-        .unwrap()
+        .expect("hardcoded valid transformer configuration parameters")
         .with_dropout(0.0)
         // Note: BLOOM uses ALiBi position encoding
     }
@@ -220,11 +220,11 @@ impl ModelPreset {
     /// T5 Small (60M parameters)
     fn t5_small() -> (EncoderStackConfig, DecoderStackConfig) {
         let encoder = EncoderStackConfig::new(6, 512, 8, 2048, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         let decoder = DecoderStackConfig::new(6, 512, 8, 2048, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         (encoder, decoder)
@@ -233,11 +233,11 @@ impl ModelPreset {
     /// T5 Base (220M parameters)
     fn t5_base() -> (EncoderStackConfig, DecoderStackConfig) {
         let encoder = EncoderStackConfig::new(12, 768, 12, 3072, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         let decoder = DecoderStackConfig::new(12, 768, 12, 3072, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         (encoder, decoder)
@@ -246,11 +246,11 @@ impl ModelPreset {
     /// T5 Large (770M parameters)
     fn t5_large() -> (EncoderStackConfig, DecoderStackConfig) {
         let encoder = EncoderStackConfig::new(24, 1024, 16, 4096, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         let decoder = DecoderStackConfig::new(24, 1024, 16, 4096, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         (encoder, decoder)
@@ -259,11 +259,11 @@ impl ModelPreset {
     /// T5 XL (3B parameters)
     fn t5_xl() -> (EncoderStackConfig, DecoderStackConfig) {
         let encoder = EncoderStackConfig::new(24, 2048, 32, 8192, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         let decoder = DecoderStackConfig::new(24, 2048, 32, 8192, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         (encoder, decoder)
@@ -272,11 +272,11 @@ impl ModelPreset {
     /// T5 XXL (11B parameters)
     fn t5_xxl() -> (EncoderStackConfig, DecoderStackConfig) {
         let encoder = EncoderStackConfig::new(24, 4096, 64, 16384, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         let decoder = DecoderStackConfig::new(24, 4096, 64, 16384, 512)
-            .unwrap()
+            .expect("hardcoded valid transformer configuration parameters")
             .with_dropout(0.1);
 
         (encoder, decoder)
@@ -289,7 +289,7 @@ mod tests {
 
     #[test]
     fn test_gpt2_small_preset() {
-        let config = ModelPreset::Gpt2Small.to_config().unwrap();
+        let config = ModelPreset::Gpt2Small.to_config().expect("unwrap");
         assert_eq!(config.num_layers, 12);
         assert_eq!(config.layer_config.attention.d_model, 768);
         assert_eq!(config.layer_config.attention.n_heads, 12);
@@ -299,7 +299,7 @@ mod tests {
 
     #[test]
     fn test_gpt2_medium_preset() {
-        let config = ModelPreset::Gpt2Medium.to_config().unwrap();
+        let config = ModelPreset::Gpt2Medium.to_config().expect("unwrap");
         assert_eq!(config.num_layers, 24);
         assert_eq!(config.layer_config.attention.d_model, 1024);
         assert_eq!(config.layer_config.attention.n_heads, 16);
@@ -308,7 +308,7 @@ mod tests {
 
     #[test]
     fn test_gpt2_large_preset() {
-        let config = ModelPreset::Gpt2Large.to_config().unwrap();
+        let config = ModelPreset::Gpt2Large.to_config().expect("unwrap");
         assert_eq!(config.num_layers, 36);
         assert_eq!(config.layer_config.attention.d_model, 1280);
         assert_eq!(config.layer_config.attention.n_heads, 20);
@@ -317,7 +317,7 @@ mod tests {
 
     #[test]
     fn test_gpt2_xl_preset() {
-        let config = ModelPreset::Gpt2Xl.to_config().unwrap();
+        let config = ModelPreset::Gpt2Xl.to_config().expect("unwrap");
         assert_eq!(config.num_layers, 48);
         assert_eq!(config.layer_config.attention.d_model, 1600);
         assert_eq!(config.layer_config.attention.n_heads, 25);
@@ -326,7 +326,7 @@ mod tests {
 
     #[test]
     fn test_gpt3_small_preset() {
-        let config = ModelPreset::Gpt3Small.to_config().unwrap();
+        let config = ModelPreset::Gpt3Small.to_config().expect("unwrap");
         assert_eq!(config.num_layers, 12);
         assert_eq!(config.layer_config.attention.d_model, 768);
         assert_eq!(config.position_encoding.max_seq_len, 2048);
@@ -335,7 +335,7 @@ mod tests {
 
     #[test]
     fn test_llama_7b_preset() {
-        let config = ModelPreset::LLaMA7B.to_config().unwrap();
+        let config = ModelPreset::LLaMA7B.to_config().expect("unwrap");
         assert_eq!(config.num_layers, 32);
         assert_eq!(config.layer_config.attention.d_model, 4096);
         assert_eq!(config.layer_config.attention.n_heads, 32);
@@ -345,7 +345,7 @@ mod tests {
 
     #[test]
     fn test_llama_13b_preset() {
-        let config = ModelPreset::LLaMA13B.to_config().unwrap();
+        let config = ModelPreset::LLaMA13B.to_config().expect("unwrap");
         assert_eq!(config.num_layers, 40);
         assert_eq!(config.layer_config.attention.d_model, 5120);
         assert!(config.validate().is_ok());
@@ -353,7 +353,7 @@ mod tests {
 
     #[test]
     fn test_llama_33b_preset() {
-        let config = ModelPreset::LLaMA33B.to_config().unwrap();
+        let config = ModelPreset::LLaMA33B.to_config().expect("unwrap");
         assert_eq!(config.num_layers, 60);
         assert_eq!(config.layer_config.attention.d_model, 6656);
         assert!(config.validate().is_ok());
@@ -361,7 +361,7 @@ mod tests {
 
     #[test]
     fn test_llama_65b_preset() {
-        let config = ModelPreset::LLaMA65B.to_config().unwrap();
+        let config = ModelPreset::LLaMA65B.to_config().expect("unwrap");
         assert_eq!(config.num_layers, 80);
         assert_eq!(config.layer_config.attention.d_model, 8192);
         assert!(config.validate().is_ok());
@@ -369,7 +369,7 @@ mod tests {
 
     #[test]
     fn test_bloom_176b_preset() {
-        let config = ModelPreset::Bloom176B.to_config().unwrap();
+        let config = ModelPreset::Bloom176B.to_config().expect("unwrap");
         assert_eq!(config.num_layers, 70);
         assert_eq!(config.layer_config.attention.d_model, 14336);
         assert_eq!(config.layer_config.attention.n_heads, 112);
@@ -380,7 +380,9 @@ mod tests {
 
     #[test]
     fn test_t5_small_preset() {
-        let (encoder, decoder) = ModelPreset::T5Small.to_encoder_decoder_config().unwrap();
+        let (encoder, decoder) = ModelPreset::T5Small
+            .to_encoder_decoder_config()
+            .expect("unwrap");
         assert_eq!(encoder.num_layers, 6);
         assert_eq!(decoder.num_layers, 6);
         assert_eq!(encoder.layer_config.attention.d_model, 512);
@@ -391,7 +393,9 @@ mod tests {
 
     #[test]
     fn test_t5_base_preset() {
-        let (encoder, decoder) = ModelPreset::T5Base.to_encoder_decoder_config().unwrap();
+        let (encoder, decoder) = ModelPreset::T5Base
+            .to_encoder_decoder_config()
+            .expect("unwrap");
         assert_eq!(encoder.num_layers, 12);
         assert_eq!(decoder.num_layers, 12);
         assert_eq!(encoder.layer_config.attention.d_model, 768);
@@ -401,7 +405,9 @@ mod tests {
 
     #[test]
     fn test_t5_large_preset() {
-        let (encoder, decoder) = ModelPreset::T5Large.to_encoder_decoder_config().unwrap();
+        let (encoder, decoder) = ModelPreset::T5Large
+            .to_encoder_decoder_config()
+            .expect("unwrap");
         assert_eq!(encoder.num_layers, 24);
         assert_eq!(decoder.num_layers, 24);
         assert_eq!(encoder.layer_config.attention.d_model, 1024);
@@ -411,7 +417,9 @@ mod tests {
 
     #[test]
     fn test_t5_xl_preset() {
-        let (encoder, decoder) = ModelPreset::T5Xl.to_encoder_decoder_config().unwrap();
+        let (encoder, decoder) = ModelPreset::T5Xl
+            .to_encoder_decoder_config()
+            .expect("unwrap");
         assert_eq!(encoder.num_layers, 24);
         assert_eq!(decoder.num_layers, 24);
         assert_eq!(encoder.layer_config.attention.d_model, 2048);
@@ -421,7 +429,9 @@ mod tests {
 
     #[test]
     fn test_t5_xxl_preset() {
-        let (encoder, decoder) = ModelPreset::T5Xxl.to_encoder_decoder_config().unwrap();
+        let (encoder, decoder) = ModelPreset::T5Xxl
+            .to_encoder_decoder_config()
+            .expect("unwrap");
         assert_eq!(encoder.num_layers, 24);
         assert_eq!(decoder.num_layers, 24);
         assert_eq!(encoder.layer_config.attention.d_model, 4096);
@@ -446,44 +456,52 @@ mod tests {
         // Verify all presets produce valid configurations
         assert!(ModelPreset::Gpt2Small
             .to_config()
-            .unwrap()
+            .expect("unwrap")
             .validate()
             .is_ok());
         assert!(ModelPreset::Gpt2Medium
             .to_config()
-            .unwrap()
+            .expect("unwrap")
             .validate()
             .is_ok());
         assert!(ModelPreset::Gpt2Large
             .to_config()
-            .unwrap()
+            .expect("unwrap")
             .validate()
             .is_ok());
-        assert!(ModelPreset::Gpt2Xl.to_config().unwrap().validate().is_ok());
+        assert!(ModelPreset::Gpt2Xl
+            .to_config()
+            .expect("unwrap")
+            .validate()
+            .is_ok());
         assert!(ModelPreset::Gpt3Small
             .to_config()
-            .unwrap()
+            .expect("unwrap")
             .validate()
             .is_ok());
-        assert!(ModelPreset::LLaMA7B.to_config().unwrap().validate().is_ok());
+        assert!(ModelPreset::LLaMA7B
+            .to_config()
+            .expect("unwrap")
+            .validate()
+            .is_ok());
         assert!(ModelPreset::LLaMA13B
             .to_config()
-            .unwrap()
+            .expect("unwrap")
             .validate()
             .is_ok());
         assert!(ModelPreset::LLaMA33B
             .to_config()
-            .unwrap()
+            .expect("unwrap")
             .validate()
             .is_ok());
         assert!(ModelPreset::LLaMA65B
             .to_config()
-            .unwrap()
+            .expect("unwrap")
             .validate()
             .is_ok());
         assert!(ModelPreset::Bloom176B
             .to_config()
-            .unwrap()
+            .expect("unwrap")
             .validate()
             .is_ok());
     }

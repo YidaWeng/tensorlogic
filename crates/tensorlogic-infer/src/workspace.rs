@@ -264,7 +264,10 @@ impl WorkspacePool {
 
         match workspace_id {
             Some(id) => {
-                self.workspaces.get_mut(&id).unwrap().acquire()?;
+                self.workspaces
+                    .get_mut(&id)
+                    .expect("workspace id from find_first_fit or create_workspace is valid")
+                    .acquire()?;
                 self.stats.total_allocations += 1;
                 Ok(id)
             }
@@ -273,7 +276,10 @@ impl WorkspacePool {
                 if self.config.auto_expand {
                     let new_size = self.size_to_bucket(size);
                     let id = self.create_workspace(new_size);
-                    self.workspaces.get_mut(&id).unwrap().acquire()?;
+                    self.workspaces
+                        .get_mut(&id)
+                        .expect("workspace id from create_workspace is valid")
+                        .acquire()?;
                     self.stats.total_allocations += 1;
                     self.stats.total_expansions += 1;
                     Ok(id)
@@ -390,17 +396,80 @@ impl WorkspacePool {
             };
         }
 
-        // Simple defragmentation: merge adjacent free workspaces
-        // In a real implementation, this would involve memory compaction
-        let freed_bytes = 0;
-        let merged_workspaces = 0;
+        // Defragmentation strategy: pairwise-merge free workspaces from
+        // smallest to largest. This increases the max contiguous free block
+        // without changing total free bytes.
+        let mut free_blocks: Vec<(String, usize)> = self
+            .workspaces
+            .iter()
+            .filter_map(|(id, ws)| {
+                if ws.in_use {
+                    None
+                } else {
+                    Some((id.clone(), ws.size))
+                }
+            })
+            .collect();
 
-        // Placeholder for actual defragmentation logic
+        if free_blocks.len() < 2 {
+            self.stats.total_defragmentations += 1;
+            return DefragmentationResult {
+                freed_bytes: 0,
+                merged_workspaces: 0,
+            };
+        }
+
+        free_blocks.sort_by_key(|(_, size)| *size);
+
+        let freed_bytes = 0;
+        let mut merged_workspaces = 0;
+
+        let mut pair_index = 0usize;
+        while pair_index + 1 < free_blocks.len() {
+            let (id_a, size_a) = &free_blocks[pair_index];
+            let (id_b, size_b) = &free_blocks[pair_index + 1];
+            let merged_size = size_a.saturating_add(*size_b);
+
+            // If the merged block would violate workspace limits, skip this pair.
+            if merged_size > self.config.max_size {
+                pair_index += 2;
+                continue;
+            }
+
+            self.remove_from_free_list(id_a, *size_a);
+            self.remove_from_free_list(id_b, *size_b);
+            self.workspaces.remove(id_a);
+            self.workspaces.remove(id_b);
+
+            let merged_id = format!("ws_{}", self.next_id);
+            self.next_id += 1;
+            self.workspaces.insert(
+                merged_id.clone(),
+                Workspace::new(merged_id.clone(), merged_size),
+            );
+
+            let bucket = self.size_to_bucket(merged_size);
+            self.free_lists
+                .entry(bucket)
+                .or_default()
+                .push_back(merged_id);
+
+            merged_workspaces += 1;
+            pair_index += 2;
+        }
+
         self.stats.total_defragmentations += 1;
 
         DefragmentationResult {
             freed_bytes,
             merged_workspaces,
+        }
+    }
+
+    fn remove_from_free_list(&mut self, id: &str, size: usize) {
+        let bucket = self.size_to_bucket(size);
+        if let Some(list) = self.free_lists.get_mut(&bucket) {
+            list.retain(|ws_id| ws_id != id);
         }
     }
 
@@ -446,22 +515,35 @@ impl SharedWorkspacePool {
 
     /// Allocate a workspace.
     pub fn allocate(&self, size: usize) -> Result<String, WorkspaceError> {
-        self.inner.lock().unwrap().allocate(size)
+        self.inner
+            .lock()
+            .expect("lock should not be poisoned")
+            .allocate(size)
     }
 
     /// Release a workspace.
     pub fn release(&self, id: &str) -> Result<(), WorkspaceError> {
-        self.inner.lock().unwrap().release(id)
+        self.inner
+            .lock()
+            .expect("lock should not be poisoned")
+            .release(id)
     }
 
     /// Get statistics.
     pub fn stats(&self) -> WorkspaceStats {
-        self.inner.lock().unwrap().stats().clone()
+        self.inner
+            .lock()
+            .expect("lock should not be poisoned")
+            .stats()
+            .clone()
     }
 
     /// Perform defragmentation.
     pub fn defragment(&self) -> DefragmentationResult {
-        self.inner.lock().unwrap().defragment()
+        self.inner
+            .lock()
+            .expect("lock should not be poisoned")
+            .defragment()
     }
 }
 
@@ -572,10 +654,10 @@ mod tests {
         let config = WorkspaceConfig::default();
         let mut pool = WorkspacePool::new(config);
 
-        let id = pool.allocate(512).unwrap();
+        let id = pool.allocate(512).expect("unwrap");
         assert!(!id.is_empty());
 
-        let workspace = pool.workspaces.get(&id).unwrap();
+        let workspace = pool.workspaces.get(&id).expect("unwrap");
         assert!(workspace.in_use);
         assert!(workspace.size >= 512);
     }
@@ -585,10 +667,10 @@ mod tests {
         let config = WorkspaceConfig::default();
         let mut pool = WorkspacePool::new(config);
 
-        let id = pool.allocate(512).unwrap();
+        let id = pool.allocate(512).expect("unwrap");
         assert!(pool.release(&id).is_ok());
 
-        let workspace = pool.workspaces.get(&id).unwrap();
+        let workspace = pool.workspaces.get(&id).expect("unwrap");
         assert!(!workspace.in_use);
     }
 
@@ -668,7 +750,7 @@ mod tests {
         let config = WorkspaceConfig::default();
         let pool = SharedWorkspacePool::new(config);
 
-        let id = pool.allocate(512).unwrap();
+        let id = pool.allocate(512).expect("unwrap");
         assert!(pool.release(&id).is_ok());
 
         let stats = pool.stats();
@@ -693,7 +775,26 @@ mod tests {
         let mut pool = WorkspacePool::new(config);
 
         let result = pool.defragment();
-        // Should not panic
-        assert_eq!(result.freed_bytes, 0); // No actual defrag yet
+        // Defragmentation should be safe and preserve free bytes.
+        assert_eq!(result.freed_bytes, 0);
+    }
+
+    #[test]
+    fn test_defragmentation_merges_when_threshold_met() {
+        let config = WorkspaceConfig {
+            enable_defragmentation: true,
+            defrag_threshold: 0.0,
+            num_buckets: 4,
+            ..Default::default()
+        };
+        let mut pool = WorkspacePool::new(config);
+
+        let before = pool.workspaces.len();
+        let result = pool.defragment();
+        let after = pool.workspaces.len();
+
+        assert_eq!(result.freed_bytes, 0);
+        assert!(result.merged_workspaces > 0);
+        assert!(after < before);
     }
 }

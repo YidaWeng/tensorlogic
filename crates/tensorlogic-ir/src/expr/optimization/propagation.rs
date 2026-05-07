@@ -308,6 +308,14 @@ pub fn propagate_constants(expr: &TLExpr) -> TLExpr {
         ),
         TLExpr::Abducible { .. } => expr.clone(),
         TLExpr::Explain { formula } => TLExpr::explain(propagate_constants(formula)),
+        TLExpr::SymbolLiteral(_) => expr.clone(),
+        TLExpr::Match { scrutinee, arms } => TLExpr::Match {
+            scrutinee: Box::new(propagate_constants(scrutinee)),
+            arms: arms
+                .iter()
+                .map(|(p, b)| (p.clone(), Box::new(propagate_constants(b))))
+                .collect(),
+        },
 
         TLExpr::Pred { .. } | TLExpr::Constant(_) => expr.clone(),
     }

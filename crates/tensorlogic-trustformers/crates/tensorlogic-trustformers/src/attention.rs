@@ -388,7 +388,7 @@ mod tests {
     }
 
     #[test]
-    fn test_mha_build() {
+    fn test_mha_build() -> Result<(), Box<dyn std::error::Error>> {
         let config = AttentionConfig {
             hidden_size: 512,
             num_heads: 8,
@@ -398,25 +398,23 @@ mod tests {
             use_bias: true,
             scale: None,
         };
-        let mha = MultiHeadAttention::new(config).unwrap();
-        let graph = mha.build();
-        assert!(graph.is_ok());
-        let graph = graph.unwrap();
+        let mha = MultiHeadAttention::new(config)?;
+        let graph = mha.build()?;
         assert!(graph.output().is_some());
+        Ok(())
     }
 
     #[test]
-    fn test_cross_attention_build() {
+    fn test_cross_attention_build() -> Result<(), Box<dyn std::error::Error>> {
         let config = AttentionConfig::default();
-        let mha = MultiHeadAttention::new(config).unwrap();
-        let graph = mha.build_cross_attention();
-        assert!(graph.is_ok());
-        let graph = graph.unwrap();
+        let mha = MultiHeadAttention::new(config)?;
+        let graph = mha.build_cross_attention()?;
         assert!(graph.output().is_some());
+        Ok(())
     }
 
     #[test]
-    fn test_different_head_counts() {
+    fn test_different_head_counts() -> Result<(), Box<dyn std::error::Error>> {
         for num_heads in vec![1, 2, 4, 8, 12, 16] {
             let hidden_size = 512;
             assert_eq!(hidden_size % num_heads, 0);
@@ -425,62 +423,67 @@ mod tests {
                 num_heads,
                 ..Default::default()
             };
-            let mha = MultiHeadAttention::new(config).unwrap();
+            let mha = MultiHeadAttention::new(config)?;
             let graph = mha.build();
             assert!(graph.is_ok());
         }
+        Ok(())
     }
 
     #[test]
-    fn test_custom_scale() {
+    fn test_custom_scale() -> Result<(), Box<dyn std::error::Error>> {
         let config = AttentionConfig {
             hidden_size: 512,
             num_heads: 8,
             scale: Some(0.125),
             ..Default::default()
         };
-        let mha = MultiHeadAttention::new(config).unwrap();
+        let mha = MultiHeadAttention::new(config)?;
         let graph = mha.build();
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_no_bias() {
+    fn test_no_bias() -> Result<(), Box<dyn std::error::Error>> {
         let config = AttentionConfig {
             hidden_size: 512,
             num_heads: 8,
             use_bias: false,
             ..Default::default()
         };
-        let mha = MultiHeadAttention::new(config).unwrap();
+        let mha = MultiHeadAttention::new(config)?;
         let graph = mha.build();
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_causal_pattern() {
+    fn test_causal_pattern() -> Result<(), Box<dyn std::error::Error>> {
         let config = AttentionConfig {
             hidden_size: 512,
             num_heads: 8,
             pattern: AttentionPattern::Causal,
             ..Default::default()
         };
-        let mha = MultiHeadAttention::new(config).unwrap();
+        let mha = MultiHeadAttention::new(config)?;
         let graph = mha.build();
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_different_sizes() {
+    fn test_different_sizes() -> Result<(), Box<dyn std::error::Error>> {
         for (hidden_size, num_heads) in vec![(256, 4), (512, 8), (768, 12), (1024, 16)] {
             let config = AttentionConfig {
                 hidden_size,
                 num_heads,
                 ..Default::default()
             };
-            let mha = MultiHeadAttention::new(config).unwrap();
+            let mha = MultiHeadAttention::new(config)?;
             let graph = mha.build();
             assert!(graph.is_ok());
         }
+        Ok(())
     }
 }

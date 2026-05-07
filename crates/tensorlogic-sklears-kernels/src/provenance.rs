@@ -28,7 +28,7 @@
 //! // Computations are automatically tracked
 //! let x = vec![1.0, 2.0, 3.0];
 //! let y = vec![4.0, 5.0, 6.0];
-//! let result = kernel.compute(&x, &y).unwrap();
+//! let result = kernel.compute(&x, &y).expect("unwrap");
 //!
 //! // Query provenance history
 //! let records = tracker.get_all_records();
@@ -127,7 +127,7 @@ impl ProvenanceRecord {
         use std::time::UNIX_EPOCH;
         let timestamp = SystemTime::now()
             .duration_since(UNIX_EPOCH)
-            .unwrap()
+            .expect("system time is after UNIX_EPOCH")
             .as_nanos();
         format!("prov_{}", timestamp)
     }
@@ -244,7 +244,7 @@ impl ProvenanceTracker {
     pub fn add_record(&self, record: ProvenanceRecord) {
         // Check if we should sample this record
         if self.config.sample_rate < 1.0 {
-            let mut counter = self.counter.lock().unwrap();
+            let mut counter = self.counter.lock().expect("lock should not be poisoned");
             *counter += 1;
             let sample_every = (1.0 / self.config.sample_rate) as usize;
             if !(*counter).is_multiple_of(sample_every) {
@@ -252,7 +252,7 @@ impl ProvenanceTracker {
             }
         }
 
-        let mut records = self.records.lock().unwrap();
+        let mut records = self.records.lock().expect("lock should not be poisoned");
         records.push(record);
 
         // Enforce max_records limit
@@ -265,14 +265,17 @@ impl ProvenanceTracker {
 
     /// Get all records
     pub fn get_all_records(&self) -> Vec<ProvenanceRecord> {
-        self.records.lock().unwrap().clone()
+        self.records
+            .lock()
+            .expect("lock should not be poisoned")
+            .clone()
     }
 
     /// Get records filtered by kernel name
     pub fn get_records_by_kernel(&self, kernel_name: &str) -> Vec<ProvenanceRecord> {
         self.records
             .lock()
-            .unwrap()
+            .expect("lock should not be poisoned")
             .iter()
             .filter(|r| r.kernel_name == kernel_name)
             .cloned()
@@ -283,7 +286,7 @@ impl ProvenanceTracker {
     pub fn get_records_by_tag(&self, tag: &str) -> Vec<ProvenanceRecord> {
         self.records
             .lock()
-            .unwrap()
+            .expect("lock should not be poisoned")
             .iter()
             .filter(|r| r.tags.contains(&tag.to_string()))
             .cloned()
@@ -292,17 +295,23 @@ impl ProvenanceTracker {
 
     /// Get number of tracked records
     pub fn count(&self) -> usize {
-        self.records.lock().unwrap().len()
+        self.records
+            .lock()
+            .expect("lock should not be poisoned")
+            .len()
     }
 
     /// Clear all records
     pub fn clear(&self) {
-        self.records.lock().unwrap().clear();
+        self.records
+            .lock()
+            .expect("lock should not be poisoned")
+            .clear();
     }
 
     /// Get average computation time across all records
     pub fn average_computation_time(&self) -> Option<Duration> {
-        let records = self.records.lock().unwrap();
+        let records = self.records.lock().expect("lock should not be poisoned");
         if records.is_empty() {
             return None;
         }
@@ -313,7 +322,7 @@ impl ProvenanceTracker {
 
     /// Get statistics about tracked computations
     pub fn statistics(&self) -> ProvenanceStatistics {
-        let records = self.records.lock().unwrap();
+        let records = self.records.lock().expect("lock should not be poisoned");
 
         let total_computations = records.len();
         let successful_computations = records.iter().filter(|r| r.is_success()).count();
@@ -343,7 +352,7 @@ impl ProvenanceTracker {
 
     /// Export records to JSON
     pub fn to_json(&self) -> Result<String> {
-        let records = self.records.lock().unwrap();
+        let records = self.records.lock().expect("lock should not be poisoned");
         serde_json::to_string_pretty(&*records).map_err(|e| {
             KernelError::ComputationError(format!("Failed to serialize provenance records: {}", e))
         })
@@ -358,7 +367,7 @@ impl ProvenanceTracker {
             ))
         })?;
 
-        let mut records = self.records.lock().unwrap();
+        let mut records = self.records.lock().expect("lock should not be poisoned");
         records.extend(imported);
         Ok(())
     }
@@ -547,7 +556,7 @@ mod tests {
         let config = ProvenanceConfig::new()
             .with_max_records(500)
             .with_sample_rate(0.5)
-            .unwrap()
+            .expect("unwrap")
             .with_timing(true);
 
         assert_eq!(config.max_records, Some(500));
@@ -674,7 +683,7 @@ mod tests {
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         assert!((result - 32.0).abs() < 1e-10);
 
         assert_eq!(tracker.count(), 1);
@@ -698,7 +707,7 @@ mod tests {
 
         let data = vec![vec![1.0, 2.0], vec![3.0, 4.0], vec![5.0, 6.0]];
 
-        let matrix = kernel.compute_matrix(&data).unwrap();
+        let matrix = kernel.compute_matrix(&data).expect("unwrap");
         assert_eq!(matrix.len(), 3);
 
         assert_eq!(tracker.count(), 1);
@@ -724,7 +733,7 @@ mod tests {
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        kernel.compute(&x, &y).unwrap();
+        kernel.compute(&x, &y).expect("unwrap");
 
         let records = tracker.get_all_records();
         assert_eq!(records[0].tags.len(), 2);
@@ -739,12 +748,12 @@ mod tests {
         let record = ProvenanceRecord::new("Linear".to_string(), HashMap::new(), 10, 1);
         tracker.add_record(record);
 
-        let json = tracker.to_json().unwrap();
+        let json = tracker.to_json().expect("unwrap");
         assert!(!json.is_empty());
 
         // Test deserialization
         let tracker2 = ProvenanceTracker::new();
-        tracker2.from_json(&json).unwrap();
+        tracker2.from_json(&json).expect("unwrap");
 
         assert_eq!(tracker2.count(), 1);
     }
@@ -759,7 +768,7 @@ mod tests {
             tracker.add_record(record);
         }
 
-        let avg = tracker.average_computation_time().unwrap();
+        let avg = tracker.average_computation_time().expect("unwrap");
         // Average of 10, 20, 30, 40, 50 ms = 30 ms
         assert_eq!(avg.as_millis(), 30);
     }

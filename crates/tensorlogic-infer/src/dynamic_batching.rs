@@ -285,7 +285,10 @@ impl<T> RequestQueue<T> {
         }
 
         let priority = request.metadata.priority;
-        self.queues.get_mut(&priority).unwrap().push_back(request);
+        self.queues
+            .get_mut(&priority)
+            .expect("priority queue always initialized")
+            .push_back(request);
         Ok(())
     }
 
@@ -304,7 +307,10 @@ impl<T> RequestQueue<T> {
                 break;
             }
 
-            let queue = self.queues.get_mut(&priority).unwrap();
+            let queue = self
+                .queues
+                .get_mut(&priority)
+                .expect("priority queue always initialized");
             while let Some(request) = queue.pop_front() {
                 // Skip timed-out requests
                 if request.is_timed_out() {
@@ -337,7 +343,12 @@ impl<T> RequestQueue<T> {
         ];
 
         for &priority in &priorities {
-            if let Some(request) = self.queues.get(&priority).unwrap().front() {
+            if let Some(request) = self
+                .queues
+                .get(&priority)
+                .expect("priority queue always initialized")
+                .front()
+            {
                 return Some(request.age());
             }
         }
@@ -360,7 +371,12 @@ impl<T> RequestQueue<T> {
         }
 
         // Form batch immediately for critical requests
-        if !self.queues.get(&Priority::Critical).unwrap().is_empty() {
+        if !self
+            .queues
+            .get(&Priority::Critical)
+            .expect("Critical priority queue always initialized")
+            .is_empty()
+        {
             return true;
         }
 
@@ -538,8 +554,8 @@ mod tests {
         let req2 = BatchRequest::new("2".to_string(), vec![2.0], vec![vec![1]])
             .with_priority(Priority::High);
 
-        queue.enqueue(req1).unwrap();
-        queue.enqueue(req2).unwrap();
+        queue.enqueue(req1).expect("unwrap");
+        queue.enqueue(req2).expect("unwrap");
 
         assert_eq!(queue.depth(), 2);
 
@@ -559,10 +575,10 @@ mod tests {
 
         queue
             .enqueue(BatchRequest::new("1".to_string(), vec![1.0], vec![vec![1]]))
-            .unwrap();
+            .expect("unwrap");
         queue
             .enqueue(BatchRequest::new("2".to_string(), vec![2.0], vec![vec![1]]))
-            .unwrap();
+            .expect("unwrap");
 
         let result = queue.enqueue(BatchRequest::new("3".to_string(), vec![3.0], vec![vec![1]]));
         assert!(matches!(result, Err(BatchingError::QueueFull)));
@@ -612,7 +628,7 @@ mod tests {
         // Submit requests
         for i in 0..5 {
             let request = BatchRequest::new(format!("req_{}", i), vec![i as f64], vec![vec![1]]);
-            batcher.submit(request).unwrap();
+            batcher.submit(request).expect("unwrap");
         }
 
         assert_eq!(batcher.queue_depth(), 5);
@@ -621,7 +637,7 @@ mod tests {
         let batch = batcher.try_form_batch();
         assert!(batch.is_some());
 
-        let batch = batch.unwrap();
+        let batch = batch.expect("unwrap");
         assert!(!batch.is_empty());
     }
 

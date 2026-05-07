@@ -201,7 +201,7 @@ mod tests {
             parse_estimates_file(&test_file, "test_bench", Some("10")).expect("Failed to parse");
 
         assert!(result.is_some());
-        let result = result.unwrap();
+        let result = result.expect("parse result should be Some after successful parse");
         assert_eq!(result.name, "test_bench");
         assert_eq!(result.parameter, Some("10".to_string()));
         assert!((result.estimates.mean.point_estimate - 113.48351458953826).abs() < 1e-10);

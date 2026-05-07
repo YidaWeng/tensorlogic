@@ -412,7 +412,7 @@ impl DataParallelCoordinator {
 
     /// Synchronize gradients across devices.
     pub fn synchronize_gradients(&self) -> Result<(), ExecutorError> {
-        let backend = self.backend.read().unwrap();
+        let backend = self.backend.read().expect("lock should not be poisoned");
 
         // All-reduce gradients with mean reduction
         backend.all_reduce("gradients", ReductionOp::Mean)?;
@@ -500,7 +500,7 @@ impl ModelParallelCoordinator {
 
     /// Gather sharded tensors.
     pub fn gather_shards(&self, _shard_dim: usize) -> Result<(), ExecutorError> {
-        let backend = self.backend.read().unwrap();
+        let backend = self.backend.read().expect("lock should not be poisoned");
         backend.all_gather("sharded_tensor")?;
         Ok(())
     }
@@ -543,7 +543,7 @@ impl PipelineParallelCoordinator {
     pub fn send_activations(&self, stage: usize) -> Result<(), ExecutorError> {
         if stage < self.num_stages - 1 {
             let next_rank = stage + 1;
-            let backend = self.backend.read().unwrap();
+            let backend = self.backend.read().expect("lock should not be poisoned");
             backend.send("activations", next_rank)?;
         }
         Ok(())
@@ -553,7 +553,7 @@ impl PipelineParallelCoordinator {
     pub fn recv_activations(&self, stage: usize) -> Result<(), ExecutorError> {
         if stage > 0 {
             let prev_rank = stage - 1;
-            let backend = self.backend.read().unwrap();
+            let backend = self.backend.read().expect("lock should not be poisoned");
             backend.recv("activations", prev_rank)?;
         }
         Ok(())
@@ -563,7 +563,7 @@ impl PipelineParallelCoordinator {
     pub fn send_gradients(&self, stage: usize) -> Result<(), ExecutorError> {
         if stage > 0 {
             let prev_rank = stage - 1;
-            let backend = self.backend.read().unwrap();
+            let backend = self.backend.read().expect("lock should not be poisoned");
             backend.send("gradients", prev_rank)?;
         }
         Ok(())
@@ -573,7 +573,7 @@ impl PipelineParallelCoordinator {
     pub fn recv_gradients(&self, stage: usize) -> Result<(), ExecutorError> {
         if stage < self.num_stages - 1 {
             let next_rank = stage + 1;
-            let backend = self.backend.read().unwrap();
+            let backend = self.backend.read().expect("lock should not be poisoned");
             backend.recv("gradients", next_rank)?;
         }
         Ok(())
@@ -611,7 +611,10 @@ impl DistributedExecutor {
         backend: Arc<RwLock<dyn CommunicationBackend>>,
     ) -> Result<Self, ExecutorError> {
         // Initialize backend
-        backend.write().unwrap().initialize(&config)?;
+        backend
+            .write()
+            .expect("lock should not be poisoned")
+            .initialize(&config)?;
 
         let mut executor = DistributedExecutor {
             config: config.clone(),
@@ -673,17 +676,26 @@ impl DistributedExecutor {
 
     /// Get the rank of this process.
     pub fn rank(&self) -> usize {
-        self.backend.read().unwrap().rank()
+        self.backend
+            .read()
+            .expect("lock should not be poisoned")
+            .rank()
     }
 
     /// Get the world size.
     pub fn world_size(&self) -> usize {
-        self.backend.read().unwrap().world_size()
+        self.backend
+            .read()
+            .expect("lock should not be poisoned")
+            .world_size()
     }
 
     /// Synchronize all processes.
     pub fn barrier(&self) -> Result<(), ExecutorError> {
-        self.backend.read().unwrap().barrier()
+        self.backend
+            .read()
+            .expect("lock should not be poisoned")
+            .barrier()
     }
 
     /// Get data parallel coordinator.
@@ -704,7 +716,11 @@ impl DistributedExecutor {
 
 impl Drop for DistributedExecutor {
     fn drop(&mut self) {
-        let _ = self.backend.write().unwrap().finalize();
+        let _ = self
+            .backend
+            .write()
+            .expect("lock should not be poisoned")
+            .finalize();
     }
 }
 
@@ -833,11 +849,11 @@ mod tests {
         let coordinator = ModelParallelCoordinator::new(config, backend);
 
         let shape = TensorShape::static_shape(vec![8, 16]);
-        let shards = coordinator.shard_tensor(0, &shape, 0).unwrap();
+        let shards = coordinator.shard_tensor(0, &shape, 0).expect("unwrap");
 
         assert_eq!(shards.len(), 4);
         // Each shard should have size 2 in dimension 0
-        assert_eq!(shards[0].dims[0].as_static().unwrap(), 2);
+        assert_eq!(shards[0].dims[0].as_static().expect("unwrap"), 2);
     }
 
     #[test]
@@ -864,7 +880,7 @@ mod tests {
         let executor = DistributedExecutor::new(config, backend);
         assert!(executor.is_ok());
 
-        let executor = executor.unwrap();
+        let executor = executor.expect("unwrap");
         assert_eq!(executor.rank(), 0);
         assert_eq!(executor.world_size(), 1);
     }
@@ -931,7 +947,7 @@ mod tests {
         };
 
         let backend = Arc::new(RwLock::new(DummyCommunicationBackend::new()));
-        let executor = DistributedExecutor::new(config, backend).unwrap();
+        let executor = DistributedExecutor::new(config, backend).expect("unwrap");
 
         assert!(executor.data_parallel().is_some());
         assert!(executor.model_parallel().is_some());

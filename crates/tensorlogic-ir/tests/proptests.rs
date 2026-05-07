@@ -426,8 +426,8 @@ mod additional_tests {
             .expect("register B");
 
         // Same domain is compatible with itself
-        assert!(registry.are_compatible("A", "A").unwrap());
-        assert!(registry.are_compatible("B", "B").unwrap());
+        assert!(registry.are_compatible("A", "A").expect("unwrap"));
+        assert!(registry.are_compatible("B", "B").expect("unwrap"));
     }
 
     #[test]
@@ -665,8 +665,8 @@ proptest! {
         // Add a simple node (input tensors 0,1 -> output tensor 2)
         let _ = graph.add_node(EinsumNode::elem_binary("add", 0, 1, 2));
 
-        let canon1 = canonicalize_graph(&graph).unwrap();
-        let canon2 = canonicalize_graph(&canon1).unwrap();
+        let canon1 = canonicalize_graph(&graph).expect("unwrap");
+        let canon2 = canonicalize_graph(&canon1).expect("unwrap");
 
         prop_assert_eq!(canon1, canon2, "Canonicalization not idempotent");
     }
@@ -691,8 +691,8 @@ proptest! {
         let _ = g1.add_node(EinsumNode::elem_unary("neg", 0, 1));
         let _ = g2.add_node(EinsumNode::elem_unary("neg", 0, 1));
 
-        let hash1 = canonical_hash(&g1).unwrap();
-        let hash2 = canonical_hash(&g2).unwrap();
+        let hash1 = canonical_hash(&g1).expect("unwrap");
+        let hash2 = canonical_hash(&g2).expect("unwrap");
 
         prop_assert_eq!(hash1, hash2,
             "Structurally equivalent graphs have different canonical hashes");

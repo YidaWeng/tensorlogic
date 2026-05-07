@@ -155,7 +155,9 @@ impl TimelineVisualizer {
         ops.sort_by(|(_, a), (_, b)| {
             let a_total_ms = a.avg_time.as_secs_f64() * 1000.0 * a.count as f64;
             let b_total_ms = b.avg_time.as_secs_f64() * 1000.0 * b.count as f64;
-            b_total_ms.partial_cmp(&a_total_ms).unwrap()
+            b_total_ms
+                .partial_cmp(&a_total_ms)
+                .unwrap_or(std::cmp::Ordering::Equal)
         });
 
         // Header
@@ -372,7 +374,10 @@ impl TensorStatsVisualizer {
             counts[bin] += 1;
         }
 
-        let max_count = *counts.iter().max().unwrap();
+        let max_count = *counts
+            .iter()
+            .max()
+            .expect("counts has bins elements, so max always exists");
 
         // Draw histogram
         output.push_str("Value Distribution\n");

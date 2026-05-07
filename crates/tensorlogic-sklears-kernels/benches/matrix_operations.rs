@@ -36,7 +36,11 @@ fn bench_linear_kernel_matrix(c: &mut Criterion) {
         group.throughput(Throughput::Elements((size * size) as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute_matrix(&data).unwrap());
+                black_box(
+                    kernel
+                        .compute_matrix(&data)
+                        .expect("linear kernel compute_matrix failed"),
+                );
             });
         });
     }
@@ -51,12 +55,16 @@ fn bench_rbf_kernel_matrix(c: &mut Criterion) {
     for size in [10, 25, 50, 100].iter() {
         let data = generate_dataset(50, *size);
         let config = RbfKernelConfig::new(0.5);
-        let kernel = RbfKernel::new(config).unwrap();
+        let kernel = RbfKernel::new(config).expect("Failed to create RbfKernel for matrix bench");
 
         group.throughput(Throughput::Elements((size * size) as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute_matrix(&data).unwrap());
+                black_box(
+                    kernel
+                        .compute_matrix(&data)
+                        .expect("rbf kernel compute_matrix failed"),
+                );
             });
         });
     }
@@ -72,11 +80,16 @@ fn bench_polynomial_kernel_matrix(c: &mut Criterion) {
     let data = generate_dataset(50, size);
 
     for degree in [2, 3, 4].iter() {
-        let kernel = PolynomialKernel::new(*degree, 1.0).unwrap();
+        let kernel = PolynomialKernel::new(*degree, 1.0)
+            .expect("Failed to create PolynomialKernel for matrix bench");
 
         group.bench_with_input(BenchmarkId::from_parameter(degree), degree, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute_matrix(&data).unwrap());
+                black_box(
+                    kernel
+                        .compute_matrix(&data)
+                        .expect("polynomial kernel compute_matrix failed"),
+                );
             });
         });
     }
@@ -95,7 +108,11 @@ fn bench_cosine_kernel_matrix(c: &mut Criterion) {
         group.throughput(Throughput::Elements((size * size) as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute_matrix(&data).unwrap());
+                black_box(
+                    kernel
+                        .compute_matrix(&data)
+                        .expect("cosine kernel compute_matrix failed"),
+                );
             });
         });
     }
@@ -110,7 +127,8 @@ fn bench_rule_similarity_matrix(c: &mut Criterion) {
     let num_rules = 20;
     let rules = generate_rules(num_rules);
     let config = RuleSimilarityConfig::new();
-    let kernel = RuleSimilarityKernel::new(rules, config).unwrap();
+    let kernel = RuleSimilarityKernel::new(rules, config)
+        .expect("Failed to create RuleSimilarityKernel for matrix bench");
 
     for size in [10, 25, 50, 100].iter() {
         let data = vec![vec![0.5; num_rules]; *size];
@@ -118,7 +136,11 @@ fn bench_rule_similarity_matrix(c: &mut Criterion) {
         group.throughput(Throughput::Elements((size * size) as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute_matrix(&data).unwrap());
+                black_box(
+                    kernel
+                        .compute_matrix(&data)
+                        .expect("rule similarity kernel compute_matrix failed"),
+                );
             });
         });
     }
@@ -139,7 +161,11 @@ fn bench_predicate_overlap_matrix(c: &mut Criterion) {
         group.throughput(Throughput::Elements((size * size) as u64));
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, _| {
             b.iter(|| {
-                black_box(kernel.compute_matrix(&data).unwrap());
+                black_box(
+                    kernel
+                        .compute_matrix(&data)
+                        .expect("predicate overlap kernel compute_matrix failed"),
+                );
             });
         });
     }
@@ -163,10 +189,14 @@ fn bench_sparse_matrix_construction(c: &mut Criterion) {
             |b, _| {
                 let builder = SparseKernelMatrixBuilder::new()
                     .with_threshold(0.1)
-                    .unwrap();
+                    .expect("Failed to set threshold on SparseKernelMatrixBuilder");
 
                 b.iter(|| {
-                    black_box(builder.build(&data, &kernel).unwrap());
+                    black_box(
+                        builder
+                            .build(&data, &kernel)
+                            .expect("sparse matrix build failed"),
+                    );
                 });
             },
         );
@@ -190,12 +220,16 @@ fn bench_sparse_matrix_max_entries(c: &mut Criterion) {
             |b, _| {
                 let builder = SparseKernelMatrixBuilder::new()
                     .with_threshold(0.0)
-                    .unwrap()
+                    .expect("Failed to set threshold=0 on SparseKernelMatrixBuilder")
                     .with_max_entries_per_row(*max_entries)
-                    .unwrap();
+                    .expect("Failed to set max_entries_per_row on SparseKernelMatrixBuilder");
 
                 b.iter(|| {
-                    black_box(builder.build(&data, &kernel).unwrap());
+                    black_box(
+                        builder
+                            .build(&data, &kernel)
+                            .expect("sparse matrix build with max_entries failed"),
+                    );
                 });
             },
         );
@@ -215,7 +249,11 @@ fn bench_sparse_vs_dense(c: &mut Criterion) {
     // Dense matrix
     group.bench_function("dense", |b| {
         b.iter(|| {
-            black_box(kernel.compute_matrix(&data).unwrap());
+            black_box(
+                kernel
+                    .compute_matrix(&data)
+                    .expect("dense compute_matrix failed in sparse_vs_dense"),
+            );
         });
     });
 
@@ -223,10 +261,14 @@ fn bench_sparse_vs_dense(c: &mut Criterion) {
     group.bench_function("sparse_threshold_0.5", |b| {
         let builder = SparseKernelMatrixBuilder::new()
             .with_threshold(0.5)
-            .unwrap();
+            .expect("Failed to set threshold=0.5 on SparseKernelMatrixBuilder");
 
         b.iter(|| {
-            black_box(builder.build(&data, &kernel).unwrap());
+            black_box(
+                builder
+                    .build(&data, &kernel)
+                    .expect("sparse build with threshold 0.5 failed"),
+            );
         });
     });
 
@@ -234,12 +276,16 @@ fn bench_sparse_vs_dense(c: &mut Criterion) {
     group.bench_function("sparse_max_20", |b| {
         let builder = SparseKernelMatrixBuilder::new()
             .with_threshold(0.0)
-            .unwrap()
+            .expect("Failed to set threshold=0 for sparse_max_20")
             .with_max_entries_per_row(20)
-            .unwrap();
+            .expect("Failed to set max_entries_per_row=20 for sparse_max_20");
 
         b.iter(|| {
-            black_box(builder.build(&data, &kernel).unwrap());
+            black_box(
+                builder
+                    .build(&data, &kernel)
+                    .expect("sparse build with max 20 entries failed"),
+            );
         });
     });
 
@@ -261,7 +307,11 @@ fn bench_matrix_scalability(c: &mut Criterion) {
             &(samples, features),
             |b, _| {
                 b.iter(|| {
-                    black_box(kernel.compute_matrix(&data).unwrap());
+                    black_box(
+                        kernel
+                            .compute_matrix(&data)
+                            .expect("compute_matrix failed in scalability bench"),
+                    );
                 });
             },
         );

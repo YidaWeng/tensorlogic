@@ -373,7 +373,7 @@ mod tests {
         assert!(handle.elapsed().as_millis() < 100);
 
         // Test cancellation
-        handle.cancel().await.unwrap();
+        handle.cancel().await.expect("unwrap");
         assert!(rx.recv().await.is_some());
     }
 }

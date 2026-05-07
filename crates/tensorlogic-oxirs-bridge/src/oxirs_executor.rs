@@ -408,7 +408,7 @@ impl OxirsSparqlExecutor {
         &self,
         pattern: &crate::sparql::GraphPattern,
     ) -> Result<Vec<HashMap<String, QueryValue>>> {
-        use crate::sparql::{GraphPattern, PatternElement};
+        use crate::sparql::{BindExpr, GraphPattern, PatternElement};
 
         match pattern {
             GraphPattern::Triple(triple) => {
@@ -502,6 +502,71 @@ impl OxirsSparqlExecutor {
                 // Filters are applied during pattern matching
                 // For now, return empty (would need context from parent pattern)
                 Ok(Vec::new())
+            }
+
+            GraphPattern::Values(vars, rows) => {
+                // Each row becomes one independent binding (no join with store needed).
+                let bindings = rows
+                    .iter()
+                    .map(|row| {
+                        vars.iter()
+                            .zip(row.iter())
+                            .map(|(var, elem)| {
+                                let qv = match elem {
+                                    PatternElement::Constant(c) => {
+                                        if c.starts_with('<')
+                                            || c.starts_with("http")
+                                            || c.starts_with("https")
+                                            || c.starts_with("urn:")
+                                        {
+                                            QueryValue::Iri(c.clone())
+                                        } else {
+                                            QueryValue::Literal {
+                                                value: c.clone(),
+                                                datatype: None,
+                                                language: None,
+                                            }
+                                        }
+                                    }
+                                    PatternElement::Variable(v) => QueryValue::Iri(format!("?{v}")),
+                                };
+                                (var.clone(), qv)
+                            })
+                            .collect::<HashMap<String, QueryValue>>()
+                    })
+                    .collect();
+                Ok(bindings)
+            }
+
+            GraphPattern::Bind(expr, var) => {
+                // Context-free constant bind only. Variable-ref bind requires
+                // per-row context threading — filed as follow-up
+                // `bind-arithmetic-and-context`.
+                match expr {
+                    BindExpr::Term(PatternElement::Constant(c)) => {
+                        let qv = if c.starts_with('<')
+                            || c.starts_with("http")
+                            || c.starts_with("https")
+                            || c.starts_with("urn:")
+                        {
+                            QueryValue::Iri(c.clone())
+                        } else {
+                            QueryValue::Literal {
+                                value: c.clone(),
+                                datatype: None,
+                                language: None,
+                            }
+                        };
+                        let mut binding = HashMap::new();
+                        binding.insert(var.clone(), qv);
+                        Ok(vec![binding])
+                    }
+                    BindExpr::Term(PatternElement::Variable(_)) => {
+                        // Variable-ref requires per-row context; return one empty
+                        // binding until executor context threading is implemented.
+                        Ok(vec![HashMap::new()])
+                    }
+                }
             }
         }
     }
@@ -781,6 +846,70 @@ mod tests {
         let result = executor.execute_to_tlexpr(query);
 
         assert!(result.is_ok());
+    }
+
+    #[test]
+    fn test_execute_values_single_var() {
+        use crate::sparql::{GraphPattern, PatternElement};
+        let executor = OxirsSparqlExecutor::new().expect("Failed to create executor");
+        let pattern = GraphPattern::Values(
+            vec!["x".to_string()],
+            vec![
+                vec![PatternElement::Constant("1".to_string())],
+                vec![PatternElement::Constant("2".to_string())],
+            ],
+        );
+        let results = executor
+            .execute_pattern(&pattern)
+            .expect("execute_pattern failed");
+        assert_eq!(results.len(), 2, "Expected two rows");
+        let v0 = results[0].get("x").expect("binding x row 0");
+        assert_eq!(v0.as_str(), "1");
+        let v1 = results[1].get("x").expect("binding x row 1");
+        assert_eq!(v1.as_str(), "2");
+    }
+
+    #[test]
+    fn test_execute_values_multi_var() {
+        use crate::sparql::{GraphPattern, PatternElement};
+        let executor = OxirsSparqlExecutor::new().expect("Failed to create executor");
+        let pattern = GraphPattern::Values(
+            vec!["x".to_string(), "y".to_string()],
+            vec![
+                vec![
+                    PatternElement::Constant("1".to_string()),
+                    PatternElement::Constant("a".to_string()),
+                ],
+                vec![
+                    PatternElement::Constant("2".to_string()),
+                    PatternElement::Constant("b".to_string()),
+                ],
+            ],
+        );
+        let results = executor
+            .execute_pattern(&pattern)
+            .expect("execute_pattern failed");
+        assert_eq!(results.len(), 2, "Expected two rows");
+        assert_eq!(results[0].get("x").expect("x row 0").as_str(), "1");
+        assert_eq!(results[0].get("y").expect("y row 0").as_str(), "a");
+        assert_eq!(results[1].get("x").expect("x row 1").as_str(), "2");
+        assert_eq!(results[1].get("y").expect("y row 1").as_str(), "b");
+    }
+
+    #[test]
+    fn test_execute_bind_constant() {
+        use crate::sparql::{BindExpr, GraphPattern, PatternElement};
+        let executor = OxirsSparqlExecutor::new().expect("Failed to create executor");
+        let pattern = GraphPattern::Bind(
+            BindExpr::Term(PatternElement::Constant("hello".to_string())),
+            "greeting".to_string(),
+        );
+        let results = executor
+            .execute_pattern(&pattern)
+            .expect("execute_pattern failed");
+        assert_eq!(results.len(), 1, "Expected one binding");
+        let v = results[0].get("greeting").expect("binding greeting");
+        assert_eq!(v.as_str(), "hello");
     }
 
     #[test]

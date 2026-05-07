@@ -455,7 +455,7 @@ impl SimilaritySearch {
             .collect();
 
         // Sort by similarity (descending)
-        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        similarities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         // Return top k
         similarities.into_iter().take(k).collect()
@@ -510,8 +510,12 @@ mod tests {
     #[test]
     fn test_schema_embedding_generation() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.add_domain(DomainInfo::new("Course", 50)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Course", 50))
+            .expect("unwrap");
 
         let embedder = SchemaEmbedder::new();
         let embedding = embedder.embed_schema(&table);
@@ -543,9 +547,15 @@ mod tests {
     #[test]
     fn test_similarity_search_indexing() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.add_domain(DomainInfo::new("Student", 50)).unwrap();
-        table.add_domain(DomainInfo::new("Course", 30)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Student", 50))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Course", 30))
+            .expect("unwrap");
 
         let mut search = SimilaritySearch::new();
         search.index_table(&table);
@@ -558,9 +568,15 @@ mod tests {
     #[test]
     fn test_find_similar_domains() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.add_domain(DomainInfo::new("Student", 80)).unwrap();
-        table.add_domain(DomainInfo::new("Course", 50)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Student", 80))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Course", 50))
+            .expect("unwrap");
 
         let mut search = SimilaritySearch::new();
         search.index_table(&table);
@@ -576,16 +592,18 @@ mod tests {
     #[test]
     fn test_find_similar_predicates() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let knows = PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()]);
         let likes = PredicateInfo::new("likes", vec!["Person".to_string(), "Person".to_string()]);
         let teaches =
             PredicateInfo::new("teaches", vec!["Person".to_string(), "Person".to_string()]);
 
-        table.add_predicate(knows).unwrap();
-        table.add_predicate(likes).unwrap();
-        table.add_predicate(teaches).unwrap();
+        table.add_predicate(knows).expect("unwrap");
+        table.add_predicate(likes).expect("unwrap");
+        table.add_predicate(teaches).expect("unwrap");
 
         let mut search = SimilaritySearch::new();
         search.index_table(&table);
@@ -603,9 +621,15 @@ mod tests {
     #[test]
     fn test_similar_domains_by_name() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-        table.add_domain(DomainInfo::new("Student", 80)).unwrap();
-        table.add_domain(DomainInfo::new("Course", 50)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Student", 80))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Course", 50))
+            .expect("unwrap");
 
         let mut search = SimilaritySearch::new();
         search.index_table(&table);

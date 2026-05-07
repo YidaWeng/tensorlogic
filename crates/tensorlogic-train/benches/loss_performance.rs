@@ -33,7 +33,9 @@ fn benchmark_loss_computation(c: &mut Criterion) {
     group.bench_function("mse_loss", |b| {
         let loss = MseLoss;
         b.iter(|| {
-            let result = loss.compute(&predictions.view(), &targets.view()).unwrap();
+            let result = loss
+                .compute(&predictions.view(), &targets.view())
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -42,7 +44,9 @@ fn benchmark_loss_computation(c: &mut Criterion) {
     group.bench_function("cross_entropy", |b| {
         let loss = CrossEntropyLoss::default();
         b.iter(|| {
-            let result = loss.compute(&predictions.view(), &targets.view()).unwrap();
+            let result = loss
+                .compute(&predictions.view(), &targets.view())
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -51,7 +55,9 @@ fn benchmark_loss_computation(c: &mut Criterion) {
     group.bench_function("bce_with_logits", |b| {
         let loss = BCEWithLogitsLoss;
         b.iter(|| {
-            let result = loss.compute(&predictions.view(), &targets.view()).unwrap();
+            let result = loss
+                .compute(&predictions.view(), &targets.view())
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -60,7 +66,9 @@ fn benchmark_loss_computation(c: &mut Criterion) {
     group.bench_function("focal_loss", |b| {
         let loss = FocalLoss::default();
         b.iter(|| {
-            let result = loss.compute(&predictions.view(), &targets.view()).unwrap();
+            let result = loss
+                .compute(&predictions.view(), &targets.view())
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -69,7 +77,9 @@ fn benchmark_loss_computation(c: &mut Criterion) {
     group.bench_function("dice_loss", |b| {
         let loss = DiceLoss::default();
         b.iter(|| {
-            let result = loss.compute(&predictions.view(), &targets.view()).unwrap();
+            let result = loss
+                .compute(&predictions.view(), &targets.view())
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -78,7 +88,9 @@ fn benchmark_loss_computation(c: &mut Criterion) {
     group.bench_function("tversky_loss", |b| {
         let loss = TverskyLoss::default();
         b.iter(|| {
-            let result = loss.compute(&predictions.view(), &targets.view()).unwrap();
+            let result = loss
+                .compute(&predictions.view(), &targets.view())
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -87,7 +99,9 @@ fn benchmark_loss_computation(c: &mut Criterion) {
     group.bench_function("hinge_loss", |b| {
         let loss = HingeLoss::default();
         b.iter(|| {
-            let result = loss.compute(&predictions.view(), &targets.view()).unwrap();
+            let result = loss
+                .compute(&predictions.view(), &targets.view())
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -96,7 +110,9 @@ fn benchmark_loss_computation(c: &mut Criterion) {
     group.bench_function("huber_loss", |b| {
         let loss = HuberLoss::default();
         b.iter(|| {
-            let result = loss.compute(&predictions.view(), &targets.view()).unwrap();
+            let result = loss
+                .compute(&predictions.view(), &targets.view())
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -105,7 +121,9 @@ fn benchmark_loss_computation(c: &mut Criterion) {
     group.bench_function("kl_divergence", |b| {
         let loss = KLDivergenceLoss::default();
         b.iter(|| {
-            let result = loss.compute(&predictions.view(), &targets.view()).unwrap();
+            let result = loss
+                .compute(&predictions.view(), &targets.view())
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -125,7 +143,9 @@ fn benchmark_loss_scaling(c: &mut Criterion) {
                 let loss = CrossEntropyLoss::default();
 
                 b.iter(|| {
-                    let result = loss.compute(&predictions.view(), &targets.view()).unwrap();
+                    let result = loss
+                        .compute(&predictions.view(), &targets.view())
+                        .expect("unwrap");
                     black_box(result);
                 });
             },
@@ -147,7 +167,9 @@ fn benchmark_loss_class_scaling(c: &mut Criterion) {
                 let loss = CrossEntropyLoss::default();
 
                 b.iter(|| {
-                    let result = loss.compute(&predictions.view(), &targets.view()).unwrap();
+                    let result = loss
+                        .compute(&predictions.view(), &targets.view())
+                        .expect("unwrap");
                     black_box(result);
                 });
             },
@@ -171,7 +193,9 @@ fn benchmark_contrastive_triplet(c: &mut Criterion) {
             Array2::from_shape_fn((n_pairs, 1), |(i, _)| if i % 2 == 0 { 1.0 } else { 0.0 });
 
         b.iter(|| {
-            let result = loss.compute(&predictions.view(), &targets.view()).unwrap();
+            let result = loss
+                .compute(&predictions.view(), &targets.view())
+                .expect("unwrap");
             black_box(result);
         });
     });
@@ -184,7 +208,9 @@ fn benchmark_contrastive_triplet(c: &mut Criterion) {
         let targets = Array2::zeros((n_pairs, 1)); // Not used for triplet loss
 
         b.iter(|| {
-            let result = loss.compute(&predictions.view(), &targets.view()).unwrap();
+            let result = loss
+                .compute(&predictions.view(), &targets.view())
+                .expect("unwrap");
             black_box(result);
         });
     });

@@ -174,30 +174,21 @@ impl CompilationCache {
 
     /// Compress a cache entry using gzip
     fn compress_entry(entry: &CacheEntry) -> Result<Vec<u8>> {
-        use std::io::Write;
-
         // Serialize to JSON first
         let json = serde_json::to_vec(entry).context("Failed to serialize entry")?;
 
-        // Compress with flate2 (gzip)
-        let mut encoder = flate2::write::GzEncoder::new(Vec::new(), flate2::Compression::best());
-        encoder.write_all(&json).context("Failed to compress")?;
-        let compressed = encoder.finish().context("Failed to finish compression")?;
+        // Compress with oxiarc-deflate gzip (level 9 = best compression)
+        let compressed = oxiarc_deflate::gzip_compress(&json, 9)
+            .context("Failed to gzip-compress cache entry")?;
 
         Ok(compressed)
     }
 
     /// Decompress a cache entry
     fn decompress_entry(compressed: &[u8]) -> Result<CacheEntry> {
-        use flate2::read::GzDecoder;
-        use std::io::Read;
-
-        // Decompress
-        let mut decoder = GzDecoder::new(compressed);
-        let mut decompressed = Vec::new();
-        decoder
-            .read_to_end(&mut decompressed)
-            .context("Failed to decompress")?;
+        // Decompress with oxiarc-deflate gzip
+        let decompressed = oxiarc_deflate::gzip_decompress(compressed)
+            .context("Failed to gzip-decompress cache entry")?;
 
         // Deserialize from JSON
         let entry: CacheEntry =
@@ -823,7 +814,8 @@ mod tests {
     #[test]
     fn test_cache_put_get() {
         let temp_dir = std::env::temp_dir().join("tensorlogic-test-cache-putget");
-        let mut cache = CompilationCache::new(Some(temp_dir.clone()), 100).unwrap();
+        let mut cache = CompilationCache::new(Some(temp_dir.clone()), 100)
+            .expect("cache creation should succeed");
 
         let expr = TLExpr::Pred {
             name: "test".to_string(),
@@ -837,7 +829,9 @@ mod tests {
         let graph = EinsumGraph::new();
 
         // Put in cache
-        cache.put(&expr, &ctx, &graph).unwrap();
+        cache
+            .put(&expr, &ctx, &graph)
+            .expect("cache put should succeed");
 
         // Get from cache
         let retrieved = cache.get(&expr, &ctx);
@@ -850,7 +844,8 @@ mod tests {
     #[test]
     fn test_cache_clear() {
         let temp_dir = std::env::temp_dir().join("tensorlogic-test-cache-clear");
-        let mut cache = CompilationCache::new(Some(temp_dir.clone()), 100).unwrap();
+        let mut cache = CompilationCache::new(Some(temp_dir.clone()), 100)
+            .expect("cache creation should succeed");
 
         let expr = TLExpr::Pred {
             name: "test".to_string(),
@@ -860,10 +855,12 @@ mod tests {
         let ctx = CompilerContext::with_config(CompilationConfig::soft_differentiable());
         let graph = EinsumGraph::new();
 
-        cache.put(&expr, &ctx, &graph).unwrap();
+        cache
+            .put(&expr, &ctx, &graph)
+            .expect("cache put should succeed");
         assert_eq!(cache.stats().entries, 1);
 
-        cache.clear().unwrap();
+        cache.clear().expect("cache clear should succeed");
         assert_eq!(cache.stats().entries, 0);
 
         // Cleanup
@@ -873,7 +870,8 @@ mod tests {
     #[test]
     fn test_cache_warmup() {
         let temp_dir = std::env::temp_dir().join("tensorlogic-test-cache-warmup");
-        let mut cache = CompilationCache::new(Some(temp_dir.clone()), 100).unwrap();
+        let mut cache = CompilationCache::new(Some(temp_dir.clone()), 100)
+            .expect("cache creation should succeed");
 
         let ctx = CompilerContext::with_config(CompilationConfig::soft_differentiable());
 
@@ -882,7 +880,9 @@ mod tests {
             ("AND(a, b)".to_string(), ctx.clone()),
         ];
 
-        let warmed = cache.warm_up(&expressions).unwrap();
+        let warmed = cache
+            .warm_up(&expressions)
+            .expect("cache warmup should succeed");
 
         assert_eq!(warmed, 2);
         assert_eq!(cache.stats().entries, 2);
@@ -896,17 +896,28 @@ mod tests {
         use std::fs::File;
         use std::io::Write;
 
-        let temp_dir = std::env::temp_dir().join("tensorlogic-test-cache-warmup-file");
-        let mut cache = CompilationCache::new(Some(temp_dir.clone()), 100).unwrap();
+        // Use a unique directory per test invocation to avoid races when nextest
+        // runs lib and binary targets concurrently with identical temp paths.
+        let unique_id = std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .unwrap_or_default()
+            .subsec_nanos();
+        let temp_dir =
+            std::env::temp_dir().join(format!("tensorlogic-test-cache-warmup-file-{}", unique_id));
+        let mut cache = CompilationCache::new(Some(temp_dir.clone()), 100)
+            .expect("cache creation should succeed");
 
         // Create a warmup file
         let warmup_file = temp_dir.join("warmup.txt");
-        let mut file = File::create(&warmup_file).unwrap();
-        writeln!(file, "# This is a comment").unwrap();
-        writeln!(file, "pred(x, y) | soft_differentiable | Person:100").unwrap();
-        writeln!(file, "AND(a, b)").unwrap();
+        let mut file = File::create(&warmup_file).expect("warmup file creation should succeed");
+        writeln!(file, "# This is a comment").expect("write should succeed");
+        writeln!(file, "pred(x, y) | soft_differentiable | Person:100")
+            .expect("write should succeed");
+        writeln!(file, "AND(a, b)").expect("write should succeed");
 
-        let result = cache.warm_up_from_file(&warmup_file).unwrap();
+        let result = cache
+            .warm_up_from_file(&warmup_file)
+            .expect("warmup from file should succeed");
 
         assert_eq!(result.total, 2);
         assert_eq!(result.warmed, 2);
@@ -961,7 +972,7 @@ mod tests {
         let json = stats.to_json();
         assert!(json.is_ok());
 
-        let json_str = json.unwrap();
+        let json_str = json.expect("JSON serialization should succeed");
         assert!(json_str.contains("\"entries\""));
         assert!(json_str.contains("\"hits\""));
         assert!(json_str.contains("\"hit_rate\""));
@@ -984,7 +995,7 @@ mod tests {
         let json = analytics.to_json();
         assert!(json.is_ok());
 
-        let json_str = json.unwrap();
+        let json_str = json.expect("JSON serialization should succeed");
         assert!(json_str.contains("\"total_requests\""));
         assert!(json_str.contains("\"efficiency_score\""));
         assert!(json_str.contains("\"recommendation\""));

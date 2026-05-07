@@ -543,7 +543,7 @@ mod tests {
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), Array2::from_elem((2, 2), 0.1));
 
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         assert_eq!(optimizer.get_step(), 1);
         assert_eq!(optimizer.get_d(), 1e-6); // D initialized to d0
@@ -560,13 +560,13 @@ mod tests {
         // First step
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), Array2::from_elem((2, 2), 0.1));
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         let d_after_step1 = optimizer.get_d();
         assert_eq!(d_after_step1, 1e-6);
 
         // Second step - D should adapt
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         let d_after_step2 = optimizer.get_d();
         assert!(d_after_step2 >= 1e-6); // D should increase or stay same
@@ -584,10 +584,10 @@ mod tests {
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), Array2::from_elem((2, 2), 0.5));
 
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         // Parameters should be updated (decreased since gradient is positive)
-        let w = params.get("w").unwrap();
+        let w = params.get("w").expect("unwrap");
         assert!(w[[0, 0]] < initial_value);
     }
 
@@ -603,9 +603,9 @@ mod tests {
         grads.insert("w".to_string(), Array2::from_elem((2, 2), 0.0));
 
         // With weight decay and zero gradient, parameters should decay
-        let initial_sum: f64 = params.get("w").unwrap().sum();
-        optimizer.step(&mut params, &grads).unwrap();
-        let final_sum: f64 = params.get("w").unwrap().sum();
+        let initial_sum: f64 = params.get("w").expect("unwrap").sum();
+        optimizer.step(&mut params, &grads).expect("unwrap");
+        let final_sum: f64 = params.get("w").expect("unwrap").sum();
 
         assert!(final_sum < initial_sum);
     }
@@ -622,10 +622,10 @@ mod tests {
         grads.insert("w".to_string(), Array2::from_elem((2, 2), 10.0)); // Large gradient
 
         // Should not panic, gradients should be clipped
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
 
         // Parameters should still be updated, but with clipped gradients
-        let w = params.get("w").unwrap();
+        let w = params.get("w").expect("unwrap");
         assert!(w[[0, 0]] < 1.0);
     }
 
@@ -642,7 +642,7 @@ mod tests {
 
         // Take a few steps
         for _ in 0..3 {
-            optimizer.step(&mut params, &grads).unwrap();
+            optimizer.step(&mut params, &grads).expect("unwrap");
         }
 
         let state = optimizer.state_dict();
@@ -664,7 +664,7 @@ mod tests {
 
         // Take a few steps with optimizer1
         for _ in 0..3 {
-            optimizer1.step(&mut params, &grads).unwrap();
+            optimizer1.step(&mut params, &grads).expect("unwrap");
         }
 
         let state = optimizer1.state_dict();
@@ -693,12 +693,12 @@ mod tests {
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), Array2::from_elem((2, 2), 0.1));
 
-        opt_with_bc.step(&mut params1, &grads).unwrap();
-        opt_without_bc.step(&mut params2, &grads).unwrap();
+        opt_with_bc.step(&mut params1, &grads).expect("unwrap");
+        opt_without_bc.step(&mut params2, &grads).expect("unwrap");
 
         // Results should be different due to bias correction
-        let w1 = params1.get("w").unwrap();
-        let w2 = params2.get("w").unwrap();
+        let w1 = params1.get("w").expect("unwrap");
+        let w2 = params2.get("w").expect("unwrap");
 
         // They should be different (bias correction affects the updates)
         let diff = (w1[[0, 0]] - w2[[0, 0]]).abs();
@@ -720,11 +720,11 @@ mod tests {
         grads.insert("w".to_string(), Array2::from_elem((2, 2), 1.0)); // Large gradient
 
         // First step
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
         let d1 = optimizer.get_d();
 
         // Second step
-        optimizer.step(&mut params, &grads).unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
         let d2 = optimizer.get_d();
 
         // D should not grow more than 10% per step

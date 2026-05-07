@@ -1,6 +1,7 @@
 //! Execution profiling and performance monitoring.
 
 use crate::context::{ExecutionHook, ExecutionPhase, ExecutionState};
+use std::cmp::Reverse;
 use std::collections::HashMap;
 use std::time::{Duration, Instant};
 
@@ -99,7 +100,7 @@ impl ProfileData {
             .map(|(name, profile)| (name.as_str(), profile))
             .collect();
 
-        ops.sort_by(|a, b| b.1.total_time.cmp(&a.1.total_time));
+        ops.sort_by_key(|b| Reverse(b.1.total_time));
         ops.truncate(limit);
         ops
     }
@@ -617,9 +618,11 @@ impl BottleneckAnalyzer {
         }
 
         // Sort by percentage (highest first)
-        report
-            .bottlenecks
-            .sort_by(|a, b| b.percentage.partial_cmp(&a.percentage).unwrap());
+        report.bottlenecks.sort_by(|a, b| {
+            b.percentage
+                .partial_cmp(&a.percentage)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         // Calculate memory pressure
         if data.memory.peak_bytes > 1_000_000_000 {
@@ -742,7 +745,7 @@ mod tests {
         data.record_op("relu", Duration::from_millis(50));
         data.record_op("einsum", Duration::from_millis(80));
 
-        let einsum_profile = data.get_op_profile("einsum").unwrap();
+        let einsum_profile = data.get_op_profile("einsum").expect("unwrap");
         assert_eq!(einsum_profile.count, 2);
 
         let slowest = data.slowest_ops(2);

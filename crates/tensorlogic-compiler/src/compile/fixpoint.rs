@@ -260,9 +260,9 @@ mod tests {
         // μX.P(x)  (doesn't reference X, so not truly recursive)
         let body = TLExpr::pred("P", vec![Term::var("x")]);
 
-        ctx.bind_var("x", "Node").unwrap();
+        ctx.bind_var("x", "Node").expect("unwrap");
 
-        let result = compile_least_fixpoint("X", &body, &mut ctx, &mut graph).unwrap();
+        let result = compile_least_fixpoint("X", &body, &mut ctx, &mut graph).expect("unwrap");
 
         // Should compile to just the body
         // Tensor index 0 is valid (first tensor in graph)
@@ -279,9 +279,9 @@ mod tests {
         // νX.Safe(s)  (doesn't reference X)
         let body = TLExpr::pred("Safe", vec![Term::var("s")]);
 
-        ctx.bind_var("s", "State").unwrap();
+        ctx.bind_var("s", "State").expect("unwrap");
 
-        let result = compile_greatest_fixpoint("X", &body, &mut ctx, &mut graph).unwrap();
+        let result = compile_greatest_fixpoint("X", &body, &mut ctx, &mut graph).expect("unwrap");
 
         // Tensor index 0 is valid (first tensor in graph)
         assert!(!result.axes.is_empty());
@@ -299,10 +299,10 @@ mod tests {
         let x = TLExpr::pred("X", vec![Term::var("x"), Term::var("y")]);
         let body = TLExpr::or(r, x);
 
-        ctx.bind_var("x", "Node").unwrap();
-        ctx.bind_var("y", "Node").unwrap();
+        ctx.bind_var("x", "Node").expect("unwrap");
+        ctx.bind_var("y", "Node").expect("unwrap");
 
-        let _result = compile_least_fixpoint("X", &body, &mut ctx, &mut graph).unwrap();
+        let _result = compile_least_fixpoint("X", &body, &mut ctx, &mut graph).expect("unwrap");
 
         // Should have created nodes for the unrolled fixpoint computation
         assert!(!graph.nodes.is_empty());
@@ -349,10 +349,10 @@ mod tests {
             ),
         );
 
-        ctx.bind_var("x", "Node").unwrap();
-        ctx.bind_var("z", "Node").unwrap();
+        ctx.bind_var("x", "Node").expect("unwrap");
+        ctx.bind_var("z", "Node").expect("unwrap");
 
-        let _result = compile_least_fixpoint("X", &body, &mut ctx, &mut graph).unwrap();
+        let _result = compile_least_fixpoint("X", &body, &mut ctx, &mut graph).expect("unwrap");
 
         assert!(!graph.nodes.is_empty());
         assert!(!graph.tensors.is_empty());
@@ -371,12 +371,13 @@ mod tests {
         // Use a simple body for both
         let body = TLExpr::pred("P", vec![Term::var("x")]);
 
-        ctx1.bind_var("x", "D").unwrap();
-        ctx2.bind_var("x", "D").unwrap();
+        ctx1.bind_var("x", "D").expect("unwrap");
+        ctx2.bind_var("x", "D").expect("unwrap");
 
-        let _least_result = compile_least_fixpoint("X", &body, &mut ctx1, &mut graph1).unwrap();
+        let _least_result =
+            compile_least_fixpoint("X", &body, &mut ctx1, &mut graph1).expect("unwrap");
         let _greatest_result =
-            compile_greatest_fixpoint("X", &body, &mut ctx2, &mut graph2).unwrap();
+            compile_greatest_fixpoint("X", &body, &mut ctx2, &mut graph2).expect("unwrap");
 
         // Both should compile successfully
         assert!(!graph1.tensors.is_empty());

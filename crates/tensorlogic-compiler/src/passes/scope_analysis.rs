@@ -385,7 +385,7 @@ mod tests {
     fn test_bound_variable() {
         let expr = TLExpr::exists("x", "Domain", TLExpr::pred("p", vec![Term::var("x")]));
 
-        let result = analyze_scopes(&expr).unwrap();
+        let result = analyze_scopes(&expr).expect("unwrap");
         assert!(result.unbound_variables.is_empty());
         assert_eq!(result.variables.len(), 1);
         assert_eq!(result.variables["x"].name, "x");
@@ -395,7 +395,7 @@ mod tests {
     fn test_unbound_variable() {
         let expr = TLExpr::pred("p", vec![Term::var("x")]);
 
-        let result = analyze_scopes(&expr).unwrap();
+        let result = analyze_scopes(&expr).expect("unwrap");
         assert_eq!(result.unbound_variables.len(), 1);
         assert_eq!(result.unbound_variables[0], "x");
     }
@@ -409,7 +409,7 @@ mod tests {
             TLExpr::pred("p", vec![Term::var("x"), Term::var("y")]),
         );
 
-        let result = analyze_scopes(&expr).unwrap();
+        let result = analyze_scopes(&expr).expect("unwrap");
         assert_eq!(result.unbound_variables.len(), 1);
         assert_eq!(result.unbound_variables[0], "y");
         assert_eq!(result.variables.len(), 2);
@@ -428,7 +428,7 @@ mod tests {
             ),
         );
 
-        let result = analyze_scopes(&expr).unwrap();
+        let result = analyze_scopes(&expr).expect("unwrap");
         assert_eq!(result.unbound_variables.len(), 1);
         assert_eq!(result.unbound_variables[0], "z");
     }
@@ -457,7 +457,7 @@ mod tests {
             ],
         );
 
-        let result = analyze_scopes(&expr).unwrap();
+        let result = analyze_scopes(&expr).expect("unwrap");
         assert!(result.type_conflicts.is_empty());
     }
 
@@ -471,7 +471,7 @@ mod tests {
             ],
         );
 
-        let result = analyze_scopes(&expr).unwrap();
+        let result = analyze_scopes(&expr).expect("unwrap");
         assert_eq!(result.type_conflicts.len(), 1);
         assert_eq!(result.type_conflicts[0].variable, "x");
     }
@@ -480,7 +480,7 @@ mod tests {
     fn test_suggest_quantifiers() {
         let expr = TLExpr::pred("p", vec![Term::var("x"), Term::var("y")]);
 
-        let suggestions = suggest_quantifiers(&expr).unwrap();
+        let suggestions = suggest_quantifiers(&expr).expect("unwrap");
         assert_eq!(suggestions.len(), 2);
         assert!(suggestions[0].contains("x"));
         assert!(suggestions[1].contains("y"));

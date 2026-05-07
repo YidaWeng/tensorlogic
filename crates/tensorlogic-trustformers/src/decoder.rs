@@ -282,7 +282,7 @@ mod tests {
 
     #[test]
     fn test_decoder_config_creation() {
-        let config = DecoderConfig::new(512, 8, 2048).unwrap();
+        let config = DecoderConfig::new(512, 8, 2048).expect("unwrap");
         assert_eq!(config.self_attention.d_model, 512);
         assert_eq!(config.cross_attention.d_model, 512);
         assert!(config.self_attention.causal);
@@ -292,7 +292,9 @@ mod tests {
 
     #[test]
     fn test_decoder_config_with_dropout() {
-        let config = DecoderConfig::new(512, 8, 2048).unwrap().with_dropout(0.1);
+        let config = DecoderConfig::new(512, 8, 2048)
+            .expect("unwrap")
+            .with_dropout(0.1);
         assert!((config.self_attention.dropout - 0.1).abs() < 1e-10);
         assert!((config.cross_attention.dropout - 0.1).abs() < 1e-10);
         assert!((config.feed_forward.dropout - 0.1).abs() < 1e-10);
@@ -301,28 +303,28 @@ mod tests {
     #[test]
     fn test_decoder_config_pre_norm() {
         let config = DecoderConfig::new(512, 8, 2048)
-            .unwrap()
+            .expect("unwrap")
             .with_pre_norm(false);
         assert!(!config.pre_norm);
     }
 
     #[test]
     fn test_decoder_creation() {
-        let config = DecoderConfig::new(512, 8, 2048).unwrap();
-        let decoder = Decoder::new(config).unwrap();
+        let config = DecoderConfig::new(512, 8, 2048).expect("unwrap");
+        let decoder = Decoder::new(config).expect("unwrap");
         assert_eq!(decoder.config.self_attention.d_model, 512);
     }
 
     #[test]
     fn test_decoder_graph_building_pre_norm() {
-        let config = DecoderConfig::new(512, 8, 2048).unwrap();
-        let decoder = Decoder::new(config).unwrap();
+        let config = DecoderConfig::new(512, 8, 2048).expect("unwrap");
+        let decoder = Decoder::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("decoder_input");
         graph.add_tensor("encoder_output");
 
-        let outputs = decoder.build_decoder_graph(&mut graph).unwrap();
+        let outputs = decoder.build_decoder_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
@@ -330,22 +332,22 @@ mod tests {
     #[test]
     fn test_decoder_graph_building_post_norm() {
         let config = DecoderConfig::new(512, 8, 2048)
-            .unwrap()
+            .expect("unwrap")
             .with_pre_norm(false);
-        let decoder = Decoder::new(config).unwrap();
+        let decoder = Decoder::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("decoder_input");
         graph.add_tensor("encoder_output");
 
-        let outputs = decoder.build_decoder_graph(&mut graph).unwrap();
+        let outputs = decoder.build_decoder_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
 
     #[test]
     fn test_decoder_config_validation() {
-        let config = DecoderConfig::new(512, 8, 2048).unwrap();
+        let config = DecoderConfig::new(512, 8, 2048).expect("unwrap");
         assert!(config.validate().is_ok());
 
         // Invalid head count
@@ -355,7 +357,7 @@ mod tests {
 
     #[test]
     fn test_decoder_requires_causal_masking() {
-        let config = DecoderConfig::new(512, 8, 2048).unwrap();
+        let config = DecoderConfig::new(512, 8, 2048).expect("unwrap");
         assert!(config.self_attention.causal);
         assert!(!config.cross_attention.causal);
     }

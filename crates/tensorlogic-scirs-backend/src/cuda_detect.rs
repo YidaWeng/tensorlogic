@@ -164,7 +164,7 @@ mod tests {
     #[test]
     fn test_parse_nvidia_smi_output_single_device() {
         let output = "0, NVIDIA GeForce RTX 3090, 24576, 8.6\n";
-        let devices = parse_nvidia_smi_output(output).unwrap();
+        let devices = parse_nvidia_smi_output(output).expect("unwrap");
 
         assert_eq!(devices.len(), 1);
         assert_eq!(devices[0].index, 0);
@@ -176,7 +176,7 @@ mod tests {
     #[test]
     fn test_parse_nvidia_smi_output_multiple_devices() {
         let output = "0, NVIDIA GeForce RTX 3090, 24576, 8.6\n1, NVIDIA A100, 40960, 8.0\n";
-        let devices = parse_nvidia_smi_output(output).unwrap();
+        let devices = parse_nvidia_smi_output(output).expect("unwrap");
 
         assert_eq!(devices.len(), 2);
         assert_eq!(devices[0].name, "NVIDIA GeForce RTX 3090");
@@ -187,7 +187,7 @@ mod tests {
     #[test]
     fn test_parse_nvidia_smi_output_no_compute_cap() {
         let output = "0, NVIDIA GeForce RTX 3090, 24576\n";
-        let devices = parse_nvidia_smi_output(output).unwrap();
+        let devices = parse_nvidia_smi_output(output).expect("unwrap");
 
         assert_eq!(devices.len(), 1);
         assert_eq!(devices[0].compute_capability, None);
@@ -196,7 +196,7 @@ mod tests {
     #[test]
     fn test_parse_nvidia_smi_output_empty() {
         let output = "";
-        let devices = parse_nvidia_smi_output(output).unwrap();
+        let devices = parse_nvidia_smi_output(output).expect("unwrap");
         assert_eq!(devices.len(), 0);
     }
 

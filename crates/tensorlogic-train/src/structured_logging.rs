@@ -412,6 +412,9 @@ mod tests {
         let builder = TracingLoggerBuilder::new().with_env_filter("tensorlogic=debug,scirs2=info");
 
         assert!(builder.env_filter.is_some());
-        assert_eq!(builder.env_filter.unwrap(), "tensorlogic=debug,scirs2=info");
+        assert_eq!(
+            builder.env_filter.expect("unwrap"),
+            "tensorlogic=debug,scirs2=info"
+        );
     }
 }

@@ -232,13 +232,10 @@ impl SymbolTable {
 
     fn collect_predicates_from_expr(&mut self, expr: &TLExpr) -> Result<()> {
         match expr {
-            TLExpr::Pred { name, args } => {
-                if !self.predicates.contains_key(name) {
-                    let arg_domains: Vec<String> =
-                        args.iter().map(|_| "Unknown".to_string()).collect();
-                    self.predicates
-                        .insert(name.clone(), PredicateInfo::new(name.clone(), arg_domains));
-                }
+            TLExpr::Pred { name, args } if !self.predicates.contains_key(name) => {
+                let arg_domains: Vec<String> = args.iter().map(|_| "Unknown".to_string()).collect();
+                self.predicates
+                    .insert(name.clone(), PredicateInfo::new(name.clone(), arg_domains));
             }
             TLExpr::And(l, r)
             | TLExpr::Or(l, r)

@@ -18,7 +18,7 @@
 //! let labels = Array1::from_vec(vec![1.0, 0.0, 1.0, 0.0, 1.0]);
 //!
 //! let miner = HardNegativeMiner::new(MiningStrategy::TopK(2), 0.0);
-//! let selected = miner.select_samples(&losses, &labels).unwrap();
+//! let selected = miner.select_samples(&losses, &labels).expect("unwrap");
 //! ```
 //!
 //! ## Importance Sampling
@@ -28,7 +28,7 @@
 //!
 //! let scores = Array1::from_vec(vec![0.1, 0.5, 0.9, 0.3]);
 //! let sampler = ImportanceSampler::new(2, 42);
-//! let selected = sampler.sample(&scores).unwrap();
+//! let selected = sampler.sample(&scores).expect("unwrap");
 //! ```
 
 use scirs2_core::ndarray::Array1;
@@ -141,7 +141,8 @@ impl HardNegativeMiner {
                 // Sort negatives by loss (descending)
                 let mut neg_with_loss: Vec<(usize, f64)> =
                     neg_indices.iter().map(|&idx| (idx, losses[idx])).collect();
-                neg_with_loss.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+                neg_with_loss
+                    .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
                 let k = num_samples.min(neg_with_loss.len());
                 Ok(neg_with_loss.iter().take(k).map(|(idx, _)| *idx).collect())
@@ -165,7 +166,8 @@ impl HardNegativeMiner {
                         (idx, weight)
                     })
                     .collect();
-                neg_with_weight.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+                neg_with_weight
+                    .sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
                 let k = num_samples.min(neg_with_weight.len());
                 Ok(neg_with_weight
@@ -314,7 +316,7 @@ impl FocalSampler {
 
         // Select top samples by weight
         let mut indexed_weights: Vec<(usize, f64)> = weights.into_iter().enumerate().collect();
-        indexed_weights.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        indexed_weights.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         let k = self.num_samples.min(indexed_weights.len());
         Ok(indexed_weights
@@ -464,7 +466,7 @@ impl CurriculumSampler {
                 .enumerate()
                 .map(|(idx, &score)| (idx, score))
                 .collect();
-            all_sorted.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap());
+            all_sorted.sort_by(|a, b| a.1.partial_cmp(&b.1).unwrap_or(std::cmp::Ordering::Equal));
 
             candidates = all_sorted
                 .iter()
@@ -516,7 +518,7 @@ impl OnlineHardExampleMiner {
 
         // Sort by loss
         let mut indexed_losses: Vec<(usize, f64)> = losses.iter().copied().enumerate().collect();
-        indexed_losses.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+        indexed_losses.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap_or(std::cmp::Ordering::Equal));
 
         let total_samples = losses.len();
         let num_hard = match &self.strategy {
@@ -621,7 +623,7 @@ mod tests {
         let labels = Array1::from_vec(vec![1.0, 0.0, 1.0, 0.0, 1.0, 0.0]);
 
         let miner = HardNegativeMiner::new(MiningStrategy::TopK(2), 0.0);
-        let selected = miner.select_samples(&losses, &labels).unwrap();
+        let selected = miner.select_samples(&losses, &labels).expect("unwrap");
 
         // Should include all positives (0, 2, 4) and top 2 negatives (1, 3)
         assert!(selected.contains(&0));
@@ -637,7 +639,7 @@ mod tests {
         let labels = Array1::from_vec(vec![1.0, 0.0, 1.0, 0.0, 0.0]);
 
         let miner = HardNegativeMiner::new(MiningStrategy::Threshold(0.5), 0.0);
-        let selected = miner.select_samples(&losses, &labels).unwrap();
+        let selected = miner.select_samples(&losses, &labels).expect("unwrap");
 
         // Should include all positives and negatives with loss > 0.5
         assert!(selected.contains(&0)); // Positive
@@ -652,7 +654,7 @@ mod tests {
         let scores = Array1::from_vec(vec![0.1, 0.5, 0.9, 0.3]);
         let sampler = ImportanceSampler::new(3, 42);
 
-        let selected = sampler.sample(&scores).unwrap();
+        let selected = sampler.sample(&scores).expect("unwrap");
         assert_eq!(selected.len(), 3);
 
         // Higher scored items should be more likely
@@ -665,7 +667,7 @@ mod tests {
         let scores = Array1::from_vec(vec![0.1, 0.5, 0.9, 0.3]);
         let sampler = ImportanceSampler::new(5, 42);
 
-        let selected = sampler.sample_without_replacement(&scores).unwrap();
+        let selected = sampler.sample_without_replacement(&scores).expect("unwrap");
 
         // Should have unique indices
         let mut sorted = selected.clone();
@@ -680,7 +682,9 @@ mod tests {
         let labels = Array1::from_vec(vec![1.0, 0.0, 1.0, 1.0, 0.0]);
 
         let sampler = FocalSampler::new(2.0, 3);
-        let selected = sampler.select_samples(&predictions, &labels).unwrap();
+        let selected = sampler
+            .select_samples(&predictions, &labels)
+            .expect("unwrap");
 
         assert_eq!(selected.len(), 3);
         // Should select hard examples (where prediction is far from label)
@@ -692,7 +696,7 @@ mod tests {
         let labels = Array1::from_vec(vec![0.0, 0.0, 0.0, 1.0, 1.0, 2.0]);
         let sampler = ClassBalancedSampler::new(2, 42);
 
-        let selected = sampler.sample(&labels).unwrap();
+        let selected = sampler.sample(&labels).expect("unwrap");
 
         // Should sample up to 2 from each class
         // Class 0: 2, Class 1: 2, Class 2: 1 (only 1 available) = 5 total
@@ -710,7 +714,7 @@ mod tests {
         let labels = Array1::from_vec(vec![0.0, 0.0, 0.0, 1.0, 1.0, 2.0]);
         let sampler = ClassBalancedSampler::new(2, 42);
 
-        let weights = sampler.compute_class_weights(&labels).unwrap();
+        let weights = sampler.compute_class_weights(&labels).expect("unwrap");
 
         // Class 0: 3 samples, weight = 6/(3*3) = 0.667
         // Class 1: 2 samples, weight = 6/(3*2) = 1.0
@@ -727,17 +731,17 @@ mod tests {
 
         // At 0% progress, should only select easiest samples
         sampler.update_progress(0.0);
-        let selected = sampler.select_samples().unwrap();
+        let selected = sampler.select_samples().expect("unwrap");
         assert!(!selected.is_empty());
 
         // At 50% progress, should include medium difficulty
         sampler.update_progress(0.5);
-        let selected = sampler.select_samples().unwrap();
+        let selected = sampler.select_samples().expect("unwrap");
         assert!(selected.len() >= 3);
 
         // At 100% progress, should include all samples
         sampler.update_progress(1.0);
-        let selected = sampler.select_samples().unwrap();
+        let selected = sampler.select_samples().expect("unwrap");
         assert_eq!(selected.len(), 3);
     }
 
@@ -746,7 +750,7 @@ mod tests {
         let losses = Array1::from_vec(vec![0.1, 0.9, 0.3, 0.8, 0.2]);
         let miner = OnlineHardExampleMiner::new(MiningStrategy::TopK(2), 0.2);
 
-        let selected = miner.mine_batch(&losses).unwrap();
+        let selected = miner.mine_batch(&losses).expect("unwrap");
 
         // Should keep top 2 hard (1, 3) and some easy
         assert!(selected.len() >= 2);
@@ -759,7 +763,7 @@ mod tests {
         let losses = Array1::from_vec(vec![0.1, 0.5, 0.9]);
         let reweighter = BatchReweighter::new(ReweightingStrategy::Uniform);
 
-        let weights = reweighter.compute_weights(&losses).unwrap();
+        let weights = reweighter.compute_weights(&losses).expect("unwrap");
 
         assert_eq!(weights.len(), 3);
         assert!((weights[0] - 1.0).abs() < 1e-10);
@@ -772,7 +776,7 @@ mod tests {
         let losses = Array1::from_vec(vec![0.1, 0.5, 0.9]);
         let reweighter = BatchReweighter::new(ReweightingStrategy::InverseLoss { epsilon: 0.01 });
 
-        let weights = reweighter.compute_weights(&losses).unwrap();
+        let weights = reweighter.compute_weights(&losses).expect("unwrap");
 
         // Lower loss should have higher weight (inverse)
         assert!(weights[0] > weights[1]);
@@ -788,7 +792,7 @@ mod tests {
         let losses = Array1::from_vec(vec![0.1, 0.5, 0.9]);
         let reweighter = BatchReweighter::new(ReweightingStrategy::Focal { gamma: 2.0 });
 
-        let weights = reweighter.compute_weights(&losses).unwrap();
+        let weights = reweighter.compute_weights(&losses).expect("unwrap");
 
         // Higher loss should have higher weight (focal emphasizes hard)
         assert!(weights[2] > weights[1]);
@@ -806,7 +810,7 @@ mod tests {
 
         // 3 positives, ratio 1.0 means 3 negatives
         let miner = HardNegativeMiner::new(MiningStrategy::TopK(10), 1.0);
-        let selected = miner.select_samples(&losses, &labels).unwrap();
+        let selected = miner.select_samples(&losses, &labels).expect("unwrap");
 
         let num_pos = selected.iter().filter(|&&idx| labels[idx] > 0.5).count();
         let num_neg = selected.iter().filter(|&&idx| labels[idx] < 0.5).count();

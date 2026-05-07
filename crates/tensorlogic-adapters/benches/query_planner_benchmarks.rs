@@ -17,7 +17,7 @@ fn create_diverse_schema(size: usize) -> SymbolTable {
     for i in 0..10 {
         table
             .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-            .unwrap();
+            .expect("failed to add domain");
     }
 
     // Add predicates with varying arities and signatures
@@ -29,7 +29,7 @@ fn create_diverse_schema(size: usize) -> SymbolTable {
         }
 
         let pred = PredicateInfo::new(format!("pred_{}", i), domains);
-        table.add_predicate(pred).unwrap();
+        table.add_predicate(pred).expect("failed to add predicate");
     }
 
     table
@@ -49,7 +49,7 @@ fn query_types_comparison(c: &mut Criterion) {
             let query = PredicateQuery::by_name("pred_0");
 
             b.iter(|| {
-                let results = planner.execute(&query).unwrap();
+                let results = planner.execute(&query).expect("query execution failed");
                 black_box(results);
             });
         });
@@ -60,7 +60,7 @@ fn query_types_comparison(c: &mut Criterion) {
             let query = PredicateQuery::by_arity(2);
 
             b.iter(|| {
-                let results = planner.execute(&query).unwrap();
+                let results = planner.execute(&query).expect("query execution failed");
                 black_box(results);
             });
         });
@@ -72,7 +72,7 @@ fn query_types_comparison(c: &mut Criterion) {
                 PredicateQuery::by_signature(vec!["Domain0".to_string(), "Domain1".to_string()]);
 
             b.iter(|| {
-                let results = planner.execute(&query).unwrap();
+                let results = planner.execute(&query).expect("query execution failed");
                 black_box(results);
             });
         });
@@ -83,7 +83,7 @@ fn query_types_comparison(c: &mut Criterion) {
             let query = PredicateQuery::by_domain("Domain0");
 
             b.iter(|| {
-                let results = planner.execute(&query).unwrap();
+                let results = planner.execute(&query).expect("query execution failed");
                 black_box(results);
             });
         });
@@ -97,7 +97,7 @@ fn query_types_comparison(c: &mut Criterion) {
             let query = PredicateQuery::by_pattern(pattern);
 
             b.iter(|| {
-                let results = planner.execute(&query).unwrap();
+                let results = planner.execute(&query).expect("query execution failed");
                 black_box(results);
             });
         });
@@ -122,7 +122,7 @@ fn complex_queries(c: &mut Criterion) {
             ]);
 
             b.iter(|| {
-                let results = planner.execute(&query).unwrap();
+                let results = planner.execute(&query).expect("and query execution failed");
                 black_box(results);
             });
         });
@@ -136,7 +136,7 @@ fn complex_queries(c: &mut Criterion) {
             ]);
 
             b.iter(|| {
-                let results = planner.execute(&query).unwrap();
+                let results = planner.execute(&query).expect("or query execution failed");
                 black_box(results);
             });
         });
@@ -153,7 +153,9 @@ fn complex_queries(c: &mut Criterion) {
             ]);
 
             b.iter(|| {
-                let results = planner.execute(&query).unwrap();
+                let results = planner
+                    .execute(&query)
+                    .expect("nested query execution failed");
                 black_box(results);
             });
         });
@@ -174,7 +176,9 @@ fn plan_caching(c: &mut Criterion) {
             b.iter(|| {
                 let mut planner = QueryPlanner::new(tbl);
                 let query = PredicateQuery::by_arity(2);
-                let results = planner.execute(&query).unwrap();
+                let results = planner
+                    .execute(&query)
+                    .expect("cold cache query execution failed");
                 black_box(results);
             });
         });
@@ -185,10 +189,14 @@ fn plan_caching(c: &mut Criterion) {
             let query = PredicateQuery::by_arity(2);
 
             // Pre-warm cache
-            planner.execute(&query).unwrap();
+            planner
+                .execute(&query)
+                .expect("cache warm-up query execution failed");
 
             b.iter(|| {
-                let results = planner.execute(&query).unwrap();
+                let results = planner
+                    .execute(&query)
+                    .expect("warm cache query execution failed");
                 black_box(results);
             });
         });
@@ -205,12 +213,14 @@ fn plan_caching(c: &mut Criterion) {
 
             // Pre-warm cache
             for q in &queries {
-                planner.execute(q).unwrap();
+                planner
+                    .execute(q)
+                    .expect("cache warm-up multi-query execution failed");
             }
 
             b.iter(|| {
                 for q in &queries {
-                    let results = planner.execute(q).unwrap();
+                    let results = planner.execute(q).expect("multi-query execution failed");
                     black_box(results);
                 }
             });
@@ -238,7 +248,9 @@ fn pattern_matching(c: &mut Criterion) {
                 let query = PredicateQuery::by_pattern(pattern);
 
                 b.iter(|| {
-                    let results = planner.execute(&query).unwrap();
+                    let results = planner
+                        .execute(&query)
+                        .expect("simple wildcard query execution failed");
                     black_box(results);
                 });
             },
@@ -257,7 +269,9 @@ fn pattern_matching(c: &mut Criterion) {
                 let query = PredicateQuery::by_pattern(pattern);
 
                 b.iter(|| {
-                    let results = planner.execute(&query).unwrap();
+                    let results = planner
+                        .execute(&query)
+                        .expect("complex pattern query execution failed");
                     black_box(results);
                 });
             },
@@ -283,7 +297,7 @@ fn planning_overhead(c: &mut Criterion) {
 
                 b.iter(|| {
                     planner.clear_cache();
-                    let plan = planner.plan(&query).unwrap();
+                    let plan = planner.plan(&query).expect("plan generation failed");
                     black_box(plan);
                 });
             },
@@ -321,7 +335,9 @@ fn statistics_tracking(c: &mut Criterion) {
             let query = PredicateQuery::by_arity(2);
 
             b.iter(|| {
-                let results = planner.execute(&query).unwrap();
+                let results = planner
+                    .execute(&query)
+                    .expect("statistics tracking query execution failed");
                 let _stats = planner.statistics();
                 black_box(results);
             });

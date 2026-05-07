@@ -313,7 +313,7 @@ mod tests {
         gradients.insert("w".to_string(), array![[0.1, 0.2], [0.3, 0.4]]);
 
         // First step
-        optimizer.step(&mut parameters, &gradients).unwrap();
+        optimizer.step(&mut parameters, &gradients).expect("unwrap");
 
         // Parameters should have changed
         assert_ne!(parameters["w"][[0, 0]], 1.0);
@@ -342,7 +342,7 @@ mod tests {
 
         let initial_param = parameters["w"].clone();
 
-        optimizer.step(&mut parameters, &gradients).unwrap();
+        optimizer.step(&mut parameters, &gradients).expect("unwrap");
 
         // With projection-based weight decay, parameters should change differently
         // than standard Adam
@@ -366,7 +366,7 @@ mod tests {
 
         // Take a few steps
         for _ in 0..5 {
-            optimizer.step(&mut parameters, &gradients).unwrap();
+            optimizer.step(&mut parameters, &gradients).expect("unwrap");
         }
 
         // Save state
@@ -382,7 +382,9 @@ mod tests {
         });
 
         // Initialize with dummy step to create state
-        new_optimizer.step(&mut parameters, &gradients).unwrap();
+        new_optimizer
+            .step(&mut parameters, &gradients)
+            .expect("unwrap");
 
         // Load state
         new_optimizer.load_state_dict(state);
@@ -408,7 +410,7 @@ mod tests {
             let mut gradients = HashMap::new();
             gradients.insert("w".to_string(), grad);
 
-            optimizer.step(&mut parameters, &gradients).unwrap();
+            optimizer.step(&mut parameters, &gradients).expect("unwrap");
         }
 
         // Should converge toward zero
@@ -457,8 +459,8 @@ mod tests {
         let mut gradients = HashMap::new();
         gradients.insert("w".to_string(), array![[0.1, 0.2]]);
 
-        opt_nesterov.step(&mut params1, &gradients).unwrap();
-        opt_standard.step(&mut params2, &gradients).unwrap();
+        opt_nesterov.step(&mut params1, &gradients).expect("unwrap");
+        opt_standard.step(&mut params2, &gradients).expect("unwrap");
 
         // With Nesterov should produce different results
         // (though they may be close for a single step)

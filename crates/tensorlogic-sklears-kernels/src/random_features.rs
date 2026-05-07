@@ -31,10 +31,10 @@
 //!
 //! // Create RFF for RBF kernel with gamma=0.5
 //! let config = RffConfig::new(KernelType::Rbf { gamma: 0.5 }, 100);
-//! let rff = RandomFourierFeatures::new(3, config).unwrap(); // 3D input
+//! let rff = RandomFourierFeatures::new(3, config).expect("unwrap"); // 3D input
 //!
 //! let x = vec![1.0, 2.0, 3.0];
-//! let features = rff.transform(&x).unwrap();
+//! let features = rff.transform(&x).expect("unwrap");
 //! // features is a 200-dimensional vector (100 cos + 100 sin components)
 //! ```
 
@@ -136,7 +136,7 @@ impl RandomFourierFeatures {
     /// };
     ///
     /// let config = RffConfig::new(KernelType::Rbf { gamma: 1.0 }, 50);
-    /// let rff = RandomFourierFeatures::new(10, config).unwrap();
+    /// let rff = RandomFourierFeatures::new(10, config).expect("unwrap");
     /// ```
     pub fn new(input_dim: usize, config: RffConfig) -> Result<Self> {
         if input_dim == 0 {
@@ -608,7 +608,7 @@ mod tests {
     #[test]
     fn test_rff_creation() {
         let config = RffConfig::new(KernelType::Rbf { gamma: 1.0 }, 50).with_seed(42);
-        let rff = RandomFourierFeatures::new(3, config).unwrap();
+        let rff = RandomFourierFeatures::new(3, config).expect("unwrap");
 
         assert_eq!(rff.input_dim(), 3);
         assert_eq!(rff.output_dim(), 100); // 2 * 50
@@ -627,10 +627,10 @@ mod tests {
     #[test]
     fn test_rff_transform() {
         let config = RffConfig::new(KernelType::Rbf { gamma: 1.0 }, 50).with_seed(42);
-        let rff = RandomFourierFeatures::new(3, config).unwrap();
+        let rff = RandomFourierFeatures::new(3, config).expect("unwrap");
 
         let x = vec![1.0, 2.0, 3.0];
-        let features = rff.transform(&x).unwrap();
+        let features = rff.transform(&x).expect("unwrap");
 
         assert_eq!(features.len(), 100);
         // Features should be bounded (cos and sin scaled by sqrt(1/n))
@@ -642,7 +642,7 @@ mod tests {
     #[test]
     fn test_rff_transform_dimension_mismatch() {
         let config = RffConfig::new(KernelType::Rbf { gamma: 1.0 }, 50).with_seed(42);
-        let rff = RandomFourierFeatures::new(3, config).unwrap();
+        let rff = RandomFourierFeatures::new(3, config).expect("unwrap");
 
         let x = vec![1.0, 2.0]; // Wrong dimension
         assert!(rff.transform(&x).is_err());
@@ -651,10 +651,10 @@ mod tests {
     #[test]
     fn test_rff_batch_transform() {
         let config = RffConfig::new(KernelType::Rbf { gamma: 1.0 }, 50).with_seed(42);
-        let rff = RandomFourierFeatures::new(2, config).unwrap();
+        let rff = RandomFourierFeatures::new(2, config).expect("unwrap");
 
         let data = vec![vec![1.0, 2.0], vec![3.0, 4.0], vec![5.0, 6.0]];
-        let features = rff.transform_batch(&data).unwrap();
+        let features = rff.transform_batch(&data).expect("unwrap");
 
         assert_eq!(features.len(), 3);
         assert_eq!(features[0].len(), 100);
@@ -663,18 +663,18 @@ mod tests {
     #[test]
     fn test_rff_kernel_approximation() {
         let config = RffConfig::new(KernelType::Rbf { gamma: 1.0 }, 500).with_seed(42);
-        let rff = RandomFourierFeatures::new(2, config).unwrap();
+        let rff = RandomFourierFeatures::new(2, config).expect("unwrap");
 
         let x = vec![0.0, 0.0];
         let y = vec![0.0, 0.0];
 
         // Same point should have kernel ≈ 1
-        let approx = rff.approximate_kernel(&x, &y).unwrap();
+        let approx = rff.approximate_kernel(&x, &y).expect("unwrap");
         assert!((approx - 1.0).abs() < 0.1); // Allow some approximation error
 
         // Different points
         let y2 = vec![1.0, 1.0];
-        let approx2 = rff.approximate_kernel(&x, &y2).unwrap();
+        let approx2 = rff.approximate_kernel(&x, &y2).expect("unwrap");
         // True RBF: exp(-1.0 * 2) = exp(-2) ≈ 0.135
         assert!(approx2 > 0.0 && approx2 < 1.0);
     }
@@ -682,11 +682,11 @@ mod tests {
     #[test]
     fn test_rff_matrix_approximation() {
         let config = RffConfig::new(KernelType::Rbf { gamma: 0.5 }, 200).with_seed(42);
-        let rff = RandomFourierFeatures::new(2, config).unwrap();
+        let rff = RandomFourierFeatures::new(2, config).expect("unwrap");
 
         let data = vec![vec![0.0, 0.0], vec![1.0, 0.0], vec![0.0, 1.0]];
 
-        let matrix = rff.approximate_kernel_matrix(&data).unwrap();
+        let matrix = rff.approximate_kernel_matrix(&data).expect("unwrap");
 
         assert_eq!(matrix.len(), 3);
         assert_eq!(matrix[0].len(), 3);
@@ -709,12 +709,12 @@ mod tests {
         let config1 = RffConfig::new(KernelType::Rbf { gamma: 1.0 }, 50).with_seed(123);
         let config2 = RffConfig::new(KernelType::Rbf { gamma: 1.0 }, 50).with_seed(123);
 
-        let rff1 = RandomFourierFeatures::new(3, config1).unwrap();
-        let rff2 = RandomFourierFeatures::new(3, config2).unwrap();
+        let rff1 = RandomFourierFeatures::new(3, config1).expect("unwrap");
+        let rff2 = RandomFourierFeatures::new(3, config2).expect("unwrap");
 
         let x = vec![1.0, 2.0, 3.0];
-        let f1 = rff1.transform(&x).unwrap();
-        let f2 = rff2.transform(&x).unwrap();
+        let f1 = rff1.transform(&x).expect("unwrap");
+        let f2 = rff2.transform(&x).expect("unwrap");
 
         for (a, b) in f1.iter().zip(f2.iter()) {
             assert!((a - b).abs() < 1e-10);
@@ -724,20 +724,20 @@ mod tests {
     #[test]
     fn test_rff_laplacian() {
         let config = RffConfig::new(KernelType::Laplacian { gamma: 1.0 }, 100).with_seed(42);
-        let rff = RandomFourierFeatures::new(2, config).unwrap();
+        let rff = RandomFourierFeatures::new(2, config).expect("unwrap");
 
         let x = vec![0.0, 0.0];
-        let approx = rff.approximate_kernel(&x, &x).unwrap();
+        let approx = rff.approximate_kernel(&x, &x).expect("unwrap");
         assert!((approx - 1.0).abs() < 0.2);
     }
 
     #[test]
     fn test_rff_matern() {
         let config = RffConfig::new(KernelType::Matern15 { length_scale: 1.0 }, 100).with_seed(42);
-        let rff = RandomFourierFeatures::new(2, config).unwrap();
+        let rff = RandomFourierFeatures::new(2, config).expect("unwrap");
 
         let x = vec![0.0, 0.0];
-        let approx = rff.approximate_kernel(&x, &x).unwrap();
+        let approx = rff.approximate_kernel(&x, &x).expect("unwrap");
         assert!((approx - 1.0).abs() < 0.2);
     }
 
@@ -745,22 +745,24 @@ mod tests {
     fn test_nystroem_features() {
         let landmarks = vec![vec![0.0, 0.0], vec![1.0, 0.0], vec![0.0, 1.0]];
 
-        let nystroem = NystroemFeatures::new(landmarks, KernelType::Rbf { gamma: 1.0 }).unwrap();
+        let nystroem =
+            NystroemFeatures::new(landmarks, KernelType::Rbf { gamma: 1.0 }).expect("unwrap");
 
         assert_eq!(nystroem.n_landmarks(), 3);
 
         let x = vec![0.5, 0.5];
-        let features = nystroem.transform(&x).unwrap();
+        let features = nystroem.transform(&x).expect("unwrap");
         assert_eq!(features.len(), 3);
     }
 
     #[test]
     fn test_nystroem_batch() {
         let landmarks = vec![vec![0.0, 0.0], vec![1.0, 1.0]];
-        let nystroem = NystroemFeatures::new(landmarks, KernelType::Rbf { gamma: 0.5 }).unwrap();
+        let nystroem =
+            NystroemFeatures::new(landmarks, KernelType::Rbf { gamma: 0.5 }).expect("unwrap");
 
         let data = vec![vec![0.0, 0.0], vec![0.5, 0.5], vec![1.0, 1.0]];
-        let features = nystroem.transform_batch(&data).unwrap();
+        let features = nystroem.transform_batch(&data).expect("unwrap");
 
         assert_eq!(features.len(), 3);
         assert_eq!(features[0].len(), 2);
@@ -769,10 +771,10 @@ mod tests {
     #[test]
     fn test_orthogonal_rff() {
         let config = RffConfig::new(KernelType::Rbf { gamma: 1.0 }, 50).with_seed(42);
-        let orf = OrthogonalRandomFeatures::new(3, config).unwrap();
+        let orf = OrthogonalRandomFeatures::new(3, config).expect("unwrap");
 
         let x = vec![1.0, 2.0, 3.0];
-        let features = orf.transform(&x).unwrap();
+        let features = orf.transform(&x).expect("unwrap");
 
         assert_eq!(features.len(), 100);
     }

@@ -717,8 +717,8 @@ mod tests {
         ctx.annotate("foo", EffectSet::singleton(Effect::IO));
         ctx.annotate("bar", EffectSet::pure());
 
-        assert!(ctx.get_effects("foo").unwrap().has(Effect::IO));
-        assert!(ctx.get_effects("bar").unwrap().is_pure());
+        assert!(ctx.get_effects("foo").expect("unwrap").has(Effect::IO));
+        assert!(ctx.get_effects("bar").expect("unwrap").is_pure());
     }
 
     #[test]
@@ -738,9 +738,9 @@ mod tests {
     fn test_effect_registry_builtins() {
         let registry = EffectRegistry::with_builtins();
 
-        assert!(registry.is_pure("sin").unwrap());
-        assert!(!registry.is_pure("print").unwrap());
-        assert!(!registry.is_pure("random").unwrap());
+        assert!(registry.is_pure("sin").expect("unwrap"));
+        assert!(!registry.is_pure("print").expect("unwrap"));
+        assert!(!registry.is_pure("random").expect("unwrap"));
     }
 
     #[test]

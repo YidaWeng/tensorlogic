@@ -229,9 +229,9 @@ mod tests {
         callbacks.add(Box::new(EpochCallback::new(false)));
 
         let state = create_test_state();
-        callbacks.on_train_begin(&state).unwrap();
-        callbacks.on_epoch_begin(0, &state).unwrap();
-        callbacks.on_epoch_end(0, &state).unwrap();
-        callbacks.on_train_end(&state).unwrap();
+        callbacks.on_train_begin(&state).expect("unwrap");
+        callbacks.on_epoch_begin(0, &state).expect("unwrap");
+        callbacks.on_epoch_end(0, &state).expect("unwrap");
+        callbacks.on_train_end(&state).expect("unwrap");
     }
 }

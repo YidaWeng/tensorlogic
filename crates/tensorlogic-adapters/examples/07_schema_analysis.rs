@@ -31,13 +31,13 @@ fn analyze_good_schema() {
     // Well-balanced domains
     table
         .add_domain(DomainInfo::new("Person", 100).with_description("Human entities"))
-        .unwrap();
+        .expect("failed to add Person domain");
     table
         .add_domain(DomainInfo::new("Location", 50).with_description("Physical places"))
-        .unwrap();
+        .expect("failed to add Location domain");
     table
         .add_domain(DomainInfo::new("Event", 200).with_description("Temporal events"))
-        .unwrap();
+        .expect("failed to add Event domain");
 
     // Appropriate predicates
     table
@@ -45,21 +45,21 @@ fn analyze_good_schema() {
             "attends",
             vec!["Person".to_string(), "Event".to_string()],
         ))
-        .unwrap();
+        .expect("failed to add attends predicate");
 
     table
         .add_predicate(PredicateInfo::new(
             "held_at",
             vec!["Event".to_string(), "Location".to_string()],
         ))
-        .unwrap();
+        .expect("failed to add held_at predicate");
 
     table
         .add_predicate(PredicateInfo::new(
             "knows",
             vec!["Person".to_string(), "Person".to_string()],
         ))
-        .unwrap();
+        .expect("failed to add knows predicate");
 
     // Compute statistics
     let stats = SchemaStatistics::compute(&table);
@@ -110,22 +110,30 @@ fn analyze_problematic_schema() {
     let mut table = SymbolTable::new();
 
     // Issue 1: Zero cardinality domain
-    table.add_domain(DomainInfo::new("EmptyDomain", 0)).unwrap();
+    table
+        .add_domain(DomainInfo::new("EmptyDomain", 0))
+        .expect("failed to add EmptyDomain domain");
 
     // Issue 2: Very high cardinality
     table
         .add_domain(DomainInfo::new("HugeDomain", 1_000_000))
-        .unwrap();
+        .expect("failed to add HugeDomain domain");
 
     // Issue 3: Unused domain
     table
         .add_domain(DomainInfo::new("UnusedDomain", 50))
-        .unwrap();
+        .expect("failed to add UnusedDomain domain");
 
     // Issue 4: High arity predicate
-    table.add_domain(DomainInfo::new("A", 10)).unwrap();
-    table.add_domain(DomainInfo::new("B", 10)).unwrap();
-    table.add_domain(DomainInfo::new("C", 10)).unwrap();
+    table
+        .add_domain(DomainInfo::new("A", 10))
+        .expect("failed to add A domain");
+    table
+        .add_domain(DomainInfo::new("B", 10))
+        .expect("failed to add B domain");
+    table
+        .add_domain(DomainInfo::new("C", 10))
+        .expect("failed to add C domain");
 
     table
         .add_predicate(PredicateInfo::new(
@@ -139,7 +147,7 @@ fn analyze_problematic_schema() {
                 "C".to_string(),
             ],
         ))
-        .unwrap();
+        .expect("failed to add complex_relation predicate");
 
     // Normal predicate
     table
@@ -147,7 +155,7 @@ fn analyze_problematic_schema() {
             "normal",
             vec!["A".to_string(), "B".to_string()],
         ))
-        .unwrap();
+        .expect("failed to add normal predicate");
 
     // Compute statistics
     let stats = SchemaStatistics::compute(&table);
@@ -188,23 +196,29 @@ fn analyze_problematic_schema() {
 fn compare_schemas() {
     // Create two schemas with different characteristics
     let mut schema1 = SymbolTable::new();
-    schema1.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    schema1.add_domain(DomainInfo::new("Location", 50)).unwrap();
+    schema1
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("failed to add Person domain");
+    schema1
+        .add_domain(DomainInfo::new("Location", 50))
+        .expect("failed to add Location domain");
     schema1
         .add_predicate(PredicateInfo::new(
             "at",
             vec!["Person".to_string(), "Location".to_string()],
         ))
-        .unwrap();
+        .expect("failed to add at predicate");
 
     let mut schema2 = SymbolTable::new();
-    schema2.add_domain(DomainInfo::new("Entity", 500)).unwrap();
+    schema2
+        .add_domain(DomainInfo::new("Entity", 500))
+        .expect("failed to add Entity domain");
     schema2
         .add_domain(DomainInfo::new("Relation", 1000))
-        .unwrap();
+        .expect("failed to add Relation domain");
     schema2
         .add_domain(DomainInfo::new("Attribute", 100))
-        .unwrap();
+        .expect("failed to add Attribute domain");
     schema2
         .add_predicate(PredicateInfo::new(
             "has_relation",
@@ -214,13 +228,13 @@ fn compare_schemas() {
                 "Entity".to_string(),
             ],
         ))
-        .unwrap();
+        .expect("failed to add has_relation predicate");
     schema2
         .add_predicate(PredicateInfo::new(
             "has_attribute",
             vec!["Entity".to_string(), "Attribute".to_string()],
         ))
-        .unwrap();
+        .expect("failed to add has_attribute predicate");
 
     let stats1 = SchemaStatistics::compute(&schema1);
     let stats2 = SchemaStatistics::compute(&schema2);

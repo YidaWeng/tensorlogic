@@ -267,6 +267,15 @@ impl TLExpr {
             TLExpr::Explain { formula } => {
                 formula.collect_and_validate_domains(registry, var_domains)?;
             }
+            TLExpr::SymbolLiteral(_) => {
+                // No domain validation needed for symbol literals
+            }
+            TLExpr::Match { scrutinee, arms } => {
+                scrutinee.collect_and_validate_domains(registry, var_domains)?;
+                for (_, body) in arms {
+                    body.collect_and_validate_domains(registry, var_domains)?;
+                }
+            }
             TLExpr::Pred { .. } | TLExpr::Constant(_) => {
                 // No domain validation needed for predicates and constants
             }
@@ -440,6 +449,13 @@ impl TLExpr {
             TLExpr::Abducible { .. } => {}
             TLExpr::Explain { formula } => {
                 formula.collect_domains(domains);
+            }
+            TLExpr::SymbolLiteral(_) => {}
+            TLExpr::Match { scrutinee, arms } => {
+                scrutinee.collect_domains(domains);
+                for (_, body) in arms {
+                    body.collect_domains(domains);
+                }
             }
             TLExpr::Pred { .. } | TLExpr::Constant(_) => {}
         }

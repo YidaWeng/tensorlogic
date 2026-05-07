@@ -7,6 +7,7 @@
 //! - Custom fusion strategies
 //! - Automatic graph simplification
 
+use std::cmp::Reverse;
 use std::collections::{HashMap, HashSet};
 
 use super::{EinsumGraph, EinsumNode, OpType};
@@ -159,7 +160,7 @@ impl PatternMatcher {
     pub fn add_rule(&mut self, rule: GraphRewriteRule) {
         self.rules.push(rule);
         // Sort by priority (descending)
-        self.rules.sort_by(|a, b| b.priority.cmp(&a.priority));
+        self.rules.sort_by_key(|r| Reverse(r.priority));
     }
 
     /// Find all matches for a pattern in the graph

@@ -124,7 +124,9 @@ impl<M: Model> Ensemble for VotingEnsemble<M> {
                         let class_idx = row
                             .iter()
                             .enumerate()
-                            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                            .max_by(|(_, a), (_, b)| {
+                                a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal)
+                            })
                             .map(|(idx, _)| idx)
                             .unwrap_or(0);
 
@@ -137,7 +139,7 @@ impl<M: Model> Ensemble for VotingEnsemble<M> {
                     let winning_class = votes
                         .iter()
                         .position(|&v| (v - max_votes).abs() < 1e-10)
-                        .unwrap();
+                        .unwrap_or(0);
 
                     ensemble_pred[[i, winning_class]] = 1.0;
                 }
@@ -477,7 +479,7 @@ impl ModelSoup {
     /// let mut weights2 = HashMap::new();
     /// weights2.insert("w".to_string(), array![[3.0, 4.0]]);
     ///
-    /// let soup = ModelSoup::uniform_soup(vec![weights1, weights2]).unwrap();
+    /// let soup = ModelSoup::uniform_soup(vec![weights1, weights2]).expect("unwrap");
     /// // Averaged weights: [[2.0, 3.0]]
     /// ```
     pub fn uniform_soup(model_weights: Vec<HashMap<String, Array2<f64>>>) -> TrainResult<Self> {
@@ -557,9 +559,9 @@ impl ModelSoup {
         let best_idx = val_accuracies
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(idx, _)| idx)
-            .unwrap();
+            .unwrap_or(0);
 
         let mut soup_indices = vec![best_idx];
         let mut best_accuracy = val_accuracies[best_idx];
@@ -720,13 +722,13 @@ mod tests {
         let model1 = create_test_model();
         let model2 = create_test_model();
 
-        let ensemble = VotingEnsemble::new(vec![model1, model2], VotingMode::Hard).unwrap();
+        let ensemble = VotingEnsemble::new(vec![model1, model2], VotingMode::Hard).expect("unwrap");
 
         assert_eq!(ensemble.num_models(), 2);
         assert_eq!(ensemble.mode(), VotingMode::Hard);
 
         let input = array![[1.0, 0.0], [0.0, 1.0]];
-        let pred = ensemble.predict(&input).unwrap();
+        let pred = ensemble.predict(&input).expect("unwrap");
 
         assert_eq!(pred.shape(), &[2, 2]);
     }
@@ -736,10 +738,10 @@ mod tests {
         let model1 = create_test_model();
         let model2 = create_test_model();
 
-        let ensemble = VotingEnsemble::new(vec![model1, model2], VotingMode::Soft).unwrap();
+        let ensemble = VotingEnsemble::new(vec![model1, model2], VotingMode::Soft).expect("unwrap");
 
         let input = array![[1.0, 0.0]];
-        let pred = ensemble.predict(&input).unwrap();
+        let pred = ensemble.predict(&input).expect("unwrap");
 
         assert_eq!(pred.shape(), &[1, 2]);
     }
@@ -750,12 +752,12 @@ mod tests {
         let model2 = create_test_model();
 
         let ensemble = VotingEnsemble::new(vec![model1, model2], VotingMode::Soft)
-            .unwrap()
+            .expect("unwrap")
             .with_weights(vec![0.7, 0.3])
-            .unwrap();
+            .expect("unwrap");
 
         let input = array![[1.0, 0.0]];
-        let pred = ensemble.predict(&input).unwrap();
+        let pred = ensemble.predict(&input).expect("unwrap");
 
         assert_eq!(pred.shape(), &[1, 2]);
     }
@@ -765,7 +767,7 @@ mod tests {
         let model1 = create_test_model();
         let model2 = create_test_model();
 
-        let ensemble = VotingEnsemble::new(vec![model1, model2], VotingMode::Soft).unwrap();
+        let ensemble = VotingEnsemble::new(vec![model1, model2], VotingMode::Soft).expect("unwrap");
 
         // Wrong number of weights
         let result = ensemble.with_weights(vec![0.5]);
@@ -774,7 +776,8 @@ mod tests {
         // Weights don't sum to 1.0
         let model3 = create_test_model();
         let model4 = create_test_model();
-        let ensemble2 = VotingEnsemble::new(vec![model3, model4], VotingMode::Soft).unwrap();
+        let ensemble2 =
+            VotingEnsemble::new(vec![model3, model4], VotingMode::Soft).expect("unwrap");
         let result = ensemble2.with_weights(vec![0.5, 0.6]);
         assert!(result.is_err());
     }
@@ -784,12 +787,12 @@ mod tests {
         let model1 = create_test_model();
         let model2 = create_test_model();
 
-        let ensemble = AveragingEnsemble::new(vec![model1, model2]).unwrap();
+        let ensemble = AveragingEnsemble::new(vec![model1, model2]).expect("unwrap");
 
         assert_eq!(ensemble.num_models(), 2);
 
         let input = array![[1.0, 0.0], [0.0, 1.0]];
-        let pred = ensemble.predict(&input).unwrap();
+        let pred = ensemble.predict(&input).expect("unwrap");
 
         assert_eq!(pred.shape(), &[2, 2]);
     }
@@ -800,12 +803,12 @@ mod tests {
         let model2 = create_test_model();
 
         let ensemble = AveragingEnsemble::new(vec![model1, model2])
-            .unwrap()
+            .expect("unwrap")
             .with_weights(vec![2.0, 1.0])
-            .unwrap();
+            .expect("unwrap");
 
         let input = array![[1.0, 0.0]];
-        let pred = ensemble.predict(&input).unwrap();
+        let pred = ensemble.predict(&input).expect("unwrap");
 
         assert_eq!(pred.shape(), &[1, 2]);
     }
@@ -816,12 +819,12 @@ mod tests {
         let base2 = create_test_model(); // 2 inputs, 2 outputs
         let meta = LinearModel::new(4, 2); // 4 inputs (2 base models × 2 outputs), 2 outputs
 
-        let ensemble = StackingEnsemble::new(vec![base1, base2], meta).unwrap();
+        let ensemble = StackingEnsemble::new(vec![base1, base2], meta).expect("unwrap");
 
         assert_eq!(ensemble.num_models(), 3); // 2 base + 1 meta
 
         let input = array![[1.0, 0.0]];
-        let pred = ensemble.predict(&input).unwrap();
+        let pred = ensemble.predict(&input).expect("unwrap");
 
         // Meta-model takes concatenated predictions as input
         assert_eq!(pred.nrows(), 1);
@@ -833,10 +836,10 @@ mod tests {
         let base2 = create_test_model();
         let meta = create_test_model();
 
-        let ensemble = StackingEnsemble::new(vec![base1, base2], meta).unwrap();
+        let ensemble = StackingEnsemble::new(vec![base1, base2], meta).expect("unwrap");
 
         let input = array![[1.0, 0.0]];
-        let meta_features = ensemble.generate_meta_features(&input).unwrap();
+        let meta_features = ensemble.generate_meta_features(&input).expect("unwrap");
 
         // Should concatenate predictions from 2 base models
         // Each base model outputs 2 features, so total = 2 * 2 = 4
@@ -845,7 +848,7 @@ mod tests {
 
     #[test]
     fn test_bagging_helper() {
-        let helper = BaggingHelper::new(10, 42).unwrap();
+        let helper = BaggingHelper::new(10, 42).expect("unwrap");
 
         let indices = helper.generate_bootstrap_indices(100, 0);
         assert_eq!(indices.len(), 100);
@@ -864,7 +867,7 @@ mod tests {
 
     #[test]
     fn test_bagging_helper_different_seeds() {
-        let helper = BaggingHelper::new(10, 42).unwrap();
+        let helper = BaggingHelper::new(10, 42).expect("unwrap");
 
         let indices1 = helper.generate_bootstrap_indices(50, 0);
         let indices2 = helper.generate_bootstrap_indices(50, 1);
@@ -898,17 +901,17 @@ mod tests {
         weights2.insert("w".to_string(), array![[3.0, 4.0]]);
         weights2.insert("b".to_string(), array![[1.5]]);
 
-        let soup = ModelSoup::uniform_soup(vec![weights1, weights2]).unwrap();
+        let soup = ModelSoup::uniform_soup(vec![weights1, weights2]).expect("unwrap");
 
         assert_eq!(soup.num_models(), 2);
         assert_eq!(soup.recipe(), SoupRecipe::Uniform);
 
         // Check averaged weights
-        let w = soup.get_parameter("w").unwrap();
+        let w = soup.get_parameter("w").expect("unwrap");
         assert_eq!(w[[0, 0]], 2.0); // (1.0 + 3.0) / 2
         assert_eq!(w[[0, 1]], 3.0); // (2.0 + 4.0) / 2
 
-        let b = soup.get_parameter("b").unwrap();
+        let b = soup.get_parameter("b").expect("unwrap");
         assert_eq!(b[[0, 0]], 1.0); // (0.5 + 1.5) / 2
     }
 
@@ -923,9 +926,9 @@ mod tests {
         let mut weights3 = HashMap::new();
         weights3.insert("w".to_string(), array![[3.0]]);
 
-        let soup = ModelSoup::uniform_soup(vec![weights1, weights2, weights3]).unwrap();
+        let soup = ModelSoup::uniform_soup(vec![weights1, weights2, weights3]).expect("unwrap");
 
-        let w = soup.get_parameter("w").unwrap();
+        let w = soup.get_parameter("w").expect("unwrap");
         assert_eq!(w[[0, 0]], 2.0); // (1.0 + 2.0 + 3.0) / 3
     }
 
@@ -942,7 +945,8 @@ mod tests {
 
         let accuracies = vec![0.8, 0.9, 0.85]; // Model 2 is best
 
-        let soup = ModelSoup::greedy_soup(vec![weights1, weights2, weights3], accuracies).unwrap();
+        let soup =
+            ModelSoup::greedy_soup(vec![weights1, weights2, weights3], accuracies).expect("unwrap");
 
         assert_eq!(soup.recipe(), SoupRecipe::Greedy);
         assert!(soup.num_models() >= 1); // At least the best model
@@ -957,12 +961,13 @@ mod tests {
         weights2.insert("w".to_string(), array![[3.0, 4.0]]);
 
         // Weight model 1 twice as much as model 2
-        let soup = ModelSoup::weighted_soup(vec![weights1, weights2], vec![2.0, 1.0]).unwrap();
+        let soup =
+            ModelSoup::weighted_soup(vec![weights1, weights2], vec![2.0, 1.0]).expect("unwrap");
 
         assert_eq!(soup.recipe(), SoupRecipe::Weighted);
 
         // Check weighted average: (2*1 + 1*3) / 3 = 5/3 ≈ 1.667
-        let w = soup.get_parameter("w").unwrap();
+        let w = soup.get_parameter("w").expect("unwrap");
         assert!((w[[0, 0]] - 1.6666666).abs() < 1e-5);
         assert!((w[[0, 1]] - 2.6666666).abs() < 1e-5);
     }
@@ -1020,7 +1025,7 @@ mod tests {
         let mut weights2 = HashMap::new();
         weights2.insert("w".to_string(), array![[3.0]]);
 
-        let soup = ModelSoup::uniform_soup(vec![weights1, weights2]).unwrap();
+        let soup = ModelSoup::uniform_soup(vec![weights1, weights2]).expect("unwrap");
         let final_weights = soup.into_weights();
 
         assert_eq!(final_weights["w"][[0, 0]], 2.0);
@@ -1034,8 +1039,8 @@ mod tests {
         let mut weights2 = HashMap::new();
         weights2.insert("conv".to_string(), array![[5.0, 6.0], [7.0, 8.0]]);
 
-        let soup = ModelSoup::uniform_soup(vec![weights1, weights2]).unwrap();
-        let conv = soup.get_parameter("conv").unwrap();
+        let soup = ModelSoup::uniform_soup(vec![weights1, weights2]).expect("unwrap");
+        let conv = soup.get_parameter("conv").expect("unwrap");
 
         assert_eq!(conv[[0, 0]], 3.0); // (1 + 5) / 2
         assert_eq!(conv[[0, 1]], 4.0); // (2 + 6) / 2

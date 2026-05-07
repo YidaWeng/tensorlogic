@@ -236,6 +236,15 @@ impl TLExpr {
             TLExpr::Explain { formula } => {
                 formula.collect_free_vars(vars, bound);
             }
+            TLExpr::SymbolLiteral(_) => {
+                // No free variables — a symbol literal is a constant
+            }
+            TLExpr::Match { scrutinee, arms } => {
+                scrutinee.collect_free_vars(vars, bound);
+                for (_, body) in arms {
+                    body.collect_free_vars(vars, bound);
+                }
+            }
         }
     }
 
@@ -415,6 +424,15 @@ impl TLExpr {
             }
             TLExpr::Explain { formula } => {
                 formula.collect_predicates(preds);
+            }
+            TLExpr::SymbolLiteral(_) => {
+                // No predicates — a symbol literal is a constant
+            }
+            TLExpr::Match { scrutinee, arms } => {
+                scrutinee.collect_predicates(preds);
+                for (_, body) in arms {
+                    body.collect_predicates(preds);
+                }
             }
         }
     }

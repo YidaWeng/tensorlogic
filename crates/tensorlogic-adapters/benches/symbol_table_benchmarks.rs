@@ -21,7 +21,7 @@ fn bench_domain_addition(c: &mut Criterion) {
                     for i in 0..size {
                         table
                             .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-                            .unwrap();
+                            .expect("unwrap");
                     }
                     black_box(table)
                 },
@@ -43,7 +43,7 @@ fn bench_domain_lookup(c: &mut Criterion) {
         for i in 0..size {
             table
                 .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-                .unwrap();
+                .expect("unwrap");
         }
 
         group.bench_with_input(BenchmarkId::from_parameter(size), &size, |b, _| {
@@ -67,7 +67,9 @@ fn bench_predicate_addition(c: &mut Criterion) {
             b.iter_batched(
                 || {
                     let mut table = SymbolTable::new();
-                    table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+                    table
+                        .add_domain(DomainInfo::new("Person", 100))
+                        .expect("unwrap");
                     table
                 },
                 |mut table| {
@@ -77,7 +79,7 @@ fn bench_predicate_addition(c: &mut Criterion) {
                                 format!("pred{}", i),
                                 vec!["Person".to_string()],
                             ))
-                            .unwrap();
+                            .expect("unwrap");
                     }
                     black_box(table)
                 },
@@ -98,12 +100,12 @@ fn bench_json_serialization(c: &mut Criterion) {
         for i in 0..size {
             table
                 .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-                .unwrap();
+                .expect("unwrap");
         }
 
         group.bench_with_input(BenchmarkId::from_parameter(size), &size, |b, _| {
             b.iter(|| {
-                black_box(table.to_json().unwrap());
+                black_box(table.to_json().expect("unwrap"));
             })
         });
     }
@@ -120,13 +122,13 @@ fn bench_json_deserialization(c: &mut Criterion) {
         for i in 0..size {
             table
                 .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-                .unwrap();
+                .expect("unwrap");
         }
-        let json = table.to_json().unwrap();
+        let json = table.to_json().expect("unwrap");
 
         group.bench_with_input(BenchmarkId::from_parameter(size), &size, |b, _| {
             b.iter(|| {
-                black_box(SymbolTable::from_json(&json).unwrap());
+                black_box(SymbolTable::from_json(&json).expect("unwrap"));
             })
         });
     }
@@ -143,12 +145,12 @@ fn bench_yaml_serialization(c: &mut Criterion) {
         for i in 0..size {
             table
                 .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-                .unwrap();
+                .expect("unwrap");
         }
 
         group.bench_with_input(BenchmarkId::from_parameter(size), &size, |b, _| {
             b.iter(|| {
-                black_box(table.to_yaml().unwrap());
+                black_box(table.to_yaml().expect("unwrap"));
             })
         });
     }
@@ -165,7 +167,7 @@ fn bench_schema_validation(c: &mut Criterion) {
         for i in 0..size {
             table
                 .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-                .unwrap();
+                .expect("unwrap");
         }
         for i in 0..size {
             table
@@ -173,13 +175,13 @@ fn bench_schema_validation(c: &mut Criterion) {
                     format!("pred{}", i),
                     vec![format!("Domain{}", i % size)],
                 ))
-                .unwrap();
+                .expect("unwrap");
         }
 
         group.bench_with_input(BenchmarkId::from_parameter(size), &size, |b, _| {
             b.iter(|| {
                 let validator = SchemaValidator::new(&table);
-                black_box(validator.validate().unwrap());
+                black_box(validator.validate().expect("unwrap"));
             })
         });
     }
@@ -418,7 +420,7 @@ fn bench_schema_statistics(c: &mut Criterion) {
         for i in 0..size {
             table
                 .add_domain(DomainInfo::new(format!("Domain{}", i), 100))
-                .unwrap();
+                .expect("unwrap");
         }
 
         // Add predicates
@@ -427,7 +429,7 @@ fn bench_schema_statistics(c: &mut Criterion) {
             let domains: Vec<String> = (0..arity).map(|j| format!("Domain{}", j % size)).collect();
             table
                 .add_predicate(PredicateInfo::new(format!("pred{}", i), domains))
-                .unwrap();
+                .expect("unwrap");
         }
 
         group.bench_with_input(BenchmarkId::from_parameter(size), &table, |b, tbl| {
@@ -453,7 +455,7 @@ fn bench_schema_analyzer(c: &mut Criterion) {
                     format!("Domain{}", i),
                     if i % 5 == 0 { 0 } else { 100 },
                 ))
-                .unwrap();
+                .expect("unwrap");
         }
 
         // Add predicates (not using all domains)
@@ -464,7 +466,7 @@ fn bench_schema_analyzer(c: &mut Criterion) {
                 .collect();
             table
                 .add_predicate(PredicateInfo::new(format!("pred{}", i), domains))
-                .unwrap();
+                .expect("unwrap");
         }
 
         group.bench_with_input(BenchmarkId::from_parameter(size), &table, |b, tbl| {

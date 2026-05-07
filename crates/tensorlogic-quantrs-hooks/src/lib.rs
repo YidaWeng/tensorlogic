@@ -1,6 +1,6 @@
 //! TL <-> QuantrS2 hooks (PGM/message passing as reductions).
 //!
-//! **Version**: 0.1.0-beta.1 | **Status**: Production Ready
+//! **Version**: 0.1.0 | **Status**: Production Ready
 //!
 //! This crate provides integration between TensorLogic and probabilistic graphical models (PGMs).
 //! It maps belief propagation and other message passing algorithms onto einsum reduction patterns.
@@ -20,16 +20,19 @@
 //! ```
 
 mod cache;
+pub mod convergence;
 pub mod dbn;
 mod elimination_ordering;
 mod error;
 mod expectation_propagation;
 mod factor;
+pub mod factor_graph_viz;
 mod graph;
 mod inference;
 pub mod influence;
 mod junction_tree;
 mod linear_chain_crf;
+pub mod loopy_bp;
 pub mod memory;
 mod message_passing;
 mod models;
@@ -42,13 +45,21 @@ mod sampling;
 pub mod tensor_network_bridge;
 mod variable_elimination;
 mod variational;
+pub mod vmp;
 
 pub use cache::{CacheStats, CachedFactor, FactorCache};
+pub use convergence::{
+    ConvergenceConfig, ConvergenceError, ConvergenceMonitor, ConvergenceState, DampingSchedule,
+    InferenceStats,
+};
 pub use dbn::{CoupledDBN, CouplingFactor, DBNBuilder, DynamicBayesianNetwork, TemporalVar};
 pub use elimination_ordering::{EliminationOrdering, EliminationStrategy};
 pub use error::{PgmError, Result};
 pub use expectation_propagation::{ExpectationPropagation, GaussianEP, GaussianSite, Site};
 pub use factor::{Factor, FactorOp};
+pub use factor_graph_viz::{
+    render_ascii, render_dot, FactorGraphModel, FactorGraphStats, VizFactorNode, VizVariableNode,
+};
 pub use graph::{FactorGraph, FactorNode, VariableNode};
 pub use inference::{ConditionalQuery, InferenceEngine, MarginalizationQuery};
 pub use influence::{
@@ -57,6 +68,11 @@ pub use influence::{
 pub use junction_tree::{Clique, JunctionTree, JunctionTreeEdge, Separator};
 pub use linear_chain_crf::{
     EmissionFeature, FeatureFunction, IdentityFeature, LinearChainCRF, TransitionFeature,
+};
+pub use loopy_bp::{
+    bethe_free_energy, BetheFreeEnergy, CycleAnalysis, CycleDetector, LbpConvergenceMonitor,
+    LbpDampingPolicy, LbpIterStats, LogMessage, LoopyBeliefPropagation, LoopyBpConfig,
+    LoopyBpResult, UpdateSchedule,
 };
 pub use memory::{
     BlockSparseFactor, CompressedFactor, FactorPool, LazyFactor, MemoryEstimate, PoolStats,
@@ -92,6 +108,12 @@ pub use tensor_network_bridge::{
 };
 pub use variable_elimination::VariableElimination;
 pub use variational::{BetheApproximation, MeanFieldInference, TreeReweightedBP};
+pub use vmp::{
+    categorical_kl, dirichlet_kl, gaussian_kl, gaussian_kl_fixed_precision,
+    BetaBernoulliObservation, BetaNP, CategoricalNP, DirichletNP, ExponentialFamily, Family,
+    GammaNP, GammaPoissonObservation, GaussianNP, MessageDirection, VariationalMessagePassing,
+    VariationalState, VmpConfig, VmpFactor, VmpMessage, VmpResult,
+};
 
 use scirs2_core::ndarray::ArrayD;
 use std::collections::HashMap;
@@ -226,7 +248,7 @@ mod tests {
     #[test]
     fn test_expr_to_factor_graph() {
         let expr = TLExpr::pred("P", vec![Term::var("x")]);
-        let graph = expr_to_factor_graph(&expr).unwrap();
+        let graph = expr_to_factor_graph(&expr).expect("unwrap");
         assert!(!graph.is_empty());
     }
 
@@ -234,11 +256,11 @@ mod tests {
     fn test_marginalize_simple() {
         // 2x2 joint distribution: P(X, Y)
         let joint = Array::from_shape_vec(vec![2, 2], vec![0.25, 0.25, 0.25, 0.25])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
 
         // Marginalize over Y (axis 1) to get P(X)
-        let marginal = marginalize(&joint, 0, &[0, 1]).unwrap();
+        let marginal = marginalize(&joint, 0, &[0, 1]).expect("unwrap");
 
         assert_eq!(marginal.ndim(), 1);
         assert_abs_diff_eq!(marginal.sum(), 1.0, epsilon = 1e-10);
@@ -248,14 +270,14 @@ mod tests {
     fn test_condition_simple() {
         // 2x2 joint distribution
         let joint = Array::from_shape_vec(vec![2, 2], vec![0.1, 0.2, 0.3, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
 
         // Condition on Y=1: P(X | Y=1)
         let mut evidence = HashMap::new();
         evidence.insert(1, 1);
 
-        let conditional = condition(&joint, &evidence).unwrap();
+        let conditional = condition(&joint, &evidence).expect("unwrap");
 
         // Should have one dimension less
         assert_eq!(conditional.ndim(), 1);

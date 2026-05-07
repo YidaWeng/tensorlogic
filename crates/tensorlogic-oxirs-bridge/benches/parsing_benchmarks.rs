@@ -53,7 +53,7 @@ fn bench_turtle_parsing(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(size), &data, |b, data| {
             b.iter(|| {
                 let mut analyzer = SchemaAnalyzer::new();
-                analyzer.load_turtle(black_box(data)).unwrap();
+                analyzer.load_turtle(black_box(data)).expect("unwrap");
             });
         });
     }
@@ -82,12 +82,12 @@ fn bench_schema_analysis(c: &mut Criterion) {
     "#;
 
     let mut analyzer = SchemaAnalyzer::new();
-    analyzer.load_turtle(schema).unwrap();
+    analyzer.load_turtle(schema).expect("unwrap");
 
     group.bench_function("analyze_schema", |b| {
         b.iter(|| {
             let mut analyzer_clone = SchemaAnalyzer::from_graph(analyzer.graph.clone());
-            analyzer_clone.analyze().unwrap();
+            analyzer_clone.analyze().expect("unwrap");
         });
     });
 
@@ -105,7 +105,7 @@ fn bench_nquads_parsing(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(size), &data, |b, data| {
             b.iter(|| {
                 let mut processor = NQuadsProcessor::new();
-                processor.load_nquads(black_box(data)).unwrap();
+                processor.load_nquads(black_box(data)).expect("unwrap");
             });
         });
     }
@@ -124,7 +124,7 @@ fn bench_streaming_loading(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(size), &data, |b, data| {
             b.iter(|| {
                 let mut loader = StreamingRdfLoader::new();
-                loader.process_turtle(black_box(data)).unwrap()
+                loader.process_turtle(black_box(data)).expect("unwrap")
             });
         });
     }
@@ -148,7 +148,7 @@ fn bench_sparql_parsing(c: &mut Criterion) {
 
     for (name, query) in queries {
         group.bench_with_input(BenchmarkId::new("parse", name), &query, |b, query| {
-            b.iter(|| compiler.parse_query(black_box(query)).unwrap());
+            b.iter(|| compiler.parse_query(black_box(query)).expect("unwrap"));
         });
     }
 
@@ -170,10 +170,14 @@ fn bench_sparql_compilation(c: &mut Criterion) {
     compiler.add_predicate_mapping("http://example.org/q".to_string(), "q".to_string());
 
     for (name, query_str) in queries {
-        let query = compiler.parse_query(query_str).unwrap();
+        let query = compiler.parse_query(query_str).expect("unwrap");
 
         group.bench_with_input(BenchmarkId::new("compile", name), &query, |b, query| {
-            b.iter(|| compiler.compile_to_tensorlogic(black_box(query)).unwrap());
+            b.iter(|| {
+                compiler
+                    .compile_to_tensorlogic(black_box(query))
+                    .expect("unwrap")
+            });
         });
     }
 
@@ -199,11 +203,11 @@ fn bench_symbol_table_conversion(c: &mut Criterion) {
     "#;
 
     let mut analyzer = SchemaAnalyzer::new();
-    analyzer.load_turtle(schema).unwrap();
-    analyzer.analyze().unwrap();
+    analyzer.load_turtle(schema).expect("unwrap");
+    analyzer.analyze().expect("unwrap");
 
     group.bench_function("to_symbol_table", |b| {
-        b.iter(|| analyzer.to_symbol_table().unwrap());
+        b.iter(|| analyzer.to_symbol_table().expect("unwrap"));
     });
 
     group.finish();

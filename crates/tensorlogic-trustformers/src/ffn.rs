@@ -172,7 +172,7 @@ mod tests {
     #[test]
     fn test_ffn_creation() {
         let config = FeedForwardConfig::new(512, 2048);
-        let ffn = FeedForward::new(config).unwrap();
+        let ffn = FeedForward::new(config).expect("unwrap");
         assert_eq!(ffn.config.d_model, 512);
         assert_eq!(ffn.config.d_ff, 2048);
         assert_eq!(ffn.activation(), "gelu");
@@ -181,7 +181,7 @@ mod tests {
     #[test]
     fn test_ffn_expansion_ratio() {
         let config = FeedForwardConfig::new(512, 2048);
-        let ffn = FeedForward::new(config).unwrap();
+        let ffn = FeedForward::new(config).expect("unwrap");
         let ratio = ffn.expansion_ratio();
         assert!((ratio - 4.0).abs() < 1e-10);
     }
@@ -189,14 +189,14 @@ mod tests {
     #[test]
     fn test_ffn_with_custom_activation() {
         let config = FeedForwardConfig::new(512, 2048).with_activation("relu");
-        let ffn = FeedForward::new(config).unwrap();
+        let ffn = FeedForward::new(config).expect("unwrap");
         assert_eq!(ffn.activation(), "relu");
     }
 
     #[test]
     fn test_ffn_graph_building() {
         let config = FeedForwardConfig::new(512, 2048);
-        let ffn = FeedForward::new(config).unwrap();
+        let ffn = FeedForward::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         // Add input tensors
@@ -206,7 +206,7 @@ mod tests {
         graph.add_tensor("W2");
         graph.add_tensor("b2");
 
-        let outputs = ffn.build_ffn_graph(&mut graph).unwrap();
+        let outputs = ffn.build_ffn_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
@@ -214,7 +214,7 @@ mod tests {
     #[test]
     fn test_gated_ffn_creation() {
         let config = FeedForwardConfig::new(512, 2048);
-        let glu = GatedFeedForward::new(config).unwrap();
+        let glu = GatedFeedForward::new(config).expect("unwrap");
         assert_eq!(glu.config.d_model, 512);
         assert_eq!(glu.config.d_ff, 2048);
     }
@@ -222,7 +222,7 @@ mod tests {
     #[test]
     fn test_gated_ffn_graph_building() {
         let config = FeedForwardConfig::new(512, 2048);
-        let glu = GatedFeedForward::new(config).unwrap();
+        let glu = GatedFeedForward::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         // Add input tensors
@@ -231,7 +231,7 @@ mod tests {
         graph.add_tensor("W_value");
         graph.add_tensor("W_out");
 
-        let outputs = glu.build_glu_graph(&mut graph).unwrap();
+        let outputs = glu.build_glu_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }

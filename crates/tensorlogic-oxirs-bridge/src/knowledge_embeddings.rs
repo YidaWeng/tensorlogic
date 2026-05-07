@@ -45,7 +45,7 @@
 use crate::oxirs_executor::OxirsSparqlExecutor;
 use anyhow::{anyhow, Result};
 use scirs2_core::ndarray::{Array1, ArrayD};
-use scirs2_core::random::{thread_rng, Rng, SeedableRng, StdRng};
+use scirs2_core::random::{thread_rng, Rng, RngExt, SeedableRng, StdRng};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use tensorlogic_ir::{TLExpr, Term};
@@ -232,12 +232,11 @@ impl KnowledgeEmbeddings {
 
     /// Initialize embeddings with random values.
     fn initialize_embeddings(&mut self) {
-        let mut rng_box: Box<dyn scirs2_core::random::RngCore> =
-            if let Some(seed) = self.config.seed {
-                Box::new(StdRng::seed_from_u64(seed))
-            } else {
-                Box::new(thread_rng())
-            };
+        let mut rng_box: Box<dyn scirs2_core::random::Rng> = if let Some(seed) = self.config.seed {
+            Box::new(StdRng::seed_from_u64(seed))
+        } else {
+            Box::new(thread_rng())
+        };
 
         let dim = self.config.embedding_dim;
         let scale = 1.0 / (dim as f64).sqrt();

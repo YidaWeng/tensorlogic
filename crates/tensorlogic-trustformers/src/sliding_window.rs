@@ -301,7 +301,7 @@ mod tests {
 
     #[test]
     fn test_swa_config_creation() {
-        let config = SlidingWindowConfig::new(4096, 32, 4096).unwrap();
+        let config = SlidingWindowConfig::new(4096, 32, 4096).expect("unwrap");
         assert_eq!(config.d_model, 4096);
         assert_eq!(config.n_heads, 32);
         assert_eq!(config.window_size, 4096);
@@ -311,7 +311,7 @@ mod tests {
     #[test]
     fn test_swa_config_builder() {
         let config = SlidingWindowConfig::new(4096, 32, 4096)
-            .unwrap()
+            .expect("unwrap")
             .with_causal(true)
             .with_dropout(0.1);
 
@@ -330,7 +330,7 @@ mod tests {
 
     #[test]
     fn test_swa_complexity_reduction() {
-        let config = SlidingWindowConfig::new(512, 8, 256).unwrap();
+        let config = SlidingWindowConfig::new(512, 8, 256).expect("unwrap");
 
         // Short sequence: no reduction
         assert_eq!(config.complexity_reduction(128), 1.0);
@@ -342,49 +342,51 @@ mod tests {
 
     #[test]
     fn test_swa_graph_building() {
-        let config = SlidingWindowConfig::new(512, 8, 256).unwrap();
-        let swa = SlidingWindowAttention::new(config).unwrap();
+        let config = SlidingWindowConfig::new(512, 8, 256).expect("unwrap");
+        let swa = SlidingWindowAttention::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("Q");
         graph.add_tensor("K");
         graph.add_tensor("V");
 
-        let outputs = swa.build_swa_graph(&mut graph).unwrap();
+        let outputs = swa.build_swa_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
     }
 
     #[test]
     fn test_swa_causal_graph() {
         let config = SlidingWindowConfig::new(512, 8, 256)
-            .unwrap()
+            .expect("unwrap")
             .with_causal(true);
-        let swa = SlidingWindowAttention::new(config).unwrap();
+        let swa = SlidingWindowAttention::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("Q");
         graph.add_tensor("K");
         graph.add_tensor("V");
 
-        let outputs = swa.build_swa_graph(&mut graph).unwrap();
+        let outputs = swa.build_swa_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
     }
 
     #[test]
     fn test_swa_presets() {
         // Mistral 7B
-        let config = SlidingWindowPreset::Mistral7B.config().unwrap();
+        let config = SlidingWindowPreset::Mistral7B.config().expect("unwrap");
         assert_eq!(config.d_model, 4096);
         assert_eq!(config.window_size, 4096);
         assert!(config.causal);
 
         // Longformer Base
-        let config = SlidingWindowPreset::LongformerBase.config().unwrap();
+        let config = SlidingWindowPreset::LongformerBase
+            .config()
+            .expect("unwrap");
         assert_eq!(config.d_model, 768);
         assert_eq!(config.window_size, 512);
 
         // BigBird Base
-        let config = SlidingWindowPreset::BigBirdBase.config().unwrap();
+        let config = SlidingWindowPreset::BigBirdBase.config().expect("unwrap");
         assert_eq!(config.window_size, 256);
     }
 
@@ -399,7 +401,7 @@ mod tests {
 
     #[test]
     fn test_swa_stats() {
-        let config = SlidingWindowConfig::new(4096, 32, 4096).unwrap();
+        let config = SlidingWindowConfig::new(4096, 32, 4096).expect("unwrap");
         let stats = SlidingWindowStats::from_config(&config, 32768);
 
         // 4096/32768 = 0.125
@@ -409,7 +411,7 @@ mod tests {
 
     #[test]
     fn test_swa_validate() {
-        let config = SlidingWindowConfig::new(512, 8, 256).unwrap();
+        let config = SlidingWindowConfig::new(512, 8, 256).expect("unwrap");
         assert!(config.validate().is_ok());
 
         // Invalid dropout

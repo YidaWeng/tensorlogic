@@ -28,13 +28,13 @@
 //! use tensorlogic_adapters::{SymbolTable, DomainInfo, EvolutionAnalyzer};
 //!
 //! let mut old_schema = SymbolTable::new();
-//! old_schema.add_domain(DomainInfo::new("Person", 100)).unwrap();
+//! old_schema.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
 //!
 //! let mut new_schema = SymbolTable::new();
-//! new_schema.add_domain(DomainInfo::new("Person", 200)).unwrap();
+//! new_schema.add_domain(DomainInfo::new("Person", 200)).expect("unwrap");
 //!
 //! let analyzer = EvolutionAnalyzer::new(&old_schema, &new_schema);
-//! let report = analyzer.analyze().unwrap();
+//! let report = analyzer.analyze().expect("unwrap");
 //!
 //! if report.has_breaking_changes() {
 //!     println!("Breaking changes detected!");
@@ -623,12 +623,12 @@ mod tests {
         let mut old_schema = SymbolTable::new();
         old_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let new_schema = SymbolTable::new();
 
         let analyzer = EvolutionAnalyzer::new(&old_schema, &new_schema);
-        let report = analyzer.analyze().unwrap();
+        let report = analyzer.analyze().expect("unwrap");
 
         assert!(report.has_breaking_changes());
         assert_eq!(report.suggested_version_bump(), VersionBump::Major);
@@ -641,10 +641,10 @@ mod tests {
         let mut new_schema = SymbolTable::new();
         new_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let analyzer = EvolutionAnalyzer::new(&old_schema, &new_schema);
-        let report = analyzer.analyze().unwrap();
+        let report = analyzer.analyze().expect("unwrap");
 
         assert!(!report.has_breaking_changes());
         assert_eq!(report.suggested_version_bump(), VersionBump::Minor);
@@ -655,15 +655,15 @@ mod tests {
         let mut old_schema = SymbolTable::new();
         old_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_schema = SymbolTable::new();
         new_schema
             .add_domain(DomainInfo::new("Person", 200))
-            .unwrap();
+            .expect("unwrap");
 
         let analyzer = EvolutionAnalyzer::new(&old_schema, &new_schema);
-        let report = analyzer.analyze().unwrap();
+        let report = analyzer.analyze().expect("unwrap");
 
         assert!(!report.has_breaking_changes());
         assert!(!report.backward_compatible_changes.is_empty());
@@ -674,15 +674,15 @@ mod tests {
         let mut old_schema = SymbolTable::new();
         old_schema
             .add_domain(DomainInfo::new("Person", 200))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_schema = SymbolTable::new();
         new_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let analyzer = EvolutionAnalyzer::new(&old_schema, &new_schema);
-        let report = analyzer.analyze().unwrap();
+        let report = analyzer.analyze().expect("unwrap");
 
         assert!(report.has_breaking_changes());
         assert_eq!(report.max_impact(), ChangeImpact::Critical);
@@ -693,21 +693,21 @@ mod tests {
         let mut old_schema = SymbolTable::new();
         old_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
         old_schema
             .add_predicate(PredicateInfo::new(
                 "knows",
                 vec!["Person".to_string(), "Person".to_string()],
             ))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_schema = SymbolTable::new();
         new_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let analyzer = EvolutionAnalyzer::new(&old_schema, &new_schema);
-        let report = analyzer.analyze().unwrap();
+        let report = analyzer.analyze().expect("unwrap");
 
         assert!(report.has_breaking_changes());
         assert_eq!(
@@ -721,33 +721,33 @@ mod tests {
         let mut old_schema = SymbolTable::new();
         old_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
         old_schema
             .add_domain(DomainInfo::new("Location", 50))
-            .unwrap();
+            .expect("unwrap");
         old_schema
             .add_predicate(PredicateInfo::new(
                 "at",
                 vec!["Person".to_string(), "Location".to_string()],
             ))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_schema = SymbolTable::new();
         new_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
         new_schema
             .add_domain(DomainInfo::new("Location", 50))
-            .unwrap();
+            .expect("unwrap");
         new_schema
             .add_predicate(PredicateInfo::new(
                 "at",
                 vec!["Person".to_string(), "Person".to_string()],
             ))
-            .unwrap();
+            .expect("unwrap");
 
         let analyzer = EvolutionAnalyzer::new(&old_schema, &new_schema);
-        let report = analyzer.analyze().unwrap();
+        let report = analyzer.analyze().expect("unwrap");
 
         assert!(report.has_breaking_changes());
     }
@@ -757,18 +757,18 @@ mod tests {
         let mut old_schema = SymbolTable::new();
         old_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_schema = SymbolTable::new();
         new_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
         new_schema
             .add_domain(DomainInfo::new("Location", 50))
-            .unwrap();
+            .expect("unwrap");
 
         let analyzer = EvolutionAnalyzer::new(&old_schema, &new_schema);
-        let report = analyzer.analyze().unwrap();
+        let report = analyzer.analyze().expect("unwrap");
 
         assert!(!report.migration_plan.is_empty());
         assert_eq!(report.migration_plan.steps.len(), 1);
@@ -779,23 +779,23 @@ mod tests {
         let mut old_schema = SymbolTable::new();
         old_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
         old_schema
             .add_domain(DomainInfo::new("Location", 50))
-            .unwrap();
-        old_schema.bind_variable("x", "Person").unwrap();
+            .expect("unwrap");
+        old_schema.bind_variable("x", "Person").expect("unwrap");
 
         let mut new_schema = SymbolTable::new();
         new_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
         new_schema
             .add_domain(DomainInfo::new("Location", 50))
-            .unwrap();
-        new_schema.bind_variable("x", "Location").unwrap();
+            .expect("unwrap");
+        new_schema.bind_variable("x", "Location").expect("unwrap");
 
         let analyzer = EvolutionAnalyzer::new(&old_schema, &new_schema);
-        let report = analyzer.analyze().unwrap();
+        let report = analyzer.analyze().expect("unwrap");
 
         assert!(report.has_breaking_changes());
     }
@@ -805,15 +805,15 @@ mod tests {
         let mut old_schema = SymbolTable::new();
         old_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let mut new_schema = SymbolTable::new();
         new_schema
             .add_domain(DomainInfo::new("Person", 100))
-            .unwrap();
+            .expect("unwrap");
 
         let analyzer = EvolutionAnalyzer::new(&old_schema, &new_schema);
-        let report = analyzer.analyze().unwrap();
+        let report = analyzer.analyze().expect("unwrap");
 
         assert!(!report.has_breaking_changes());
         assert_eq!(report.suggested_version_bump(), VersionBump::Patch);

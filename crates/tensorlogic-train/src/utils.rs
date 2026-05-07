@@ -575,7 +575,7 @@ mod tests {
         let lrs = vec![1e-4, 1e-3, 1e-2, 1e-1];
         let losses = vec![1.0, 0.5, 0.3, 0.8]; // Min at 1e-2
 
-        let analyzer = LrRangeTestAnalyzer::new(lrs.clone(), losses).unwrap();
+        let analyzer = LrRangeTestAnalyzer::new(lrs.clone(), losses).expect("unwrap");
 
         let min_lr = analyzer.lr_at_min_loss();
         assert_eq!(min_lr, Some(1e-2));
@@ -603,7 +603,10 @@ mod tests {
         assert_eq!(stats.len(), 2);
 
         // Find the vanishing layer
-        let vanishing = stats.iter().find(|s| s.layer_name == "layer2").unwrap();
+        let vanishing = stats
+            .iter()
+            .find(|s| s.layer_name == "layer2")
+            .expect("unwrap");
         assert!(vanishing.is_vanishing(1e-7));
     }
 }

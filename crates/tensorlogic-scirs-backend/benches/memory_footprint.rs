@@ -30,7 +30,7 @@ fn create_test_tensor(shape: &[usize]) -> ArrayD<f64> {
             .map(|i| (i as f64) * 0.01)
             .collect(),
     )
-    .unwrap()
+    .expect("unwrap")
 }
 
 /// Benchmark memory usage for simple expressions
@@ -48,13 +48,13 @@ fn bench_memory_simple_expressions(c: &mut Criterion) {
             |bench, &size| {
                 bench.iter(|| {
                     let expr = TLExpr::pred("P", vec![Term::var("i")]);
-                    let graph = compile_to_einsum(&expr).unwrap();
+                    let graph = compile_to_einsum(&expr).expect("unwrap");
 
                     let mut executor = Scirs2Exec::new();
                     let data = create_test_tensor(&[size]);
                     executor.add_tensor(graph.tensors[0].clone(), data);
 
-                    black_box(executor.forward(&graph).unwrap())
+                    black_box(executor.forward(&graph).expect("unwrap"))
                 });
             },
         );
@@ -68,7 +68,7 @@ fn bench_memory_simple_expressions(c: &mut Criterion) {
                     let p = TLExpr::pred("P", vec![Term::var("i")]);
                     let q = TLExpr::pred("Q", vec![Term::var("i")]);
                     let expr = TLExpr::and(p, q);
-                    let graph = compile_to_einsum(&expr).unwrap();
+                    let graph = compile_to_einsum(&expr).expect("unwrap");
 
                     let mut executor = Scirs2Exec::new();
                     let p_data = create_test_tensor(&[size]);
@@ -76,7 +76,7 @@ fn bench_memory_simple_expressions(c: &mut Criterion) {
                     executor.add_tensor(graph.tensors[0].clone(), p_data);
                     executor.add_tensor(graph.tensors[1].clone(), q_data);
 
-                    black_box(executor.forward(&graph).unwrap())
+                    black_box(executor.forward(&graph).expect("unwrap"))
                 });
             },
         );
@@ -102,7 +102,7 @@ fn bench_memory_matrix_operations(c: &mut Criterion) {
                     let a = TLExpr::pred("A", vec![Term::var("i"), Term::var("j")]);
                     let b = TLExpr::pred("B", vec![Term::var("i"), Term::var("j")]);
                     let expr = TLExpr::and(a, b);
-                    let graph = compile_to_einsum(&expr).unwrap();
+                    let graph = compile_to_einsum(&expr).expect("unwrap");
 
                     let mut executor = Scirs2Exec::new();
                     let a_data = create_test_tensor(&[size, size]);
@@ -110,7 +110,7 @@ fn bench_memory_matrix_operations(c: &mut Criterion) {
                     executor.add_tensor(graph.tensors[0].clone(), a_data);
                     executor.add_tensor(graph.tensors[1].clone(), b_data);
 
-                    black_box(executor.forward(&graph).unwrap())
+                    black_box(executor.forward(&graph).expect("unwrap"))
                 });
             },
         );
@@ -138,7 +138,7 @@ fn bench_memory_complex_expressions(c: &mut Criterion) {
                     let ab = TLExpr::and(a, b);
                     let cd = TLExpr::and(c, d);
                     let expr = TLExpr::or(ab, cd);
-                    let graph = compile_to_einsum(&expr).unwrap();
+                    let graph = compile_to_einsum(&expr).expect("unwrap");
 
                     let mut executor = Scirs2Exec::new();
                     for i in 0..4 {
@@ -146,7 +146,7 @@ fn bench_memory_complex_expressions(c: &mut Criterion) {
                         executor.add_tensor(graph.tensors[i].clone(), data);
                     }
 
-                    black_box(executor.forward(&graph).unwrap())
+                    black_box(executor.forward(&graph).expect("unwrap"))
                 });
             },
         );

@@ -190,7 +190,7 @@ pub(crate) fn compile_nominal(
     graph
         .tensors
         .get_mut(nominal_idx)
-        .unwrap()
+        .expect("nominal_idx from add_tensor is always valid")
         .push_str(&format!("#{}", metadata));
 
     Ok(CompileState {
@@ -462,7 +462,7 @@ mod tests {
         let mut ctx = CompilerContext::new();
         let mut graph = EinsumGraph::new();
 
-        let result = compile_nominal("home", &mut ctx, &mut graph).unwrap();
+        let result = compile_nominal("home", &mut ctx, &mut graph).expect("unwrap");
 
         // Should have created a tensor
         assert!(!graph.tensors.is_empty());
@@ -479,9 +479,9 @@ mod tests {
 
         // @home Safe(x)
         let safe = TLExpr::pred("Safe", vec![Term::var("x")]);
-        ctx.bind_var("x", "Person").unwrap();
+        ctx.bind_var("x", "Person").expect("unwrap");
 
-        let _result = compile_at("home", &safe, &mut ctx, &mut graph).unwrap();
+        let _result = compile_at("home", &safe, &mut ctx, &mut graph).expect("unwrap");
 
         // Should have created tensors (may or may not have nodes depending on whether formula has state axis)
         assert!(!graph.tensors.is_empty());
@@ -495,7 +495,7 @@ mod tests {
         // E Safe
         let safe = TLExpr::pred("Safe", vec![]);
 
-        let _result = compile_somewhere(&safe, &mut ctx, &mut graph).unwrap();
+        let _result = compile_somewhere(&safe, &mut ctx, &mut graph).expect("unwrap");
 
         // Should have compiled successfully
         assert!(!graph.tensors.is_empty());
@@ -509,7 +509,7 @@ mod tests {
         // A Safe
         let safe = TLExpr::pred("Safe", vec![]);
 
-        let _result = compile_everywhere(&safe, &mut ctx, &mut graph).unwrap();
+        let _result = compile_everywhere(&safe, &mut ctx, &mut graph).expect("unwrap");
 
         // Should have compiled successfully
         assert!(!graph.tensors.is_empty());
@@ -523,10 +523,10 @@ mod tests {
 
         // E Knows(x, y)
         let knows = TLExpr::pred("Knows", vec![Term::var("x"), Term::var("y")]);
-        ctx.bind_var("x", "Person").unwrap();
-        ctx.bind_var("y", "Person").unwrap();
+        ctx.bind_var("x", "Person").expect("unwrap");
+        ctx.bind_var("y", "Person").expect("unwrap");
 
-        let _result = compile_somewhere(&knows, &mut ctx, &mut graph).unwrap();
+        let _result = compile_somewhere(&knows, &mut ctx, &mut graph).expect("unwrap");
 
         // Should preserve non-state axes
         assert!(!graph.tensors.is_empty());
@@ -540,9 +540,9 @@ mod tests {
 
         // A Safe(x)
         let safe = TLExpr::pred("Safe", vec![Term::var("x")]);
-        ctx.bind_var("x", "Person").unwrap();
+        ctx.bind_var("x", "Person").expect("unwrap");
 
-        let _result = compile_everywhere(&safe, &mut ctx, &mut graph).unwrap();
+        let _result = compile_everywhere(&safe, &mut ctx, &mut graph).expect("unwrap");
 
         // Should preserve non-state axes
         assert!(!graph.tensors.is_empty());
@@ -559,7 +559,7 @@ mod tests {
             formula: Box::new(safe),
         };
 
-        let _result = compile_somewhere(&everywhere_safe, &mut ctx, &mut graph).unwrap();
+        let _result = compile_somewhere(&everywhere_safe, &mut ctx, &mut graph).expect("unwrap");
 
         // Should have created tensors (nodes created only if formula has state axis)
         assert!(!graph.tensors.is_empty());
@@ -568,11 +568,11 @@ mod tests {
     #[test]
     fn test_multiple_nominals_distinct_indices() {
         let mut ctx = CompilerContext::new();
-        ensure_state_domain(&mut ctx).unwrap();
+        ensure_state_domain(&mut ctx).expect("unwrap");
 
-        let idx1 = get_nominal_index("home", &mut ctx).unwrap();
-        let idx2 = get_nominal_index("office", &mut ctx).unwrap();
-        let idx3 = get_nominal_index("home", &mut ctx).unwrap();
+        let idx1 = get_nominal_index("home", &mut ctx).expect("unwrap");
+        let idx2 = get_nominal_index("office", &mut ctx).expect("unwrap");
+        let idx3 = get_nominal_index("home", &mut ctx).expect("unwrap");
 
         // Same nominal should give same index
         assert_eq!(idx1, idx3);
@@ -591,7 +591,7 @@ mod tests {
         // @home True (constant 1.0)
         let constant = TLExpr::Constant(1.0);
 
-        let result = compile_at("home", &constant, &mut ctx, &mut graph).unwrap();
+        let result = compile_at("home", &constant, &mut ctx, &mut graph).expect("unwrap");
 
         // Constant doesn't have state axis, so should return unchanged
         assert!(!graph.tensors.is_empty());

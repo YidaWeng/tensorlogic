@@ -430,11 +430,11 @@ mod tests {
 
     #[test]
     fn test_typed_tensor_creation() {
-        let tensor: Vector<f64> = TypedTensor::new(1.0, vec![10]).unwrap();
+        let tensor: Vector<f64> = TypedTensor::new(1.0, vec![10]).expect("unwrap");
         assert_eq!(tensor.shape(), &[10]);
         assert_eq!(Vector::<f64>::rank(), 1);
 
-        let matrix: Matrix<f64> = TypedTensor::new(2.0, vec![10, 20]).unwrap();
+        let matrix: Matrix<f64> = TypedTensor::new(2.0, vec![10, 20]).expect("unwrap");
         assert_eq!(matrix.shape(), &[10, 20]);
         assert_eq!(Matrix::<f64>::rank(), 2);
     }
@@ -450,7 +450,7 @@ mod tests {
 
     #[test]
     fn test_typed_tensor_inner() {
-        let tensor: Vector<i32> = TypedTensor::new(42, vec![5]).unwrap();
+        let tensor: Vector<i32> = TypedTensor::new(42, vec![5]).expect("unwrap");
         assert_eq!(*tensor.inner(), 42);
 
         let inner = tensor.into_inner();
@@ -497,15 +497,15 @@ mod tests {
         let mut batch: TypedBatch<i32, D1> = TypedBatch::new();
         assert!(batch.is_empty());
 
-        let tensor1: Vector<i32> = TypedTensor::new(1, vec![5]).unwrap();
-        let tensor2: Vector<i32> = TypedTensor::new(2, vec![5]).unwrap();
+        let tensor1: Vector<i32> = TypedTensor::new(1, vec![5]).expect("unwrap");
+        let tensor2: Vector<i32> = TypedTensor::new(2, vec![5]).expect("unwrap");
 
         batch = batch.with(tensor1).with(tensor2);
 
         assert_eq!(batch.len(), 2);
         assert!(!batch.is_empty());
 
-        let first = batch.get(0).unwrap();
+        let first = batch.get(0).expect("unwrap");
         assert_eq!(*first.inner(), 1);
     }
 
@@ -514,19 +514,19 @@ mod tests {
         let scalar: Scalar<f64> = TensorBuilder::new(2.5)
             .with_shape(vec![])
             .build_scalar()
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(*scalar.inner(), 2.5);
 
         let vector: Vector<f64> = TensorBuilder::new(2.71)
             .with_shape(vec![10])
             .build_vector()
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(vector.shape(), &[10]);
 
         let matrix: Matrix<f64> = TensorBuilder::new(1.41)
             .with_shape(vec![3, 4])
             .build_matrix()
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(matrix.shape(), &[3, 4]);
     }
 
@@ -555,7 +555,7 @@ mod tests {
 
     #[test]
     fn test_shape_validation() {
-        let tensor: Vector<i32> = TypedTensor::new(42, vec![10]).unwrap();
+        let tensor: Vector<i32> = TypedTensor::new(42, vec![10]).expect("unwrap");
         assert!(tensor.validate_shape(&[10]));
         assert!(!tensor.validate_shape(&[20]));
         assert!(!tensor.validate_shape(&[10, 10]));

@@ -434,7 +434,8 @@ mod tests {
 
     #[test]
     fn test_site_creation() {
-        let site = Site::new_uniform("test_site".to_string(), vec!["X".to_string()], &[2]).unwrap();
+        let site = Site::new_uniform("test_site".to_string(), vec!["X".to_string()], &[2])
+            .expect("unwrap");
 
         assert_eq!(site.variables.len(), 1);
         assert_eq!(site.factor.variables[0], "X");
@@ -501,14 +502,15 @@ mod tests {
 
         // Add a simple factor P(X) = [0.7, 0.3]
         let values = Array::from_shape_vec(vec![2], vec![0.7, 0.3])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        let factor = Factor::new("P(X)".to_string(), vec!["X".to_string()], values).unwrap();
-        graph.add_factor(factor).unwrap();
+        let factor =
+            Factor::new("P(X)".to_string(), vec!["X".to_string()], values).expect("unwrap");
+        graph.add_factor(factor).expect("unwrap");
 
         // Run EP
         let ep = ExpectationPropagation::default();
-        let marginals = ep.run(&graph).unwrap();
+        let marginals = ep.run(&graph).expect("unwrap");
 
         // Check that we got a marginal for X
         assert!(marginals.contains_key("X"));
@@ -554,29 +556,29 @@ mod tests {
 
         // Factor P(X) = [0.6, 0.4]
         let px_values = Array::from_shape_vec(vec![2], vec![0.6, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        let px = Factor::new("P(X)".to_string(), vec!["X".to_string()], px_values).unwrap();
-        graph.add_factor(px).unwrap();
+        let px = Factor::new("P(X)".to_string(), vec!["X".to_string()], px_values).expect("unwrap");
+        graph.add_factor(px).expect("unwrap");
 
         // Factor P(Y|X)
         let pyx_values = Array::from_shape_vec(
             vec![2, 2],
             vec![0.8, 0.2, 0.3, 0.7], // P(Y|X=0), P(Y|X=1)
         )
-        .unwrap()
+        .expect("unwrap")
         .into_dyn();
         let pyx = Factor::new(
             "P(Y|X)".to_string(),
             vec!["X".to_string(), "Y".to_string()],
             pyx_values,
         )
-        .unwrap();
-        graph.add_factor(pyx).unwrap();
+        .expect("unwrap");
+        graph.add_factor(pyx).expect("unwrap");
 
         // Run EP
         let ep = ExpectationPropagation::new(100, 1e-6, 0.0);
-        let marginals = ep.run(&graph).unwrap();
+        let marginals = ep.run(&graph).expect("unwrap");
 
         // Check marginals
         assert!(marginals.contains_key("X"));

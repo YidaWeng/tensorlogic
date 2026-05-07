@@ -605,16 +605,18 @@ mod tests {
     #[test]
     fn test_symbol_table_cache() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new(
                 "knows",
                 vec!["Person".to_string(), "Person".to_string()],
             ))
-            .unwrap();
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("age", vec!["Person".to_string()]))
-            .unwrap();
+            .expect("unwrap");
 
         let mut cache = SymbolTableCache::new();
 

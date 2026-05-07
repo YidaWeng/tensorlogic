@@ -19,13 +19,13 @@
 //! let builder = KernelBuilder::new();
 //! let kernel = builder
 //!     .add_scaled(std::sync::Arc::new(LinearKernel::new()), 0.5)
-//!     .add_scaled(std::sync::Arc::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap()), 0.3)
+//!     .add_scaled(std::sync::Arc::new(RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap")), 0.3)
 //!     .build();
 //!
 //! // Use the composed kernel
 //! let x = vec![1.0, 2.0, 3.0];
 //! let y = vec![4.0, 5.0, 6.0];
-//! let similarity = kernel.compute(&x, &y).unwrap();
+//! let similarity = kernel.compute(&x, &y).expect("unwrap");
 //! ```
 
 use crate::error::{KernelError, Result};
@@ -282,7 +282,9 @@ impl KernelBuilder {
 
     /// Add a scaled kernel
     pub fn add_scaled(mut self, kernel: Arc<dyn Kernel>, scale: f64) -> Self {
-        let scaled = KernelExpr::base(kernel).scale(scale).unwrap();
+        let scaled = KernelExpr::base(kernel)
+            .scale(scale)
+            .expect("scale value is valid f64");
         self.expr = Some(match self.expr {
             Some(existing) => existing.add(scaled),
             None => scaled,
@@ -324,7 +326,7 @@ impl KernelBuilder {
                 // Empty builder - return a zero kernel
                 KernelExpr::base(Arc::new(crate::tensor_kernels::LinearKernel::new()))
                     .scale(0.0)
-                    .unwrap()
+                    .expect("0.0 is a valid scale value")
                     .build()
             }
         }
@@ -346,13 +348,13 @@ mod tests {
     #[test]
     fn test_kernel_expr_scale() {
         let linear = Arc::new(LinearKernel::new());
-        let expr = KernelExpr::base(linear).scale(2.0).unwrap();
+        let expr = KernelExpr::base(linear).scale(2.0).expect("unwrap");
 
         let kernel = SymbolicKernel::new(expr);
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         // Linear kernel: 1*4 + 2*5 + 3*6 = 32, scaled by 2 = 64
         assert!((result - 64.0).abs() < 1e-10);
     }
@@ -370,7 +372,7 @@ mod tests {
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         // Sum of two linear kernels: 32 + 32 = 64
         assert!((result - 64.0).abs() < 1e-10);
     }
@@ -388,7 +390,7 @@ mod tests {
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         // Product of two linear kernels: 32 * 32 = 1024
         assert!((result - 1024.0).abs() < 1e-10);
     }
@@ -396,13 +398,13 @@ mod tests {
     #[test]
     fn test_kernel_expr_power() {
         let linear = Arc::new(LinearKernel::new());
-        let expr = KernelExpr::base(linear).power(2).unwrap();
+        let expr = KernelExpr::base(linear).power(2).expect("unwrap");
 
         let kernel = SymbolicKernel::new(expr);
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         // Linear kernel squared: 32^2 = 1024
         assert!((result - 1024.0).abs() < 1e-10);
     }
@@ -411,18 +413,18 @@ mod tests {
     fn test_kernel_expr_complex() {
         // (0.5 * linear + 0.3 * rbf)
         let linear = Arc::new(LinearKernel::new());
-        let rbf = Arc::new(RbfKernel::new(RbfKernelConfig::new(0.5)).unwrap());
+        let rbf = Arc::new(RbfKernel::new(RbfKernelConfig::new(0.5)).expect("unwrap"));
 
         let expr = KernelExpr::base(linear)
             .scale(0.5)
-            .unwrap()
-            .add(KernelExpr::base(rbf).scale(0.3).unwrap());
+            .expect("unwrap")
+            .add(KernelExpr::base(rbf).scale(0.3).expect("unwrap"));
 
         let kernel = SymbolicKernel::new(expr);
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![1.0, 2.0, 3.0]; // Same vectors
 
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         // 0.5 * 14 + 0.3 * 1.0 = 7.0 + 0.3 = 7.3
         assert!((result - 7.3).abs() < 1e-6);
     }
@@ -438,7 +440,7 @@ mod tests {
         let x = vec![1.0, 2.0, 3.0];
         let y = vec![4.0, 5.0, 6.0];
 
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         // 0.5 * 32 + 0.3 * 32 = 16 + 9.6 = 25.6
         assert!((result - 25.6).abs() < 1e-10);
     }
@@ -454,7 +456,7 @@ mod tests {
         let x = vec![1.0, 2.0];
         let y = vec![3.0, 4.0];
 
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         // (1*3 + 2*4) * (1*3 + 2*4) = 11 * 11 = 121
         assert!((result - 121.0).abs() < 1e-10);
     }
@@ -465,13 +467,13 @@ mod tests {
         let kernel = builder
             .add(Arc::new(LinearKernel::new()))
             .power(3)
-            .unwrap()
+            .expect("unwrap")
             .build();
 
         let x = vec![2.0];
         let y = vec![3.0];
 
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         // (2*3)^3 = 6^3 = 216
         assert!((result - 216.0).abs() < 1e-10);
     }
@@ -481,9 +483,9 @@ mod tests {
         let linear = Arc::new(LinearKernel::new());
         let expr = KernelExpr::base(linear)
             .scale(1.0)
-            .unwrap()
+            .expect("unwrap")
             .power(1)
-            .unwrap();
+            .expect("unwrap");
 
         let simplified = expr.simplify();
 
@@ -522,7 +524,7 @@ mod tests {
         // Scaled PSD kernel (positive scale) is PSD
         let expr = KernelExpr::base(Arc::new(LinearKernel::new()))
             .scale(2.0)
-            .unwrap();
+            .expect("unwrap");
         let kernel = SymbolicKernel::new(expr);
         assert!(kernel.is_psd());
     }
@@ -545,7 +547,7 @@ mod tests {
         let y = vec![4.0, 5.0, 6.0];
 
         // Empty builder creates a zero kernel
-        let result = kernel.compute(&x, &y).unwrap();
+        let result = kernel.compute(&x, &y).expect("unwrap");
         assert!((result - 0.0).abs() < 1e-10);
     }
 }

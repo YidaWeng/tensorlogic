@@ -245,8 +245,11 @@ impl FusionOptimizer {
         }
 
         // Sort by benefit score
-        self.candidates
-            .sort_by(|a, b| b.benefit_score.partial_cmp(&a.benefit_score).unwrap());
+        self.candidates.sort_by(|a, b| {
+            b.benefit_score
+                .partial_cmp(&a.benefit_score)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        });
 
         self.candidates.clone()
     }

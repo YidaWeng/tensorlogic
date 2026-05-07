@@ -500,7 +500,7 @@ mod tests {
 
         assert_eq!(manager.num_checkpoints(), 3);
 
-        let checkpoint = manager.restore_checkpoint(id1).unwrap();
+        let checkpoint = manager.restore_checkpoint(id1).expect("unwrap");
         assert_eq!(checkpoint.checkpoint_id, 0);
         assert_eq!(checkpoint.partial_results, vec![1, 2, 3]);
 
@@ -517,7 +517,7 @@ mod tests {
         manager.create_checkpoint(1, vec![2]);
         manager.create_checkpoint(2, vec![3]);
 
-        let latest = manager.latest_checkpoint().unwrap();
+        let latest = manager.latest_checkpoint().expect("unwrap");
         assert_eq!(latest.checkpoint_id, 2);
         assert_eq!(latest.partial_results, vec![3]);
     }

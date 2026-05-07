@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.90%2B-orange.svg)](https://www.rust-lang.org/)
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-4364%2F4364-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-6982%2F6982-brightgreen.svg)](#testing)
 
 TensorLogic compiles logical rules (predicates, quantifiers, implications) into **tensor equations (einsum graphs)** with a minimal DSL + IR, enabling neural/symbolic/probabilistic models within a unified tensor computation framework.
 
@@ -14,25 +14,29 @@ TensorLogic compiles logical rules (predicates, quantifiers, implications) into 
 - 🧠 **Logic-to-Tensor Compilation**: Compile complex logical rules into optimized tensor operations
 - ⚡ **High Performance**: SciRS2 backend with SIMD acceleration (2-4x speedup)
 - 🐍 **Python Bindings**: Production-ready PyO3 bindings with NumPy integration
-- 🔧 **Multiple Backends**: CPU, SIMD-accelerated CPU, GPU (future)
+- 🔧 **Multiple Backends**: CPU, SIMD-accelerated CPU, GPU (OxiCUDA, driver-only)
 - 📊 **Comprehensive Benchmarks**: 24 benchmark groups across 5 suites
-- 🧪 **Extensively Tested**: 4,363 tests with 100% pass rate
+- 🧪 **Extensively Tested**: 6,982 tests with 100% pass rate
 - 📚 **Rich Documentation**: Tutorials, examples, API docs
 - 🔗 **Ecosystem Integration**: OxiRS (RDF*/SHACL), SkleaRS, QuantrS2, TrustformeRS, ToRSh
 - 🤖 **Neurosymbolic AI**: Bidirectional tensor conversion with ToRSh (pure Rust PyTorch alternative)
 
-## 🎉 Production Ready
+## 🎉 Stable Release
 
-**Version**: 0.1.0-beta.1 | **Status**: Production Ready
+**Version**: 0.1.0 | **Status**: Stable Release | **Date**: 2026-04-27
 
-TensorLogic has reached production-ready status with comprehensive testing, benchmarking, and documentation:
+TensorLogic has reached stable release status with comprehensive testing, benchmarking, and documentation:
 
-- ✅ **4,364/4,364 tests passing** (100% pass rate) - Comprehensive coverage across all crates
-- ✅ **Zero compiler warnings** - Clean build with latest dependencies
-- ✅ **Complete benchmark suite** - 24 groups covering SIMD, memory, gradients, throughput
-- ✅ **Production packaging** - Ready for PyPI with cross-platform wheels
-- ✅ **Comprehensive docs** - README, CHANGELOG, packaging guide, tutorials
-- ✅ **All 8 development phases complete** - From IR to Python bindings
+- ✅ **SciRS2 ecosystem upgraded to 0.3.4** — Latest scientific computing backend
+- ✅ **OxiRS ecosystem upgraded to 0.2.2** — Major RDF/knowledge graph API upgrade
+- ✅ **SkleaRS upgraded to 0.1.0 stable** — Production-ready kernel integration
+- ✅ **ToRSh upgraded to 0.1.1** — Enhanced neurosymbolic tensor interop
+- ✅ **oxicode upgraded to 0.2** — Improved serialization/codec
+- ✅ **Pure Rust compression** — `flate2` replaced with `oxiarc-deflate` (OxiARC policy)
+- ✅ **RNG unified via scirs2_core** — All `rand_09`/`rand_distr_05` aliases removed; no direct `rand` deps
+- ✅ **No `unwrap()` in production/example/bench code** — clippy::unwrap_used = 0
+- ✅ **6,982/6,982 tests passing** (100% pass rate)
+- ✅ **Zero compiler/clippy warnings** — Clean build with latest dependencies
 
 **Ready for real-world use in research, production systems, and educational contexts!**
 
@@ -180,7 +184,14 @@ TensorLogic follows a modular architecture with clear separation of concerns:
 
 ## 📚 Workspace Structure
 
-The project is organized as a Cargo workspace with 11 specialized crates:
+The project is organized as a Cargo workspace with 13 specialized crates:
+
+### Core
+
+| Crate | Purpose | Status |
+|-------|---------|--------|
+| **tensorlogic** | Root crate re-exporting the public API | ✅ Stable |
+| **tensorlogic-cli** | REPL and command-line interface | ✅ Stable |
 
 ### Planning Layer (Engine-Agnostic)
 
@@ -207,7 +218,14 @@ The project is organized as a Cargo workspace with 11 specialized crates:
 | **tensorlogic-quantrs-hooks** | PGM/message-passing interop for QuantrS2 | ✅ Core Features |
 | **tensorlogic-trustformers** | Transformer-as-rules (attention/FFN as einsum) | ✅ Complete |
 | **tensorlogic-py** | PyO3 bindings with `abi3-py39` support | ✅ Production Ready |
-| **torsh_interop** | ToRSh tensor interoperability (neurosymbolic AI) | ✅ Complete (feature-gated) |
+
+### GPU Utilities (OxiCUDA)
+
+| Crate | Purpose | Status |
+|-------|---------|--------|
+| **tensorlogic-oxicuda-rng** | GPU-accelerated RNG (PCG/Box-Muller) with CPU fallback — 47 tests | ✅ Complete |
+| **tensorlogic-oxicuda-solver** | GPU-accelerated linear solvers (LU/Cholesky/QR/CG) with CPU fallback — 35 tests | ✅ Complete |
+| **tensorlogic-oxicuda-sparse** | GPU-accelerated sparse matrix ops (SpMV/SpMM/CSR) with CPU fallback — 13 tests | ✅ Complete |
 
 ## 🔬 Logic-to-Tensor Mapping
 
@@ -359,10 +377,10 @@ pytest tests/ -v
 ```
 
 **Test Statistics**:
-- **4,364 tests** across all crates (lib + integration + doc)
+- **6,982 tests** across all crates (lib + integration + doc)
 - **100% pass rate** (12 tests intentionally skipped)
 - **Zero compiler warnings, zero clippy warnings, zero rustdoc warnings**
-- **313,107 lines of code** (278,630 Rust, 34,790 comments, 50,564 blank)
+- **~294K lines of Rust code** (843 source files — tokei)
 - Coverage includes:
   - Unit tests (logic operations, type checking, optimization)
   - Integration tests (end-to-end workflows)
@@ -519,7 +537,7 @@ let output = attention.forward(&query, &key, &value)?;
 | 7 | Python Bindings | ✅ Production Ready | 98% |
 | 8 | Validation & Scale | ✅ Complete | 100% |
 
-**Overall Project Status**: 🎉 **Production Ready**
+**Overall Project Status**: 🎉 **Stable Release (0.1.0)**
 
 ## 🤝 Contributing
 
@@ -546,6 +564,21 @@ We welcome contributions! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for guid
 8. Push to branch (`git push origin feature/amazing-feature`)
 9. Open a Pull Request
 
+## Sponsorship
+
+TensorLogic is developed and maintained by **COOLJAPAN OU (Team Kitasan)**.
+
+If you find TensorLogic useful, please consider sponsoring the project to support continued development of the Pure Rust ecosystem.
+
+[![Sponsor](https://img.shields.io/badge/Sponsor-%E2%9D%A4-red?logo=github)](https://github.com/sponsors/cool-japan)
+
+**[https://github.com/sponsors/cool-japan](https://github.com/sponsors/cool-japan)**
+
+Your sponsorship helps us:
+- Maintain and improve the COOLJAPAN ecosystem
+- Keep the entire ecosystem (OxiBLAS, OxiFFT, SciRS2, etc.) 100% Pure Rust
+- Provide long-term support and security updates
+
 ## 📄 License
 
 Licensed under Apache 2.0 License. See [LICENSE](LICENSE) for details.
@@ -566,10 +599,13 @@ Licensed under Apache 2.0 License. See [LICENSE](LICENSE) for details.
 
 ### Short-term (Next Release)
 
-- [ ] GPU backend support
+- [x] **GPU backend support** - ✅ COMPLETE (OxiCUDA driver-only, no CUDA SDK needed — tensorlogic-oxicuda-{rng,solver,sparse,backend})
 - [ ] Additional fuzzy logic variants
 - [x] **ToRSh tensor interoperability** - ✅ COMPLETE (pure Rust alternative to PyTorch)
 - [x] **Provenance API in Python bindings** - ✅ COMPLETE (get_provenance)
+- [x] **SciRS2 ecosystem upgrade** - ✅ COMPLETE (upgraded to 0.3.4)
+- [x] **OxiRS ecosystem upgrade** - ✅ COMPLETE (upgraded to 0.2.2)
+- [x] **rand 0.10 full alignment** - ✅ COMPLETE
 
 ### Medium-term
 

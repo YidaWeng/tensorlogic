@@ -380,7 +380,7 @@ mod tests {
 
     #[test]
     fn test_encoder_stack_config_creation() {
-        let config = EncoderStackConfig::new(6, 512, 8, 2048, 1024).unwrap();
+        let config = EncoderStackConfig::new(6, 512, 8, 2048, 1024).expect("unwrap");
         assert_eq!(config.num_layers, 6);
         assert_eq!(config.layer_config.attention.d_model, 512);
         assert!(config.final_layer_norm);
@@ -390,7 +390,7 @@ mod tests {
     #[test]
     fn test_encoder_stack_config_with_learned_pe() {
         let config = EncoderStackConfig::new(6, 512, 8, 2048, 1024)
-            .unwrap()
+            .expect("unwrap")
             .with_learned_position_encoding();
         assert!(matches!(
             config.position_encoding.encoding_type,
@@ -400,8 +400,8 @@ mod tests {
 
     #[test]
     fn test_encoder_stack_creation() {
-        let config = EncoderStackConfig::new(6, 512, 8, 2048, 1024).unwrap();
-        let stack = EncoderStack::new(config).unwrap();
+        let config = EncoderStackConfig::new(6, 512, 8, 2048, 1024).expect("unwrap");
+        let stack = EncoderStack::new(config).expect("unwrap");
         assert_eq!(stack.num_layers(), 6);
         assert!(stack.position_encoding_sin.is_some());
         assert!(stack.final_norm.is_some());
@@ -409,20 +409,20 @@ mod tests {
 
     #[test]
     fn test_encoder_stack_graph_building() {
-        let config = EncoderStackConfig::new(2, 512, 8, 2048, 1024).unwrap();
-        let stack = EncoderStack::new(config).unwrap();
+        let config = EncoderStackConfig::new(2, 512, 8, 2048, 1024).expect("unwrap");
+        let stack = EncoderStack::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("x");
 
-        let outputs = stack.build_encoder_stack_graph(&mut graph).unwrap();
+        let outputs = stack.build_encoder_stack_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }
 
     #[test]
     fn test_decoder_stack_config_creation() {
-        let config = DecoderStackConfig::new(6, 512, 8, 2048, 1024).unwrap();
+        let config = DecoderStackConfig::new(6, 512, 8, 2048, 1024).expect("unwrap");
         assert_eq!(config.num_layers, 6);
         assert_eq!(config.layer_config.self_attention.d_model, 512);
         assert!(config.layer_config.self_attention.causal);
@@ -431,8 +431,8 @@ mod tests {
 
     #[test]
     fn test_decoder_stack_creation() {
-        let config = DecoderStackConfig::new(6, 512, 8, 2048, 1024).unwrap();
-        let stack = DecoderStack::new(config).unwrap();
+        let config = DecoderStackConfig::new(6, 512, 8, 2048, 1024).expect("unwrap");
+        let stack = DecoderStack::new(config).expect("unwrap");
         assert_eq!(stack.num_layers(), 6);
         assert!(stack.position_encoding_sin.is_some());
         assert!(stack.final_norm.is_some());
@@ -440,14 +440,14 @@ mod tests {
 
     #[test]
     fn test_decoder_stack_graph_building() {
-        let config = DecoderStackConfig::new(2, 512, 8, 2048, 1024).unwrap();
-        let stack = DecoderStack::new(config).unwrap();
+        let config = DecoderStackConfig::new(2, 512, 8, 2048, 1024).expect("unwrap");
+        let stack = DecoderStack::new(config).expect("unwrap");
 
         let mut graph = EinsumGraph::new();
         graph.add_tensor("target");
         graph.add_tensor("encoder_output");
 
-        let outputs = stack.build_decoder_stack_graph(&mut graph).unwrap();
+        let outputs = stack.build_decoder_stack_graph(&mut graph).expect("unwrap");
         assert_eq!(outputs.len(), 1);
         assert!(!graph.nodes.is_empty());
     }

@@ -259,63 +259,63 @@ mod tests {
     }
 
     #[test]
-    fn test_layer_norm_build() {
+    fn test_layer_norm_build() -> Result<(), Box<dyn std::error::Error>> {
         let config = NormalizationConfig {
             hidden_size: 512,
             norm_type: NormalizationType::LayerNorm,
             epsilon: 1e-5,
             elementwise_affine: true,
         };
-        let layer_norm = LayerNorm::new(config).unwrap();
-        let graph = layer_norm.build();
-        assert!(graph.is_ok());
-        let graph = graph.unwrap();
+        let layer_norm = LayerNorm::new(config)?;
+        let graph = layer_norm.build()?;
         assert!(graph.output().is_some());
+        Ok(())
     }
 
     #[test]
-    fn test_layer_norm_no_affine() {
+    fn test_layer_norm_no_affine() -> Result<(), Box<dyn std::error::Error>> {
         let config = NormalizationConfig {
             hidden_size: 512,
             norm_type: NormalizationType::LayerNorm,
             epsilon: 1e-5,
             elementwise_affine: false,
         };
-        let layer_norm = LayerNorm::new(config).unwrap();
+        let layer_norm = LayerNorm::new(config)?;
         let graph = layer_norm.build();
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_rms_norm_build() {
+    fn test_rms_norm_build() -> Result<(), Box<dyn std::error::Error>> {
         let config = NormalizationConfig {
             hidden_size: 512,
             norm_type: NormalizationType::RMSNorm,
             epsilon: 1e-5,
             elementwise_affine: true,
         };
-        let layer_norm = LayerNorm::new(config).unwrap();
-        let graph = layer_norm.build();
-        assert!(graph.is_ok());
-        let graph = graph.unwrap();
+        let layer_norm = LayerNorm::new(config)?;
+        let graph = layer_norm.build()?;
         assert!(graph.output().is_some());
+        Ok(())
     }
 
     #[test]
-    fn test_rms_norm_no_affine() {
+    fn test_rms_norm_no_affine() -> Result<(), Box<dyn std::error::Error>> {
         let config = NormalizationConfig {
             hidden_size: 512,
             norm_type: NormalizationType::RMSNorm,
             epsilon: 1e-5,
             elementwise_affine: false,
         };
-        let layer_norm = LayerNorm::new(config).unwrap();
+        let layer_norm = LayerNorm::new(config)?;
         let graph = layer_norm.build();
         assert!(graph.is_ok());
+        Ok(())
     }
 
     #[test]
-    fn test_different_hidden_sizes() {
+    fn test_different_hidden_sizes() -> Result<(), Box<dyn std::error::Error>> {
         for hidden_size in vec![128, 256, 512, 768, 1024, 2048] {
             let config = NormalizationConfig {
                 hidden_size,
@@ -323,9 +323,10 @@ mod tests {
                 epsilon: 1e-5,
                 elementwise_affine: true,
             };
-            let layer_norm = LayerNorm::new(config).unwrap();
+            let layer_norm = LayerNorm::new(config)?;
             let graph = layer_norm.build();
             assert!(graph.is_ok());
         }
+        Ok(())
     }
 }

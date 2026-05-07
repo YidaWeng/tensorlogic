@@ -78,7 +78,7 @@ impl MemoryProfiler {
 
     /// Record a tensor allocation.
     pub fn record_allocation(&self, size_bytes: u64, source: String) -> usize {
-        let mut inner = self.inner.lock().unwrap();
+        let mut inner = self.inner.lock().expect("lock should not be poisoned");
 
         let id = inner.next_id;
         inner.next_id += 1;
@@ -104,7 +104,7 @@ impl MemoryProfiler {
 
     /// Record a tensor deallocation.
     pub fn record_deallocation(&self, id: usize) {
-        let mut inner = self.inner.lock().unwrap();
+        let mut inner = self.inner.lock().expect("lock should not be poisoned");
 
         // Extract timestamp before mutable borrow
         let now = inner.start_time.elapsed().as_millis() as u64;
@@ -123,17 +123,23 @@ impl MemoryProfiler {
 
     /// Get current memory usage in bytes.
     pub fn current_usage(&self) -> u64 {
-        self.inner.lock().unwrap().current_usage
+        self.inner
+            .lock()
+            .expect("lock should not be poisoned")
+            .current_usage
     }
 
     /// Get peak memory usage in bytes.
     pub fn peak_usage(&self) -> u64 {
-        self.inner.lock().unwrap().peak_usage
+        self.inner
+            .lock()
+            .expect("lock should not be poisoned")
+            .peak_usage
     }
 
     /// Get memory usage statistics.
     pub fn get_stats(&self) -> MemoryStats {
-        let inner = self.inner.lock().unwrap();
+        let inner = self.inner.lock().expect("lock should not be poisoned");
 
         let active_count = inner.allocations.values().filter(|r| r.alive).count();
         let leaked_bytes: u64 = inner
@@ -170,7 +176,7 @@ impl MemoryProfiler {
     pub fn get_allocations(&self) -> Vec<AllocationRecord> {
         self.inner
             .lock()
-            .unwrap()
+            .expect("lock should not be poisoned")
             .allocations
             .values()
             .cloned()
@@ -181,7 +187,7 @@ impl MemoryProfiler {
     pub fn get_active_allocations(&self) -> Vec<AllocationRecord> {
         self.inner
             .lock()
-            .unwrap()
+            .expect("lock should not be poisoned")
             .allocations
             .values()
             .filter(|r| r.alive)
@@ -191,7 +197,7 @@ impl MemoryProfiler {
 
     /// Reset the profiler.
     pub fn reset(&self) {
-        let mut inner = self.inner.lock().unwrap();
+        let mut inner = self.inner.lock().expect("lock should not be poisoned");
         inner.allocations.clear();
         inner.next_id = 0;
         inner.start_time = std::time::Instant::now();
@@ -203,7 +209,7 @@ impl MemoryProfiler {
 
     /// Export memory timeline to CSV.
     pub fn export_timeline(&self) -> String {
-        let inner = self.inner.lock().unwrap();
+        let inner = self.inner.lock().expect("lock should not be poisoned");
 
         let mut csv = String::from("timestamp_ms,event,size_bytes,source\n");
 

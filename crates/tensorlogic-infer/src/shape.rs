@@ -71,10 +71,10 @@ impl TensorShape {
 
         for (a, b) in self.dims.iter().zip(other.dims.iter()) {
             match (a, b) {
-                (DimSize::Static(size_a), DimSize::Static(size_b)) => {
-                    if size_a != size_b && *size_a != 1 && *size_b != 1 {
-                        return false;
-                    }
+                (DimSize::Static(size_a), DimSize::Static(size_b))
+                    if size_a != size_b && *size_a != 1 && *size_b != 1 =>
+                {
+                    return false;
                 }
                 _ => {
                     // Dynamic or symbolic dims are always compatible
@@ -323,7 +323,9 @@ mod tests {
         ctx.set_tensor_shape(1, TensorShape::static_shape(vec![4, 5]));
 
         // "ab,bc->ac" should produce shape [3, 5]
-        let shape = ctx.infer_einsum_shape("ab,bc->ac", &[0, 1]).unwrap();
+        let shape = ctx
+            .infer_einsum_shape("ab,bc->ac", &[0, 1])
+            .expect("unwrap");
         assert_eq!(shape.rank(), 2);
         assert_eq!(shape.as_static(), Some(vec![3, 5]));
     }
@@ -334,7 +336,7 @@ mod tests {
         ctx.set_tensor_shape(0, TensorShape::static_shape(vec![2, 3, 4]));
 
         // "abc->ab" should produce shape [2, 3]
-        let shape = ctx.infer_einsum_shape("abc->ab", &[0]).unwrap();
+        let shape = ctx.infer_einsum_shape("abc->ab", &[0]).expect("unwrap");
         assert_eq!(shape.rank(), 2);
         assert_eq!(shape.as_static(), Some(vec![2, 3]));
     }
@@ -345,7 +347,7 @@ mod tests {
         ctx.set_tensor_shape(0, TensorShape::static_shape(vec![3, 3]));
 
         // "aa->a" should produce shape [3]
-        let shape = ctx.infer_einsum_shape("aa->a", &[0]).unwrap();
+        let shape = ctx.infer_einsum_shape("aa->a", &[0]).expect("unwrap");
         assert_eq!(shape.rank(), 1);
         assert_eq!(shape.as_static(), Some(vec![3]));
     }
@@ -357,7 +359,9 @@ mod tests {
         ctx.set_tensor_shape(1, TensorShape::static_shape(vec![10, 4, 5]));
 
         // "bik,bkj->bij" should produce shape [10, 3, 5]
-        let shape = ctx.infer_einsum_shape("bik,bkj->bij", &[0, 1]).unwrap();
+        let shape = ctx
+            .infer_einsum_shape("bik,bkj->bij", &[0, 1])
+            .expect("unwrap");
         assert_eq!(shape.rank(), 3);
         assert_eq!(shape.as_static(), Some(vec![10, 3, 5]));
     }
@@ -371,6 +375,6 @@ mod tests {
         // "ab,bc->ac" should fail because 'b' has different sizes (4 vs 5)
         let result = ctx.infer_einsum_shape("ab,bc->ac", &[0, 1]);
         assert!(result.is_err());
-        assert!(result.unwrap_err().contains("inconsistent"));
+        assert!(result.expect_err("unwrap_err").contains("inconsistent"));
     }
 }

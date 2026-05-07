@@ -220,7 +220,7 @@ mod tests {
     #[test]
     fn test_dead_code_elimination_empty_graph() {
         let mut graph = EinsumGraph::new();
-        let removed = eliminate_dead_code(&mut graph).unwrap();
+        let removed = eliminate_dead_code(&mut graph).expect("unwrap");
         assert_eq!(removed, 0);
     }
 
@@ -229,7 +229,7 @@ mod tests {
         let mut graph = EinsumGraph::new();
         graph.add_tensor("a[i]");
         graph.add_tensor("b[i]");
-        let removed = eliminate_dead_code(&mut graph).unwrap();
+        let removed = eliminate_dead_code(&mut graph).expect("unwrap");
         assert_eq!(removed, 0); // No outputs, so nothing to eliminate
     }
 
@@ -313,12 +313,12 @@ mod tests {
                 outputs: vec![t1],
                 metadata: None,
             })
-            .unwrap();
+            .expect("unwrap");
 
         // Set output
-        graph.add_output(t1).unwrap();
+        graph.add_output(t1).expect("unwrap");
 
-        let stats = optimize_graph(&mut graph).unwrap();
+        let stats = optimize_graph(&mut graph).expect("unwrap");
         // Optimization stats should be computed (just check it doesn't panic)
         let _total = stats.total_optimizations();
     }

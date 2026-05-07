@@ -30,6 +30,7 @@
 //! }
 //! ```
 
+use std::cmp::Reverse;
 use std::collections::HashMap;
 use std::fmt;
 use std::time::{Duration, Instant};
@@ -231,7 +232,7 @@ impl ExecutionTrace {
     /// Get operations sorted by duration (slowest first).
     pub fn slowest_operations(&self, limit: usize) -> Vec<&TraceEntry> {
         let mut sorted: Vec<_> = self.entries.iter().collect();
-        sorted.sort_by(|a, b| b.duration.cmp(&a.duration));
+        sorted.sort_by_key(|b| Reverse(b.duration));
         sorted.into_iter().take(limit).collect()
     }
 
@@ -410,7 +411,9 @@ impl ExecutionTracer {
 
         let duration = handle.start_time.elapsed();
         let entry = TraceEntry {
-            entry_id: handle.entry_id.unwrap(),
+            entry_id: handle
+                .entry_id
+                .expect("entry_id is Some after is_none guard above"),
             node_id,
             operation: operation.into(),
             start_time: handle.start_time,
@@ -948,7 +951,7 @@ mod tests {
             TensorStats::new(0, vec![2, 3], "f64").with_statistics(0.0, 1.0, 0.5, 0.25, 0, 0);
 
         inspector.record_stats(stats.clone());
-        assert_eq!(inspector.get_stats(0).unwrap().tensor_id, 0);
+        assert_eq!(inspector.get_stats(0).expect("unwrap").tensor_id, 0);
         assert!(!stats.has_numerical_issues());
     }
 
@@ -974,7 +977,7 @@ mod tests {
 
         let hit = manager.should_break(5, "einsum", 1000, false);
         assert!(hit.is_some());
-        assert_eq!(hit.unwrap().node_id, 5);
+        assert_eq!(hit.expect("unwrap").node_id, 5);
 
         manager.continue_execution();
         let hit2 = manager.should_break(5, "einsum", 1000, false);

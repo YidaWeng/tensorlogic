@@ -30,7 +30,7 @@ fn main() -> Result<()> {
 
     // Add to symbol table
     table.add_product_domain("PersonAtLocation", person_at_location)?;
-    let domain = table.get_domain("PersonAtLocation").unwrap();
+    let domain = table.get_domain("PersonAtLocation").expect("unwrap");
     println!("Added to table with cardinality: {}\n", domain.cardinality);
 
     // Example 2: Ternary Product

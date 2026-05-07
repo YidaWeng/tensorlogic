@@ -8,10 +8,18 @@ fn test_academic_schema() {
     let mut table = SymbolTable::new();
 
     // Define domains
-    table.add_domain(DomainInfo::new("Student", 1000)).unwrap();
-    table.add_domain(DomainInfo::new("Professor", 100)).unwrap();
-    table.add_domain(DomainInfo::new("Course", 500)).unwrap();
-    table.add_domain(DomainInfo::new("Department", 20)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Student", 1000))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Professor", 100))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Course", 500))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Department", 20))
+        .expect("unwrap");
 
     // Define domain hierarchy
     let mut hierarchy = DomainHierarchy::new();
@@ -24,34 +32,34 @@ fn test_academic_schema() {
             "enrolled",
             vec!["Student".to_string(), "Course".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new(
             "teaches",
             vec!["Professor".to_string(), "Course".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new(
             "belongs_to",
             vec!["Course".to_string(), "Department".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new(
             "advises",
             vec!["Professor".to_string(), "Student".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     // Validate schema
     let validator = SchemaValidator::new(&table);
-    let report = validator.validate().unwrap();
+    let report = validator.validate().expect("unwrap");
     assert!(report.errors.is_empty(), "Schema should be valid");
 
     // Test serialization round-trip
-    let json = table.to_json().unwrap();
-    let restored = SymbolTable::from_json(&json).unwrap();
+    let json = table.to_json().expect("unwrap");
+    let restored = SymbolTable::from_json(&json).expect("unwrap");
     assert_eq!(table.domains.len(), restored.domains.len());
     assert_eq!(table.predicates.len(), restored.predicates.len());
 
@@ -79,28 +87,32 @@ fn test_academic_schema() {
 fn test_social_network_versioning() {
     // Version 1: Basic social network
     let mut v1 = SymbolTable::new();
-    v1.add_domain(DomainInfo::new("User", 10000)).unwrap();
-    v1.add_domain(DomainInfo::new("Post", 50000)).unwrap();
+    v1.add_domain(DomainInfo::new("User", 10000))
+        .expect("unwrap");
+    v1.add_domain(DomainInfo::new("Post", 50000))
+        .expect("unwrap");
     v1.add_predicate(PredicateInfo::new(
         "follows",
         vec!["User".to_string(), "User".to_string()],
     ))
-    .unwrap();
+    .expect("unwrap");
     v1.add_predicate(PredicateInfo::new(
         "created",
         vec!["User".to_string(), "Post".to_string()],
     ))
-    .unwrap();
+    .expect("unwrap");
 
     // Version 2: Add reactions and groups
     let mut v2 = v1.clone();
-    v2.add_domain(DomainInfo::new("Group", 1000)).unwrap();
-    v2.add_domain(DomainInfo::new("Reaction", 5)).unwrap();
+    v2.add_domain(DomainInfo::new("Group", 1000))
+        .expect("unwrap");
+    v2.add_domain(DomainInfo::new("Reaction", 5))
+        .expect("unwrap");
     v2.add_predicate(PredicateInfo::new(
         "member_of",
         vec!["User".to_string(), "Group".to_string()],
     ))
-    .unwrap();
+    .expect("unwrap");
     v2.add_predicate(PredicateInfo::new(
         "reacted_with",
         vec![
@@ -109,7 +121,7 @@ fn test_social_network_versioning() {
             "Reaction".to_string(),
         ],
     ))
-    .unwrap();
+    .expect("unwrap");
 
     // Compare versions
     let diff = compute_diff(&v1, &v2);
@@ -137,10 +149,16 @@ fn test_ecommerce_schema() {
     // Define domains
     table
         .add_domain(DomainInfo::new("Customer", 100000))
-        .unwrap();
-    table.add_domain(DomainInfo::new("Product", 10000)).unwrap();
-    table.add_domain(DomainInfo::new("Order", 500000)).unwrap();
-    table.add_domain(DomainInfo::new("Category", 100)).unwrap();
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Product", 10000))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Order", 500000))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Category", 100))
+        .expect("unwrap");
 
     // Define predicates with constraints
     let mut purchases = PredicateInfo::new(
@@ -150,12 +168,12 @@ fn test_ecommerce_schema() {
     purchases.constraints = Some(
         PredicateConstraints::new().with_property(PredicateProperty::Functional), // Each purchase links to one product
     );
-    table.add_predicate(purchases).unwrap();
+    table.add_predicate(purchases).expect("unwrap");
 
     let mut contains =
         PredicateInfo::new("contains", vec!["Order".to_string(), "Product".to_string()]);
     contains.description = Some("Products contained in an order".to_string());
-    table.add_predicate(contains).unwrap();
+    table.add_predicate(contains).expect("unwrap");
 
     let mut in_category = PredicateInfo::new(
         "in_category",
@@ -164,11 +182,11 @@ fn test_ecommerce_schema() {
     in_category.constraints = Some(
         PredicateConstraints::new().with_property(PredicateProperty::Functional), // Each product has one category
     );
-    table.add_predicate(in_category).unwrap();
+    table.add_predicate(in_category).expect("unwrap");
 
     // Validate
     let validator = SchemaValidator::new(&table);
-    let report = validator.validate().unwrap();
+    let report = validator.validate().expect("unwrap");
     assert!(report.errors.is_empty());
 
     // Test compiler export
@@ -182,26 +200,31 @@ fn test_ecommerce_schema() {
 fn test_schema_merge() {
     // Base schema
     let mut base = SymbolTable::new();
-    base.add_domain(DomainInfo::new("Entity", 1000)).unwrap();
+    base.add_domain(DomainInfo::new("Entity", 1000))
+        .expect("unwrap");
     base.add_predicate(PredicateInfo::new("related", vec!["Entity".to_string()]))
-        .unwrap();
+        .expect("unwrap");
 
     // Update schema 1: Add attributes
     let mut update1 = SymbolTable::new();
-    update1.add_domain(DomainInfo::new("Entity", 1000)).unwrap(); // Need Entity for predicate
+    update1
+        .add_domain(DomainInfo::new("Entity", 1000))
+        .expect("unwrap"); // Need Entity for predicate
     update1
         .add_domain(DomainInfo::new("Attribute", 100))
-        .unwrap();
+        .expect("unwrap");
     update1
         .add_predicate(PredicateInfo::new(
             "has_attr",
             vec!["Entity".to_string(), "Attribute".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     // Update schema 2: Modify entity cardinality
     let mut update2 = SymbolTable::new();
-    update2.add_domain(DomainInfo::new("Entity", 2000)).unwrap(); // Increased
+    update2
+        .add_domain(DomainInfo::new("Entity", 2000))
+        .expect("unwrap"); // Increased
 
     // Merge base + update1
     let merged1 = merge_tables(&base, &update1);
@@ -210,7 +233,13 @@ fn test_schema_merge() {
 
     // Merge merged1 + update2
     let final_merged = merge_tables(&merged1, &update2);
-    assert_eq!(final_merged.get_domain("Entity").unwrap().cardinality, 2000);
+    assert_eq!(
+        final_merged
+            .get_domain("Entity")
+            .expect("unwrap")
+            .cardinality,
+        2000
+    );
 }
 
 /// Test parametric types in a real scenario.
@@ -219,8 +248,12 @@ fn test_collection_schema() {
     let mut table = SymbolTable::new();
 
     // Define base domains
-    table.add_domain(DomainInfo::new("User", 1000)).unwrap();
-    table.add_domain(DomainInfo::new("Item", 5000)).unwrap();
+    table
+        .add_domain(DomainInfo::new("User", 1000))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Item", 5000))
+        .expect("unwrap");
 
     // Create parametric types
     let user_list = ParametricType::list(TypeParameter::concrete("User"));
@@ -232,15 +265,15 @@ fn test_collection_schema() {
     // Add domains with parametric types
     let mut shopping_cart = DomainInfo::new("ShoppingCart", 1000);
     shopping_cart.parametric_type = Some(item_set);
-    table.add_domain(shopping_cart).unwrap();
+    table.add_domain(shopping_cart).expect("unwrap");
 
     let mut friends_list = DomainInfo::new("FriendsList", 1000);
     friends_list.parametric_type = Some(user_list);
-    table.add_domain(friends_list).unwrap();
+    table.add_domain(friends_list).expect("unwrap");
 
     // Validate
     let validator = SchemaValidator::new(&table);
-    let report = validator.validate().unwrap();
+    let report = validator.validate().expect("unwrap");
     assert!(report.errors.is_empty());
 }
 
@@ -251,10 +284,18 @@ fn test_organizational_hierarchy() {
     let mut hierarchy = DomainHierarchy::new();
 
     // Define organization structure
-    table.add_domain(DomainInfo::new("Employee", 1000)).unwrap();
-    table.add_domain(DomainInfo::new("Manager", 100)).unwrap();
-    table.add_domain(DomainInfo::new("Director", 20)).unwrap();
-    table.add_domain(DomainInfo::new("Executive", 5)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Employee", 1000))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Manager", 100))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Director", 20))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Executive", 5))
+        .expect("unwrap");
 
     // Build hierarchy
     hierarchy.add_subtype("Manager", "Employee");
@@ -272,7 +313,7 @@ fn test_organizational_hierarchy() {
             "reports_to",
             vec!["Employee".to_string(), "Manager".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     // Validate hierarchy is acyclic
     assert!(hierarchy.validate_acyclic().is_ok());
@@ -302,12 +343,12 @@ fn test_metadata_tracking() {
     metadata.documentation = Some(documentation);
 
     person.metadata = Some(metadata);
-    table.add_domain(person).unwrap();
+    table.add_domain(person).expect("unwrap");
 
     // Verify metadata
-    let retrieved = table.get_domain("Person").unwrap();
+    let retrieved = table.get_domain("Person").expect("unwrap");
     assert!(retrieved.metadata.is_some());
-    let metadata = retrieved.metadata.as_ref().unwrap();
+    let metadata = retrieved.metadata.as_ref().expect("unwrap");
     assert!(metadata.provenance.is_some());
     assert!(metadata.documentation.is_some());
 }
@@ -321,7 +362,7 @@ fn test_large_schema() {
     for i in 0..100 {
         table
             .add_domain(DomainInfo::new(format!("Domain{}", i), 1000))
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Create many predicates
@@ -332,7 +373,7 @@ fn test_large_schema() {
                 format!("pred{}", i),
                 vec![format!("Domain{}", domain_idx)],
             ))
-            .unwrap();
+            .expect("unwrap");
     }
 
     // Test operations on large schema
@@ -353,7 +394,7 @@ fn test_large_schema() {
     );
 
     // Verify round-trip
-    let restored = compact.to_symbol_table().unwrap();
+    let restored = compact.to_symbol_table().expect("unwrap");
     assert_eq!(table.domains.len(), restored.domains.len());
     assert_eq!(table.predicates.len(), restored.predicates.len());
 }
@@ -362,26 +403,30 @@ fn test_large_schema() {
 #[test]
 fn test_binary_storage() {
     let mut table = SymbolTable::new();
-    table.add_domain(DomainInfo::new("Person", 100)).unwrap();
-    table.add_domain(DomainInfo::new("Location", 50)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
+    table
+        .add_domain(DomainInfo::new("Location", 50))
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new(
             "at",
             vec!["Person".to_string(), "Location".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
     // Test binary serialization
     let compact = CompactSchema::from_symbol_table(&table);
-    let binary = compact.to_binary().unwrap();
+    let binary = compact.to_binary().expect("unwrap");
 
     // Verify size is reasonable
     assert!(!binary.is_empty());
     println!("Binary size: {} bytes", binary.len());
 
     // Restore from binary
-    let restored_compact = CompactSchema::from_binary(&binary).unwrap();
-    let restored_table = restored_compact.to_symbol_table().unwrap();
+    let restored_compact = CompactSchema::from_binary(&binary).expect("unwrap");
+    let restored_table = restored_compact.to_symbol_table().expect("unwrap");
 
     assert_eq!(table.domains.len(), restored_table.domains.len());
     assert_eq!(table.predicates.len(), restored_table.predicates.len());
@@ -391,10 +436,12 @@ fn test_binary_storage() {
 #[test]
 fn test_compiler_bundle_validation() {
     let mut table = SymbolTable::new();
-    table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new("knows", vec!["Person".to_string()]))
-        .unwrap();
+        .expect("unwrap");
 
     // Export to compiler bundle
     let bundle = CompilerExport::export_all(&table);
@@ -403,9 +450,9 @@ fn test_compiler_bundle_validation() {
     let mut other_table = SymbolTable::new();
     other_table
         .add_domain(DomainInfo::new("Person", 100))
-        .unwrap();
+        .expect("unwrap");
 
-    let result = SymbolTableSync::validate_bundle(&other_table, &bundle).unwrap();
+    let result = SymbolTableSync::validate_bundle(&other_table, &bundle).expect("unwrap");
     assert!(result.is_valid());
 
     // Test invalid bundle
@@ -415,7 +462,7 @@ fn test_compiler_bundle_validation() {
         vec!["UnknownDomain".to_string()],
     );
 
-    let result = SymbolTableSync::validate_bundle(&table, &invalid_bundle).unwrap();
+    let result = SymbolTableSync::validate_bundle(&table, &invalid_bundle).expect("unwrap");
     assert!(!result.is_valid());
     assert!(!result.errors.is_empty());
 }
@@ -431,16 +478,18 @@ fn test_cli_validate_valid_schema() {
 
     // Create a valid schema
     let mut table = SymbolTable::new();
-    table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new(
             "knows",
             vec!["Person".to_string(), "Person".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
-    let yaml = table.to_yaml().unwrap();
-    fs::write(&schema_path, yaml).unwrap();
+    let yaml = table.to_yaml().expect("unwrap");
+    fs::write(&schema_path, yaml).expect("unwrap");
 
     // Run validation command
     let output = Command::new("cargo")
@@ -449,7 +498,7 @@ fn test_cli_validate_valid_schema() {
             "--bin",
             "schema_validate",
             "--",
-            schema_path.to_str().unwrap(),
+            schema_path.to_str().expect("unwrap"),
         ])
         .output();
 
@@ -475,16 +524,18 @@ fn test_cli_migrate_convert() {
 
     // Create a schema in JSON
     let mut table = SymbolTable::new();
-    table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    table
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
     table
         .add_predicate(PredicateInfo::new(
             "knows",
             vec!["Person".to_string(), "Person".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
-    let json = table.to_json().unwrap();
-    fs::write(&json_path, json).unwrap();
+    let json = table.to_json().expect("unwrap");
+    fs::write(&json_path, json).expect("unwrap");
 
     // Run convert command
     let output = Command::new("cargo")
@@ -494,8 +545,8 @@ fn test_cli_migrate_convert() {
             "schema_migrate",
             "--",
             "convert",
-            json_path.to_str().unwrap(),
-            yaml_path.to_str().unwrap(),
+            json_path.to_str().expect("unwrap"),
+            yaml_path.to_str().expect("unwrap"),
         ])
         .output();
 
@@ -505,8 +556,8 @@ fn test_cli_migrate_convert() {
             assert!(yaml_path.exists(), "YAML file should be created");
 
             // Verify content
-            let yaml_content = fs::read_to_string(&yaml_path).unwrap();
-            let restored = SymbolTable::from_yaml(&yaml_content).unwrap();
+            let yaml_content = fs::read_to_string(&yaml_path).expect("unwrap");
+            let restored = SymbolTable::from_yaml(&yaml_content).expect("unwrap");
             assert_eq!(table.domains.len(), restored.domains.len());
             assert_eq!(table.predicates.len(), restored.predicates.len());
         }
@@ -531,29 +582,29 @@ fn test_cli_migrate_diff() {
     let mut old_table = SymbolTable::new();
     old_table
         .add_domain(DomainInfo::new("Person", 100))
-        .unwrap();
+        .expect("unwrap");
     old_table
         .add_predicate(PredicateInfo::new(
             "knows",
             vec!["Person".to_string(), "Person".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
-    fs::write(&old_path, old_table.to_yaml().unwrap()).unwrap();
+    fs::write(&old_path, old_table.to_yaml().expect("unwrap")).expect("unwrap");
 
     // Create new schema (with additions)
     let mut new_table = old_table.clone();
     new_table
         .add_domain(DomainInfo::new("Location", 50))
-        .unwrap();
+        .expect("unwrap");
     new_table
         .add_predicate(PredicateInfo::new(
             "at",
             vec!["Person".to_string(), "Location".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
-    fs::write(&new_path, new_table.to_yaml().unwrap()).unwrap();
+    fs::write(&new_path, new_table.to_yaml().expect("unwrap")).expect("unwrap");
 
     // Run diff command
     let output = Command::new("cargo")
@@ -563,8 +614,8 @@ fn test_cli_migrate_diff() {
             "schema_migrate",
             "--",
             "diff",
-            old_path.to_str().unwrap(),
-            new_path.to_str().unwrap(),
+            old_path.to_str().expect("unwrap"),
+            new_path.to_str().expect("unwrap"),
         ])
         .output();
 
@@ -594,28 +645,34 @@ fn test_cli_migrate_merge() {
 
     // Create first schema
     let mut table1 = SymbolTable::new();
-    table1.add_domain(DomainInfo::new("Person", 100)).unwrap();
+    table1
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap");
     table1
         .add_predicate(PredicateInfo::new(
             "knows",
             vec!["Person".to_string(), "Person".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
-    fs::write(&schema1_path, table1.to_yaml().unwrap()).unwrap();
+    fs::write(&schema1_path, table1.to_yaml().expect("unwrap")).expect("unwrap");
 
     // Create second schema
     let mut table2 = SymbolTable::new();
-    table2.add_domain(DomainInfo::new("Person", 100)).unwrap(); // Added Person domain
-    table2.add_domain(DomainInfo::new("Location", 50)).unwrap();
+    table2
+        .add_domain(DomainInfo::new("Person", 100))
+        .expect("unwrap"); // Added Person domain
+    table2
+        .add_domain(DomainInfo::new("Location", 50))
+        .expect("unwrap");
     table2
         .add_predicate(PredicateInfo::new(
             "at",
             vec!["Person".to_string(), "Location".to_string()],
         ))
-        .unwrap();
+        .expect("unwrap");
 
-    fs::write(&schema2_path, table2.to_yaml().unwrap()).unwrap();
+    fs::write(&schema2_path, table2.to_yaml().expect("unwrap")).expect("unwrap");
 
     // Run merge command
     let output = Command::new("cargo")
@@ -625,17 +682,17 @@ fn test_cli_migrate_merge() {
             "schema_migrate",
             "--",
             "merge",
-            schema1_path.to_str().unwrap(),
-            schema2_path.to_str().unwrap(),
-            merged_path.to_str().unwrap(),
+            schema1_path.to_str().expect("unwrap"),
+            schema2_path.to_str().expect("unwrap"),
+            merged_path.to_str().expect("unwrap"),
         ])
         .output();
 
     // Verify merged result
     if let Ok(output) = output {
         if output.status.success() && merged_path.exists() {
-            let merged_content = fs::read_to_string(&merged_path).unwrap();
-            let merged_table = SymbolTable::from_yaml(&merged_content).unwrap();
+            let merged_content = fs::read_to_string(&merged_path).expect("unwrap");
+            let merged_table = SymbolTable::from_yaml(&merged_content).expect("unwrap");
 
             // Should contain domains from both schemas
             assert!(merged_table.get_domain("Person").is_some());

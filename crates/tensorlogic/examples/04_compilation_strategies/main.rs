@@ -31,12 +31,14 @@ fn main() {
     // Test data: 5 different cases
     // P values: [0.0, 0.2, 0.5, 0.8, 1.0]
     // Q values: [1.0, 0.8, 0.5, 0.2, 0.0]
-    let p_data = Scirs2Exec::from_vec(vec![0.0, 0.2, 0.5, 0.8, 1.0], vec![5]).unwrap();
-    let q_data = Scirs2Exec::from_vec(vec![1.0, 0.8, 0.5, 0.2, 0.0], vec![5]).unwrap();
+    let p_data =
+        Scirs2Exec::from_vec(vec![0.0, 0.2, 0.5, 0.8, 1.0], vec![5]).expect("valid tensor data");
+    let q_data =
+        Scirs2Exec::from_vec(vec![1.0, 0.8, 0.5, 0.2, 0.0], vec![5]).expect("valid tensor data");
 
     println!("Test Data:");
-    println!("  P(x): {:?}", p_data.as_slice().unwrap());
-    println!("  Q(x): {:?}", q_data.as_slice().unwrap());
+    println!("  P(x): {:?}", p_data.as_slice().unwrap_or(&[]));
+    println!("  Q(x): {:?}", q_data.as_slice().unwrap_or(&[]));
     println!();
 
     // Test each compilation strategy
@@ -142,7 +144,7 @@ fn test_strategy(
     config: CompilationConfig,
 ) {
     // Compile with the specified configuration
-    let graph = compile_to_einsum_with_config(expr, &config).unwrap();
+    let graph = compile_to_einsum_with_config(expr, &config).expect("compilation should succeed");
 
     let mut executor = Scirs2Exec::new();
 
@@ -155,9 +157,9 @@ fn test_strategy(
     }
 
     // Execute
-    let result = executor.forward(&graph).unwrap();
+    let result = executor.forward(&graph).expect("execution should succeed");
 
     println!("{} Strategy:", name);
-    println!("  Result: {:?}", result.as_slice().unwrap());
+    println!("  Result: {:?}", result.as_slice().unwrap_or(&[]));
     println!();
 }

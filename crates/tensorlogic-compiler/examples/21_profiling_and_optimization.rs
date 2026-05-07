@@ -54,38 +54,36 @@ fn example_1_basic_profiling() -> Result<()> {
 
     // Create a profiler
     let mut profiler = CompilationProfiler::new();
-    profiler.start();
 
     // Profile compilation phases
-    profiler.start_phase("context_setup");
+    profiler.begin_phase("context_setup");
     let mut ctx = CompilerContext::new();
     ctx.add_domain("Person", 100);
-    profiler.end_phase("context_setup");
+    profiler.set_items(1);
+    profiler.end_phase();
 
     // Build a complex expression: ∀x,y,z. knows(x,y) ∧ knows(y,z) → knows(x,z)
-    profiler.start_phase("expression_building");
+    profiler.begin_phase("expression_building");
     let knows_xy = TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]);
     let knows_yz = TLExpr::pred("knows", vec![Term::var("y"), Term::var("z")]);
     let knows_xz = TLExpr::pred("knows", vec![Term::var("x"), Term::var("z")]);
     let premise = TLExpr::and(knows_xy, knows_yz);
     let rule = TLExpr::imply(premise, knows_xz);
-    profiler.end_phase("expression_building");
+    profiler.set_items(5);
+    profiler.end_phase();
 
     // Profile compilation
-    profiler.start_phase("compilation");
+    profiler.begin_phase("compilation");
     let _graph = compile_to_einsum_with_context(&rule, &mut ctx)?;
-    profiler.end_phase("compilation");
+    profiler.set_items(1);
+    profiler.end_phase();
+
+    profiler.set_input_complexity(5);
+    profiler.set_output_size(1);
 
     // Generate and display profiling report
-    let report = profiler.generate_report();
-    println!("{}", report);
-
-    // Also show JSON format
-    println!("JSON Report (excerpt):");
-    let json = profiler.generate_json_report();
-    let lines: Vec<&str> = json.lines().take(10).collect();
-    println!("{}", lines.join("\n"));
-    println!("  ...\n");
+    let report = profiler.finish();
+    println!("{}", report.summary());
 
     Ok(())
 }

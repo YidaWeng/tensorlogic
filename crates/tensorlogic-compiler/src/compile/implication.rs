@@ -41,7 +41,12 @@ pub(crate) fn compile_imply(
         if !premise_extra.is_empty() {
             let axes_to_reduce: Vec<usize> = premise_extra
                 .iter()
-                .map(|c| premise_state.axes.find(*c).unwrap())
+                .map(|c| {
+                    premise_state
+                        .axes
+                        .find(*c)
+                        .expect("axis from premise should exist")
+                })
                 .collect();
 
             let reduce_name = ctx.fresh_temp();

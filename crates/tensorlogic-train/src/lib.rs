@@ -1,6 +1,6 @@
 //! Training scaffolds: loss wiring, schedules, callbacks.
 //!
-//! **Version**: 0.1.0-beta.1 | **Status**: Production Ready
+//! **Version**: 0.1.0 | **Status**: Production Ready
 //!
 //! This crate provides comprehensive training infrastructure for Tensorlogic models:
 //! - Loss functions (standard and logical constraint-based)
@@ -21,28 +21,36 @@
 //! - Mixed precision training (FP16, BF16)
 //! - Advanced sampling strategies
 
+pub mod adversarial;
 mod augmentation;
 mod batch;
 mod callbacks;
+pub mod checkpoint;
 mod crossval;
 mod curriculum;
 mod data;
 mod distillation;
 mod dropblock;
+pub mod early_stopping;
 mod ensemble;
 mod error;
 mod few_shot;
+mod gradient_accumulation;
 mod gradient_centralization;
 mod hyperparameter;
 mod label_smoothing;
 mod logging;
+pub mod lora;
 mod loss;
+mod lr_scheduler;
 mod memory;
 mod meta_learning;
 mod metrics;
 mod mixed_precision;
 mod model;
 mod multitask;
+pub mod neural_ode;
+pub mod online_learning;
 mod optimizer;
 mod optimizers;
 mod pruning;
@@ -54,13 +62,40 @@ mod stochastic_depth;
 mod trainer;
 mod transfer;
 mod utils;
+pub mod weight_init;
 
 #[cfg(feature = "structured-logging")]
 pub mod structured_logging;
 
 pub use augmentation::{
-    CompositeAugmenter, CutMixAugmenter, CutOutAugmenter, DataAugmenter, MixupAugmenter,
-    NoAugmentation, NoiseAugmenter, RandomErasingAugmenter, RotationAugmenter, ScaleAugmenter,
+    center_crop_2d,
+    clip,
+    cutmix,
+    denormalize,
+    dropout,
+    dropout_mask,
+    gaussian_noise,
+    mixup,
+    normalize,
+    random_crop_2d,
+    random_hflip,
+    random_vflip,
+    // Functional API (v2)
+    AugRng,
+    AugStats,
+    AugmentationError,
+    AugmentationPipeline,
+    AugmentationStep,
+    CompositeAugmenter,
+    CutMixAugmenter,
+    CutOutAugmenter,
+    DataAugmenter,
+    MixupAugmenter,
+    NoAugmentation,
+    NoiseAugmenter,
+    RandomErasingAugmenter,
+    RotationAugmenter,
+    ScaleAugmenter,
 };
 pub use batch::{extract_batch, BatchConfig, BatchIterator, DataShuffler};
 pub use callbacks::{
@@ -79,6 +114,11 @@ pub use loss::{
     BCEWithLogitsLoss, ConstraintViolationLoss, ContrastiveLoss, CrossEntropyLoss, DiceLoss,
     FocalLoss, HingeLoss, HuberLoss, KLDivergenceLoss, LogicalLoss, Loss, LossConfig, MseLoss,
     PolyLoss, RuleSatisfactionLoss, TripletLoss, TverskyLoss,
+};
+pub use lr_scheduler::{
+    CosineAnnealingScheduler, CyclicalScheduler, LrSchedulerV2,
+    OneCycleLrScheduler as OneCyclePolicyScheduler, SchedulerConfig, SchedulerError, SchedulerType,
+    StepDecayScheduler, WarmupScheduler,
 };
 pub use metrics::{
     Accuracy, BalancedAccuracy, CohensKappa, ConfusionMatrix, DiceCoefficient,
@@ -198,6 +238,11 @@ pub use meta_learning::{
     MAMLConfig, MetaLearner, MetaStats, MetaTask, Reptile, ReptileConfig, MAML,
 };
 
+// Gradient accumulation and micro-batching
+pub use gradient_accumulation::{
+    AccumulationConfig, AccumulationError, AccumulationStats, GradientAccumulator, GradientBuffer,
+};
+
 // Gradient centralization
 pub use gradient_centralization::{GcConfig, GcStats, GcStrategy, GradientCentralization};
 
@@ -206,3 +251,44 @@ pub use stochastic_depth::{DropPath, ExponentialStochasticDepth, LinearStochasti
 
 // DropBlock regularization
 pub use dropblock::{DropBlock, LinearDropBlockScheduler};
+
+// Early stopping
+pub use early_stopping::{
+    EarlyStoppingConfig, EarlyStoppingDecision, EarlyStoppingMonitor, MonitorMode,
+    MultiMetricMonitor, MultiMetricPolicy, PlateauDetector, TrainingProgress,
+};
+
+// Optimizer checkpointing
+pub use checkpoint::{
+    deserialize_checkpoint, serialize_checkpoint, CheckpointError, CheckpointFormat,
+    CheckpointManager, CheckpointMetadata, LossTracker, OptimizerCheckpoint, ParamState,
+};
+
+// Weight initialization strategies
+pub use weight_init::{
+    compute_fans, constant_init, gain_for_activation, kaiming_normal, kaiming_uniform,
+    lecun_normal, lecun_uniform, normal_init, ones_init, orthogonal_init, uniform_init,
+    xavier_normal, xavier_uniform, zeros_init, FanMode, InitError, InitRng, InitStats,
+};
+
+// Online learning algorithms
+pub use online_learning::{
+    online_evaluate, Ftrl, OGDLoss, OnlineError, OnlineGradientDescent, OnlineLearner, OnlineStats,
+    OnlineUpdateResult, PAVariant, PassiveAggressive, Perceptron,
+};
+
+// Adversarial training utilities
+pub use adversarial::{
+    adversarial_training_loss, fgsm, pgd, project_l1, project_l2, project_linf, robustness_eval,
+    AdversarialError, AdversarialExample, AdversarialTrainStats, AttackConfig, AttackLoss,
+    AttackModel, CrossEntropyAttackLoss, LinearAttackModel, MseAttackLoss, PerturbNorm,
+};
+
+// Neural ODE — continuous-depth models with adjoint sensitivity
+pub use neural_ode::{
+    dopri5_solve, rk4_solve, AdaptiveSolution, AdjointResult, NeuralOde, OdeError, OdeFunc,
+    OdeSolution, OdeSolverConfig,
+};
+
+// LoRA — low-rank adaptation for parameter-efficient fine-tuning
+pub use lora::{LoraAdapter, LoraConfig, LoraError, LoraLayer};

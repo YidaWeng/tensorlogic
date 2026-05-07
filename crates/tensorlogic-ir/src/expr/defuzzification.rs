@@ -306,7 +306,7 @@ impl SingletonFuzzySet {
     pub fn winner_takes_all(&self) -> Option<(String, f64)> {
         self.singletons
             .iter()
-            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap())
+            .max_by(|a, b| a.1.partial_cmp(b.1).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(k, &v)| (k.clone(), v))
     }
 }
@@ -363,7 +363,7 @@ mod tests {
     #[test]
     fn test_centroid() {
         let fs = create_test_fuzzy_set();
-        let result = centroid(&fs).unwrap();
+        let result = centroid(&fs).expect("unwrap");
         // For symmetric triangular, centroid should be near 0.5
         assert!((result - 0.5).abs() < 0.1);
     }
@@ -371,7 +371,7 @@ mod tests {
     #[test]
     fn test_bisector() {
         let fs = create_test_fuzzy_set();
-        let result = bisector(&fs).unwrap();
+        let result = bisector(&fs).expect("unwrap");
         // Bisector for symmetric shape should be near center
         assert!((result - 0.5).abs() < 0.1);
     }
@@ -379,7 +379,7 @@ mod tests {
     #[test]
     fn test_mean_of_maximum() {
         let fs = create_test_fuzzy_set();
-        let result = mean_of_maximum(&fs).unwrap();
+        let result = mean_of_maximum(&fs).expect("unwrap");
         // MOM for single peak at 0.5
         assert!((result - 0.5).abs() < 1e-10);
     }
@@ -387,7 +387,7 @@ mod tests {
     #[test]
     fn test_smallest_of_maximum() {
         let fs = FuzzySet::from_memberships(0.0, 1.0, vec![0.0, 0.5, 1.0, 1.0, 1.0, 0.5, 0.0]);
-        let result = smallest_of_maximum(&fs).unwrap();
+        let result = smallest_of_maximum(&fs).expect("unwrap");
         // Leftmost max at index 2 → 2/6 ≈ 0.33
         assert!((result - 0.333).abs() < 0.05);
     }
@@ -395,7 +395,7 @@ mod tests {
     #[test]
     fn test_largest_of_maximum() {
         let fs = FuzzySet::from_memberships(0.0, 1.0, vec![0.0, 0.5, 1.0, 1.0, 1.0, 0.5, 0.0]);
-        let result = largest_of_maximum(&fs).unwrap();
+        let result = largest_of_maximum(&fs).expect("unwrap");
         // Rightmost max at index 4 → 4/6 ≈ 0.67
         assert!((result - 0.667).abs() < 0.05);
     }
@@ -403,7 +403,7 @@ mod tests {
     #[test]
     fn test_weighted_average() {
         let fs = FuzzySet::from_memberships(0.0, 10.0, vec![0.2, 0.5, 0.8, 0.5, 0.2]);
-        let result = weighted_average(&fs).unwrap();
+        let result = weighted_average(&fs).expect("unwrap");
         // Should be weighted toward middle (index 2)
         assert!(result > 4.0 && result < 6.0);
     }
@@ -423,7 +423,7 @@ mod tests {
         sfs.add("5.0".to_string(), 0.8);
         sfs.add("10.0".to_string(), 0.3);
 
-        let result = sfs.defuzzify().unwrap();
+        let result = sfs.defuzzify().expect("unwrap");
         // Weighted average: (0*0.2 + 5*0.8 + 10*0.3) / (0.2 + 0.8 + 0.3)
         // = (0 + 4 + 3) / 1.3 ≈ 5.38
         assert!((result - 5.38).abs() < 0.1);
@@ -436,7 +436,7 @@ mod tests {
         sfs.add("medium".to_string(), 0.8);
         sfs.add("high".to_string(), 0.5);
 
-        let (winner, membership) = sfs.winner_takes_all().unwrap();
+        let (winner, membership) = sfs.winner_takes_all().expect("unwrap");
         assert_eq!(winner, "medium");
         assert!((membership - 0.8).abs() < 1e-10);
     }

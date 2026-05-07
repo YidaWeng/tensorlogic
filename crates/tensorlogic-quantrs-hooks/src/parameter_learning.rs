@@ -658,7 +658,7 @@ mod tests {
             data.push(assignment);
         }
 
-        let probs = estimator.estimate_marginal("X", 2, &data).unwrap();
+        let probs = estimator.estimate_marginal("X", 2, &data).expect("unwrap");
 
         assert!((probs[[0]] - 0.7).abs() < 1e-6);
         assert!((probs[[1]] - 0.3).abs() < 1e-6);
@@ -676,7 +676,7 @@ mod tests {
         }
         // No observations of X=1
 
-        let probs = estimator.estimate_marginal("X", 2, &data).unwrap();
+        let probs = estimator.estimate_marginal("X", 2, &data).expect("unwrap");
 
         // With Laplace: (8+1)/(8+1+0+1) = 9/10 = 0.9
         assert!((probs[[0]] - 0.9).abs() < 1e-6);
@@ -694,7 +694,7 @@ mod tests {
             data.push(assignment);
         }
 
-        let probs = estimator.estimate_marginal("X", 2, &data).unwrap();
+        let probs = estimator.estimate_marginal("X", 2, &data).expect("unwrap");
 
         // Prior: Dirichlet(1, 1), Data: 8, 0
         // Posterior: (8+1, 0+1) / (8+1+0+1) = (9, 1) / 10

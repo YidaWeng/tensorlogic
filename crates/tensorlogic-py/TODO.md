@@ -1,54 +1,46 @@
-# Beta.1 Release Status ✅
+# TensorLogic Python Bindings — TODO
 
-**Version**: 0.1.0-beta.1
-**Status**: Production Ready
+**Status**: Alpha | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
-This crate is part of the TensorLogic v0.1.0-beta.1 release with:
-- Zero compiler warnings
-- 100% test pass rate
-- Complete documentation
-- Production-ready quality
+PyO3 / abi3-py39 Python bindings via maturin.
 
-See main [TODO.md](../../TODO.md) for overall project status.
-
----
-
-# pytensorlogic TODO
-
-## Completed ✓
+## Completed
 
 ### Infrastructure
 - [x] Basic PyO3 structure
 - [x] abi3-py39 configuration
-- [x] NumPy 0.23 integration
+- [x] NumPy integration
 - [x] Module organization (types, compiler, executor, numpy_conversion)
+- [x] Maturin build with zero warnings
 
-### Core Types Binding ✅ COMPLETE
+### Core Types Binding - COMPLETE
 - [x] **PyTerm** - Expose Term to Python with __repr__ and __str__
 - [x] **PyTLExpr** - Expose TLExpr with all logical operations
 - [x] **PyEinsumGraph** - Expose compiled graphs with stats
 - [x] Helper functions: var(), const(), pred(), and_(), or_(), not_(), exists(), forall(), imply(), constant()
 
-### Compilation API ✅ COMPLETE
+### Compilation API - COMPLETE
 - [x] **py_compile()** - Main compilation function
 - [x] **PyCompilationConfig** - Configuration wrapper with 6 presets
   - [x] soft_differentiable() - Default for neural training
   - [x] hard_boolean() - Discrete Boolean logic
-  - [x] fuzzy_godel() - Gödel fuzzy logic
+  - [x] fuzzy_godel() - Godel fuzzy logic
   - [x] fuzzy_product() - Product fuzzy logic
-  - [x] fuzzy_lukasiewicz() - Łukasiewicz fuzzy logic
+  - [x] fuzzy_lukasiewicz() - Lukasiewicz fuzzy logic
   - [x] probabilistic() - Probabilistic interpretation
 - [x] **py_compile_with_config()** - Compilation with custom config
+- [x] **py_compile_with_context()** - Compilation with CompilerContext
 - [x] Error handling with PyRuntimeError
 
-### Execution API ✅ COMPLETE
+### Execution API - COMPLETE
 - [x] **py_execute()** - Execute graphs with NumPy inputs
 - [x] Dynamic tensor shape handling (ArrayD<f64>)
 - [x] Input/output via Python dictionaries
 - [x] Integration with Scirs2Exec backend
 - [x] Proper error propagation to Python
 
-### NumPy Integration ✅ COMPLETE
+### NumPy Integration - COMPLETE
 - [x] **NumPy interop module** (numpy_conversion.rs)
   - [x] numpy_to_array2() - Convert 2D arrays
   - [x] array2_to_numpy() - Export 2D arrays
@@ -59,18 +51,18 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [ ] Zero-copy optimization (requires unsafe improvements) - FUTURE
 - [ ] **PyTorch interop** - FUTURE
 
-### Python-Friendly API ✅ COMPLETE
+### Python-Friendly API - COMPLETE
 - [x] Pythonic naming (snake_case for all functions)
 - [x] Comprehensive docstrings with Args/Returns/Example
 - [x] __repr__ implementations for all types
 - [x] __str__ implementations using pretty-printing
 - [x] Proper error messages
-- [x] **Type hints (.pyi stub files)** ✅ NEW
-- [x] **Context managers** ✅ COMPLETE
+- [x] **Type hints (.pyi stub files)** (1100+ lines)
+- [x] **Context managers**
   - [x] ExecutionContext - Managed graph execution
   - [x] CompilationContext - Managed compilation
 
-### Arithmetic Operations ✅ COMPLETE NEW
+### Arithmetic Operations - COMPLETE
 - [x] **add()** - Addition operation (left + right)
 - [x] **sub()** - Subtraction operation (left - right)
 - [x] **mul()** - Multiplication operation (left * right)
@@ -79,7 +71,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [x] Comprehensive examples (examples/arithmetic_operations.py)
 - [x] Full test coverage (tests/test_types.py, tests/test_execution.py)
 
-### Comparison Operations ✅ COMPLETE NEW
+### Comparison Operations - COMPLETE
 - [x] **eq()** - Equality comparison (left == right)
 - [x] **lt()** - Less than comparison (left < right)
 - [x] **gt()** - Greater than comparison (left > right)
@@ -89,29 +81,39 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [x] Comprehensive examples (examples/comparison_conditionals.py)
 - [x] Full test coverage (tests/test_types.py, tests/test_execution.py)
 
-### Conditional Operations ✅ COMPLETE NEW
+### Conditional Operations - COMPLETE
 - [x] **if_then_else()** - Conditional expression (ternary operator)
 - [x] Support for nested conditionals
 - [x] Comprehensive examples (examples/comparison_conditionals.py)
 - [x] Full test coverage (tests/test_types.py, tests/test_execution.py)
 
-### Development Infrastructure ✅ COMPLETE NEW
-- [x] **pytensorlogic.pyi** - Complete type stubs for IDE support
-- [x] **pytest test suite** - 100+ tests covering all operations
+### Development Infrastructure - COMPLETE
+- [x] **pytensorlogic.pyi** - Complete type stubs for IDE support (1100+ lines)
+- [x] **pytest test suite** - 300+ tests covering all operations
   - [x] test_types.py - Type creation and operation tests
   - [x] test_execution.py - End-to-end execution tests
   - [x] test_backend.py - Backend selection tests
-  - [x] test_provenance.py - Provenance tracking tests
+  - [x] test_provenance.py - Provenance tracking tests (40+ tests)
+  - [x] test_training.py - Training API tests (40+ tests)
+  - [x] test_persistence.py - Model persistence tests (20+ tests)
+  - [x] test_dsl.py - Rule Builder DSL tests (100+ tests)
 - [x] **pytest.ini** - Test configuration
 - [x] **requirements-dev.txt** - Development dependencies
-- [x] **Python examples** - Runnable demonstration scripts
+- [x] **Python examples** - 12 runnable demonstration scripts
   - [x] arithmetic_operations.py - All arithmetic operations
   - [x] comparison_conditionals.py - All comparisons and conditionals
   - [x] basic_usage.py - Comprehensive usage guide
   - [x] backend_selection.py - Backend selection
-  - [x] provenance_tracking.py - Provenance tracking
+  - [x] provenance_tracking.py - Provenance tracking (450+ lines)
+  - [x] training_workflow.py - Training API (450+ lines, 10 scenarios)
+  - [x] model_persistence.py - Model persistence (600+ lines, 10 scenarios)
+  - [x] rule_builder_dsl.py - Rule Builder DSL (550+ lines, 10 examples)
+  - [x] async_execution_demo.py - Async execution (300+ lines)
+  - [x] performance_benchmark.py - Performance benchmarks
+  - [x] memory_profiling.py - Memory profiling and streaming
+  - [x] advanced_symbol_table.py - SymbolTable and CompilerContext
 
-### Advanced Domain Management ✅ COMPLETE NEW
+### Advanced Domain Management - COMPLETE
 - [x] **DomainInfo** - Domain representation with metadata
   - [x] name, cardinality properties
   - [x] description, elements support
@@ -133,13 +135,20 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] get_domains(), get_variable_bindings(), get_axis_assignments()
   - [x] get_variable_domain(), get_variable_axis()
 - [x] **Comprehensive example** (examples/advanced_symbol_table.py)
-  - [x] Building symbol tables
-  - [x] Automatic inference
-  - [x] JSON export/import
-  - [x] Real-world social network example
-  - [x] Multi-stage compilation
 
-### Provenance Tracking ✅ **COMPLETE**
+### Backend Selection API - COMPLETE
+- [x] **PyBackend** - Backend enumeration (AUTO, SCIRS2_CPU, SCIRS2_SIMD, SCIRS2_GPU)
+- [x] **PyBackendCapabilities** - Backend capability information
+  - [x] name, version, devices, dtypes, features, max_dims properties
+  - [x] supports_device(), supports_dtype(), supports_feature() methods
+  - [x] summary(), to_dict() methods
+- [x] get_backend_capabilities() - Query backend capabilities
+- [x] list_available_backends() - List all backends with availability
+- [x] get_default_backend() - Get default backend
+- [x] get_system_info() - System and backend information
+- [x] Backend parameter in py_execute()
+
+### Provenance Tracking - COMPLETE
 - [x] **SourceLocation** - Source code location tracking
   - [x] file, line, column properties
   - [x] String representation
@@ -168,7 +177,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [x] **Test suite** - test_provenance.py (300+ lines, 40+ tests)
 - [x] **Example** - provenance_tracking.py (450+ lines, 10 scenarios)
 
-### Training API ✅ **COMPLETE**
+### Training API - COMPLETE
 - [x] **Loss Functions** - Multiple loss function implementations
   - [x] mse_loss() - Mean Squared Error for regression
   - [x] bce_loss() - Binary Cross-Entropy for binary classification
@@ -195,13 +204,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [x] **Example** - training_workflow.py (450+ lines, 10 scenarios)
 - [x] **Code quality** - Zero clippy warnings, SCIRS2 compliant
 
-## High Priority 🔴
-
-### Remaining Core Features
-- [x] **Backend selection API** - Switch between CPU/GPU/SIMD ✅ **COMPLETE**
-- [x] **Provenance tracking** - get_provenance() API ✅ **COMPLETE**
-
-### Model Persistence ✅ **COMPLETE**
+### Model Persistence - COMPLETE
 - [x] **ModelPackage** - Complete model serialization container
   - [x] graph, config, symbol_table, parameters, metadata properties
   - [x] add_metadata(), get_metadata() - Metadata management
@@ -218,7 +221,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] model_package() - Helper function
 - [x] **Format Support**
   - [x] JSON format (human-readable, cross-platform)
-  - [x] Binary format (bincode, compact, efficient)
+  - [x] Binary format (compact, efficient)
   - [x] Auto format detection from file extension
   - [x] Pickle support for Python workflows
 - [x] **Type stubs** - pytensorlogic.pyi updated (200+ lines)
@@ -226,28 +229,17 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [x] **Example** - model_persistence.py (600+ lines, 10 scenarios)
 - [ ] ONNX export - FUTURE
 
-## Medium Priority 🟡
+### Rule Builder DSL - COMPLETE
+- [x] Var class with domain bindings
+- [x] PredicateBuilder for callable predicates with arity/domain validation
+- [x] Operator overloading (&, |, ~, >>)
+- [x] RuleBuilder context manager
+- [x] Symbol table integration
+- [x] Multiple compilation strategies
+- [x] Comprehensive examples and tests
+- [x] Full type stubs
 
-### High-Level API
-- [x] **Rule Builder DSL** ✅ **COMPLETE**
-  - [x] Var class with domain bindings
-  - [x] PredicateBuilder for callable predicates with arity/domain validation
-  - [x] Operator overloading (&, |, ~, >>)
-  - [x] RuleBuilder context manager
-  - [x] Symbol table integration
-  - [x] Multiple compilation strategies
-  - [x] Comprehensive examples and tests
-  - [x] Full type stubs
-- [x] **Training API** ✅ **COMPLETE**
-  - [x] fit() method
-  - [x] Loss functions
-  - [x] Callbacks
-- [x] **Model persistence** ✅ **COMPLETE**
-  - [x] Save/load models
-  - [x] Pickle support
-  - [ ] ONNX export - FUTURE
-
-### Jupyter Integration ✅ **COMPLETE**
+### Jupyter Integration - COMPLETE
 - [x] **Rich HTML Display** - `_repr_html_()` methods for all major types
   - [x] EinsumGraph - Node statistics and type breakdown
   - [x] SymbolTable - Domains, predicates, variables in tables
@@ -255,31 +247,17 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] ModelPackage - Component checklist and metadata
   - [x] TrainingHistory - Epoch-by-epoch loss tables
   - [x] Provenance - Rule origin and attributes
-- [x] **HTML Generation Module** (jupyter.rs, 350+ lines)
+- [x] **HTML Generation Module** (jupyter.rs)
   - [x] HTML table generator
   - [x] Card/badge components
   - [x] Key-value list formatter
   - [x] Specialized visualizers for each type
-- [x] **Jupyter Notebook Example** - jupyter_visualization.ipynb
 - [ ] Visualization widgets - FUTURE
 - [ ] Interactive debugging - FUTURE
 - [ ] Progress bars - FUTURE
 
-### Documentation
-- [x] **Comprehensive README.md** (900+ lines) ✅
-- [x] **QUICKSTART.md** (Quick start guide) ✅
-- [x] **examples/README.md** (Example navigation) ✅
-- [x] **Complete API reference** (in README.md) ✅
-- [ ] Sphinx documentation (future)
-- [ ] Tutorial notebooks (in progress, 2 notebooks exist)
-- [ ] Example gallery (6 examples complete)
-
-## Low Priority 🟢
-
-### Performance ✅ **COMPLETE**
+### Performance Monitoring - COMPLETE
 - [x] **GIL Release** - Release GIL during CPU-bound tensor operations
-  - [x] Modified executor.rs to release GIL during forward pass
-  - [x] Allows Python threads to run concurrently
 - [x] **Parallel execution** - BatchExecutor and execute_parallel
 - [x] **Async support** - AsyncResult, execute_async
 - [x] **Memory profiling** - Complete performance monitoring
@@ -288,7 +266,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Timer context manager
   - [x] memory_snapshot(), get_memory_info(), reset_memory_tracking()
 
-### Streaming Execution ✅ **COMPLETE**
+### Streaming Execution - COMPLETE
 - [x] **StreamingExecutor** - Process large datasets in chunks
   - [x] Configurable chunk_size and overlap
   - [x] execute_streaming() method
@@ -297,13 +275,13 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] add(), combine(), stats()
 - [x] **process_stream()** - Process iterator through graph
 
-### Async Cancellation ✅ **COMPLETE**
+### Async Cancellation - COMPLETE
 - [x] **CancellationToken** - Cancel async operations
   - [x] cancel(), is_cancelled(), reset()
 - [x] **AsyncResult cancellation support**
   - [x] cancel(), is_cancelled(), get_cancellation_token()
 
-### Utility Functions & Context Managers ✅ **COMPLETE**
+### Utility Functions & Context Managers - COMPLETE
 - [x] **Custom Exceptions** - Better error handling
   - [x] CompilationError - Compilation failures
   - [x] ExecutionError - Execution failures
@@ -320,153 +298,102 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] batch_compile() - Compile multiple expressions
   - [x] batch_predict() - Predict on multiple inputs
 
+### Documentation - COMPLETE
+- [x] **Comprehensive README.md**
+- [x] **QUICKSTART.md** (Quick start guide)
+- [x] **examples/README.md** (Example navigation)
+- [x] **Complete API reference** (in README.md)
+- [x] **COMPLIANCE_REPORT.md** - Quality validation report
+- [x] **PACKAGING.md** - Complete packaging guide
+- [x] **pytensorlogic.pyi** - Complete with all types (1100+ lines)
+- [ ] Sphinx documentation - FUTURE
+- [ ] Tutorial Jupyter notebooks - FUTURE
+
+## v0.1.3 Enhancements (2026-03-30)
+
+- [x] **Training Progress Callbacks** (`progress.rs`): `PyProgressEvent` (step/loss/grad_norm/elapsed_ms with tqdm-compatible `as_dict()`), `PyCompilationEvent` (6 phase events), `PyTrainingResult` (final/avg/reduction loss), `PyTrainingLoop` with optional Python callback. 12 new tests.
+
+## Future Enhancements
+
+### Integrations
+- [ ] PyTorch tensor integration
+- [ ] GPU backend support
+- [ ] ONNX export
+
 ### Packaging
 - [ ] PyPI release
-- [ ] maturin build
-- [ ] Wheel distribution
-- [ ] Platform-specific builds
+- [ ] maturin build and wheel distribution
+- [ ] Platform-specific builds (Linux x86_64, macOS arm64/x86_64, Windows)
 
 ### Testing
-- [x] **pytest test suite** ✅ COMPLETE
-- [x] **Type checking (mypy)** ✅ mypy.ini configured
-- [ ] Coverage reporting (pytest-cov installed, needs CI)
-- [ ] Benchmark suite (pytest-benchmark installed)
+- [ ] Coverage reporting in CI (pytest-cov configured, needs CI pipeline)
+- [ ] Benchmark suite in CI (pytest-benchmark configured)
+
+### Advanced Features
+- [ ] Visualization widgets for Jupyter
+- [ ] Interactive debugging
+- [ ] Progress bars for long operations
+- [ ] mypy strict mode validation
 
 ---
 
-**Total Items:** 85+ tasks
-**Completion:** ~100% (85/85 core + medium + performance + utility features)
-**Major Milestone:** Utility Functions & Context Managers COMPLETE! ✅ All Features DONE!
+**Total Items:** 120+ tasks
+**Completion:** 100% of core + medium + performance + utility features
+**Release:** v0.1.0 Alpha (2026-04-06)
 
 ### Completion Summary
-- ✅ **Phase 1 Complete**: Core types binding (PyTerm, PyTLExpr, PyEinsumGraph)
-- ✅ **Phase 2 Complete**: Compilation API (compile, config presets)
-- ✅ **Phase 3 Complete**: Execution API (execute with NumPy)
-- ✅ **Phase 4 Complete**: NumPy interop (bidirectional conversion)
-- ✅ **Phase 5 Complete**: Python-friendly API (docstrings, repr, error handling)
-- ✅ **Phase 6 Complete**: Arithmetic operations (add, sub, mul, div)
-- ✅ **Phase 7 Complete**: Comparison operations (eq, lt, gt, lte, gte)
-- ✅ **Phase 8 Complete**: Conditional operations (if_then_else)
-- ✅ **Phase 9 Complete**: Type stubs (.pyi) and testing infrastructure
-- ✅ **Phase 10 Complete**: SymbolTable and domain management
-- ✅ **Phase 11 Complete**: CompilerContext for advanced compilation
-- ✅ **Phase 12 Complete**: Backend selection API (CPU/SIMD/GPU)
-- ✅ **Phase 13 Complete**: Provenance tracking (full RDF* support)
-- ✅ **Phase 14 Complete**: Training API (loss functions, optimizers, callbacks)
-- ✅ **Phase 15 Complete**: Model Persistence (save/load, multiple formats, pickle)
-- ✅ **Phase 16 Complete**: Jupyter Integration (rich HTML display for all types)
-- ✅ **Phase 17 Complete**: Rule Builder DSL (Python-native syntax, operator overloading)
-- ✅ **Phase 18 Complete**: Performance Monitoring (GIL release, profiler, memory tracking)
-- ✅ **Phase 19 Complete**: Streaming Execution (StreamingExecutor, ResultAccumulator)
-- ✅ **Phase 20 Complete**: Async Cancellation (CancellationToken, cancel support)
-- ✅ **Phase 21 Complete**: Utility Functions (context managers, custom exceptions, helpers)
+- Phase 1 Complete: Core types binding (PyTerm, PyTLExpr, PyEinsumGraph)
+- Phase 2 Complete: Compilation API (compile, config presets)
+- Phase 3 Complete: Execution API (execute with NumPy)
+- Phase 4 Complete: NumPy interop (bidirectional conversion)
+- Phase 5 Complete: Python-friendly API (docstrings, repr, error handling)
+- Phase 6 Complete: Arithmetic operations (add, sub, mul, div)
+- Phase 7 Complete: Comparison operations (eq, lt, gt, lte, gte)
+- Phase 8 Complete: Conditional operations (if_then_else)
+- Phase 9 Complete: Type stubs (.pyi) and testing infrastructure
+- Phase 10 Complete: SymbolTable and domain management
+- Phase 11 Complete: CompilerContext for advanced compilation
+- Phase 12 Complete: Backend selection API (CPU/SIMD/GPU)
+- Phase 13 Complete: Provenance tracking (full RDF* support)
+- Phase 14 Complete: Training API (loss functions, optimizers, callbacks)
+- Phase 15 Complete: Model Persistence (save/load, multiple formats, pickle)
+- Phase 16 Complete: Jupyter Integration (rich HTML display for all types)
+- Phase 17 Complete: Rule Builder DSL (Python-native syntax, operator overloading)
+- Phase 18 Complete: Performance Monitoring (GIL release, profiler, memory tracking)
+- Phase 19 Complete: Streaming Execution (StreamingExecutor, ResultAccumulator)
+- Phase 20 Complete: Async Cancellation (CancellationToken, cancel support)
+- Phase 21 Complete: Utility Functions (context managers, custom exceptions, helpers)
 
 ### Build Status
-- ✅ Maturin build succeeds with zero warnings
-- ✅ Wheel generated: pytensorlogic-0.1.0a2-cp39-abi3-macosx_11_0_arm64.whl
-- ✅ Release build optimized and ready
-- ✅ Standalone workspace configuration (not in parent workspace)
-- ✅ All dependencies resolved (tensorlogic-adapters, serde_json)
-- ✅ **Zero clippy warnings**
-- ✅ **240 tests passing, 18 skipped**
+- Maturin build succeeds with zero warnings (run: `maturin develop`)
+- Release build optimized and ready
+- All dependencies resolved
+- Zero clippy warnings
+- Note: `cargo nextest` does not run Python integration tests; use `pytest tests/` after `maturin develop`
 
 ### Test & Example Status
-- ✅ **300+ pytest tests** created across 7 test files
-  - test_types.py - Type creation and operations
-  - test_execution.py - End-to-end execution
-  - test_backend.py - Backend selection
-  - test_provenance.py - Provenance tracking (40+ tests)
-  - test_training.py - Training API (40+ tests)
-  - test_persistence.py - Model persistence (20+ tests)
-  - test_dsl.py - Rule Builder DSL (100+ tests)
-- ✅ **12 comprehensive examples**
-  - arithmetic_operations.py - Arithmetic ops
-  - comparison_conditionals.py - Comparisons and conditionals
-  - advanced_symbol_table.py - SymbolTable and CompilerContext
-  - backend_selection.py - Backend selection
-  - provenance_tracking.py - Provenance tracking (450+ lines)
-  - training_workflow.py - Training API (450+ lines, 10 scenarios)
-  - model_persistence.py - Model persistence (600+ lines, 10 scenarios)
-  - rule_builder_dsl.py - Rule Builder DSL (550+ lines, 10 examples)
-  - basic_usage.py - Comprehensive usage guide
-  - async_execution_demo.py - Async execution (300+ lines)
-  - performance_benchmark.py - Performance benchmarks (320+ lines)
-  - memory_profiling.py - Memory profiling & streaming (400+ lines)
-- ✅ **Type stub file** (pytensorlogic.pyi) with full API coverage (1100+ lines)
-- ✅ **pytest.ini** configuration
-- ✅ **requirements-dev.txt** with all dependencies
+- 300+ pytest tests across 7 test files (test_types, test_execution, test_backend, test_provenance, test_training, test_persistence, test_dsl)
+- 12 comprehensive examples
+- Type stub file (pytensorlogic.pyi) with full API coverage (1100+ lines)
+- pytest.ini configuration
+- requirements-dev.txt with all dependencies
 
-### API Surface (Combined Sessions)
-- Arithmetic: `add()`, `sub()`, `mul()`, `div()`
-- Comparisons: `eq()`, `lt()`, `gt()`, `lte()`, `gte()`
-- Conditionals: `if_then_else()`
+### API Surface
+- **Core:** var(), const(), pred(), and_(), or_(), not_(), exists(), forall(), imply(), constant(), if_then_else()
+- **Arithmetic:** add(), sub(), mul(), div()
+- **Comparisons:** eq(), lt(), gt(), lte(), gte()
+- **Compilation:** compile(), compile_with_config(), compile_with_context()
+- **Execution:** execute(), execute_async(), execute_parallel()
+- **Async:** AsyncResult, BatchExecutor, CancellationToken, cancellation_token()
+- **Adapters:** DomainInfo, PredicateInfo, SymbolTable, CompilerContext
+- **Backend:** Backend, BackendCapabilities, get_backend_capabilities(), list_available_backends(), get_default_backend(), get_system_info()
+- **Provenance:** SourceLocation, SourceSpan, Provenance, ProvenanceTracker, get_provenance(), get_metadata(), provenance_tracker()
+- **Training:** LossFunction, Optimizer, Callback, TrainingHistory, Trainer, mse_loss(), bce_loss(), cross_entropy_loss(), sgd(), adam(), rmsprop(), early_stopping(), model_checkpoint(), logger(), fit()
+- **Persistence:** ModelPackage, model_package(), save_model(), load_model(), save_full_model(), load_full_model()
+- **DSL:** Var, PredicateBuilder, RuleBuilder, var_dsl(), pred_dsl(), rule_builder()
+- **Performance:** MemorySnapshot, Profiler, Timer, memory_snapshot(), profiler(), timer(), get_memory_info()
+- **Streaming:** StreamingExecutor, DataGenerator, ResultAccumulator, streaming_executor(), result_accumulator(), process_stream()
+- **Exceptions:** CompilationError, ExecutionError, ValidationError, BackendError, ConfigurationError
+- **Utils:** ExecutionContext, CompilationContext, quick_execute(), validate_inputs(), batch_compile(), batch_predict(), execution_context(), compilation_context()
 
-- Classes: `DomainInfo`, `PredicateInfo`, `SymbolTable`, `CompilerContext`
-- Functions: `domain_info()`, `predicate_info()`, `symbol_table()`, `compiler_context()`
-
-- Classes: `Backend`, `BackendCapabilities`
-- Functions: `get_backend_capabilities()`, `list_available_backends()`, `get_default_backend()`, `get_system_info()`
-
-- Classes: `SourceLocation`, `SourceSpan`, `Provenance`, `ProvenanceTracker`
-- Functions: `get_provenance()`, `get_metadata()`, `provenance_tracker()`
-
-- Classes: `LossFunction`, `Optimizer`, `Callback`, `TrainingHistory`, `Trainer`
-- Loss Functions: `mse_loss()`, `bce_loss()`, `cross_entropy_loss()`
-- Optimizers: `sgd()`, `adam()`, `rmsprop()`
-- Callbacks: `early_stopping()`, `model_checkpoint()`, `logger()`
-- Training: `fit()`
-
-- Classes: `ModelPackage`
-- Functions: `model_package()`, `save_model()`, `load_model()`, `save_full_model()`, `load_full_model()`
-- Format support: JSON, Binary (bincode), Pickle
-
-- Module: `jupyter.rs` - HTML generation utilities
-- Methods: `_repr_html_()` for EinsumGraph, SymbolTable, CompilationConfig, ModelPackage, TrainingHistory, Provenance
-- Features: Rich tables, badges, cards, statistics visualization
-
-- Module: `dsl.rs` - Rule Builder DSL (580+ lines)
-- Classes: `Var`, `PredicateBuilder`, `RuleBuilder`
-- Functions: `var_dsl()`, `pred_dsl()`, `rule_builder()`
-- Features: Operator overloading (&, |, ~, >>), domain validation, arity checking, context manager
-- Operator methods: `__and__`, `__or__`, `__invert__`, `__rshift__` for TLExpr
-
-- Module: `performance.rs` - Performance monitoring (350+ lines)
-- Classes: `MemorySnapshot`, `Profiler`, `Timer`
-- Functions: `memory_snapshot()`, `profiler()`, `timer()`, `get_memory_info()`, `reset_memory_tracking()`
-- Features: Timer context manager, profiler snapshots, timing statistics
-
-- Module: `streaming.rs` - Streaming execution (300+ lines)
-- Classes: `StreamingExecutor`, `DataGenerator`, `ResultAccumulator`
-- Functions: `streaming_executor()`, `result_accumulator()`, `process_stream()`
-- Features: Chunked processing, overlap support, result accumulation
-
-- Module: `async_executor.rs` - Async cancellation
-- Classes: `CancellationToken`
-- Functions: `cancellation_token()`
-- Features: Cooperative cancellation, timeout wait with cancellation check
-
-- Module: `utils.rs` - Utility functions (400+ lines)
-- Classes: `ExecutionContext`, `CompilationContext`
-- Exceptions: `CompilationError`, `ExecutionError`, `ValidationError`, `BackendError`, `ConfigurationError`
-- Functions: `quick_execute()`, `validate_inputs()`, `batch_compile()`, `batch_predict()`, `execution_context()`, `compilation_context()`
-- Features: Context managers, input validation, batch operations
-
-**Total API:** 80+ functions, 35+ classes, 5 custom exceptions, 6 compilation strategies, 3 serialization formats, 6 rich displays, 4 operators
-
-### Documentation Status
-- ✅ README.md - Comprehensive documentation (900+ lines)
-- ✅ TODO.md - Updated status
-- ✅ COMPLIANCE_REPORT.md - Quality validation report
-- ✅ pytensorlogic.pyi - Complete with all DSL types (1100+ lines)
-- ✅ PACKAGING.md - Complete packaging guide
-
-### Next Steps
-1. ✅ SymbolTable and CompilerContext bindings (DONE)
-2. ✅ Update type stubs for new classes (DONE)
-3. ✅ Backend selection API (DONE)
-4. ✅ Provenance tracking API (DONE)
-5. ✅ Training API (DONE)
-6. ✅ Rule Builder DSL (DONE)
-7. ✅ Run pytest test suite (DONE - 240 passing)
-8. Low-priority optimizations (GIL release, benchmarks)
-9. PyPI packaging and release
+**Total API:** 80+ functions, 35+ classes, 5 custom exceptions, 6 compilation strategies, 3 serialization formats, 6 rich displays, 4 operator overloads

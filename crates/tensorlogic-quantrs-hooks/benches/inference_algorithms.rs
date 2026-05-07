@@ -34,22 +34,26 @@ fn create_sprinkler_network() -> FactorGraph {
         "P(Rain)".to_string(),
         vec!["Rain".to_string()],
         Array::from_shape_vec(vec![2], vec![0.8, 0.2])
-            .unwrap()
+            .expect("create_sprinkler_network: Failed to create P(Rain) array")
             .into_dyn(),
     )
-    .unwrap();
-    graph.add_factor(p_rain).unwrap();
+    .expect("create_sprinkler_network: Failed to create P(Rain) factor");
+    graph
+        .add_factor(p_rain)
+        .expect("create_sprinkler_network: Failed to add P(Rain)");
 
     // P(Sprinkler | Rain)
     let p_sprinkler = Factor::new(
         "P(Sprinkler|Rain)".to_string(),
         vec!["Rain".to_string(), "Sprinkler".to_string()],
         Array::from_shape_vec(vec![2, 2], vec![0.6, 0.4, 0.99, 0.01])
-            .unwrap()
+            .expect("create_sprinkler_network: Failed to create P(Sprinkler|Rain) array")
             .into_dyn(),
     )
-    .unwrap();
-    graph.add_factor(p_sprinkler).unwrap();
+    .expect("create_sprinkler_network: Failed to create P(Sprinkler|Rain) factor");
+    graph
+        .add_factor(p_sprinkler)
+        .expect("create_sprinkler_network: Failed to add P(Sprinkler|Rain)");
 
     // P(WetGrass | Sprinkler, Rain)
     let p_wet = Factor::new(
@@ -63,11 +67,13 @@ fn create_sprinkler_network() -> FactorGraph {
             vec![2, 2, 2],
             vec![1.0, 0.0, 0.2, 0.8, 0.1, 0.9, 0.01, 0.99],
         )
-        .unwrap()
+        .expect("create_sprinkler_network: Failed to create P(WetGrass|...) array")
         .into_dyn(),
     )
-    .unwrap();
-    graph.add_factor(p_wet).unwrap();
+    .expect("create_sprinkler_network: Failed to create P(WetGrass|...) factor");
+    graph
+        .add_factor(p_wet)
+        .expect("create_sprinkler_network: Failed to add P(WetGrass|...)");
 
     graph
 }
@@ -88,15 +94,17 @@ fn create_chain_mrf(length: usize, card: usize) -> FactorGraph {
 
     for i in 0..(length - 1) {
         let array = Array::from_shape_vec(shape.clone(), values.clone())
-            .unwrap()
+            .expect("create_chain_mrf: Failed to create factor array")
             .into_dyn();
         let factor = Factor::new(
             format!("psi_{}_{}", i, i + 1),
             vec![format!("X_{}", i), format!("X_{}", i + 1)],
             array,
         )
-        .unwrap();
-        graph.add_factor(factor).unwrap();
+        .expect("create_chain_mrf: Failed to create factor");
+        graph
+            .add_factor(factor)
+            .expect("create_chain_mrf: Failed to add factor");
     }
 
     graph
@@ -122,15 +130,17 @@ fn create_grid_mrf(rows: usize, cols: usize, card: usize) -> FactorGraph {
     for i in 0..rows {
         for j in 0..(cols - 1) {
             let array = Array::from_shape_vec(shape.clone(), values.clone())
-                .unwrap()
+                .expect("create_grid_mrf: Failed to create horizontal edge array")
                 .into_dyn();
             let factor = Factor::new(
                 format!("h_{}_{}", i, j),
                 vec![format!("X_{}_{}", i, j), format!("X_{}_{}", i, j + 1)],
                 array,
             )
-            .unwrap();
-            graph.add_factor(factor).unwrap();
+            .expect("create_grid_mrf: Failed to create horizontal edge factor");
+            graph
+                .add_factor(factor)
+                .expect("create_grid_mrf: Failed to add horizontal edge factor");
         }
     }
 
@@ -138,15 +148,17 @@ fn create_grid_mrf(rows: usize, cols: usize, card: usize) -> FactorGraph {
     for i in 0..(rows - 1) {
         for j in 0..cols {
             let array = Array::from_shape_vec(shape.clone(), values.clone())
-                .unwrap()
+                .expect("create_grid_mrf: Failed to create vertical edge array")
                 .into_dyn();
             let factor = Factor::new(
                 format!("v_{}_{}", i, j),
                 vec![format!("X_{}_{}", i, j), format!("X_{}_{}", i + 1, j)],
                 array,
             )
-            .unwrap();
-            graph.add_factor(factor).unwrap();
+            .expect("create_grid_mrf: Failed to create vertical edge factor");
+            graph
+                .add_factor(factor)
+                .expect("create_grid_mrf: Failed to add vertical edge factor");
         }
     }
 
@@ -163,7 +175,10 @@ fn bench_variable_elimination(c: &mut Criterion) {
     group.bench_function("sprinkler_network", |b| {
         b.iter(|| {
             let ve = VariableElimination::new();
-            black_box(ve.marginalize(&graph, "WetGrass").unwrap());
+            black_box(
+                ve.marginalize(&graph, "WetGrass")
+                    .expect("VE sprinkler_network marginalize failed"),
+            );
         });
     });
 
@@ -175,7 +190,10 @@ fn bench_variable_elimination(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::new("chain_length", length), &chain, |b, g| {
             b.iter(|| {
                 let ve = VariableElimination::new();
-                black_box(ve.marginalize(g, "X_0").unwrap());
+                black_box(
+                    ve.marginalize(g, "X_0")
+                        .expect("VE chain_length marginalize failed"),
+                );
             });
         });
     }
@@ -192,23 +210,32 @@ fn bench_junction_tree(c: &mut Criterion) {
     group.throughput(Throughput::Elements(3));
     group.bench_function("sprinkler_network_build", |b| {
         b.iter(|| {
-            black_box(JunctionTree::from_factor_graph(&graph).unwrap());
+            black_box(
+                JunctionTree::from_factor_graph(&graph).expect("JT sprinkler_network_build failed"),
+            );
         });
     });
 
     group.bench_function("sprinkler_network_calibrate", |b| {
-        let mut tree = JunctionTree::from_factor_graph(&graph).unwrap();
+        let mut tree = JunctionTree::from_factor_graph(&graph)
+            .expect("JT sprinkler_network_calibrate: from_factor_graph failed");
         b.iter(|| {
-            tree.calibrate().unwrap();
+            tree.calibrate()
+                .expect("JT sprinkler_network_calibrate: calibrate failed");
             black_box(());
         });
     });
 
     group.bench_function("sprinkler_network_query", |b| {
-        let mut tree = JunctionTree::from_factor_graph(&graph).unwrap();
-        tree.calibrate().unwrap();
+        let mut tree = JunctionTree::from_factor_graph(&graph)
+            .expect("JT sprinkler_network_query: from_factor_graph failed");
+        tree.calibrate()
+            .expect("JT sprinkler_network_query: calibrate failed");
         b.iter(|| {
-            black_box(tree.query_marginal("WetGrass").unwrap());
+            black_box(
+                tree.query_marginal("WetGrass")
+                    .expect("JT sprinkler_network_query: query_marginal failed"),
+            );
         });
     });
 
@@ -219,7 +246,10 @@ fn bench_junction_tree(c: &mut Criterion) {
         group.throughput(Throughput::Elements(length as u64));
         group.bench_with_input(BenchmarkId::new("chain_build", length), &chain, |b, g| {
             b.iter(|| {
-                black_box(JunctionTree::from_factor_graph(g).unwrap());
+                black_box(
+                    JunctionTree::from_factor_graph(g)
+                        .expect("JT chain_build: from_factor_graph failed"),
+                );
             });
         });
     }
@@ -237,7 +267,11 @@ fn bench_belief_propagation(c: &mut Criterion) {
     group.throughput(Throughput::Elements(3));
     group.bench_function("sprinkler_network", |b| {
         b.iter(|| {
-            black_box(algorithm.run(&graph).unwrap());
+            black_box(
+                algorithm
+                    .run(&graph)
+                    .expect("BP sprinkler_network run failed"),
+            );
         });
     });
 
@@ -248,7 +282,7 @@ fn bench_belief_propagation(c: &mut Criterion) {
         group.throughput(Throughput::Elements(length as u64));
         group.bench_with_input(BenchmarkId::new("chain_length", length), &chain, |b, g| {
             b.iter(|| {
-                black_box(algorithm.run(g).unwrap());
+                black_box(algorithm.run(g).expect("BP chain_length run failed"));
             });
         });
     }
@@ -265,7 +299,7 @@ fn bench_belief_propagation(c: &mut Criterion) {
             &grid,
             |b, g| {
                 b.iter(|| {
-                    black_box(loopy_bp.run(g).unwrap());
+                    black_box(loopy_bp.run(g).expect("BP grid_loopy run failed"));
                 });
             },
         );
@@ -284,7 +318,7 @@ fn bench_mean_field(c: &mut Criterion) {
     group.throughput(Throughput::Elements(3));
     group.bench_function("sprinkler_network", |b| {
         b.iter(|| {
-            black_box(mf.run(&graph).unwrap());
+            black_box(mf.run(&graph).expect("MF sprinkler_network run failed"));
         });
     });
 
@@ -299,7 +333,7 @@ fn bench_mean_field(c: &mut Criterion) {
             &grid,
             |b, g| {
                 b.iter(|| {
-                    black_box(mf.run(g).unwrap());
+                    black_box(mf.run(g).expect("MF grid_size run failed"));
                 });
             },
         );
@@ -318,7 +352,11 @@ fn bench_bethe(c: &mut Criterion) {
     group.throughput(Throughput::Elements(3));
     group.bench_function("sprinkler_network", |b| {
         b.iter(|| {
-            black_box(bethe.run(&graph).unwrap());
+            black_box(
+                bethe
+                    .run(&graph)
+                    .expect("Bethe sprinkler_network run failed"),
+            );
         });
     });
 
@@ -333,7 +371,7 @@ fn bench_bethe(c: &mut Criterion) {
             &grid,
             |b, g| {
                 b.iter(|| {
-                    black_box(bethe.run(g).unwrap());
+                    black_box(bethe.run(g).expect("Bethe grid_size run failed"));
                 });
             },
         );
@@ -353,7 +391,7 @@ fn bench_trw_bp(c: &mut Criterion) {
     group.throughput(Throughput::Elements(3));
     group.bench_function("sprinkler_network", |b| {
         b.iter(|| {
-            black_box(trw.run(&graph).unwrap());
+            black_box(trw.run(&graph).expect("TRW sprinkler_network run failed"));
         });
     });
 
@@ -370,7 +408,7 @@ fn bench_trw_bp(c: &mut Criterion) {
             &grid,
             |b, g| {
                 b.iter(|| {
-                    black_box(trw_grid.run(g).unwrap());
+                    black_box(trw_grid.run(g).expect("TRW grid_size run failed"));
                 });
             },
         );
@@ -389,7 +427,7 @@ fn bench_expectation_propagation(c: &mut Criterion) {
     group.throughput(Throughput::Elements(3));
     group.bench_function("sprinkler_network", |b| {
         b.iter(|| {
-            black_box(ep.run(&graph).unwrap());
+            black_box(ep.run(&graph).expect("EP sprinkler_network run failed"));
         });
     });
 
@@ -400,7 +438,7 @@ fn bench_expectation_propagation(c: &mut Criterion) {
         group.throughput(Throughput::Elements(length as u64));
         group.bench_with_input(BenchmarkId::new("chain_length", length), &chain, |b, g| {
             b.iter(|| {
-                black_box(ep.run(g).unwrap());
+                black_box(ep.run(g).expect("EP chain_length run failed"));
             });
         });
     }
@@ -423,7 +461,7 @@ fn bench_gibbs_sampling(c: &mut Criterion) {
             &graph,
             |b, g| {
                 b.iter(|| {
-                    black_box(sampler.run(g).unwrap());
+                    black_box(sampler.run(g).expect("Gibbs num_samples run failed"));
                 });
             },
         );
@@ -442,16 +480,23 @@ fn bench_algorithm_comparison(c: &mut Criterion) {
     group.bench_function("ve_chain8", |b| {
         b.iter(|| {
             let ve = VariableElimination::new();
-            black_box(ve.marginalize(&graph, "X_0").unwrap());
+            black_box(
+                ve.marginalize(&graph, "X_0")
+                    .expect("VE ve_chain8 marginalize failed"),
+            );
         });
     });
 
     // Junction Tree
     group.bench_function("jt_chain8", |b| {
         b.iter(|| {
-            let mut tree = JunctionTree::from_factor_graph(&graph).unwrap();
-            tree.calibrate().unwrap();
-            black_box(tree.query_marginal("X_0").unwrap());
+            let mut tree = JunctionTree::from_factor_graph(&graph)
+                .expect("JT jt_chain8: from_factor_graph failed");
+            tree.calibrate().expect("JT jt_chain8: calibrate failed");
+            black_box(
+                tree.query_marginal("X_0")
+                    .expect("JT jt_chain8: query_marginal failed"),
+            );
         });
     });
 
@@ -459,7 +504,7 @@ fn bench_algorithm_comparison(c: &mut Criterion) {
     group.bench_function("bp_chain8", |b| {
         let bp = SumProductAlgorithm::default();
         b.iter(|| {
-            black_box(bp.run(&graph).unwrap());
+            black_box(bp.run(&graph).expect("BP bp_chain8 run failed"));
         });
     });
 
@@ -467,7 +512,7 @@ fn bench_algorithm_comparison(c: &mut Criterion) {
     group.bench_function("mf_chain8", |b| {
         let mf = MeanFieldInference::new(100, 1e-4);
         b.iter(|| {
-            black_box(mf.run(&graph).unwrap());
+            black_box(mf.run(&graph).expect("MF mf_chain8 run failed"));
         });
     });
 
@@ -475,7 +520,7 @@ fn bench_algorithm_comparison(c: &mut Criterion) {
     group.bench_function("bethe_chain8", |b| {
         let bethe = BetheApproximation::new(50, 1e-4, 0.0);
         b.iter(|| {
-            black_box(bethe.run(&graph).unwrap());
+            black_box(bethe.run(&graph).expect("Bethe bethe_chain8 run failed"));
         });
     });
 

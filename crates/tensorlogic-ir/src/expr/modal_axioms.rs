@@ -415,7 +415,7 @@ mod tests {
             TLExpr::modal_box(p),
         );
 
-        let result = apply_axiom_k(&expr).unwrap();
+        let result = apply_axiom_k(&expr).expect("unwrap");
         assert_eq!(result, TLExpr::modal_box(q));
     }
 
@@ -424,7 +424,7 @@ mod tests {
         let p = TLExpr::pred("p", vec![]);
         let box_p = TLExpr::modal_box(p.clone());
 
-        let result = apply_axiom_t(&box_p).unwrap();
+        let result = apply_axiom_t(&box_p).expect("unwrap");
         assert_eq!(result, p);
     }
 

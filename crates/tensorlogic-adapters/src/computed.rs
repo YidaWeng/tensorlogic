@@ -252,7 +252,12 @@ impl ComputedDomain {
                     .unwrap_or(0);
                 let sum_card: usize = domains
                     .iter()
-                    .map(|d| table.get_domain(d).unwrap().cardinality)
+                    .map(|d| {
+                        table
+                            .get_domain(d)
+                            .expect("domain reference is valid")
+                            .cardinality
+                    })
                     .sum();
                 Ok((max_card, sum_card))
             }
@@ -419,7 +424,7 @@ impl ComputedDomainRegistry {
     ///         predicate: "is_adult".to_string(),
     ///     }
     /// );
-    /// registry.register(domain).unwrap();
+    /// registry.register(domain).expect("unwrap");
     /// ```
     pub fn register(&mut self, domain: ComputedDomain) -> Result<(), AdapterError> {
         let name = domain.name().to_string();
@@ -561,10 +566,12 @@ mod tests {
     #[test]
     fn test_cardinality_bounds_filter() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 1000)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 1000))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("is_adult", vec!["Person".to_string()]))
-            .unwrap();
+            .expect("unwrap");
 
         let domain = ComputedDomain::new(
             "Adults",
@@ -574,7 +581,7 @@ mod tests {
             },
         );
 
-        let (lower, upper) = domain.cardinality_bounds(&table).unwrap();
+        let (lower, upper) = domain.cardinality_bounds(&table).expect("unwrap");
         assert_eq!(lower, 0);
         assert_eq!(upper, 1000);
     }
@@ -582,8 +589,8 @@ mod tests {
     #[test]
     fn test_cardinality_bounds_union() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("A", 100)).unwrap();
-        table.add_domain(DomainInfo::new("B", 200)).unwrap();
+        table.add_domain(DomainInfo::new("A", 100)).expect("unwrap");
+        table.add_domain(DomainInfo::new("B", 200)).expect("unwrap");
 
         let domain = ComputedDomain::new(
             "AorB",
@@ -592,7 +599,7 @@ mod tests {
             },
         );
 
-        let (lower, upper) = domain.cardinality_bounds(&table).unwrap();
+        let (lower, upper) = domain.cardinality_bounds(&table).expect("unwrap");
         assert_eq!(lower, 200); // max(100, 200)
         assert_eq!(upper, 300); // 100 + 200
     }
@@ -600,8 +607,8 @@ mod tests {
     #[test]
     fn test_cardinality_bounds_product() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("A", 10)).unwrap();
-        table.add_domain(DomainInfo::new("B", 20)).unwrap();
+        table.add_domain(DomainInfo::new("A", 10)).expect("unwrap");
+        table.add_domain(DomainInfo::new("B", 20)).expect("unwrap");
 
         let domain = ComputedDomain::new(
             "AxB",
@@ -610,7 +617,7 @@ mod tests {
             },
         );
 
-        let (lower, upper) = domain.cardinality_bounds(&table).unwrap();
+        let (lower, upper) = domain.cardinality_bounds(&table).expect("unwrap");
         assert_eq!(lower, 200);
         assert_eq!(upper, 200);
     }
@@ -618,10 +625,12 @@ mod tests {
     #[test]
     fn test_validate_success() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Person", 1000)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Person", 1000))
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new("is_adult", vec!["Person".to_string()]))
-            .unwrap();
+            .expect("unwrap");
 
         let domain = ComputedDomain::new(
             "Adults",
@@ -680,7 +689,7 @@ mod tests {
                 predicate: "other".to_string(),
             },
         );
-        registry.register(domain1).unwrap();
+        registry.register(domain1).expect("unwrap");
         assert!(registry.register(domain2).is_err());
     }
 
@@ -694,7 +703,7 @@ mod tests {
                 predicate: "is_adult".to_string(),
             },
         );
-        registry.register(domain).unwrap();
+        registry.register(domain).expect("unwrap");
 
         assert!(registry.get("Adults").is_some());
         assert!(registry.get("Unknown").is_none());
@@ -710,7 +719,7 @@ mod tests {
                 predicate: "is_adult".to_string(),
             },
         );
-        registry.register(domain).unwrap();
+        registry.register(domain).expect("unwrap");
 
         assert!(registry.remove("Adults").is_some());
         assert_eq!(registry.len(), 0);

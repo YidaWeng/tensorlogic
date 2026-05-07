@@ -333,14 +333,14 @@ mod tests {
     #[test]
     fn test_factor_creation() {
         let values = Array::from_shape_vec(vec![2, 2], vec![0.1, 0.2, 0.3, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         let factor = Factor::new(
             "f1".to_string(),
             vec!["x".to_string(), "y".to_string()],
             values,
         )
-        .unwrap();
+        .expect("unwrap");
 
         assert_eq!(factor.variables.len(), 2);
         assert_eq!(factor.values.ndim(), 2);
@@ -349,14 +349,14 @@ mod tests {
     #[test]
     fn test_factor_normalize() {
         let values = Array::from_shape_vec(vec![2, 2], vec![1.0, 2.0, 3.0, 4.0])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         let mut factor = Factor::new(
             "f1".to_string(),
             vec!["x".to_string(), "y".to_string()],
             values,
         )
-        .unwrap();
+        .expect("unwrap");
 
         factor.normalize();
         let sum: f64 = factor.values.iter().sum();
@@ -375,16 +375,16 @@ mod tests {
     fn test_factor_product() {
         // φ₁(X) and φ₂(Y) → φ(X,Y)
         let f1_values = Array::from_shape_vec(vec![2], vec![0.6, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        let f1 = Factor::new("f1".to_string(), vec!["x".to_string()], f1_values).unwrap();
+        let f1 = Factor::new("f1".to_string(), vec!["x".to_string()], f1_values).expect("unwrap");
 
         let f2_values = Array::from_shape_vec(vec![2], vec![0.7, 0.3])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        let f2 = Factor::new("f2".to_string(), vec!["y".to_string()], f2_values).unwrap();
+        let f2 = Factor::new("f2".to_string(), vec!["y".to_string()], f2_values).expect("unwrap");
 
-        let product = f1.product(&f2).unwrap();
+        let product = f1.product(&f2).expect("unwrap");
         assert_eq!(product.variables.len(), 2);
         assert_eq!(product.values.shape(), &[2, 2]);
 
@@ -398,16 +398,16 @@ mod tests {
     fn test_factor_marginalize() {
         // φ(X,Y) → φ(X)
         let values = Array::from_shape_vec(vec![2, 2], vec![0.1, 0.2, 0.3, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         let factor = Factor::new(
             "f1".to_string(),
             vec!["x".to_string(), "y".to_string()],
             values,
         )
-        .unwrap();
+        .expect("unwrap");
 
-        let marginal = factor.marginalize_out("y").unwrap();
+        let marginal = factor.marginalize_out("y").expect("unwrap");
         assert_eq!(marginal.variables.len(), 1);
         assert_eq!(marginal.variables[0], "x");
         assert_eq!(marginal.values.shape(), &[2]);
@@ -420,16 +420,16 @@ mod tests {
     #[test]
     fn test_factor_divide() {
         let values1 = Array::from_shape_vec(vec![2], vec![0.6, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        let f1 = Factor::new("f1".to_string(), vec!["x".to_string()], values1).unwrap();
+        let f1 = Factor::new("f1".to_string(), vec!["x".to_string()], values1).expect("unwrap");
 
         let values2 = Array::from_shape_vec(vec![2], vec![0.3, 0.2])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
-        let f2 = Factor::new("f2".to_string(), vec!["x".to_string()], values2).unwrap();
+        let f2 = Factor::new("f2".to_string(), vec!["x".to_string()], values2).expect("unwrap");
 
-        let result = f1.divide(&f2).unwrap();
+        let result = f1.divide(&f2).expect("unwrap");
         assert_eq!(result.variables.len(), 1);
 
         // 0.6/0.3 = 2.0, 0.4/0.2 = 2.0
@@ -441,16 +441,16 @@ mod tests {
     fn test_factor_reduce() {
         // φ(X,Y) with evidence Y=1 → φ(X)
         let values = Array::from_shape_vec(vec![2, 2], vec![0.1, 0.2, 0.3, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         let factor = Factor::new(
             "f1".to_string(),
             vec!["x".to_string(), "y".to_string()],
             values,
         )
-        .unwrap();
+        .expect("unwrap");
 
-        let reduced = factor.reduce("y", 1).unwrap();
+        let reduced = factor.reduce("y", 1).expect("unwrap");
         assert_eq!(reduced.variables.len(), 1);
         assert_eq!(reduced.variables[0], "x");
 
@@ -463,26 +463,26 @@ mod tests {
     fn test_factor_product_with_shared_vars() {
         // φ₁(X,Y) and φ₂(Y,Z) → φ(X,Y,Z)
         let f1_values = Array::from_shape_vec(vec![2, 2], vec![0.1, 0.2, 0.3, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         let f1 = Factor::new(
             "f1".to_string(),
             vec!["x".to_string(), "y".to_string()],
             f1_values,
         )
-        .unwrap();
+        .expect("unwrap");
 
         let f2_values = Array::from_shape_vec(vec![2, 2], vec![0.5, 0.5, 0.5, 0.5])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         let f2 = Factor::new(
             "f2".to_string(),
             vec!["y".to_string(), "z".to_string()],
             f2_values,
         )
-        .unwrap();
+        .expect("unwrap");
 
-        let product = f1.product(&f2).unwrap();
+        let product = f1.product(&f2).expect("unwrap");
         assert_eq!(product.variables.len(), 3);
         assert!(product.variables.contains(&"x".to_string()));
         assert!(product.variables.contains(&"y".to_string()));
@@ -493,16 +493,16 @@ mod tests {
     fn test_factor_maximize() {
         // φ(X,Y) → max_Y φ(X)
         let values = Array::from_shape_vec(vec![2, 2], vec![0.1, 0.2, 0.3, 0.4])
-            .unwrap()
+            .expect("unwrap")
             .into_dyn();
         let factor = Factor::new(
             "f1".to_string(),
             vec!["x".to_string(), "y".to_string()],
             values,
         )
-        .unwrap();
+        .expect("unwrap");
 
-        let maximized = factor.maximize_out("y").unwrap();
+        let maximized = factor.maximize_out("y").expect("unwrap");
         assert_eq!(maximized.variables.len(), 1);
         assert_eq!(maximized.variables[0], "x");
         assert_eq!(maximized.values.shape(), &[2]);
@@ -517,18 +517,18 @@ mod tests {
         // φ(X,Y,Z) → max_{Y,Z} φ(X)
         let values =
             Array::from_shape_vec(vec![2, 2, 2], vec![0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8])
-                .unwrap()
+                .expect("unwrap")
                 .into_dyn();
         let factor = Factor::new(
             "f1".to_string(),
             vec!["x".to_string(), "y".to_string(), "z".to_string()],
             values,
         )
-        .unwrap();
+        .expect("unwrap");
 
         let maximized = factor
             .maximize_out_vars(&["y".to_string(), "z".to_string()])
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(maximized.variables.len(), 1);
         assert_eq!(maximized.variables[0], "x");
     }

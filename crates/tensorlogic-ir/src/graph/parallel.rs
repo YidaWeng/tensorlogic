@@ -88,7 +88,7 @@ impl Default for ParallelizationAnalysis {
 /// let mut graph = EinsumGraph::new();
 /// // Build your graph...
 ///
-/// let analysis = analyze_parallelization(&graph).unwrap();
+/// let analysis = analyze_parallelization(&graph).expect("unwrap");
 /// if analysis.has_parallelism() {
 ///     println!("Max parallelism: {}", analysis.max_parallelism);
 ///     println!("Estimated speedup: {:.2}x", analysis.estimated_speedup);
@@ -256,7 +256,7 @@ fn estimate_group_cost(graph: &EinsumGraph, nodes: &[usize]) -> f64 {
     nodes
         .iter()
         .map(|&idx| estimate_node_cost(graph, idx))
-        .max_by(|a, b| a.partial_cmp(b).unwrap())
+        .max_by(|a, b| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
         .unwrap_or(0.0)
 }
 
@@ -394,7 +394,7 @@ mod tests {
     #[test]
     fn test_analyze_empty_graph() {
         let graph = EinsumGraph::new();
-        let analysis = analyze_parallelization(&graph).unwrap();
+        let analysis = analyze_parallelization(&graph).expect("unwrap");
         assert_eq!(analysis.max_parallelism, 0);
         assert_eq!(analysis.total_nodes(), 0);
     }
@@ -406,9 +406,9 @@ mod tests {
         let b = graph.add_tensor("B");
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
 
-        let analysis = analyze_parallelization(&graph).unwrap();
+        let analysis = analyze_parallelization(&graph).expect("unwrap");
         assert_eq!(analysis.max_parallelism, 1);
         assert_eq!(analysis.total_nodes(), 1);
     }
@@ -424,12 +424,12 @@ mod tests {
         // Two independent operations
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("tanh", c, d))
-            .unwrap();
+            .expect("unwrap");
 
-        let analysis = analyze_parallelization(&graph).unwrap();
+        let analysis = analyze_parallelization(&graph).expect("unwrap");
         assert_eq!(analysis.max_parallelism, 2);
         assert!(analysis.has_parallelism());
     }
@@ -444,19 +444,19 @@ mod tests {
         // Sequential operations
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("tanh", b, c))
-            .unwrap();
+            .expect("unwrap");
 
-        let analysis = analyze_parallelization(&graph).unwrap();
+        let analysis = analyze_parallelization(&graph).expect("unwrap");
         assert_eq!(analysis.critical_path_length, 2);
     }
 
     #[test]
     fn test_partition_empty_graph() {
         let graph = EinsumGraph::new();
-        let subgraphs = partition_independent_subgraphs(&graph).unwrap();
+        let subgraphs = partition_independent_subgraphs(&graph).expect("unwrap");
         assert!(subgraphs.is_empty());
     }
 
@@ -467,9 +467,9 @@ mod tests {
         let b = graph.add_tensor("B");
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
 
-        let subgraphs = partition_independent_subgraphs(&graph).unwrap();
+        let subgraphs = partition_independent_subgraphs(&graph).expect("unwrap");
         assert_eq!(subgraphs.len(), 1);
         assert_eq!(subgraphs[0].len(), 1);
     }
@@ -485,12 +485,12 @@ mod tests {
         // Two truly independent operations (no shared tensors)
         graph
             .add_node(EinsumNode::elem_unary("relu", a, b))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("tanh", c, d))
-            .unwrap();
+            .expect("unwrap");
 
-        let subgraphs = partition_independent_subgraphs(&graph).unwrap();
+        let subgraphs = partition_independent_subgraphs(&graph).expect("unwrap");
         // Should have 2 independent subgraphs
         assert_eq!(subgraphs.len(), 2);
     }

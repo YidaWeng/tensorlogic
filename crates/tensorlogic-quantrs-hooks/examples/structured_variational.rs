@@ -167,7 +167,7 @@ fn create_grid_mrf(rows: usize, cols: usize) -> FactorGraph {
             let factor_name = format!("node_{}_{}", i, j);
 
             let potential = Array::from_shape_vec(vec![2], node_potential_values.clone())
-                .unwrap()
+                .expect("create_grid_mrf: Failed to create node potential array")
                 .into_dyn();
 
             use tensorlogic_quantrs_hooks::Factor;
@@ -176,7 +176,9 @@ fn create_grid_mrf(rows: usize, cols: usize) -> FactorGraph {
                 variables: vec![var_name],
                 values: potential,
             };
-            graph.add_factor(factor).unwrap();
+            graph
+                .add_factor(factor)
+                .expect("create_grid_mrf: Failed to add node factor");
         }
     }
 
@@ -197,7 +199,7 @@ fn create_grid_mrf(rows: usize, cols: usize) -> FactorGraph {
             ];
 
             let potential = Array::from_shape_vec(vec![2, 2], edge_values)
-                .unwrap()
+                .expect("create_grid_mrf: Failed to create horizontal edge potential array")
                 .into_dyn();
 
             use tensorlogic_quantrs_hooks::Factor;
@@ -206,7 +208,9 @@ fn create_grid_mrf(rows: usize, cols: usize) -> FactorGraph {
                 variables: vec![var1, var2],
                 values: potential,
             };
-            graph.add_factor(factor).unwrap();
+            graph
+                .add_factor(factor)
+                .expect("create_grid_mrf: Failed to add horizontal edge factor");
         }
     }
 
@@ -220,7 +224,7 @@ fn create_grid_mrf(rows: usize, cols: usize) -> FactorGraph {
             let edge_values = vec![0.8, 0.2, 0.2, 0.8];
 
             let potential = Array::from_shape_vec(vec![2, 2], edge_values)
-                .unwrap()
+                .expect("create_grid_mrf: Failed to create vertical edge potential array")
                 .into_dyn();
 
             use tensorlogic_quantrs_hooks::Factor;
@@ -229,7 +233,9 @@ fn create_grid_mrf(rows: usize, cols: usize) -> FactorGraph {
                 variables: vec![var1, var2],
                 values: potential,
             };
-            graph.add_factor(factor).unwrap();
+            graph
+                .add_factor(factor)
+                .expect("create_grid_mrf: Failed to add vertical edge factor");
         }
     }
 

@@ -10,7 +10,7 @@ fn test_pow_compilation() {
     let b = TLExpr::pred("b", vec![Term::var("x")]);
     let expr = TLExpr::Pow(Box::new(a), Box::new(b));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -23,7 +23,7 @@ fn test_mod_compilation() {
     let b = TLExpr::pred("b", vec![Term::var("x")]);
     let expr = TLExpr::Mod(Box::new(a), Box::new(b));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -36,7 +36,7 @@ fn test_min_compilation() {
     let b = TLExpr::pred("b", vec![Term::var("x")]);
     let expr = TLExpr::Min(Box::new(a), Box::new(b));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -49,7 +49,7 @@ fn test_max_compilation() {
     let b = TLExpr::pred("b", vec![Term::var("x")]);
     let expr = TLExpr::Max(Box::new(a), Box::new(b));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -61,7 +61,7 @@ fn test_abs_compilation() {
     let inner = TLExpr::pred("a", vec![Term::var("x")]);
     let expr = TLExpr::Abs(Box::new(inner));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -73,7 +73,7 @@ fn test_floor_compilation() {
     let inner = TLExpr::pred("a", vec![Term::var("x")]);
     let expr = TLExpr::Floor(Box::new(inner));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -85,7 +85,7 @@ fn test_ceil_compilation() {
     let inner = TLExpr::pred("a", vec![Term::var("x")]);
     let expr = TLExpr::Ceil(Box::new(inner));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -97,7 +97,7 @@ fn test_round_compilation() {
     let inner = TLExpr::pred("a", vec![Term::var("x")]);
     let expr = TLExpr::Round(Box::new(inner));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -109,7 +109,7 @@ fn test_sqrt_compilation() {
     let inner = TLExpr::pred("a", vec![Term::var("x")]);
     let expr = TLExpr::Sqrt(Box::new(inner));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -121,7 +121,7 @@ fn test_exp_compilation() {
     let inner = TLExpr::pred("a", vec![Term::var("x")]);
     let expr = TLExpr::Exp(Box::new(inner));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -133,7 +133,7 @@ fn test_log_compilation() {
     let inner = TLExpr::pred("a", vec![Term::var("x")]);
     let expr = TLExpr::Log(Box::new(inner));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -145,7 +145,7 @@ fn test_sin_compilation() {
     let inner = TLExpr::pred("a", vec![Term::var("x")]);
     let expr = TLExpr::Sin(Box::new(inner));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -157,7 +157,7 @@ fn test_cos_compilation() {
     let inner = TLExpr::pred("a", vec![Term::var("x")]);
     let expr = TLExpr::Cos(Box::new(inner));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -169,7 +169,7 @@ fn test_tan_compilation() {
     let inner = TLExpr::pred("a", vec![Term::var("x")]);
     let expr = TLExpr::Tan(Box::new(inner));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -196,7 +196,7 @@ fn test_let_binding_compilation() {
         body: Box::new(body),
     };
 
-    let graph = compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+    let graph = compile_to_einsum_with_context(&expr, &mut ctx).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     // Let binding should produce nodes
     assert_eq!(graph.outputs.len(), 1);
@@ -213,7 +213,7 @@ fn test_nested_math_operations() {
     let abs = TLExpr::Abs(Box::new(add));
     let expr = TLExpr::Sqrt(Box::new(abs));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -233,7 +233,7 @@ fn test_complex_math_expression() {
     let max_expr = TLExpr::Max(Box::new(floor_c), Box::new(const_2));
     let expr = TLExpr::Min(Box::new(pow), Box::new(max_expr));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -253,7 +253,7 @@ fn test_trig_expressions() {
     let cos_squared = TLExpr::Pow(Box::new(cos_x), Box::new(two));
     let expr = TLExpr::Add(Box::new(sin_squared), Box::new(cos_squared));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -285,7 +285,7 @@ fn test_nested_let_bindings() {
         body: Box::new(inner_let),
     };
 
-    let graph = compile_to_einsum_with_context(&expr, &mut ctx).unwrap();
+    let graph = compile_to_einsum_with_context(&expr, &mut ctx).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert_eq!(graph.outputs.len(), 1);
 }
@@ -297,7 +297,7 @@ fn test_mod_with_constants() {
     let divisor = TLExpr::Constant(10.0);
     let expr = TLExpr::Mod(Box::new(a), Box::new(divisor));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);
@@ -312,7 +312,7 @@ fn test_exp_log_composition() {
     let exp_a = TLExpr::Exp(Box::new(a));
     let expr = TLExpr::Log(Box::new(exp_a));
 
-    let graph = compile_to_einsum(&expr).unwrap();
+    let graph = compile_to_einsum(&expr).expect("unwrap");
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
     assert_eq!(graph.outputs.len(), 1);

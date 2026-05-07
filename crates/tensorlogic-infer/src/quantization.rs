@@ -587,8 +587,8 @@ mod tests {
 
     #[test]
     fn test_symmetric_quantization() {
-        let params =
-            QuantizationParams::symmetric_per_tensor(QuantizationType::Int8, 127.0).unwrap();
+        let params = QuantizationParams::symmetric_per_tensor(QuantizationType::Int8, 127.0)
+            .expect("unwrap");
         assert_eq!(params.scale[0], 1.0);
         assert_eq!(params.zero_point[0], 0);
 
@@ -601,8 +601,8 @@ mod tests {
 
     #[test]
     fn test_asymmetric_quantization() {
-        let params =
-            QuantizationParams::asymmetric_per_tensor(QuantizationType::Int8, -10.0, 20.0).unwrap();
+        let params = QuantizationParams::asymmetric_per_tensor(QuantizationType::Int8, -10.0, 20.0)
+            .expect("unwrap");
 
         assert!(params.scale[0] > 0.0);
         assert_ne!(params.zero_point[0], 0);
@@ -663,7 +663,7 @@ mod tests {
     #[test]
     fn test_fake_quantize() {
         let params =
-            QuantizationParams::symmetric_per_tensor(QuantizationType::Int8, 10.0).unwrap();
+            QuantizationParams::symmetric_per_tensor(QuantizationType::Int8, 10.0).expect("unwrap");
         let fake_quant = FakeQuantize::new(params);
 
         let original = 3.5;
@@ -679,7 +679,7 @@ mod tests {
         for _ in 0..100 {
             quantizer.calibrate(NodeId(0), -10.0, 10.0);
         }
-        quantizer.finalize_calibration().unwrap();
+        quantizer.finalize_calibration().expect("unwrap");
 
         let summary = quantizer.summary();
         assert!(summary.memory_savings() > 0.0);
@@ -688,7 +688,8 @@ mod tests {
 
     #[test]
     fn test_int4_quantization() {
-        let params = QuantizationParams::symmetric_per_tensor(QuantizationType::Int4, 7.0).unwrap();
+        let params =
+            QuantizationParams::symmetric_per_tensor(QuantizationType::Int4, 7.0).expect("unwrap");
 
         let value = 5.0;
         let qvalue = params.quantize(value);

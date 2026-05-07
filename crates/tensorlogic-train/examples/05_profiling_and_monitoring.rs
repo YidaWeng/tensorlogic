@@ -170,8 +170,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     let improvement = if history.train_loss.len() >= 2 {
-        let initial = history.train_loss.first().unwrap();
-        let final_loss = history.train_loss.last().unwrap();
+        let initial = history.train_loss.first().expect("unwrap");
+        let final_loss = history.train_loss.last().expect("unwrap");
         (1.0 - final_loss / initial) * 100.0
     } else {
         0.0
@@ -215,8 +215,8 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     println!("\n=== Final Model State ===\n");
 
-    let weights = parameters.get("weights").unwrap();
-    let bias = parameters.get("bias").unwrap();
+    let weights = parameters.get("weights").expect("unwrap");
+    let bias = parameters.get("bias").expect("unwrap");
 
     println!("Weights:");
     println!("  Shape: {:?}", weights.shape());

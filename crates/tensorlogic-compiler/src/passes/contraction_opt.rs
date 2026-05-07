@@ -380,7 +380,7 @@ mod tests {
     #[test]
     fn test_parse_einsum_spec() {
         let spec = "ij,jk->ik";
-        let (inputs, output) = parse_einsum_spec(spec).unwrap();
+        let (inputs, output) = parse_einsum_spec(spec).expect("unwrap");
 
         assert_eq!(inputs.len(), 2);
         assert_eq!(inputs[0], "ij");
@@ -391,7 +391,7 @@ mod tests {
     #[test]
     fn test_parse_einsum_spec_complex() {
         let spec = "ijk,klm,mnp->ijnp";
-        let (inputs, output) = parse_einsum_spec(spec).unwrap();
+        let (inputs, output) = parse_einsum_spec(spec).expect("unwrap");
 
         assert_eq!(inputs.len(), 3);
         assert_eq!(output, "ijnp");
@@ -405,7 +405,7 @@ mod tests {
         let path = find_optimal_path_greedy(&inputs, output);
         assert!(path.is_some());
 
-        let path = path.unwrap();
+        let path = path.expect("unwrap");
         assert_eq!(path.steps.len(), 2); // Three tensors require two contractions
         assert!(path.estimated_flops > 0.0);
     }

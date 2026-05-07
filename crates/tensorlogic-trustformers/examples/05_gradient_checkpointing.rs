@@ -112,7 +112,8 @@ fn demonstrate_dynamic_checkpointing(config: &EncoderStackConfig) {
     let num_layers = config.num_layers;
 
     for memory_fraction in [0.2, 0.3, 0.5] {
-        let checkpoint_config = CheckpointConfig::dynamic(num_layers, memory_fraction).unwrap();
+        let checkpoint_config = CheckpointConfig::dynamic(num_layers, memory_fraction)
+            .expect("dynamic checkpoint config construction should succeed");
 
         println!(
             "Target memory: {:.0}% of full storage",
@@ -153,7 +154,8 @@ fn demonstrate_comparison(config: &EncoderStackConfig) {
         ),
         (
             "Dynamic (30% memory)",
-            CheckpointConfig::dynamic(num_layers, 0.3).unwrap(),
+            CheckpointConfig::dynamic(num_layers, 0.3)
+                .expect("dynamic checkpoint config construction should succeed"),
         ),
     ];
 

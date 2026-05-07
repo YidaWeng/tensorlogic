@@ -49,13 +49,13 @@ impl NGramKernelConfig {
 /// ```rust
 /// use tensorlogic_sklears_kernels::{NGramKernel, NGramKernelConfig};
 ///
-/// let config = NGramKernelConfig::new(2).unwrap(); // bigrams
+/// let config = NGramKernelConfig::new(2).expect("unwrap"); // bigrams
 /// let kernel = NGramKernel::new(config);
 ///
 /// let text1 = "hello world";
 /// let text2 = "hello there";
 ///
-/// let sim = kernel.compute_strings(text1, text2).unwrap();
+/// let sim = kernel.compute_strings(text1, text2).expect("unwrap");
 /// println!("Similarity: {}", sim);
 /// ```
 pub struct NGramKernel {
@@ -344,37 +344,37 @@ mod tests {
 
     #[test]
     fn test_ngram_kernel() {
-        let config = NGramKernelConfig::new(2).unwrap();
+        let config = NGramKernelConfig::new(2).expect("unwrap");
         let kernel = NGramKernel::new(config);
 
         let text1 = "hello";
         let text2 = "hallo";
 
-        let sim = kernel.compute_strings(text1, text2).unwrap();
+        let sim = kernel.compute_strings(text1, text2).expect("unwrap");
         assert!(sim > 0.0);
         assert!(sim <= 1.0);
     }
 
     #[test]
     fn test_ngram_identical_strings() {
-        let config = NGramKernelConfig::new(2).unwrap();
+        let config = NGramKernelConfig::new(2).expect("unwrap");
         let kernel = NGramKernel::new(config);
 
         let text = "test";
-        let sim = kernel.compute_strings(text, text).unwrap();
+        let sim = kernel.compute_strings(text, text).expect("unwrap");
 
         assert!((sim - 1.0).abs() < 1e-10);
     }
 
     #[test]
     fn test_ngram_different_strings() {
-        let config = NGramKernelConfig::new(2).unwrap();
+        let config = NGramKernelConfig::new(2).expect("unwrap");
         let kernel = NGramKernel::new(config);
 
         let text1 = "abc";
         let text2 = "xyz";
 
-        let sim = kernel.compute_strings(text1, text2).unwrap();
+        let sim = kernel.compute_strings(text1, text2).expect("unwrap");
         assert!(sim < 0.1); // Should be very low similarity
     }
 
@@ -392,7 +392,7 @@ mod tests {
         let text1 = "abc";
         let text2 = "aec";
 
-        let sim = kernel.compute_strings(text1, text2).unwrap();
+        let sim = kernel.compute_strings(text1, text2).expect("unwrap");
         assert!(sim > 0.0);
     }
 
@@ -402,7 +402,7 @@ mod tests {
         let kernel = SubsequenceKernel::new(config);
 
         let text = "test";
-        let sim = kernel.compute_strings(text, text).unwrap();
+        let sim = kernel.compute_strings(text, text).expect("unwrap");
 
         assert!(sim > 0.0);
     }
@@ -411,9 +411,9 @@ mod tests {
     fn test_subsequence_config() {
         let config = SubsequenceKernelConfig::new()
             .with_max_length(5)
-            .unwrap()
+            .expect("unwrap")
             .with_decay(0.7)
-            .unwrap();
+            .expect("unwrap");
 
         assert_eq!(config.max_length, 5);
         assert!((config.decay - 0.7).abs() < 1e-10);
@@ -430,29 +430,29 @@ mod tests {
 
     #[test]
     fn test_edit_distance_kernel() {
-        let kernel = EditDistanceKernel::new(0.1).unwrap();
+        let kernel = EditDistanceKernel::new(0.1).expect("unwrap");
 
         let text1 = "kitten";
         let text2 = "sitting";
 
-        let sim = kernel.compute_strings(text1, text2).unwrap();
+        let sim = kernel.compute_strings(text1, text2).expect("unwrap");
         assert!(sim > 0.0);
         assert!(sim < 1.0);
     }
 
     #[test]
     fn test_edit_distance_identical() {
-        let kernel = EditDistanceKernel::new(0.1).unwrap();
+        let kernel = EditDistanceKernel::new(0.1).expect("unwrap");
 
         let text = "test";
-        let sim = kernel.compute_strings(text, text).unwrap();
+        let sim = kernel.compute_strings(text, text).expect("unwrap");
 
         assert!((sim - 1.0).abs() < 1e-10); // exp(-0 * 0.1) = 1.0
     }
 
     #[test]
     fn test_edit_distance_computation() {
-        let kernel = EditDistanceKernel::new(1.0).unwrap();
+        let kernel = EditDistanceKernel::new(1.0).expect("unwrap");
 
         assert_eq!(kernel.edit_distance("", ""), 0);
         assert_eq!(kernel.edit_distance("a", ""), 1);
@@ -473,13 +473,13 @@ mod tests {
 
     #[test]
     fn test_kernel_trait() {
-        let kernel = NGramKernel::new(NGramKernelConfig::new(2).unwrap());
+        let kernel = NGramKernel::new(NGramKernelConfig::new(2).expect("unwrap"));
         assert_eq!(kernel.name(), "NGram");
 
         let kernel = SubsequenceKernel::new(SubsequenceKernelConfig::new());
         assert_eq!(kernel.name(), "Subsequence");
 
-        let kernel = EditDistanceKernel::new(0.1).unwrap();
+        let kernel = EditDistanceKernel::new(0.1).expect("unwrap");
         assert_eq!(kernel.name(), "EditDistance");
     }
 }

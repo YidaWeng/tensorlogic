@@ -1,10 +1,14 @@
 [package]
 name = "bench-tracker"
-version = "0.1.0"
-edition = "2021"
-authors = ["COOLJAPAN OU (Team Kitasan)"]
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
 description = "Benchmark regression tracking tool for TensorLogic"
-license = "MIT OR Apache-2.0"
+readme = "README.md"
+keywords = ["benchmark", "regression", "tracking", "performance", "tensorlogic"]
+categories = ["development-tools", "development-tools::profiling"]
+documentation = "https://docs.rs/bench-tracker"
 
 [[bin]]
 name = "bench-tracker"
@@ -20,4 +24,4 @@ colored.workspace = true
 tabled.workspace = true
 
 [dev-dependencies]
-tempfile = "3.24"
+tempfile = "3.27"

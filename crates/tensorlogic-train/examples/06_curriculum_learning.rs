@@ -29,7 +29,7 @@ fn main() {
     println!("1. Linear Curriculum (gradual difficulty increase)");
     println!("   Starts with 20% easiest samples, linearly grows to 100%\n");
 
-    let linear_curriculum = LinearCurriculum::new(0.2).unwrap();
+    let linear_curriculum = LinearCurriculum::new(0.2).expect("unwrap");
 
     // Simulate model predictions (entropy-based difficulty)
     let predictions = array![
@@ -42,63 +42,63 @@ fn main() {
 
     let difficulties = linear_curriculum
         .compute_difficulty(&data, &labels, Some(&predictions))
-        .unwrap();
+        .expect("unwrap");
 
     println!("   Difficulty scores: {:?}", difficulties);
 
     // Epoch 0: Select easiest 20%
     let selected = linear_curriculum
         .select_samples(0, 10, &difficulties.view())
-        .unwrap();
+        .expect("unwrap");
     println!("   Epoch 0 (20%): Selected samples {:?}", selected);
 
     // Epoch 5: Select ~60%
     let selected = linear_curriculum
         .select_samples(5, 10, &difficulties.view())
-        .unwrap();
+        .expect("unwrap");
     println!("   Epoch 5 (60%): Selected samples {:?}", selected);
 
     // Epoch 9: Select all samples
     let selected = linear_curriculum
         .select_samples(9, 10, &difficulties.view())
-        .unwrap();
+        .expect("unwrap");
     println!("   Epoch 9 (100%): Selected samples {:?}\n", selected);
 
     // Example 2: Exponential Curriculum
     println!("2. Exponential Curriculum (rapid growth)");
     println!("   Fast ramp-up using exponential schedule\n");
 
-    let exp_curriculum = ExponentialCurriculum::new(0.1, 2.0).unwrap();
+    let exp_curriculum = ExponentialCurriculum::new(0.1, 2.0).expect("unwrap");
 
     let selected_exp_0 = exp_curriculum
         .select_samples(0, 10, &difficulties.view())
-        .unwrap();
+        .expect("unwrap");
     println!("   Epoch 0: Selected {} samples", selected_exp_0.len());
 
     let selected_exp_5 = exp_curriculum
         .select_samples(5, 10, &difficulties.view())
-        .unwrap();
+        .expect("unwrap");
     println!("   Epoch 5: Selected {} samples", selected_exp_5.len());
 
     let selected_exp_9 = exp_curriculum
         .select_samples(9, 10, &difficulties.view())
-        .unwrap();
+        .expect("unwrap");
     println!("   Epoch 9: Selected {} samples\n", selected_exp_9.len());
 
     // Example 3: Self-Paced Learning
     println!("3. Self-Paced Learning (model-driven pace)");
     println!("   Model decides which samples it's ready to learn from\n");
 
-    let self_paced = SelfPacedCurriculum::new(1.0, 0.5).unwrap();
+    let self_paced = SelfPacedCurriculum::new(1.0, 0.5).expect("unwrap");
 
     // Compute difficulty based on loss (not just entropy)
     let sp_difficulties = self_paced
         .compute_difficulty(&data, &labels, Some(&predictions))
-        .unwrap();
+        .expect("unwrap");
 
     let selected_sp = self_paced
         .select_samples(0, 10, &sp_difficulties.view())
-        .unwrap();
+        .expect("unwrap");
     println!("   Selected samples (difficulty < 0.5): {:?}", selected_sp);
     println!("   Number selected: {}\n", selected_sp.len());
 
@@ -106,19 +106,19 @@ fn main() {
     println!("4. Competence-Based Curriculum (adaptive difficulty)");
     println!("   Adapts to model's improving competence level\n");
 
-    let competence_curriculum = CompetenceCurriculum::new(0.3, 0.1).unwrap();
+    let competence_curriculum = CompetenceCurriculum::new(0.3, 0.1).expect("unwrap");
 
     // Normalize difficulties to [0, 1]
     let comp_difficulties = competence_curriculum
         .compute_difficulty(&data, &labels, Some(&predictions))
-        .unwrap();
+        .expect("unwrap");
 
     println!("   Normalized difficulties: {:?}", comp_difficulties);
 
     // Epoch 0: Competence = 0.3
     let selected_comp_0 = competence_curriculum
         .select_samples(0, 10, &comp_difficulties.view())
-        .unwrap();
+        .expect("unwrap");
     println!(
         "   Epoch 0 (competence=0.3): Selected {} samples",
         selected_comp_0.len()
@@ -127,7 +127,7 @@ fn main() {
     // Epoch 5: Competence = 0.8
     let selected_comp_5 = competence_curriculum
         .select_samples(5, 10, &comp_difficulties.view())
-        .unwrap();
+        .expect("unwrap");
     println!(
         "   Epoch 5 (competence=0.8): Selected {} samples\n",
         selected_comp_5.len()
@@ -142,13 +142,13 @@ fn main() {
     // Cache difficulty scores
     manager
         .compute_difficulty("train", &data, &labels, Some(&predictions))
-        .unwrap();
+        .expect("unwrap");
 
     // Simulate training loop
     for epoch in 0..5 {
         manager.set_epoch(epoch);
 
-        let selected_indices = manager.get_selected_samples("train", 10).unwrap();
+        let selected_indices = manager.get_selected_samples("train", 10).expect("unwrap");
 
         println!(
             "   Epoch {}: Training with {} samples (indices: {:?})",

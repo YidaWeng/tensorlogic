@@ -30,7 +30,7 @@ fn create_test_tensor(shape: &[usize]) -> ArrayD<f64> {
             .map(|i| (i as f64) * 0.01 + 0.1)
             .collect(),
     )
-    .unwrap()
+    .expect("unwrap")
 }
 
 #[cfg(feature = "integration-tests")]
@@ -53,7 +53,7 @@ fn bench_gradient_simple_ops(c: &mut Criterion) {
                     let p = TLExpr::pred("P", vec![Term::var("i")]);
                     let q = TLExpr::pred("Q", vec![Term::var("i")]);
                     let expr = TLExpr::and(p, q);
-                    let graph = compile_to_einsum(&expr).unwrap();
+                    let graph = compile_to_einsum(&expr).expect("unwrap");
 
                     let mut executor = Scirs2Exec::new();
                     let p_data = create_test_tensor(&[size]);
@@ -62,11 +62,11 @@ fn bench_gradient_simple_ops(c: &mut Criterion) {
                     executor.add_tensor(graph.tensors[1].clone(), q_data);
 
                     // Forward pass
-                    let output = executor.forward(&graph).unwrap();
+                    let output = executor.forward(&graph).expect("unwrap");
 
                     // Backward pass
                     let grad_output = create_grad_tensor(output.shape());
-                    black_box(executor.backward(&graph, &grad_output).unwrap())
+                    black_box(executor.backward(&graph, &grad_output).expect("unwrap"))
                 });
             },
         );
@@ -93,7 +93,7 @@ fn bench_gradient_nested_ops(c: &mut Criterion) {
                         let next = TLExpr::pred(format!("P{}", i), vec![Term::var("i")]);
                         expr = TLExpr::and(expr, next);
                     }
-                    let graph = compile_to_einsum(&expr).unwrap();
+                    let graph = compile_to_einsum(&expr).expect("unwrap");
 
                     let mut executor = Scirs2Exec::new();
                     for i in 0..depth {
@@ -101,9 +101,9 @@ fn bench_gradient_nested_ops(c: &mut Criterion) {
                         executor.add_tensor(graph.tensors[i].clone(), data);
                     }
 
-                    let output = executor.forward(&graph).unwrap();
+                    let output = executor.forward(&graph).expect("unwrap");
                     let grad_output = create_grad_tensor(output.shape());
-                    black_box(executor.backward(&graph, &grad_output).unwrap())
+                    black_box(executor.backward(&graph, &grad_output).expect("unwrap"))
                 });
             },
         );
@@ -126,7 +126,7 @@ fn bench_gradient_matrix_ops(c: &mut Criterion) {
                     let a = TLExpr::pred("A", vec![Term::var("i"), Term::var("j")]);
                     let b = TLExpr::pred("B", vec![Term::var("i"), Term::var("j")]);
                     let expr = TLExpr::and(a, b);
-                    let graph = compile_to_einsum(&expr).unwrap();
+                    let graph = compile_to_einsum(&expr).expect("unwrap");
 
                     let mut executor = Scirs2Exec::new();
                     let a_data = create_test_tensor(&[size, size]);
@@ -134,9 +134,9 @@ fn bench_gradient_matrix_ops(c: &mut Criterion) {
                     executor.add_tensor(graph.tensors[0].clone(), a_data);
                     executor.add_tensor(graph.tensors[1].clone(), b_data);
 
-                    let output = executor.forward(&graph).unwrap();
+                    let output = executor.forward(&graph).expect("unwrap");
                     let grad_output = create_grad_tensor(output.shape());
-                    black_box(executor.backward(&graph, &grad_output).unwrap())
+                    black_box(executor.backward(&graph, &grad_output).expect("unwrap"))
                 });
             },
         );
@@ -158,15 +158,15 @@ fn bench_gradient_quantifiers(c: &mut Criterion) {
                 bench.iter(|| {
                     let pred = TLExpr::pred("P", vec![Term::var("i"), Term::var("j")]);
                     let expr = TLExpr::exists("j", "domain", pred);
-                    let graph = compile_to_einsum(&expr).unwrap();
+                    let graph = compile_to_einsum(&expr).expect("unwrap");
 
                     let mut executor = Scirs2Exec::new();
                     let data = create_test_tensor(&[size, size]);
                     executor.add_tensor(graph.tensors[0].clone(), data);
 
-                    let output = executor.forward(&graph).unwrap();
+                    let output = executor.forward(&graph).expect("unwrap");
                     let grad_output = create_grad_tensor(output.shape());
-                    black_box(executor.backward(&graph, &grad_output).unwrap())
+                    black_box(executor.backward(&graph, &grad_output).expect("unwrap"))
                 });
             },
         );
@@ -193,7 +193,7 @@ fn bench_gradient_complex(c: &mut Criterion) {
                     let ab = TLExpr::and(a, b);
                     let not_c = TLExpr::negate(c);
                     let expr = TLExpr::or(ab, not_c);
-                    let graph = compile_to_einsum(&expr).unwrap();
+                    let graph = compile_to_einsum(&expr).expect("unwrap");
 
                     let mut executor = Scirs2Exec::new();
                     let a_data = create_test_tensor(&[size]);
@@ -203,9 +203,9 @@ fn bench_gradient_complex(c: &mut Criterion) {
                     executor.add_tensor(graph.tensors[1].clone(), b_data);
                     executor.add_tensor(graph.tensors[2].clone(), c_data);
 
-                    let output = executor.forward(&graph).unwrap();
+                    let output = executor.forward(&graph).expect("unwrap");
                     let grad_output = create_grad_tensor(output.shape());
-                    black_box(executor.backward(&graph, &grad_output).unwrap())
+                    black_box(executor.backward(&graph, &grad_output).expect("unwrap"))
                 });
             },
         );

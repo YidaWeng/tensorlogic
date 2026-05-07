@@ -24,10 +24,10 @@
 //! let a = graph.add_tensor("foo");
 //! let b = graph.add_tensor("bar");
 //! let c = graph.add_tensor("baz");
-//! graph.add_node(EinsumNode::einsum("ij,jk->ik", vec![a, b], vec![c])).unwrap();
-//! graph.add_output(c).unwrap();
+//! graph.add_node(EinsumNode::einsum("ij,jk->ik", vec![a, b], vec![c])).expect("unwrap");
+//! graph.add_output(c).expect("unwrap");
 //!
-//! let canonical = tensorlogic_ir::canonicalize_graph(&graph).unwrap();
+//! let canonical = tensorlogic_ir::canonicalize_graph(&graph).expect("unwrap");
 //! // Tensors are renamed to t0, t1, t2
 //! assert_eq!(canonical.tensors, vec!["t0", "t1", "t2"]);
 //! ```
@@ -84,7 +84,11 @@ pub fn canonicalize_graph(graph: &EinsumGraph) -> Result<EinsumGraph, IrError> {
     let mut new_inputs: Vec<usize> = graph
         .inputs
         .iter()
-        .map(|&idx| *tensor_mapping.get(&idx).unwrap())
+        .map(|&idx| {
+            *tensor_mapping
+                .get(&idx)
+                .expect("tensor index must exist in mapping")
+        })
         .collect();
     new_inputs.sort_unstable();
     canonical.inputs = new_inputs;
@@ -93,7 +97,11 @@ pub fn canonicalize_graph(graph: &EinsumGraph) -> Result<EinsumGraph, IrError> {
     let mut new_outputs: Vec<usize> = graph
         .outputs
         .iter()
-        .map(|&idx| *tensor_mapping.get(&idx).unwrap())
+        .map(|&idx| {
+            *tensor_mapping
+                .get(&idx)
+                .expect("tensor index must exist in mapping")
+        })
         .collect();
     new_outputs.sort_unstable();
     canonical.outputs = new_outputs;
@@ -235,12 +243,20 @@ fn remap_node(node: &EinsumNode, tensor_mapping: &HashMap<usize, usize>) -> Eins
     let new_inputs = node
         .inputs
         .iter()
-        .map(|&idx| *tensor_mapping.get(&idx).unwrap())
+        .map(|&idx| {
+            *tensor_mapping
+                .get(&idx)
+                .expect("tensor index must exist in mapping")
+        })
         .collect();
     let new_outputs = node
         .outputs
         .iter()
-        .map(|&idx| *tensor_mapping.get(&idx).unwrap())
+        .map(|&idx| {
+            *tensor_mapping
+                .get(&idx)
+                .expect("tensor index must exist in mapping")
+        })
         .collect();
 
     EinsumNode {
@@ -336,7 +352,7 @@ mod tests {
     #[test]
     fn test_empty_graph_canonicalization() {
         let graph = EinsumGraph::new();
-        let canonical = canonicalize_graph(&graph).unwrap();
+        let canonical = canonicalize_graph(&graph).expect("unwrap");
         assert!(canonical.is_empty());
     }
 
@@ -350,10 +366,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::einsum("ij,jk->ik", vec![a, b], vec![c]))
-            .unwrap();
-        graph.add_output(c).unwrap();
+            .expect("unwrap");
+        graph.add_output(c).expect("unwrap");
 
-        let canonical = canonicalize_graph(&graph).unwrap();
+        let canonical = canonicalize_graph(&graph).expect("unwrap");
 
         // Check tensor names are canonical
         assert_eq!(canonical.tensors, vec!["t0", "t1", "t2"]);
@@ -371,20 +387,20 @@ mod tests {
         let b1 = g1.add_tensor("B");
         let c1 = g1.add_tensor("C");
         g1.add_node(EinsumNode::elem_binary("mul", a1, b1, c1))
-            .unwrap();
-        g1.add_output(c1).unwrap();
+            .expect("unwrap");
+        g1.add_output(c1).expect("unwrap");
 
         let mut g2 = EinsumGraph::new();
         let x2 = g2.add_tensor("X");
         let y2 = g2.add_tensor("Y");
         let z2 = g2.add_tensor("Z");
         g2.add_node(EinsumNode::elem_binary("mul", x2, y2, z2))
-            .unwrap();
-        g2.add_output(z2).unwrap();
+            .expect("unwrap");
+        g2.add_output(z2).expect("unwrap");
 
         // Both should canonicalize to the same structure
-        let c1 = canonicalize_graph(&g1).unwrap();
-        let c2 = canonicalize_graph(&g2).unwrap();
+        let c1 = canonicalize_graph(&g1).expect("unwrap");
+        let c2 = canonicalize_graph(&g2).expect("unwrap");
 
         assert_eq!(c1, c2);
     }
@@ -394,12 +410,14 @@ mod tests {
         let mut g1 = EinsumGraph::new();
         let a = g1.add_tensor("foo");
         let b = g1.add_tensor("bar");
-        g1.add_node(EinsumNode::elem_unary("neg", a, b)).unwrap();
+        g1.add_node(EinsumNode::elem_unary("neg", a, b))
+            .expect("unwrap");
 
         let mut g2 = EinsumGraph::new();
         let x = g2.add_tensor("different");
         let y = g2.add_tensor("names");
-        g2.add_node(EinsumNode::elem_unary("neg", x, y)).unwrap();
+        g2.add_node(EinsumNode::elem_unary("neg", x, y))
+            .expect("unwrap");
 
         assert!(are_graphs_equivalent(&g1, &g2));
     }
@@ -409,12 +427,14 @@ mod tests {
         let mut g1 = EinsumGraph::new();
         let a = g1.add_tensor("A");
         let b = g1.add_tensor("B");
-        g1.add_node(EinsumNode::elem_unary("neg", a, b)).unwrap();
+        g1.add_node(EinsumNode::elem_unary("neg", a, b))
+            .expect("unwrap");
 
         let mut g2 = EinsumGraph::new();
         let x = g2.add_tensor("X");
         let y = g2.add_tensor("Y");
-        g2.add_node(EinsumNode::elem_unary("sqrt", x, y)).unwrap();
+        g2.add_node(EinsumNode::elem_unary("sqrt", x, y))
+            .expect("unwrap");
 
         assert!(!are_graphs_equivalent(&g1, &g2));
     }
@@ -426,10 +446,10 @@ mod tests {
         let b = graph.add_tensor("B");
         graph
             .add_node(EinsumNode::elem_binary("add", a, a, b))
-            .unwrap();
+            .expect("unwrap");
 
-        let hash1 = canonical_hash(&graph).unwrap();
-        let hash2 = canonical_hash(&graph).unwrap();
+        let hash1 = canonical_hash(&graph).expect("unwrap");
+        let hash2 = canonical_hash(&graph).expect("unwrap");
 
         assert_eq!(hash1, hash2);
     }
@@ -439,15 +459,17 @@ mod tests {
         let mut g1 = EinsumGraph::new();
         let a1 = g1.add_tensor("foo");
         let b1 = g1.add_tensor("bar");
-        g1.add_node(EinsumNode::elem_unary("exp", a1, b1)).unwrap();
+        g1.add_node(EinsumNode::elem_unary("exp", a1, b1))
+            .expect("unwrap");
 
         let mut g2 = EinsumGraph::new();
         let a2 = g2.add_tensor("different");
         let b2 = g2.add_tensor("names");
-        g2.add_node(EinsumNode::elem_unary("exp", a2, b2)).unwrap();
+        g2.add_node(EinsumNode::elem_unary("exp", a2, b2))
+            .expect("unwrap");
 
-        let hash1 = canonical_hash(&g1).unwrap();
-        let hash2 = canonical_hash(&g2).unwrap();
+        let hash1 = canonical_hash(&g1).expect("unwrap");
+        let hash2 = canonical_hash(&g2).expect("unwrap");
 
         assert_eq!(hash1, hash2);
     }
@@ -464,16 +486,16 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_binary("mul", a, b, c))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("sqrt", c, d))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_binary("add", d, a, e))
-            .unwrap();
-        graph.add_output(e).unwrap();
+            .expect("unwrap");
+        graph.add_output(e).expect("unwrap");
 
-        let canonical = canonicalize_graph(&graph).unwrap();
+        let canonical = canonicalize_graph(&graph).expect("unwrap");
 
         // Verify canonicalization worked
         assert_eq!(canonical.tensors.len(), 5);
@@ -493,10 +515,14 @@ mod tests {
         let c = graph.add_tensor("C");
 
         // A -> B -> C
-        graph.add_node(EinsumNode::elem_unary("op1", a, b)).unwrap();
-        graph.add_node(EinsumNode::elem_unary("op2", b, c)).unwrap();
+        graph
+            .add_node(EinsumNode::elem_unary("op1", a, b))
+            .expect("unwrap");
+        graph
+            .add_node(EinsumNode::elem_unary("op2", b, c))
+            .expect("unwrap");
 
-        let node_order = topological_sort_nodes(&graph).unwrap();
+        let node_order = topological_sort_nodes(&graph).expect("unwrap");
 
         // First node should come before second node
         assert_eq!(node_order, vec![0, 1]);
@@ -515,12 +541,12 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("op1", in1, out1))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(EinsumNode::elem_unary("op2", in2, out2))
-            .unwrap();
+            .expect("unwrap");
 
-        let canonical = canonicalize_graph(&graph).unwrap();
+        let canonical = canonicalize_graph(&graph).expect("unwrap");
 
         // Inputs and outputs should be preserved (but sorted)
         assert_eq!(canonical.inputs.len(), 2);

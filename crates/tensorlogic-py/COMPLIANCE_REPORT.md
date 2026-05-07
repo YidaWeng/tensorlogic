@@ -1,7 +1,7 @@
 # TensorLogic-Py Compliance Report
 
 **Date:** 2026-01-28
-**Version:** 0.1.0-beta.1
+**Version:** 0.3.0
 **Status:** ✅ **FULLY COMPLIANT**
 
 ---
@@ -159,7 +159,7 @@ gpu = []  # Future
 **Core Dependencies:**
 - ✅ `pyo3 = { version = "0.27", features = ["extension-module", "abi3-py39"] }`
 - ✅ `numpy = "0.27"`
-- ✅ `scirs2-core = "0.1.0-rc.2"` (SCIRS2 compliant)
+- ✅ `scirs2-core = "0.3.0"` (SCIRS2 compliant)
 - ✅ All tensorlogic-* workspace dependencies
 
 **No Forbidden Dependencies:**

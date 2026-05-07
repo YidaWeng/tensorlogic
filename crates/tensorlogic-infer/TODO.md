@@ -1,21 +1,11 @@
-# Beta.1 Release Status ✅
+# TensorLogic Infer — TODO
 
-**Version**: 0.1.0-beta.1
-**Status**: Production Ready
+**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
-This crate is part of the TensorLogic v0.1.0-beta.1 release with:
-- Zero compiler warnings
-- 100% test pass rate
-- Complete documentation
-- Production-ready quality
+Executor and autodiff traits for tensor-logic inference pipelines.
 
-See main [TODO.md](../../TODO.md) for overall project status.
-
----
-
-# tensorlogic-infer TODO
-
-## Completed ✓
+## Completed
 
 ### Core Traits
 - [x] TlExecutor trait definition
@@ -24,7 +14,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
 - [x] TensorInputs/TensorOutputs types
 - [x] Basic test coverage
 
-### Trait Enhancement ✅ PRODUCTION READY
+### Trait Enhancement
 - [x] **Batch execution support**
   - [x] BatchResult<T> container with metadata
   - [x] TlBatchExecutor trait
@@ -37,7 +27,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Operation support queries
   - [x] Capability summary generation
 
-### Type System ✅ PRODUCTION READY
+### Type System
 - [x] Tensor shape inference
   - [x] TensorShape with static/dynamic/symbolic dimensions
   - [x] ShapeInferenceContext for graph-level inference
@@ -48,7 +38,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] as_static() for runtime checks
   - [x] rank() and is_static() helpers
 
-### Execution Profiling ✅ PRODUCTION READY
+### Execution Profiling
 - [x] Profiling infrastructure
   - [x] OpProfile with timing statistics (count, avg, min, max)
   - [x] MemoryProfile with allocation tracking
@@ -59,9 +49,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] get_profile_data()
   - [x] time_op() for automatic timing
 
-## High Priority 🔴
-
-### Streaming Execution ✅ PRODUCTION READY
+### Streaming Execution
 - [x] **Add streaming execution**
   - [x] execute_streaming() for large datasets
   - [x] TlStreamingExecutor trait
@@ -71,7 +59,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Adaptive chunking based on performance metrics
   - [x] Prefetching and checkpoint support
 
-### Error Recovery ✅ PRODUCTION READY
+### Error Recovery
 - [x] **Error recovery**
   - [x] Partial results on failure (RecoveryResult)
   - [x] Checkpoint/restart (CheckpointManager)
@@ -81,7 +69,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] RetryPolicy with exponential backoff
   - [x] RecoveryStats for monitoring
 
-### Autodiff Enhancements ✅ PRODUCTION READY
+### Autodiff Enhancements
 - [x] Gradient accumulation strategy
   - [x] Standard accumulation
   - [x] Gradient checkpointing
@@ -97,7 +85,7 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] GradientClipper implementation
   - [x] GradientStats for monitoring
 
-### Type Safety Extensions ✅ PRODUCTION READY
+### Type Safety Extensions
 - [x] Type-safe tensor wrappers
   - [x] Strong typing for inputs/outputs (TypedInputs/TypedOutputs)
   - [x] Compile-time shape checking (TypedTensor with Nat rank)
@@ -107,23 +95,21 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] TypedBatch for batched operations
   - [x] ShapeConstraint trait
 
-## Medium Priority 🟡
-
-### Execution Modes ✅ **ALL MODES COMPLETE**
-- [x] **Eager execution** ✅ **PRODUCTION READY** (eager.rs - 14 tests)
-- [x] **Graph compilation** ✅ **PRODUCTION READY**
+### Execution Modes
+- [x] **Eager execution** (eager.rs - 14 tests)
+- [x] **Graph compilation**
   - [x] Compile to optimized form (GraphCompiler with multiple optimization levels)
   - [x] Cache compiled graphs (CompilationCache with LRU-style eviction)
   - [x] TlCompilableExecutor trait for compilation support
   - [x] Compilation statistics and performance tracking
   - [x] 14 comprehensive tests (100% passing)
-- [x] **JIT compilation** ✅ **PRODUCTION READY** (NEW!)
+- [x] **JIT compilation** (jit.rs)
   - [x] Runtime compilation with hot path detection
   - [x] Adaptive optimization based on profiling
   - [x] Graph specialization for observed shapes
   - [x] JitCompiler with caching support
   - [x] 13 comprehensive tests (100% passing)
-- [x] **Distributed execution** ✅ **PRODUCTION READY** (NEW!)
+- [x] **Distributed execution** (distributed.rs)
   - [x] Multi-device support with communication backends
   - [x] Data parallelism with gradient synchronization
   - [x] Model parallelism with tensor sharding
@@ -131,30 +117,29 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] 13 comprehensive tests (100% passing)
 
 ### Utilities
-- [x] **Execution profiling** ✅ **COMPLETE**
+- [x] **Execution profiling**
   - [x] Time per operation
   - [x] Memory usage
   - [x] Bottleneck detection
-- [x] **Debugging tools** ✅ **COMPLETE**
-  - [x] Trace execution
-  - [x] Inspect intermediate tensors
-  - [x] Breakpoint support
-- [x] **Visualization** ✅ **COMPLETE**
+- [x] **Debugging tools**
+  - [x] Trace execution (ExecutionTracer)
+  - [x] Inspect intermediate tensors (TensorInspector)
+  - [x] Breakpoint support (BreakpointManager)
+  - [x] Full execution recording (ExecutionRecorder)
+- [x] **Visualization**
   - [x] Execution timeline (ASCII, DOT, JSON formats)
   - [x] Tensor flow diagram (ASCII, DOT, JSON, GraphML)
   - [x] Performance visualization
   - [x] Tensor statistics histograms
   - [x] 9 comprehensive tests
 
-## Low Priority 🟢
+### Documentation
+- [x] Add README.md
+- [x] Trait implementation guide
+- [x] Backend development tutorial
+- [x] Performance optimization guide
 
-### Documentation ✅ **COMPLETE**
-- [x] Add README.md ✅
-- [x] Trait implementation guide ✅ (50+ pages)
-- [x] Backend development tutorial ✅ (30-minute hands-on guide)
-- [x] Performance optimization guide ✅ (Comprehensive best practices)
-
-### Debugging Tools ✅ PRODUCTION READY (NEW!)
+### Debugging Tools
 - [x] **Execution tracing and debugging**
   - [x] ExecutionTracer for recording operation flow
   - [x] TensorInspector for examining intermediate values
@@ -166,20 +151,19 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Multiple breakpoint types (Node, Operation, NumericalIssue, TimeThreshold)
   - [x] 12 comprehensive tests (100% passing)
 
-### Testing ✅ **COMPLETE**
+### Testing
 - [x] Backend compatibility tests (templates for backend developers)
-- [x] Stress tests (large graphs) (templates for backend developers)
-- [x] Correctness tests (gradient checking) (templates for backend developers)
-- [x] Performance regression tests (templates for backend developers)
+- [x] Stress tests (large graphs)
+- [x] Correctness tests (gradient checking)
+- [x] Performance regression tests
   - [x] PerfRegression framework with warmup and measurement iterations
   - [x] BenchmarkStats with statistical analysis (mean, median, std_dev, CV)
   - [x] BenchmarkBaseline for save/load baselines (JSON format)
   - [x] RegressionReport with regression detection
-  - [x] Configurable thresholds (regression/improvement percentages)
   - [x] HTML and text report generation
   - [x] 12 comprehensive tests (100% passing)
 
-### Eager Execution ✅ COMPLETE (NEW!)
+### Eager Execution
 - [x] **Eager mode automatic differentiation**
   - [x] TlEagerAutodiff trait for dynamic graph building
   - [x] Variable with gradient tracking
@@ -188,407 +172,375 @@ See main [TODO.md](../../TODO.md) for overall project status.
   - [x] Support for all operations (einsum, elem_op, reduce)
   - [x] 14 comprehensive tests
 
----
+### Beta.1 / RC.1 Features (All Complete)
+
+#### Zero-Copy Tensor Operations
+- [x] **Zero-copy tensor views and slicing**
+  - [x] TensorView with flexible SliceSpec
+  - [x] ViewBuilder for ergonomic API
+  - [x] In-place operation support
+  - [x] 10 comprehensive tests
+
+#### Async Execution Support [feature = "async"]
+- [x] **Async execution traits**
+  - [x] TlAsyncExecutor trait for non-blocking execution
+  - [x] TlAsyncBatchExecutor for async batching
+  - [x] TlAsyncStreamExecutor for streaming
+  - [x] AsyncExecutorPool for load balancing
+  - [x] AsyncExecutionHandle for cancellation
+  - [x] 4 comprehensive tests
+
+#### Enhanced Diagnostics
+- [x] **Rich error messages with suggestions**
+  - [x] Diagnostic with severity levels
+  - [x] DiagnosticCollector for aggregation
+  - [x] ShapeMismatchDiagnostic builder
+  - [x] TypeMismatchDiagnostic builder
+  - [x] MemoryDiagnostic builder
+  - [x] PerformanceDiagnostic builder
+  - [x] Source location tracking
+  - [x] 10 comprehensive tests
+
+#### Mixed Precision Training
+- [x] **Complete mixed precision training support** (mixed_precision.rs)
+  - [x] FP16/BF16/FP8/FP32/FP64 precision modes
+  - [x] Automatic loss scaling with dynamic adjustment
+  - [x] LossScaler with multiple strategies (Static/Dynamic)
+  - [x] MixedPrecisionState for training management
+  - [x] Gradient checkpointing for memory efficiency
+  - [x] 15 comprehensive tests
+
+#### Sparse Tensor Support
+- [x] **Comprehensive sparse tensor infrastructure** (sparse.rs)
+  - [x] CSR (Compressed Sparse Row) format
+  - [x] CSC (Compressed Sparse Column) format
+  - [x] COO (Coordinate) format for construction
+  - [x] Automatic sparsity detection and conversion
+  - [x] Sparse-dense hybrid operations
+  - [x] 14 comprehensive tests
+
+#### Parallel Execution
+- [x] **Work-stealing scheduler and parallel infrastructure** (parallel.rs)
+  - [x] WorkStealingScheduler with dynamic load balancing
+  - [x] Multiple work-stealing strategies (Random/MaxLoad/LRU/RoundRobin)
+  - [x] Task dependencies and priority levels
+  - [x] NUMA-aware memory allocation
+  - [x] Load balancing statistics and metrics
+  - [x] 13 comprehensive tests
+
+#### SIMD Optimizations
+- [x] **Platform-specific SIMD optimization utilities** (simd.rs)
+  - [x] SimdCapabilities detection (AVX2/AVX-512/NEON/SVE)
+  - [x] AlignedBuffer for SIMD-aligned memory
+  - [x] SimdInstructionSet abstractions
+  - [x] SimdOptimizationHints for compiler
+  - [x] 13 comprehensive tests
+
+#### Advanced Quantization
+- [x] **Complete quantization pipeline** (quantization.rs)
+  - [x] INT8, INT4, INT2, FP8, Binary, Ternary quantization types
+  - [x] QAT and PTQ with multiple calibration strategies
+  - [x] Per-tensor and per-channel granularity
+  - [x] Symmetric and asymmetric modes
+  - [x] Comprehensive compression analysis
+
+#### Dynamic Batching
+- [x] **Adaptive request batching for inference serving** (dynamic_batching.rs)
+  - [x] 4 priority levels (Low/Normal/High/Critical)
+  - [x] Adaptive batch size optimization
+  - [x] Request timeout and queueing
+  - [x] Latency and throughput optimization strategies
+
+#### Advanced Kernel Fusion
+- [x] **Pattern-based fusion optimization** (fusion.rs)
+  - [x] MatMul+Bias, MatMul+Activation, BatchNorm+ReLU patterns
+  - [x] Vertical and horizontal fusion detection
+  - [x] Memory bandwidth-aware cost modeling
+  - [x] Conservative/Aggressive/Balanced/Memory-aware strategies
+
+#### Workspace Management
+- [x] **Memory pool for efficient allocation reuse** (workspace.rs)
+  - [x] BestFit/FirstFit/ExactFit/PowerOfTwo allocation strategies
+  - [x] Automatic expansion and defragmentation
+  - [x] Thread-safe shared workspace pools
+  - [x] Comprehensive efficiency metrics
+
+#### Multi-Model Coordination
+- [x] **Ensemble and multi-model management** (multimodel.rs)
+  - [x] Ensemble strategies: Averaging, Voting, Stacking, Boosting
+  - [x] Model routing: Priority, Latency, Accuracy, Round-robin, Cascade
+  - [x] Early-exit cascade support
+  - [x] Resource tracking and usage statistics
+
+#### Graph Rewriting
+- [x] **Pattern-based graph transformation engine** (rewrite.rs)
+  - [x] Pattern matching DSL with flexible combinators
+  - [x] RewriteEngine with multiple application strategies
+  - [x] Common optimization rules (identity elimination, constant folding)
+  - [x] Exhaustive, fixed-point, and prioritized rewrite strategies
+  - [x] 23 comprehensive tests
+
+#### Profiling-Guided Optimization
+- [x] **Adaptive performance tuning infrastructure** (profiling_optimizer.rs)
+  - [x] Runtime profiling and execution profile collection
+  - [x] Hotspot detection and performance bottleneck analysis
+  - [x] Multiple optimization goals (latency, throughput, memory, energy)
+  - [x] Auto-tuning with A/B testing support
+  - [x] 21 comprehensive tests
+
+#### Cache Optimization
+- [x] **Memory hierarchy aware optimization** (cache_optimizer.rs)
+  - [x] L1/L2/L3 cache configuration and modeling
+  - [x] Loop tiling parameter computation
+  - [x] Cache metrics estimation (hit rate, latency, bandwidth)
+  - [x] Data layout recommendations for different access patterns
+  - [x] 20 comprehensive tests
+
+### Experimental Features (All Complete)
+
+#### Automatic Parallelization
+- [x] **Automatic detection of parallelism opportunities** (auto_parallel.rs)
+  - [x] Graph-level parallelism detection with dependency analysis
+  - [x] Cost model for parallel execution with communication overhead estimation
+  - [x] Dynamic work partitioning across workers with load balancing
+  - [x] Multiple parallelization strategies (Conservative/Balanced/Aggressive/CostBased)
+  - [x] 19 comprehensive tests
+
+#### Speculative Execution
+- [x] **Branch prediction and speculative execution** (speculative.rs)
+  - [x] Multiple prediction strategies (HistoryBased/AlwaysTrue/MostFrequent/Adaptive)
+  - [x] Prefetching for likely future operations
+  - [x] Rollback mechanisms (Immediate/Lazy/Checkpoint-based)
+  - [x] Confidence scoring and success rate tracking
+  - [x] 19 comprehensive tests
+
+#### Learned Optimizations
+- [x] **ML-based optimization decisions** (learned_opt.rs)
+  - [x] ML-based fusion decisions with reinforcement learning
+  - [x] Learned cost models using linear regression
+  - [x] Q-learning for scheduling optimization
+  - [x] Multiple learning strategies (Supervised/Online/Reinforcement/Transfer)
+  - [x] Feature extraction and online learning
+  - [x] 21 comprehensive tests
+
 ---
 
-**Total Items:** 52+ tasks
-**Completion:** 100% (52/52) 🎉
+## v0.1.1 Additions (2026-03-29) ✅
+- [x] **Low-Rank Approximation** (src/low_rank/)
+  - [x] TruncatedSvd with power-iteration (from scratch, no external SVD)
+  - [x] SvdResult: reconstruct(), relative_error(), energy_fraction()
+  - [x] LowRankApproximation: matrix/matmul approx, is_candidate(), optimal_rank()
+  - [x] LowRankInferencePass: EinsumGraph candidate scanning
+  - [x] 15 tests passing
+- [x] **Partitioned Reductions** (src/partitioned/)
+  - [x] PartitionedReducer: reduce_all(), reduce_axis(), log_sum_exp()
+  - [x] AccumulationStrategy: Sum/Max/Min/Mean/Product/LogSumExp
+  - [x] PartitionedStats tracking
+  - [x] 10 tests passing
+- [x] **Enhanced Streaming (StreamingConfigV2)** (streaming.rs extensions)
+  - [x] BackpressureConfig with 4 strategies (Block/DropOldest/DropNewest/ErrorOnFull)
+  - [x] WatermarkConfig for out-of-order event handling
+  - [x] StreamingStats: latency, drop rate, throughput
+  - [x] 15 tests passing
+- [x] **Windowed Aggregation** (src/windowed_aggregation.rs)
+  - [x] WindowedAggregation: tumbling, sliding, session, count windows
+  - [x] WindowAggregation: Sum/Mean/Max/Min/Count/LastValue/FirstValue
+  - [x] WindowConfig builder API
+  - [x] 12 tests passing
+
+## v0.1.3 Enhancements (2026-03-30)
+
+- [x] **Symbolic Shape Support** (`symbolic_shape.rs`): `SymbolicDim` (Fixed/Symbolic/Product), `SymbolicShape = Vec<SymbolicDim>`, `ShapeConstraint`, `SymbolicShapeEnv` with unification engine. `propagate_einsum_shapes()` infers output shapes from einsum specs. Handles batch dims, chained ops, contradiction detection. 25 new tests.
+
+## v0.1.4 Enhancements (2026-03-30)
+
+- [x] **Structured Sparsity + Pruning** (`pruning.rs`): `SparsityPattern` (Unstructured/Block/Row/Column/N:M), `MagnitudePruner::prune_2d()` and `prune()` (N-D), `SparsityStats::compute()` with theoretical speedup, `PruningConfig` with rescale option. Free functions: `compute_sparsity()`, `row_norms()`. 20 new tests.
+
+## v0.1.5 Enhancements (2026-03-30)
+
+- [x] **Tensor Statistics + Anomaly Detection** (`tensor_stats.rs`): `TensorStatsSummary::compute()` (mean/std/min/max/percentiles with NaN/Inf handling), `AnomalyDetector` (z-score outliers, IQR-based, constant detection), `ActivationStatistics` (per-tensor history with trend_mean/trend_std). 20 new tests.
+
+## v0.1.7 Enhancements (2026-03-30)
+
+- [x] **Execution Plan Formatter** (`execution_plan.rs`): `ExecutionPlan` with `PlanStep` builder, `PlanFormatter::format_table()` and `format_tree()`, `compute_memory_timeline()`, parallel speedup analysis, critical path computation. 18 new tests.
+
+## v0.1.8 Enhancements (2026-03-30)
+
+- [x] **Execution Trace Recording** (`execution_trace.rs`): `TraceRecorder` (real-time recording), `RecordedExecutionTrace` (JSON export, slowest-ops, peak memory), `TraceAnalyzer` (operation summary, memory hotspots, avg duration). 18 new tests.
+
+## v0.1.10 Enhancements (2026-03-31)
+
+- [x] **FLOP Estimation** (`cost_model.rs`): `FlopEstimate` with per-node FLOP counting — einsum uses product of all dimension sizes, reduce uses element count, elem-wise ops use tensor size; free function `estimate_node_flops()`
+- [x] **Memory Cost Estimation** (`cost_model.rs`): `MemoryCostEstimate` simulating peak live-set memory across a topological execution schedule; accounts for tensor lifetimes and simultaneous live buffers
+- [x] **Graph Cost Summary** (`cost_model.rs`): `GraphCostSummary` aggregating total FLOPs, peak memory bytes, critical-path cost, and per-node breakdown for profiling-guided optimization decisions
+- [x] **Cost Model** (`cost_model.rs`): `CostModel` struct with `estimate_graph()` producing a full `GraphCostSummary` and `cheapest_node()`/`most_expensive_node()` query helpers
+- [x] **Cost-Aware Schedule** (`cost_model.rs`): `CostAwareSchedule` producing a topologically valid execution order ranked by descending per-node cost, enabling schedulers to prioritize critical-path operations first
+
+## v0.1.11
+
+- [x] **BeamSearchDecoder + BeamHypothesis + BeamState** (`beam_search.rs`): `BeamSearchDecoder` with configurable beam width, length penalty (alpha), and repetition penalty; `BeamHypothesis` stores a token sequence with cumulative log-probability; `BeamState` holds the pruned beam set at each step with top-k selection.
+- [x] **BeamSearchResult + BeamSearchStats** (`beam_search.rs`): `BeamSearchResult` returns top-k finished sequences sorted by length-normalized score; `BeamSearchStats` tracks total expansion steps, hypotheses pruned by beam width, and EOS-triggered completions.
+
+## v0.1.14
+
+- [x] **JoinOrderOptimizer** (`join_order.rs`): Configurable join ordering engine supporting greedy and dynamic-programming strategies with cost-based optimization
+- [x] **greedy_order** (`join_order.rs`): Greedy join ordering that iteratively selects the lowest-cost pair of relations to join based on estimated selectivity
+- [x] **dp_order** (`join_order.rs`): Optimal dynamic-programming join ordering with memoization over relation subsets, guaranteeing minimum estimated cost plans
+- [x] **JoinPlan** (`join_order.rs`): Tree-structured execution plan representing the join order with estimated total cost and per-node cost breakdown
+- [x] **JoinPlanNode** (`join_order.rs`): Individual node in a join plan tree, either a leaf (base relation) or an inner join of two sub-plans with local cost estimate
+- [x] **JoinStats** (`join_order.rs`): Statistics for join optimization including number of relations, strategy used, estimated cost, and planning wall-clock time
+
+## v0.1.16
+
+- [x] **UncertaintyEstimate** (`uncertainty.rs`): Result type holding `mean` prediction tensor, `aleatoric_variance` (data noise), and `epistemic_variance` (model uncertainty) components with `total_variance()` and `std_dev()` convenience methods
+- [x] **MonteCarloEstimator** (`uncertainty.rs`): Dropout-based MC sampling engine that runs `n_samples` stochastic forward passes, aggregates ensemble statistics, and decomposes total variance into aleatoric and epistemic contributions
+- [x] **CalibrationMetrics** (`uncertainty.rs`): Computes Expected Calibration Error (ECE), Maximum Calibration Error (MCE), and reliability diagram data (confidence bins vs accuracy) for assessing how well predicted confidence matches empirical accuracy
+- [x] **ConfidenceInterval** (`uncertainty.rs`): Lower/upper bound pair at a configurable coverage probability (e.g. 90%, 95%) derived from the predictive distribution; constructed via `from_normal()` and `from_quantiles()` helpers
+- [x] **PredictionInterval** (`uncertainty.rs`): Combines a point estimate with calibrated prediction intervals, distinguishing in-distribution from out-of-distribution samples using a configurable OOD threshold on epistemic variance
+
+## v0.1.12
+
+- [x] **GreedyDecoder** (`sampling.rs`): deterministic token selection via argmax over the logit/probability vector; handles equal-value ties by returning the lowest index.
+- [x] **TemperatureSampler** (`sampling.rs`): scales logits by `1/temperature` before softmax then draws a token using a `SimpleRng` LCG; temperature=1.0 reproduces the original distribution.
+- [x] **TopKSampler** (`sampling.rs`): truncates the distribution to the top-k highest-logit tokens, re-normalizes, then applies temperature sampling; falls back to greedy when k=1.
+- [x] **TopPSampler** (`sampling.rs`): nucleus sampling — sorts tokens by descending probability, includes the minimal prefix whose cumulative probability exceeds `p`, then samples uniformly from that nucleus.
+- [x] **ConfigurableSampler** (`sampling.rs`): unified enum (`Greedy` / `Temperature` / `TopK` / `TopP`) dispatching the appropriate strategy from a single `SamplingConfig` struct containing temperature, k, and p parameters.
+- [x] **SimpleRng** (`sampling.rs`): lightweight LCG pseudo-random number generator seeded at construction; provides `next_f64()` and `next_usize_below()` used internally by the probabilistic samplers.
+
+## v0.1.17
+
+- [x] **MemoCache** (`memo_cache.rs`): Generic LRU-style expression memoization store keyed by `MemoKey`; configurable capacity with eviction triggered automatically when capacity is exceeded
+- [x] **MemoKey** (`memo_cache.rs`): Structural SHA-256 hash key for `TLExpr` sub-trees enabling equality-based cache lookup without full expression comparison; `from_expr()` constructor
+- [x] **MemoEvictionPolicy** (`memo_cache.rs`): Enum selecting eviction strategy — `LRU` (least-recently-used), `LFU` (least-frequently-used), `FIFO` (insertion order) — applied consistently on every cache miss when at capacity
+- [x] **MemoStats** (`memo_cache.rs`): Hit count, miss count, eviction count, and `hit_rate()` convenience method for monitoring memoization effectiveness at runtime
+- [x] **MemoLookupResult** (`memo_cache.rs`): Typed enum `Hit(value)` / `Miss` returned by `MemoCache::get()` eliminating the need for `Option` unwrapping at call sites
+- [x] **ExprMemoCache** (`memo_cache.rs`): Pre-configured `MemoCache<TLExpr, EinsumGraph>` specialisation for the most common caching pattern in the inference pipeline
+- [x] **MemoCacheBuilder** (`memo_cache.rs`): Builder API for constructing `MemoCache` with capacity, eviction policy, and optional pre-warming from a sequence of `(key, value)` pairs
+
+---
+
+## Open / Future Work
+
+### Distributed Improvements
+- [ ] **Advanced communication backends**
+  - [ ] NCCL integration for multi-GPU
+  - [ ] Gloo backend for CPU clusters
+  - [ ] Custom collective operations
+- [ ] **Fault tolerance enhancements**
+  - [ ] Automatic failover and recovery
+  - [ ] Elastic training (dynamic worker scaling)
+  - [ ] Distributed checkpointing
+- [ ] **Performance monitoring**
+  - [x] Per-device profiling
+  - [x] Communication bottleneck detection
+  - [x] Load balancing metrics
+
+### Developer Experience
+- [x] **Improved error messages** ✅ (v0.1.2) — ShapeMismatchDiagnostic with transpose/broadcast suggestions, PerformanceDiagnostic recommendations
+- [x] **Enhanced debugging** ✅ (v0.1.2) — StepExecutor with IntermediateValue logging (min/max/mean/nan/inf), BreakpointCondition (NodeIndex, OnNaN, OnInf, Always)
+- [ ] **Performance profiling tools**
+  - [x] Flamegraph generation
+  - [x] `critical-path-analysis` (completed 2026-04-17)
+    - **Goal:** Dedicated analysis API extracting the longest dependency chain (critical path) of an inference graph and reporting the bottleneck node + total estimated latency.
+    - **Design:** Topological sort + DAG longest-path (dynamic programming over reverse topo order). `pub struct CriticalPathReport { pub nodes: Vec<NodeId>, pub total_latency_ns: u64, pub bottleneck: NodeId }`. `pub fn critical_path(graph: &InferenceGraph) -> CriticalPathReport`. Node latency comes from existing per-node cost estimate (or 1 unit if absent — emit `MissingCost` warning).
+    - **Files:** `src/critical_path.rs` (NEW); `src/lib.rs` (export `CriticalPathReport`, `critical_path`).
+    - **Prerequisites:** reuse existing `InferenceGraph` / `NodeId` types in this crate — no new graph abstraction.
+    - **Tests:** unit tests with hand-rolled DAGs: linear chain (entire graph is critical); diamond (longer branch wins); isolated nodes (empty critical path with MissingCost warning).
+    - **Risk:** Graph-type interop — if shapes don't fit, narrow to `pub trait CriticalPathInput` and adapt internally.
+  - [ ] Memory bandwidth profiling
+
+### Hardware-Specific Backends
+- [ ] Apple Silicon optimizations (Metal)
+- [ ] AMD ROCm support
+- [ ] Intel oneAPI integration
+
+### Cloud Execution
+- [ ] AWS SageMaker integration
+- [ ] Google TPU support
+- [ ] Azure ML integration
+
+### Advanced Optimizations
+- [x] **Higher-order derivatives** ✅ (v0.1.2) — JacobianComputer, HessianComputer (finite differences)
+- [x] **Enhanced diagnostics** ✅ (v0.1.2) — ShapeMismatchDiagnostic suggestions, PerformanceDiagnostic recommendations
+- [ ] Sparse gradient support
+- [ ] Cross-operator fusion enhancements
+- [ ] Template-based kernel generation
+
+### Documentation & Testing
+- [ ] Property-based testing for all traits
+- [ ] Fuzz testing for robustness
+- [ ] Integration tests with real backends
+
+---
+
+**Total Completed Items:** 55 tasks (including 3 experimental research directions)
 **Production Ready Features:**
-- ✅ Batch Execution & Parallel Processing
-- ✅ Shape Inference & Type Checking
-- ✅ Backend Capabilities & Feature Detection
-- ✅ Execution Profiling & Performance Analysis (incl. Bottleneck Analysis, Timeline Profiling)
-- ✅ Streaming Execution & Memory-Efficient Processing
-- ✅ Error Recovery & Fault Tolerance
-- ✅ Autodiff Enhancements (Gradient Accumulation, Clipping, Scaling, Custom Gradients)
-- ✅ Type-Safe Tensor Wrappers & Compile-Time Checking
-- ✅ Graph Optimization (Fusion Planning, Dead Code Elimination)
-- ✅ Execution Scheduling (Sequential, Parallel, Cost-Based, Memory-Efficient)
-- ✅ Device Placement Optimization
-- ✅ Memory Management (Caching, Pooling, Estimation)
-- ✅ Execution Context & Lifecycle Hooks
-- ✅ Debugging Tools (Trace, Inspect, Breakpoints)
-- ✅ Visualization Utilities (Timeline, Graph, Statistics)
-- ✅ Graph Compilation & Caching
-- ✅ Eager Mode Autodiff
-- ✅ Backend Test Templates
-- ✅ Gradient Checking
-- ✅ Performance Regression Testing
-- ✅ **JIT Compilation with Hot Path Detection** (NEW!)
-- ✅ **Distributed Execution (Data/Model/Pipeline Parallelism)** (NEW!)
+- Batch Execution & Parallel Processing
+- Shape Inference & Type Checking
+- Backend Capabilities & Feature Detection
+- Execution Profiling & Performance Analysis
+- Streaming Execution & Memory-Efficient Processing
+- Error Recovery & Fault Tolerance
+- Autodiff Enhancements (Gradient Accumulation, Clipping, Scaling, Custom Gradients)
+- Type-Safe Tensor Wrappers & Compile-Time Checking
+- Graph Optimization (Fusion Planning, Dead Code Elimination)
+- Execution Scheduling (Sequential, Parallel, Cost-Based, Memory-Efficient)
+- Device Placement Optimization
+- Memory Management (Caching, Pooling, Estimation, Workspace)
+- Execution Context & Lifecycle Hooks
+- Debugging Tools (Trace, Inspect, Breakpoints)
+- Visualization Utilities (Timeline, Graph, Statistics)
+- Graph Compilation & Caching
+- Eager Mode Autodiff
+- Backend Test Templates
+- Gradient Checking
+- Performance Regression Testing
+- JIT Compilation with Hot Path Detection
+- Distributed Execution (Data/Model/Pipeline Parallelism)
+- Zero-Copy Tensor Views
+- Async Execution [feature = "async"]
+- Enhanced Diagnostics
+- Mixed Precision Training
+- Sparse Tensor Support
+- Work-Stealing Parallel Scheduler
+- SIMD Optimization Utilities
+- Advanced Quantization
+- Dynamic Batching
+- Advanced Kernel Fusion
+- Workspace Management
+- Multi-Model Coordination
+- Graph Rewriting Engine
+- Profiling-Guided Optimization
+- Cache Optimization
+- Automatic Parallelization (Experimental)
+- Speculative Execution (Experimental)
+- Learned Optimizations (Experimental)
 
-**Test Coverage:** 522 tests (all passing ✅) (+48 new tests this session, +241 total from Alpha.1)
-**Build Status:** ✅ **ZERO ERRORS, ZERO WARNINGS** 🎉
-**Total Lines of Code:** 21,349 lines Rust code (+2,150 lines this session, +7,290 total from Alpha.1)
+**Test Coverage:** 909 tests (all passing)
+**Build Status:** ZERO ERRORS, ZERO WARNINGS
+**Total Lines of Code:** ~26,000 lines Rust code
 **Examples:** 3 working examples (jit_demo.rs, distributed_demo.rs, recovery_demo.rs)
 
-**Key Features Added (This Session - Part 2):**
-- **630 lines: Graph Rewriting Engine (rewrite.rs)** 🆕
-  - Pattern-based graph transformations
-  - Multiple rewrite strategies (exhaustive, fixed-point, prioritized)
-  - Common optimization rules (constant folding, identity elimination)
-  - 23 comprehensive tests
-- **620 lines: Profiling-Guided Optimization (profiling_optimizer.rs)** 🆕
-  - Adaptive performance tuning based on runtime profiles
-  - Hotspot detection and analysis
-  - Auto-tuning with multiple optimization goals
-  - 21 comprehensive tests
-- **530 lines: Cache Optimization (cache_optimizer.rs)** 🆕
-  - Memory hierarchy aware optimization
-  - Loop tiling for cache efficiency
-  - Data layout recommendations
-  - 20 comprehensive tests
-
-**Key Features Added (This Session - Part 1):**
-- **730 lines: Mixed Precision Training (mixed_precision.rs)** 🆕
-  - FP16/BF16/FP8 computation modes with automatic loss scaling
-  - Dynamic loss scaling with overflow detection
-  - Gradient checkpointing and master weights
-  - 15 comprehensive tests
-- **710 lines: Sparse Tensor Support (sparse.rs)** 🆕
-  - CSR/CSC/COO sparse formats
-  - Automatic sparsity detection
-  - Sparse-dense hybrid operations
-  - 14 comprehensive tests
-- **810 lines: Parallel Execution (parallel.rs)** 🆕
-  - Work-stealing scheduler with dynamic load balancing
-  - NUMA-aware memory allocation
-  - Task dependencies and priorities
-  - 13 comprehensive tests
-- **540 lines: SIMD Optimizations (simd.rs)** 🆕
-  - Platform detection (AVX2/AVX-512/NEON/SVE)
-  - AlignedBuffer for SIMD operations
-  - Compiler optimization hints
-  - 13 comprehensive tests
-
-**Previous Session Features:**
-- **900 lines: JIT Compilation (jit.rs)**
-  - Runtime compilation with hot path detection
-  - JitCompiler with adaptive optimization
-  - JitCache with LRU eviction
-  - Graph specialization for observed shapes
-  - AdaptiveOptimizer for progressive optimization
-  - HotPathDetector for frequently executed paths
-  - 13 comprehensive tests
-- **950 lines: Distributed Execution (distributed.rs)** 🆕
-  - DistributedExecutor for multi-device coordination
-  - DataParallelCoordinator with gradient synchronization
-  - ModelParallelCoordinator with tensor sharding
-  - PipelineParallelCoordinator for stage-based execution
-  - CommunicationBackend abstract interface
-  - Multiple parallelism strategies (Data/Model/Pipeline/Hybrid)
-  - 13 comprehensive tests
-
-**Previous Features:**
-- 590 lines: Backend compatibility test templates (backend_tests.rs)
-- 470 lines: Eager mode autodiff (eager.rs)
-- 450 lines: Gradient checking utilities (gradcheck.rs)
-
-**Architecture Completeness:**
-- Core traits: 100% (TlExecutor, TlAutodiff, TlEnhancedAutodiff, TlEagerAutodiff, TlBatchExecutor, TlStreamingExecutor, TlRecoverableExecutor, TlCompilableExecutor, **TlJitExecutor**, **TlDistributedExecutor**)
-- Optimization layer: 100% (GraphOptimizer, FusionPlanner, Scheduler, PlacementOptimizer, GraphCompiler, **JitCompiler**, **AdaptiveOptimizer**)
-- Utility layer: 100% (Profiling, Caching, Memory Management, Strategy Configuration, Compilation Cache, **JitCache**)
-- Type safety: 100% (Shape inference, Typed tensors, Validation)
-- Error handling: 100% (Recovery, Validation, Diagnostics)
-- Development tools: 100% (Debugging, Visualization, Compilation, Backend Tests, Gradient Checking)
-- **Distributed execution**: 100% (Data/Model/Pipeline parallelism, Communication backends, Sharding) 🆕
-
----
-
-**Key Features Added (This Session - Part 3: Experimental):**
-- **800 lines: Automatic Parallelization (auto_parallel.rs)** 🆕 🧪
-  - Dependency graph analysis and cycle detection
-  - Topological sorting for parallel stage detection
-  - Cost-based work partitioning with multiple strategies
-  - Communication overhead estimation
-  - Load balancing metrics and optimization
-  - 19 comprehensive tests
-- **620 lines: Speculative Execution (speculative.rs)** 🆕 🧪
-  - Branch prediction with historical learning
-  - Multiple rollback policies (Immediate/Lazy/Checkpoint)
-  - Confidence scoring and success rate tracking
-  - Adaptive prediction strategies
-  - Checkpoint-based state management
-  - 19 comprehensive tests
-- **730 lines: Learned Optimizations (learned_opt.rs)** 🆕 🧪
-  - Linear regression for cost prediction
-  - Q-learning agent for action selection
-  - Feature extraction from graph descriptions
-  - Online learning with exponential moving averages
-  - Reinforcement learning with reward signals
-  - 21 comprehensive tests
-
-## 🎉 **FINAL STATUS: RESEARCH-COMPLETE** 🎉
-
-The tensorlogic-infer crate is now **100% complete** with ALL planned features including experimental research directions implemented, tested, and documented.
-
-### Summary
-- ✅ All 55 tasks completed (including 3 experimental research directions)
-- ✅ 522 comprehensive tests (100% passing) 🎉
-- ✅ **Zero compiler errors, zero warnings** 🏆
-- ✅ 21,349 lines of production-quality Rust code
-- ✅ Complete documentation with examples
-- ✅ Working examples and demos
-
-### Major Achievements
-1. **Complete trait system** for execution abstraction
-2. **JIT compilation** with hot path detection and adaptive optimization
-3. **Distributed execution** supporting data, model, and pipeline parallelism
-4. **Comprehensive testing** infrastructure including gradient checking and performance regression testing
-5. **Production-grade** error handling, recovery, and fault tolerance
-6. **Type-safe** tensor operations with compile-time checking
-7. **Advanced optimization** including graph compilation, fusion, and scheduling
-8. **Developer tools** for debugging, profiling, and visualization
-9. **Experimental research features** 🧪:
-   - Automatic parallelization with dependency analysis
-   - Speculative execution with branch prediction
-   - Machine learning-based optimization decisions
-
-The crate is ready for integration with backend implementations, production use, and cutting-edge research! 🚀
-
----
-
-## Beta.1 Enhancement Roadmap 🚧
-
-### Completed in Beta.1 ✅
-
-#### 1. Zero-Copy Tensor Operations (COMPLETE)
-- [x] **Zero-copy tensor views and slicing** ✨ **NEW**
-  - TensorView with flexible SliceSpec
-  - ViewBuilder for ergonomic API
-  - In-place operation support
-  - 10 comprehensive tests
-  - ~320 lines of production code
-
-#### 2. Async Execution Support (COMPLETE)
-- [x] **Async execution traits** ✨ **NEW**
-  - TlAsyncExecutor trait for non-blocking execution
-  - TlAsyncBatchExecutor for async batching
-  - TlAsyncStreamExecutor for streaming
-  - AsyncExecutorPool for load balancing
-  - AsyncExecutionHandle for cancellation
-  - 4 comprehensive tests
-  - ~370 lines of production code
-  - Feature-gated with "async" flag
-
-#### 3. Enhanced Diagnostics (COMPLETE)
-- [x] **Rich error messages with suggestions** ✨ **NEW**
-  - Diagnostic with severity levels
-  - DiagnosticCollector for aggregation
-  - ShapeMismatchDiagnostic builder
-  - TypeMismatchDiagnostic builder
-  - MemoryDiagnostic builder
-  - PerformanceDiagnostic builder
-  - Source location tracking
-  - 10 comprehensive tests
-  - ~550 lines of production code
-
-#### 4. Mixed Precision Training (COMPLETE) ✨ **NEW**
-- [x] **Complete mixed precision training support**
-  - FP16/BF16/FP8/FP32/FP64 precision modes
-  - Automatic loss scaling with dynamic adjustment
-  - LossScaler with multiple strategies (Static/Dynamic)
-  - MixedPrecisionState for training management
-  - Gradient checkpointing for memory efficiency
-  - Numerical stability monitoring
-  - Master weights in FP32
-  - 15 comprehensive tests
-  - ~730 lines of production code
-
-#### 5. Sparse Tensor Support (COMPLETE) ✨ **NEW**
-- [x] **Comprehensive sparse tensor infrastructure**
-  - CSR (Compressed Sparse Row) format
-  - CSC (Compressed Sparse Column) format
-  - COO (Coordinate) format for construction
-  - Automatic sparsity detection and conversion
-  - Sparse-dense hybrid operations
-  - Sparse matrix multiplication
-  - Memory-efficient storage
-  - 14 comprehensive tests
-  - ~710 lines of production code
-
-#### 6. Parallel Execution (COMPLETE) ✨ **NEW**
-- [x] **Work-stealing scheduler and parallel infrastructure**
-  - WorkStealingScheduler with dynamic load balancing
-  - Multiple work-stealing strategies (Random/MaxLoad/LRU/RoundRobin)
-  - Task dependencies and priority levels
-  - NUMA-aware memory allocation
-  - Cache-line padding to avoid false sharing
-  - Load balancing statistics and metrics
-  - 13 comprehensive tests
-  - ~810 lines of production code
-
-#### 7. SIMD Optimizations (COMPLETE) ✨ **NEW**
-- [x] **Platform-specific SIMD optimization utilities**
-  - SimdCapabilities detection (AVX2/AVX-512/NEON/SVE)
-  - AlignedBuffer for SIMD-aligned memory
-  - SimdInstructionSet abstractions
-  - SimdOptimizationHints for compiler
-  - Platform detection (x86_64/aarch64)
-  - Vectorization width calculations
-  - 13 comprehensive tests
-  - ~540 lines of production code
-
-#### 8. Graph Rewriting (COMPLETE) ✨ **NEW**
-- [x] **Pattern-based graph transformation engine**
-  - Pattern matching DSL with flexible combinators
-  - RewriteEngine with multiple application strategies
-  - Common optimization rules (identity elimination, constant folding)
-  - Exhaustive, fixed-point, and prioritized rewrite strategies
-  - Rule application statistics and tracking
-  - 23 comprehensive tests
-  - ~630 lines of production code
-
-#### 9. Profiling-Guided Optimization (COMPLETE) ✨ **NEW**
-- [x] **Adaptive performance tuning infrastructure**
-  - Runtime profiling and execution profile collection
-  - Hotspot detection and performance bottleneck analysis
-  - Multiple optimization goals (latency, throughput, memory, energy)
-  - Auto-tuning with A/B testing support
-  - Optimization strategy recommendation
-  - 21 comprehensive tests
-  - ~620 lines of production code
-
-#### 10. Cache Optimization (COMPLETE) ✨ **NEW**
-- [x] **Memory hierarchy aware optimization**
-  - L1/L2/L3 cache configuration and modeling
-  - Loop tiling parameter computation
-  - Cache metrics estimation (hit rate, latency, bandwidth)
-  - Data layout recommendations for different access patterns
-  - Prefetching and NUMA optimization support
-  - 20 comprehensive tests
-  - ~530 lines of production code
-
-### High Priority Enhancements
-
-#### 1. Performance Optimizations
-- [x] **Zero-copy tensor operations** ✅ COMPLETE
-- [x] **Parallel execution improvements** ✅ COMPLETE
-  - Work-stealing scheduler for better load balancing
-  - NUMA-aware memory allocation
-  - Cache-line aligned data structures
-- [x] **SIMD optimizations** ✅ COMPLETE
-  - Platform detection (AVX2, AVX-512, NEON, SVE)
-  - AlignedBuffer for SIMD operations
-  - Vectorization hints and utilities
-
-#### 2. Advanced Features
-- [x] **Quantization support** ✅ COMPLETE (Beta.1)
-  - INT8/INT4/INT2/FP8/Binary/Ternary quantization
-  - QAT and PTQ support
-  - Multiple calibration strategies
-- [x] **Mixed precision training** ✅ COMPLETE
-  - FP16/BF16/FP8 computation modes
-  - Automatic loss scaling with dynamic adjustment
-  - Gradient checkpointing integration
-  - Master weights support
-- [x] **Sparse tensor support** ✅ COMPLETE
-  - CSR/CSC/COO sparse formats
-  - Sparse-dense hybrid operations
-  - Automatic sparsity detection
-
-#### 3. Distributed Improvements
-- [ ] **Advanced communication backends**
-  - NCCL integration for multi-GPU
-  - Gloo backend for CPU clusters
-  - Custom collective operations
-- [ ] **Fault tolerance enhancements**
-  - Automatic failover and recovery
-  - Elastic training (dynamic worker scaling)
-  - Distributed checkpointing
-- [ ] **Performance monitoring**
-  - Per-device profiling
-  - Communication bottleneck detection
-  - Load balancing metrics
-
-#### 4. Developer Experience
-- [ ] **Improved error messages**
-  - More descriptive validation errors
-  - Helpful suggestions for common mistakes
-  - Better shape mismatch diagnostics
-- [ ] **Enhanced debugging**
-  - Step-through execution mode
-  - Intermediate value logging
-  - Memory leak detection
-- [ ] **Performance profiling tools**
-  - Flamegraph generation
-  - Critical path analysis
-  - Memory bandwidth profiling
-
-### Medium Priority Enhancements
-
-#### 5. Execution Modes
-- [x] **Asynchronous execution** ✅ COMPLETE (Beta.1)
-  - Async/await trait variants
-  - Stream-based processing
-  - Future-based operations
-- [x] **Dynamic graph optimization** ✅ COMPLETE
-  - Runtime graph rewriting (rewrite.rs)
-  - Adaptive fusion decisions (profiling_optimizer.rs)
-  - Online profiling and tuning (profiling_optimizer.rs, cache_optimizer.rs)
-
-#### 6. Backend Integration
-- [ ] **Hardware-specific backends**
-  - Apple Silicon optimizations (Metal)
-  - AMD ROCm support
-  - Intel oneAPI integration
-- [ ] **Cloud execution**
-  - AWS SageMaker integration
-  - Google TPU support
-  - Azure ML integration
-
-### Low Priority / Future Work
-
-#### 7. Advanced Optimizations
-- [ ] **Automatic differentiation improvements**
-  - Higher-order derivatives
-  - Jacobian/Hessian computation
-  - Sparse gradient support
-- [ ] **Graph fusion enhancements**
-  - Cross-operator fusion
-  - Vertical fusion for memory reduction
-  - Template-based kernel generation
-
-#### 8. Documentation & Testing
-- [ ] **Expanded documentation**
-  - Performance tuning guide
-  - Backend development cookbook
-  - Common patterns and idioms
-- [ ] **Extended test coverage**
-  - Property-based testing for all traits
-  - Fuzz testing for robustness
-  - Integration tests with real backends
-
-### Experimental Features ✅ **COMPLETE**
-
-#### 9. Research Directions ✅ **ALL IMPLEMENTED**
-- [x] **Automatic parallelization** ✅ **COMPLETE** (auto_parallel.rs)
-  - Graph-level parallelism detection with dependency analysis
-  - Cost model for parallel execution with communication overhead estimation
-  - Dynamic work partitioning across workers with load balancing
-  - Multiple parallelization strategies (Conservative/Balanced/Aggressive/CostBased)
-  - 19 comprehensive tests
-  - ~800 lines of production code
-- [x] **Speculative execution** ✅ **COMPLETE** (speculative.rs)
-  - Branch prediction with multiple strategies (HistoryBased/AlwaysTrue/MostFrequent/Adaptive)
-  - Prefetching for likely future operations
-  - Rollback mechanisms (Immediate/Lazy/Checkpoint-based)
-  - Confidence scoring and success rate tracking
-  - Adaptive learning from prediction outcomes
-  - 19 comprehensive tests
-  - ~620 lines of production code
-- [x] **Learned optimizations** ✅ **COMPLETE** (learned_opt.rs)
-  - ML-based fusion decisions with reinforcement learning
-  - Learned cost models using linear regression
-  - Q-learning for scheduling optimization
-  - Multiple learning strategies (Supervised/Online/Reinforcement/Transfer)
-  - Feature extraction and online learning
-  - 21 comprehensive tests
-  - ~730 lines of production code
-
----
-
-**Version**: 0.1.0-beta.1
-**Target Date**: 2026-01-28
-**Priority**: Medium-High
+**Version**: 0.1.0
+**Release Date**: 2026-04-06
 **Backward Compatibility**: Maintained
+
+## v0.1.21 (2026-04-05)
+
+- [x] **MCMC Sampling** (`mcmc.rs`): Added mcmc.rs — MCMC sampling: `MetropolisHastings` (pluggable `LogProb` + `Proposal`), `HamiltonianMonteCarlo` (leapfrog + finite-diff gradients); `McmcRng` (LCG+Box-Muller); `GaussianProposal`/`IndependentGaussianProposal`; `effective_sample_size`, `gelman_rubin`, `autocorrelation` diagnostics.
+
+## v0.1.19 (2026-04-05)
+
+- [x] **Causal Inference** (`causal.rs`): `CausalGraph` with directed-edge adjacency representation; d-separation via the Bayes-Ball algorithm (`d_separated()`); backdoor criterion check (`satisfies_backdoor_criterion()`) identifying valid adjustment sets that block all back-door paths from treatment to outcome; frontdoor criterion check (`satisfies_frontdoor_criterion()`); do-calculus intervention operator (`do_intervention()`) returning the post-intervention DAG; `ate_backdoor()` estimator of the Average Treatment Effect under backdoor adjustment; `ate_instrumental_variable()` IV estimator using a provided instrument; `propensity_score()` logistic-approximation propensity scoring; `ObservationalData` struct for passing empirical covariate/treatment/outcome samples.
+
+## v0.1.18 (2026-04-05)
+
+- [x] **Constraint Propagation** (`constraint_propagation.rs`): `ConstraintNetwork` manages variables, `Domain` (ordered set of `f64` values), and `BinaryConstraint` arcs; AC-3 arc-consistency algorithm (`propagate()`) with a workqueue driving domain reduction to a fixed point; `ConstraintRelation` enum with 7 variants (`Equal`, `NotEqual`, `LessThan`, `LessEqual`, `GreaterThan`, `GreaterEqual`, `CustomFn`); `CspSolver` backtracking CSP solver with configurable `VarOrdering` (Lexicographic, `MinRemainingValues` / MRV, `DegreeHeuristic`) and optional forward-checking that runs AC-3 after every variable assignment to prune sibling domains early; `SolveResult` carrying all solutions found (or first-solution-only mode).
+
+## v0.2.0 / Future Work
+
+- Lazy batched execution (fold compatible `forward` calls across a batch).
+- Memoization cache for repeated graph sub-patterns.
+- Streaming inference API for large graphs.
+- Zero-copy tensor sharing between executor and backend.
+- [x] ~~Split `src/causal.rs` (1,589 L) into a `causal/` directory.~~ (completed 2026-04-15)

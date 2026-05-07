@@ -177,7 +177,7 @@ mod tests {
 
     #[test]
     fn test_parse_explicit_spec() {
-        let spec = EinsumSpec::parse("ij,jk->ik").unwrap();
+        let spec = EinsumSpec::parse("ij,jk->ik").expect("unwrap");
 
         assert_eq!(spec.inputs.len(), 2);
         assert_eq!(spec.inputs[0], vec!['i', 'j']);
@@ -195,7 +195,7 @@ mod tests {
 
     #[test]
     fn test_parse_implicit_spec() {
-        let spec = EinsumSpec::parse("ij,jk").unwrap();
+        let spec = EinsumSpec::parse("ij,jk").expect("unwrap");
 
         assert_eq!(spec.inputs.len(), 2);
         assert_eq!(spec.output, vec!['i', 'j', 'k']); // Sorted
@@ -204,7 +204,7 @@ mod tests {
 
     #[test]
     fn test_parse_scalar_output() {
-        let spec = EinsumSpec::parse("i,i->").unwrap();
+        let spec = EinsumSpec::parse("i,i->").expect("unwrap");
 
         assert_eq!(spec.inputs.len(), 2);
         assert_eq!(spec.output.len(), 0);
@@ -214,7 +214,7 @@ mod tests {
 
     #[test]
     fn test_parse_trace() {
-        let spec = EinsumSpec::parse("ii->i").unwrap();
+        let spec = EinsumSpec::parse("ii->i").expect("unwrap");
 
         assert_eq!(spec.inputs.len(), 1);
         assert_eq!(spec.inputs[0], vec!['i', 'i']);
@@ -223,7 +223,7 @@ mod tests {
 
     #[test]
     fn test_parse_batch_matmul() {
-        let spec = EinsumSpec::parse("bij,bjk->bik").unwrap();
+        let spec = EinsumSpec::parse("bij,bjk->bik").expect("unwrap");
 
         assert_eq!(spec.inputs.len(), 2);
         assert_eq!(spec.output, vec!['b', 'i', 'k']);
@@ -251,7 +251,7 @@ mod tests {
 
     #[test]
     fn test_validate_input_count() {
-        let spec = EinsumSpec::parse("ij,jk->ik").unwrap();
+        let spec = EinsumSpec::parse("ij,jk->ik").expect("unwrap");
 
         assert!(spec.validate_input_count(2).is_ok());
         assert!(spec.validate_input_count(1).is_err());
@@ -260,7 +260,7 @@ mod tests {
 
     #[test]
     fn test_spec_properties() {
-        let spec = EinsumSpec::parse("ij,jk->ik").unwrap();
+        let spec = EinsumSpec::parse("ij,jk->ik").expect("unwrap");
 
         assert_eq!(spec.num_inputs(), 2);
         assert_eq!(spec.output_ndim(), 2);
@@ -271,7 +271,7 @@ mod tests {
     #[test]
     fn test_canonical_form() {
         let original = "ij,jk->ik";
-        let spec = EinsumSpec::parse(original).unwrap();
+        let spec = EinsumSpec::parse(original).expect("unwrap");
         assert_eq!(spec.canonical_form(), original);
 
         // Also test Display trait

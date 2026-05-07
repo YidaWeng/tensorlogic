@@ -663,14 +663,14 @@ mod tests {
         // Create a simple einsum: ab,bc->ac
         let _node_idx = graph
             .add_node(EinsumNode::einsum("ab,bc->ac", vec![a, b], vec![c]))
-            .unwrap();
+            .expect("unwrap");
 
         graph.outputs.push(c);
 
         let result = export_to_tensorflow(&graph, "test_einsum");
         assert!(result.is_ok());
 
-        let bytes = result.unwrap();
+        let bytes = result.expect("unwrap");
         assert!(!bytes.is_empty());
     }
 
@@ -684,7 +684,7 @@ mod tests {
 
         let _node_idx = graph
             .add_node(EinsumNode::elem_binary("add", t1, t2, t3))
-            .unwrap();
+            .expect("unwrap");
 
         graph.outputs.push(t3);
 
@@ -701,7 +701,7 @@ mod tests {
 
         let _node_idx = graph
             .add_node(EinsumNode::elem_unary("exp", t1, t2))
-            .unwrap();
+            .expect("unwrap");
 
         graph.outputs.push(t2);
 
@@ -718,7 +718,7 @@ mod tests {
 
         let _node_idx = graph
             .add_node(EinsumNode::reduce("sum", vec![1], t1, t2))
-            .unwrap();
+            .expect("unwrap");
 
         graph.outputs.push(t2);
 
@@ -752,7 +752,7 @@ mod tests {
 
         let _node_idx = graph
             .add_node(EinsumNode::elem_unary("invalid_op", t1, t2))
-            .unwrap();
+            .expect("unwrap");
 
         graph.outputs.push(t2);
 
@@ -770,7 +770,7 @@ mod tests {
 
         let _node_idx = graph
             .add_node(EinsumNode::elem_binary("invalid_op", t1, t2, t3))
-            .unwrap();
+            .expect("unwrap");
 
         graph.outputs.push(t3);
 

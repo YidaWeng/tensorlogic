@@ -4,54 +4,56 @@
 
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic--compiler-orange)](https://crates.io/crates/tensorlogic-compiler)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-compiler)
-[![Tests](https://img.shields.io/badge/tests-437%2F437_passing-brightgreen)](#)
-[![Production](https://img.shields.io/badge/status-production_ready-success)](#)
+[![Tests](https://img.shields.io/badge/tests-862%2F862_passing-brightgreen)](#)
+[![Production](https://img.shields.io/badge/status-stable-success)](#)
+[![Version](https://img.shields.io/badge/version-0.1.0-blue)](#)
+[![Zero Warnings](https://img.shields.io/badge/warnings-0-success)](#)
 
 ## Overview
 
-The compiler translates logical rules with quantifiers into optimized tensor operations using Einstein summation notation. It operates as a **planning layer** only—no execution happens here.
+The compiler translates logical rules with quantifiers into optimized tensor operations using Einstein summation notation. It operates as a **planning layer** only - no execution happens here.
 
 **Input:** `TLExpr` (logical expressions with predicates, quantifiers, implications)
 **Output:** `EinsumGraph` (directed graph of tensor operations)
 
 ## Key Features
 
-### Core Compilation (Production Ready ✅)
-- ✅ **Logic-to-Tensor Mapping**: Compiles predicates, AND, OR, NOT, EXISTS, FORALL, IMPLY
-- ✅ **Arithmetic Operations**: Add, Subtract, Multiply, Divide with element-wise tensor ops
-- ✅ **Comparison Operations**: Equal, LessThan, GreaterThan with boolean result tensors
-- ✅ **Conditional Expressions**: If-then-else with soft probabilistic semantics
-- ✅ **Shared Variable Support**: Handles variable sharing in AND operations via einsum contraction
-- ✅ **Automatic Axis Marginalization**: Implicitly quantifies extra variables in implications
+### Core Compilation (Production Ready)
+- **Logic-to-Tensor Mapping**: Compiles predicates, AND, OR, NOT, EXISTS, FORALL, IMPLY
+- **Arithmetic Operations**: Add, Subtract, Multiply, Divide with element-wise tensor ops
+- **Comparison Operations**: Equal, LessThan, GreaterThan with boolean result tensors
+- **Conditional Expressions**: If-then-else with soft probabilistic semantics
+- **Shared Variable Support**: Handles variable sharing in AND operations via einsum contraction
+- **Automatic Axis Marginalization**: Implicitly quantifies extra variables in implications
 
-### Modal & Temporal Logic (Production Ready ✅)
-- ✅ **Modal Operators**: Box (□) for necessity, Diamond (◇) for possibility
-- ✅ **Temporal Operators**: Eventually (F), Always (G) for temporal reasoning
-- ✅ **Configurable Strategies**: 3 modal strategies, 3 temporal strategies
-- ✅ **Automatic Axis Management**: World and time dimensions managed transparently
-- ✅ **Combined Reasoning**: Support for nested modal/temporal expressions
+### Modal & Temporal Logic (Production Ready)
+- **Modal Operators**: Box for necessity, Diamond for possibility
+- **Temporal Operators**: Eventually (F), Always (G) for temporal reasoning
+- **Configurable Strategies**: 3 modal strategies, 3 temporal strategies
+- **Automatic Axis Management**: World and time dimensions managed transparently
+- **Combined Reasoning**: Support for nested modal/temporal expressions
 
-### Type Safety & Validation (Production Ready ✅)
-- ✅ **Scope Analysis**: Detects unbound variables with helpful quantifier suggestions
-- ✅ **Type Checking**: Validates predicate arity and type consistency across expressions
-- ✅ **Domain Validation**: Ensures variables are bound to valid domains
-- ✅ **Enhanced Diagnostics**: Rich error messages with source locations and fix suggestions
+### Type Safety & Validation (Production Ready)
+- **Scope Analysis**: Detects unbound variables with helpful quantifier suggestions
+- **Type Checking**: Validates predicate arity and type consistency across expressions
+- **Domain Validation**: Ensures variables are bound to valid domains
+- **Enhanced Diagnostics**: Rich error messages with source locations and fix suggestions
 
-### Optimization Pipeline (Production Ready ✅)
+### Optimization Pipeline (Production Ready)
 
 The compiler features a **7-pass optimization pipeline** that can reduce expression complexity by up to 80%:
 
-1. ✅ **Negation Optimization**: Double negation elimination, De Morgan's laws, quantifier negation pushing
-2. ✅ **Constant Folding**: Compile-time evaluation of constant expressions (2.0 * 3.0 → 6.0)
-3. ✅ **Algebraic Simplification**: Identity elimination (x+0=x, x*1=x), annihilation (x*0=0), idempotency
-4. ✅ **Strength Reduction**: Replace expensive ops with cheaper equivalents (x^2→x*x, exp(log(x))→x)
-5. ✅ **Distributivity**: Factor common subexpressions (a*b + a*c → a*(b+c))
-6. ✅ **Quantifier Optimization**: Loop-invariant code motion (∃x.(a+p(x)) → a + ∃x.p(x))
-7. ✅ **Dead Code Elimination**: Remove unreachable branches and short-circuit constant conditions
+1. **Negation Optimization**: Double negation elimination, De Morgan's laws, quantifier negation pushing
+2. **Constant Folding**: Compile-time evaluation of constant expressions (2.0 * 3.0 -> 6.0)
+3. **Algebraic Simplification**: Identity elimination (x+0=x, x*1=x), annihilation (x*0=0), idempotency
+4. **Strength Reduction**: Replace expensive ops with cheaper equivalents (x^2->x*x, exp(log(x))->x)
+5. **Distributivity**: Factor common subexpressions (a*b + a*c -> a*(b+c))
+6. **Quantifier Optimization**: Loop-invariant code motion (exists x.(a+p(x)) -> a + exists x.p(x))
+7. **Dead Code Elimination**: Remove unreachable branches and short-circuit constant conditions
 
 **Additional Graph-Level Optimizations:**
-- ✅ **Common Subexpression Elimination (CSE)**: Graph-level deduplication of identical operations
-- ✅ **Einsum Optimization**: Operation merging, identity elimination, contraction order optimization
+- **Common Subexpression Elimination (CSE)**: Graph-level deduplication of identical operations
+- **Einsum Optimization**: Operation merging, identity elimination, contraction order optimization
 
 **Pipeline Features:**
 - **Configurable**: Enable/disable individual passes, set iteration limits
@@ -59,19 +61,74 @@ The compiler features a **7-pass optimization pipeline** that can reduce express
 - **Performance Tracking**: Detailed statistics on applied optimizations
 - **Hardware-Adaptive**: GPU-optimized, CPU-optimized, and SIMD-optimized cost models
 
-### Parameterized Compilation (Production Ready ✅)
-- ✅ **26+ Configurable Strategies**: Customize logic-to-tensor mappings for different use cases
-- ✅ **6 Preset Configurations**: Soft differentiable, hard Boolean, fuzzy logics, probabilistic
-- ✅ **Fine-Grained Control**: Per-operation strategy selection (AND, OR, NOT, quantifiers, implication)
+### Parameterized Compilation (Production Ready)
+- **26+ Configurable Strategies**: Customize logic-to-tensor mappings for different use cases
+- **6 Preset Configurations**: Soft differentiable, hard Boolean, fuzzy logics, probabilistic
+- **Fine-Grained Control**: Per-operation strategy selection (AND, OR, NOT, quantifiers, implication)
 
-### Advanced Analysis & Profiling (New in Alpha.2 ✨)
-- ✨ **Compilation Profiling**: Track compilation time, memory usage, cache statistics, and pass-level performance
-- ✨ **Dataflow Analysis**: Live variable analysis, reaching definitions, use-def chains for optimization
-- ✨ **Graph Dataflow**: Tensor liveness tracking, dependency analysis for graph optimization
-- ✨ **Contraction Optimization**: Dynamic programming for optimal einsum contraction order (reduces FLOPs)
-- ✨ **Loop Fusion**: Fuse multiple loops over the same axes for better cache locality
-- ✨ **Reachability Analysis**: Compute dominance, strongly connected components, topological ordering
-- ✨ **Integrated Post-Compilation**: Unified pipeline combining validation and graph-level optimizations
+### Advanced Analysis & Profiling (Production Ready)
+- **Compilation Profiling**: Track compilation time, memory usage, cache statistics, and pass-level performance
+- **Dataflow Analysis**: Live variable analysis, reaching definitions, use-def chains for optimization
+- **Graph Dataflow**: Tensor liveness tracking, dependency analysis for graph optimization
+- **Contraction Optimization**: Dynamic programming for optimal einsum contraction order (reduces FLOPs)
+- **Loop Fusion**: Fuse multiple loops over the same axes for better cache locality
+- **Reachability Analysis**: Compute dominance, strongly connected components, topological ordering
+- **Integrated Post-Compilation**: Unified pipeline combining validation and graph-level optimizations
+
+### Advanced Logic (Production Ready)
+- **Counting Quantifiers**: CountingExists, CountingForAll, ExactCount, Majority
+- **Higher-Order Logic**: Lambda expressions, Apply with beta reduction
+- **Set Theory Operations**: Membership, Union, Intersection, Difference, Cardinality, Comprehension
+- **Fixed-Point Operators**: LeastFixpoint, GreatestFixpoint with configurable unrolling depth
+- **Hybrid Logic**: Nominal (@i), At operator (@i phi), Somewhere (E phi), Everywhere (A phi)
+- **Constraint Programming**: AllDifferent, GlobalCardinality
+- **Abductive Reasoning**: Abducible with costs, Explain operator
+- **Probabilistic Logic**: WeightedRule, ProbabilisticChoice, SoftExists, SoftForAll
+- **Fuzzy Logic**: TNorm (6 variants), TCoNorm (6 variants), FuzzyNot (3 variants), FuzzyImplication (6 variants)
+
+### Import/Export (Production Ready)
+- **Import**: Prolog syntax, S-Expressions, TPTP format with auto-detection
+- **Export to ONNX**: Full protobuf message generation
+- **Export to TensorFlow GraphDef**: TensorFlow op translation
+- **Export to PyTorch**: Human-readable Python nn.Module code generation
+
+### Compiler Pipeline (Production Ready, v0.1.17)
+- **CompilerPipeline**: Composable end-to-end pass chain from parsing through code generation
+- **CompilerPassOrder**: Dependency-aware canonical ordering of compilation passes
+- **CompilerPipelineConfig**: Feature-gate toggles for scope analysis, DCE, CSE, inlining, rewriting
+- **CompilerPassStats / CompilerPipelineStats**: Per-pass timing and aggregate metrics
+- **PassBenchmark**: Micro-benchmark harness for individual passes
+
+### Symbolic Differentiation (Production Ready, v0.1.18)
+- **differentiate()**: Symbolic derivatives of `TLExpr` w.r.t. a named variable
+- **jacobian()**: Full Jacobian vector for a list of output expressions
+- **simplify_derivative()**: Algebraic simplification of computed derivatives
+- **DiffConfig / DiffResult**: Depth-controlled simplification with intermediate caching
+- Supports arithmetic, logical, fuzzy, temporal, and probabilistic operators
+
+### Partial Evaluation (Production Ready, v0.1.19)
+- **partially_evaluate()**: Single-pass reducer with `PEEnv` binding map
+- **specialize()**: Convenience wrapper for binding a single named argument
+- **specialize_batch()**: Multi-argument specialization in one call
+- **PEConfig**: Toggles for arithmetic folding, boolean folding, branch pruning, let-inlining
+- **PEStats**: Nodes visited, reduced, and inlined counters
+
+### Type Inference (Production Ready, v0.1.20)
+- **TLType**: Enum covering Bool, Numeric, Relation(arity), Set, Fuzzy, Probabilistic, Var, Unknown
+- **annotate()**: Fully type-annotated expression trees from bare `TLExpr` inputs
+- **unify()**: Hindley-Milner-lite unification engine with occurs-check
+- **Substitution / TypeEnv**: Variable-to-type binding maps with `UnificationError` reporting
+
+### Bytecode VM (Production Ready, v0.1.21)
+- **Stack-based VM**: 40-instruction set (arithmetic, comparison, boolean, fuzzy, control flow)
+- **compile()**: Compile `TLExpr` to `BytecodeProgram` with forward-jump patching
+- **execute() / execute_with_stats()**: Run programs with optional execution statistics
+- **Short-circuit evaluation**: `JumpIfFalse` / `JumpIfTrue` for `And` / `Or`
+
+### Performance Features (Production Ready)
+- **Parallel Compilation**: Multi-threaded with configurable parallelization strategy
+- **Incremental Compilation**: Expression dependency tracking, change detection
+- **Compilation Caching**: Thread-safe LRU cache with statistics
 
 ## Quick Start
 
@@ -79,7 +136,7 @@ The compiler features a **7-pass optimization pipeline** that can reduce express
 use tensorlogic_compiler::compile_to_einsum;
 use tensorlogic_ir::{TLExpr, Term};
 
-// Define a logic rule: ∃y. knows(x, y)
+// Define a logic rule: exists y. knows(x, y)
 // "Find all persons x who know someone"
 let rule = TLExpr::exists(
     "y",
@@ -103,19 +160,19 @@ let graph = compile_to_einsum(&rule)?;
 | Logic Operation | Tensor Equivalent | Notes |
 |----------------|-------------------|-------|
 | `P(x, y)` | Tensor with axes `ab` | Predicate as multi-dimensional array |
-| `P ∧ Q` | Hadamard product or einsum | Element-wise if same axes, contraction if shared vars |
-| `P ∨ Q` | `max(P, Q)` | Or soft variant (configurable) |
-| `¬P` | `1 - P` | Or temperature-controlled |
-| `∃x. P(x)` | `sum(P, axis=x)` | Or `max` for hard quantification |
-| `∀x. P(x)` | `NOT(∃x. NOT(P(x)))` | Dual of EXISTS |
-| `P → Q` | `ReLU(Q - P)` | Soft implication |
+| `P AND Q` | Hadamard product or einsum | Element-wise if same axes, contraction if shared vars |
+| `P OR Q` | `max(P, Q)` | Or soft variant (configurable) |
+| `NOT P` | `1 - P` | Or temperature-controlled |
+| `exists x. P(x)` | `sum(P, axis=x)` | Or `max` for hard quantification |
+| `forall x. P(x)` | `NOT(exists x. NOT(P(x)))` | Dual of EXISTS |
+| `P -> Q` | `ReLU(Q - P)` | Soft implication |
 
 ### Modal & Temporal Logic Operations
 
 | Logic Operation | Tensor Equivalent | Notes |
 |----------------|-------------------|-------|
-| `□P` (Box) | `min(P, axis=world)` or `prod(P, axis=world)` | Necessity over possible worlds |
-| `◇P` (Diamond) | `max(P, axis=world)` or `sum(P, axis=world)` | Possibility over possible worlds |
+| `Box P` (necessity) | `min(P, axis=world)` or `prod(P, axis=world)` | Necessity over possible worlds |
+| `Diamond P` (possibility) | `max(P, axis=world)` or `sum(P, axis=world)` | Possibility over possible worlds |
 | `F(P)` (Eventually) | `max(P, axis=time)` or `sum(P, axis=time)` | True in some future state |
 | `G(P)` (Always) | `min(P, axis=time)` or `prod(P, axis=time)` | True in all future states |
 
@@ -123,7 +180,7 @@ let graph = compile_to_einsum(&rule)?;
 ```rust
 use tensorlogic_ir::{TLExpr, Term};
 
-// □(∃y. knows(x, y)) - "In all possible worlds, x knows someone"
+// Box(exists y. knows(x, y)) - "In all possible worlds, x knows someone"
 let expr = TLExpr::Box(Box::new(
     TLExpr::exists("y", "Person",
         TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")])
@@ -146,7 +203,7 @@ let expr = TLExpr::Always(Box::new(
 
 **Combined Modal & Temporal:**
 ```rust
-// □(F(goal(a))) - "In all possible worlds, agent a eventually achieves goal"
+// Box(F(goal(a))) - "In all possible worlds, agent a eventually achieves goal"
 let expr = TLExpr::Box(Box::new(
     TLExpr::Eventually(Box::new(
         TLExpr::pred("goal", vec![Term::var("a")])
@@ -156,17 +213,17 @@ let expr = TLExpr::Box(Box::new(
 
 See `examples/10_modal_temporal_logic.rs` for comprehensive demonstrations.
 
-### Parameterized Compilation (Config System Defined)
+### Parameterized Compilation
 
 The compiler defines **6 preset configurations** and **26+ configurable strategies**:
 
 ```rust
 use tensorlogic_compiler::{CompilationConfig, CompilationConfigBuilder};
 
-// Define preset configurations
+// Use preset configurations
 let config = CompilationConfig::soft_differentiable();  // Default (neural training)
 let config = CompilationConfig::hard_boolean();         // Discrete reasoning
-let config = CompilationConfig::fuzzy_godel();          // Gödel fuzzy logic
+let config = CompilationConfig::fuzzy_godel();          // Godel fuzzy logic
 let config = CompilationConfig::probabilistic();        // Probabilistic semantics
 
 // Or build a custom configuration
@@ -176,21 +233,18 @@ let config = CompilationConfigBuilder::new()
     .not_strategy(NotStrategy::Complement)        // Standard complement
     .exists_strategy(ExistsStrategy::Max)         // Max aggregation
     .build();
-
-// Note: Full integration into compilation pipeline is in progress
-// Currently uses default soft_differentiable strategy
 ```
 
 **Available Strategies:**
 
 | Operation | Strategies | Use Cases |
 |-----------|-----------|-----------|
-| AND | Product, Min, ProbabilisticSum, Gödel, ProductTNorm, Łukasiewicz | T-norms for conjunctions |
-| OR | Max, ProbabilisticSum, Gödel, ProbabilisticSNorm, Łukasiewicz | S-norms for disjunctions |
+| AND | Product, Min, ProbabilisticSum, Godel, ProductTNorm, Lukasiewicz | T-norms for conjunctions |
+| OR | Max, ProbabilisticSum, Godel, ProbabilisticSNorm, Lukasiewicz | S-norms for disjunctions |
 | NOT | Complement (1-x), Sigmoid | Negation with or without temperature |
 | EXISTS | Sum, Max, LogSumExp, Mean | Different quantifier semantics |
 | FORALL | DualOfExists, Product, Min, MeanThreshold | Universal quantification strategies |
-| IMPLY | ReLU, Material, Gödel, Łukasiewicz, Reichenbach | Various implication operators |
+| IMPLY | ReLU, Material, Godel, Lukasiewicz, Reichenbach | Various implication operators |
 | MODAL | AllWorldsMin, AllWorldsProduct, Threshold | Necessity/possibility operators |
 | TEMPORAL | Max, Sum, LogSumExp | Eventually/always operators |
 
@@ -199,7 +253,7 @@ let config = CompilationConfigBuilder::new()
 The compiler handles complex rules like transitivity with shared variables:
 
 ```rust
-// knows(x,y) ∧ knows(y,z) → knows(x,z)
+// knows(x,y) AND knows(y,z) -> knows(x,z)
 let knows_xy = TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]);
 let knows_yz = TLExpr::pred("knows", vec![Term::var("y"), Term::var("z")]);
 let knows_xz = TLExpr::pred("knows", vec![Term::var("x"), Term::var("z")]);
@@ -210,7 +264,7 @@ let rule = TLExpr::imply(premise, knows_xz);
 let graph = compile_to_einsum(&rule)?;
 
 // Generates:
-// 1. knows[ab] ∧ knows[bc] → einsum("ab,bc->abc") [contraction over shared 'b']
+// 1. knows[ab] AND knows[bc] -> einsum("ab,bc->abc") [contraction over shared 'b']
 // 2. Marginalize over 'b' to align with conclusion axes 'ac'
 // 3. Apply ReLU(knows[ac] - marginalized_premise[ac])
 ```
@@ -219,24 +273,18 @@ let graph = compile_to_einsum(&rule)?;
 
 ### Unified Pipeline (Recommended)
 
-The recommended approach is to use the unified optimization pipeline that applies all 7 passes iteratively:
-
 ```rust
 use tensorlogic_compiler::optimize::{OptimizationPipeline, PipelineConfig};
 use tensorlogic_ir::{TLExpr, Term};
 
-// Create a complex expression
-let x = TLExpr::pred("x", vec![Term::var("i")]);
+let pipeline = OptimizationPipeline::new();
 let expr = TLExpr::negate(TLExpr::negate(TLExpr::add(
     TLExpr::pow(x, TLExpr::Constant(2.0)),
     TLExpr::Constant(0.0),
 )));
 
-// Apply default optimization pipeline
-let pipeline = OptimizationPipeline::new();
 let (optimized, stats) = pipeline.optimize(&expr);
 
-// Check results
 println!("Total optimizations: {}", stats.total_optimizations());
 println!("  Negation: {}", stats.negation.double_negations_eliminated);
 println!("  Constant folding: {}", stats.constant_folding.binary_ops_folded);
@@ -247,8 +295,6 @@ println!("  Reached fixed point: {}", stats.reached_fixed_point);
 ```
 
 ### Configurable Pipeline
-
-Customize which passes run and how many iterations:
 
 ```rust
 use tensorlogic_compiler::optimize::PipelineConfig;
@@ -274,8 +320,6 @@ let (optimized, stats) = pipeline.optimize(&expr);
 
 ### Individual Pass Usage
 
-For fine-grained control, use individual optimization passes:
-
 ```rust
 use tensorlogic_compiler::optimize::{
     optimize_negations, fold_constants, simplify_algebraic,
@@ -283,7 +327,6 @@ use tensorlogic_compiler::optimize::{
     eliminate_dead_code,
 };
 
-// Apply specific optimizations
 let (opt1, stats1) = optimize_negations(&expr);
 let (opt2, stats2) = fold_constants(&opt1);
 let (opt3, stats3) = simplify_algebraic(&opt2);
@@ -291,8 +334,6 @@ let (opt4, stats4) = reduce_strength(&opt3);
 ```
 
 ### Complexity Analysis
-
-Analyze expression complexity to guide optimization decisions:
 
 ```rust
 use tensorlogic_compiler::optimize::{analyze_complexity, CostWeights};
@@ -307,33 +348,23 @@ let gpu_weights = CostWeights::gpu_optimized();
 let gpu_cost = complexity.total_cost_with_weights(&gpu_weights);
 println!("GPU-optimized cost: {}", gpu_cost);
 
-// Check optimization potential
 println!("CSE potential: {}", complexity.cse_potential());
 println!("Complexity level: {}", complexity.complexity_level());
 ```
 
 ### Graph-Level Optimizations
 
-After compilation, optimize the resulting graph:
-
 ```rust
 use tensorlogic_ir::graph::optimization::{optimize_graph, OptimizationLevel};
 
-// Compile expression to graph
 let graph = compile_to_einsum(&expr)?;
-
-// Apply graph optimizations (DCE, CSE, identity elimination)
 let (optimized_graph, stats) = optimize_graph(&graph, OptimizationLevel::Aggressive);
 println!("Removed {} nodes", stats.nodes_removed);
 ```
 
-## Advanced Analysis Features (Alpha.2 ✨)
-
-The compiler now includes sophisticated analysis and optimization capabilities:
+## Advanced Analysis Features
 
 ### Compilation Profiling
-
-Track compilation performance, memory usage, and cache statistics:
 
 ```rust
 use tensorlogic_compiler::profiling::CompilationProfiler;
@@ -341,19 +372,15 @@ use tensorlogic_compiler::profiling::CompilationProfiler;
 let mut profiler = CompilationProfiler::new();
 profiler.start();
 
-// Profile compilation phases
 profiler.start_phase("compilation");
 let graph = compile_to_einsum(&expr)?;
 profiler.end_phase("compilation");
 
-// Record pass executions
 profiler.record_pass("negation_opt", duration, optimizations_applied);
 
-// Generate reports
 let report = profiler.generate_report();
 println!("{}", report);
 
-// Get JSON output for tooling
 let json = profiler.generate_json_report();
 ```
 
@@ -366,177 +393,99 @@ let json = profiler.generate_json_report();
 
 ### Dataflow Analysis
 
-Analyze how data flows through expressions for optimization opportunities:
-
 ```rust
 use tensorlogic_compiler::passes::{analyze_dataflow, analyze_graph_dataflow};
 
-// Analyze expression dataflow
 let analysis = analyze_dataflow(&expr);
-
-// Check live variables at each point
 println!("Live variables: {:?}", analysis.live_variables);
-
-// Track reaching definitions (which assignments reach each use)
 println!("Reaching definitions: {:?}", analysis.reaching_defs);
-
-// Identify available expressions for CSE
 println!("Available expressions: {:?}", analysis.available_exprs);
-
-// Use-def chains for dependency tracking
 println!("Use-def chains: {:?}", analysis.use_def_chains);
 
-// Analyze compiled graph dataflow
 let graph_analysis = analyze_graph_dataflow(&graph);
 println!("Tensor dependencies: {:?}", graph_analysis.dependencies);
 println!("Live tensors per node: {:?}", graph_analysis.live_tensors);
 ```
 
-**Dataflow analysis provides:**
-- Live variable analysis (which variables are used downstream)
-- Reaching definitions (where values are defined)
-- Available expressions (for common subexpression elimination)
-- Use-def chains (variable usage tracking)
-- Tensor liveness in compiled graphs
-- Dependency analysis for graph optimization
-
 ### Contraction Optimization
-
-Optimize einsum contraction order using dynamic programming:
 
 ```rust
 use tensorlogic_compiler::passes::{optimize_contractions, optimize_contractions_with_config};
 use tensorlogic_compiler::passes::ContractionOptConfig;
 
-// Optimize with default greedy algorithm
 let (optimized_graph, stats) = optimize_contractions(&graph);
 
 println!("Contractions reordered: {}", stats.contractions_reordered);
 println!("FLOPs reduction: {:.1}%", stats.flops_reduction_percent);
 println!("Memory reduction: {:.1}%", stats.memory_reduction_percent);
 
-// Custom configuration
 let config = ContractionOptConfig {
-    max_intermediate_size: 1_000_000,  // Limit intermediate tensor sizes
-    prefer_memory_over_flops: false,    // Optimize for FLOPs first
+    max_intermediate_size: 1_000_000,
+    prefer_memory_over_flops: false,
 };
 
 let (optimized, stats) = optimize_contractions_with_config(&graph, &config);
 ```
 
-**Contraction optimization features:**
-- Dynamic programming to find optimal contraction order
-- Minimizes floating-point operations (FLOPs)
-- Controls intermediate tensor memory usage
-- Greedy algorithm for large graphs
-- Detailed statistics on FLOP and memory savings
-
 ### Loop Fusion
-
-Fuse multiple loops over the same axes for better cache locality:
 
 ```rust
 use tensorlogic_compiler::passes::{fuse_loops, fuse_loops_with_config};
 use tensorlogic_compiler::passes::LoopFusionConfig;
 
-// Fuse loops with default settings
 let (fused_graph, stats) = fuse_loops(&graph);
 
 println!("Loops fused: {}", stats.loops_fused);
 println!("Reductions merged: {}", stats.reductions_merged);
 println!("Intermediates eliminated: {}", stats.intermediates_eliminated);
-
-// Custom configuration
-let config = LoopFusionConfig {
-    max_fusion_depth: 3,           // Limit fusion depth
-    require_same_reduction: true,  // Only fuse identical reductions
-};
-
-let (fused, stats) = fuse_loops_with_config(&graph, &config);
 ```
 
-**Loop fusion benefits:**
-- Reduces memory bandwidth requirements
-- Improves cache locality by reusing loaded data
-- Eliminates intermediate tensors
-- Merges reduction operations
-- Reduces kernel launch overhead on GPUs
-
 ### Reachability Analysis
-
-Compute graph structure properties for optimization and validation:
 
 ```rust
 use tensorlogic_compiler::passes::{analyze_reachability, analyze_dominance};
 
-// Compute reachability information
 let reachability = analyze_reachability(&graph);
 
-// Check if node B is reachable from node A
 if reachability.reachable.contains(&(node_a, node_b)) {
     println!("Node {} can reach node {}", node_a, node_b);
 }
 
-// Get strongly connected components
 println!("SCCs: {:?}", reachability.strongly_connected_components);
 
-// Topological ordering (for DAGs)
 if let Some(topo) = &reachability.topological_order {
     println!("Topological order: {:?}", topo);
 }
 
-// Compute dominance relationships
 let dominance = analyze_dominance(&graph);
 println!("Immediate dominators: {:?}", dominance.immediate_dominators);
 println!("Dominance frontiers: {:?}", dominance.dominance_frontiers);
 ```
 
-**Reachability analysis provides:**
-- Transitive reachability between nodes
-- Strongly connected component detection
-- Topological ordering for DAGs
-- Cycle detection
-- Dominance and post-dominance analysis
-- Dominator trees and frontiers
-
 ### Integrated Post-Compilation Pipeline
-
-Run all analysis and optimization passes in a single pipeline:
 
 ```rust
 use tensorlogic_compiler::passes::{post_compilation_passes, PostCompilationOptions};
 
 let options = PostCompilationOptions {
-    validate_graph_structure: true,  // Check for cycles, orphans
-    validate_axes: true,              // Validate axis compatibility
-    validate_shapes: true,            // Check tensor shape consistency
-    apply_optimizations: true,        // Run optimization passes
-    enable_contraction_opt: true,     // Optimize contraction order
-    enable_loop_fusion: true,         // Fuse compatible loops
-    strict_mode: false,               // Fail on warnings if true
+    validate_graph_structure: true,
+    validate_axes: true,
+    validate_shapes: true,
+    apply_optimizations: true,
+    enable_contraction_opt: true,
+    enable_loop_fusion: true,
+    strict_mode: false,
 };
 
 let mut graph = compile_to_einsum(&expr)?;
 let result = post_compilation_passes(&mut graph, &ctx, options)?;
 
 if result.is_valid {
-    println!("✓ Graph validated successfully");
+    println!("Graph validated successfully");
     println!("  Checks performed: {}", result.validation_report.checks_performed);
     println!("  Optimizations: {}", result.optimizations_applied);
-
-    for msg in &result.messages {
-        println!("  {}", msg);
-    }
 }
 ```
-
-**Post-compilation pipeline:**
-- Graph structure validation (cycles, orphaned nodes)
-- Axis compatibility checking
-- Shape inference and validation
-- Automated optimization application
-- Configurable strictness levels
-- Detailed validation and optimization reports
 
 See `examples/21_profiling_and_optimization.rs` for comprehensive demonstrations of all these features.
 
@@ -544,36 +493,36 @@ See `examples/21_profiling_and_optimization.rs` for comprehensive demonstrations
 
 ```
 TLExpr
-  ↓
+  |
 [Pre-Compilation Passes]
   - Scope analysis (detect unbound variables)
   - Type checking (validate arity, types)
   - Negation optimization
   - Common subexpression elimination
-  ↓
+  |
 [Compiler Context]
   - Assign axes to variables
   - Track domains
   - Manage temporary tensors
   - Apply compilation config
-  ↓
+  |
 [compile_expr recursion]
-  - compile_predicate → tensor with axes
-  - compile_and → einsum contraction (configurable)
-  - compile_or → element-wise max (configurable)
-  - compile_not → 1 - x (configurable)
-  - compile_exists → reduction (configurable)
-  - compile_forall → dual or product (configurable)
-  - compile_imply → marginalize + operator (configurable)
-  - compile_arithmetic → element-wise ops
-  - compile_comparison → boolean tensors
-  ↓
+  - compile_predicate -> tensor with axes
+  - compile_and -> einsum contraction (configurable)
+  - compile_or -> element-wise max (configurable)
+  - compile_not -> 1 - x (configurable)
+  - compile_exists -> reduction (configurable)
+  - compile_forall -> dual or product (configurable)
+  - compile_imply -> marginalize + operator (configurable)
+  - compile_arithmetic -> element-wise ops
+  - compile_comparison -> boolean tensors
+  |
 [Post-Compilation Passes]
   - Dead code elimination
   - Einsum operation merging
   - Identity elimination
   - Contraction order optimization
-  ↓
+  |
 EinsumGraph
   - Tensors: Vec<String>
   - Nodes: Vec<EinsumNode>
@@ -581,8 +530,6 @@ EinsumGraph
 ```
 
 ## Scope Analysis & Type Checking
-
-The compiler provides production-ready validation passes:
 
 ### Scope Analysis
 
@@ -601,7 +548,6 @@ let analysis = analyze_scopes(&expr);
 if !analysis.unbound_vars.is_empty() {
     println!("Unbound variables: {:?}", analysis.unbound_vars);
     println!("Suggestions: {}", analysis.suggest_quantifiers());
-    // Output: "Consider adding: ∃y:Domain. ∃z:Domain. ..."
 }
 ```
 
@@ -613,14 +559,12 @@ use tensorlogic_ir::PredicateSignature;
 
 let mut checker = TypeChecker::new();
 
-// Register predicate signatures
 checker.register_predicate(PredicateSignature {
     name: "knows".to_string(),
     arity: 2,
     arg_types: vec![Some("Person".to_string()), Some("Person".to_string())],
 });
 
-// Type check expression
 let result = checker.check_types(&expr);
 if let Some(error) = result.type_errors.first() {
     println!("Type error: {}", error);
@@ -665,7 +609,7 @@ ctx.add_domain("City", 50);     // 50 cities
 ctx.bind_var("x", "Person")?;
 ctx.bind_var("y", "City")?;
 
-// Axes are automatically assigned: x→'a', y→'b', ...
+// Axes are automatically assigned: x->'a', y->'b', ...
 ```
 
 ## Operation Types
@@ -703,13 +647,11 @@ The compiler performs extensive validation:
 ```rust
 // Arity validation
 let p1 = TLExpr::pred("P", vec![Term::var("x"), Term::var("y")]);
-let p2 = TLExpr::pred("P", vec![Term::var("a")]);  // ❌ Different arity!
+let p2 = TLExpr::pred("P", vec![Term::var("a")]);  // Different arity!
 validate_arity(&TLExpr::and(p1, p2))?;  // Error: Predicate 'P' has inconsistent arity
 
 // Domain validation
 ctx.bind_var("x", "NonExistent")?;  // Error: Domain 'NonExistent' not found
-
-// Axis compatibility (now automatically handled via contraction/marginalization)
 ```
 
 ## Integration with Other Crates
@@ -722,7 +664,7 @@ use tensorlogic_adapters::SymbolTable;
 
 let table = SymbolTable::new();
 // Add domains and predicates...
-// Future: Pass to compiler for enhanced type checking
+// Pass to compiler for enhanced type checking
 ```
 
 ### tensorlogic-scirs-backend
@@ -738,12 +680,12 @@ let outputs = executor.execute(&graph, &inputs)?;
 
 ## Performance Considerations
 
-- ✅ **Operation Fusion**: Einsum operation merging (completed)
-- ✅ **Common Subexpression Elimination**: Expression-level and graph-level CSE (completed)
-- ✅ **Negation Optimization**: De Morgan's laws and double negation elimination (completed)
-- ✅ **Dead Code Elimination**: Removes unused operations from the graph (completed)
-- ✅ **Axis Assignment**: Uses lexicographic order ('a', 'b', 'c', ...) for determinism
-- ✅ **Temporary Tensors**: Named as `temp_0`, `temp_1`, ... for debugging
+- **Operation Fusion**: Einsum operation merging (completed)
+- **Common Subexpression Elimination**: Expression-level and graph-level CSE (completed)
+- **Negation Optimization**: De Morgan's laws and double negation elimination (completed)
+- **Dead Code Elimination**: Removes unused operations from the graph (completed)
+- **Axis Assignment**: Uses lexicographic order ('a', 'b', 'c', ...) for determinism
+- **Temporary Tensors**: Named as `temp_0`, `temp_1`, ... for debugging
 
 ## Testing & Quality
 
@@ -760,15 +702,14 @@ cargo test -p tensorlogic-compiler
 cargo llvm-cov --package tensorlogic-compiler
 ```
 
-**Current Test Status:**
-- **437 tests** (100% passing)
+**Current Test Status (v0.1.0):**
+- **862 tests** (100% passing)
 - **Zero warnings** (strict clippy compliance)
-- **21,466 lines of code** across 72 files (all files < 2000 lines)
-- **100% Alpha.2 feature completion**
+- Stable quality
 
 ## Current Status & Roadmap
 
-### Production Ready ✅
+### Stable (v0.1.0)
 - Core logic compilation (AND, OR, NOT, quantifiers, implications)
 - Arithmetic and comparison operations
 - Conditional expressions (if-then-else)
@@ -777,27 +718,56 @@ cargo llvm-cov --package tensorlogic-compiler
 - Parameterized compilation (26+ strategies, 6 presets)
 - Optimization passes (negation, CSE, einsum, DCE)
 - SymbolTable integration for metadata
+- Modal & temporal logic (Box, Diamond, Eventually, Always)
+- Advanced logic: counting quantifiers, higher-order logic, set theory, fixed-points
+- Hybrid logic, constraint programming, abductive reasoning
+- Probabilistic logic, fuzzy logic operators
+- Import: Prolog, S-Expression, TPTP formats
+- Export: ONNX, TensorFlow GraphDef, PyTorch code generation
+- Parallel compilation (feature-gated)
+- Incremental compilation and caching
+- Compilation profiling
+- Dataflow analysis
+- Contraction optimization
+- Loop fusion
+- Reachability analysis
+- Property-based testing (21 property tests)
+- Fuzzing infrastructure (4 fuzz targets)
+- Benchmark suite
+- **CompilerPipeline** (v0.1.17): end-to-end composable pass chain with `CompilerPassOrder`
+- **Symbolic differentiation** (v0.1.18): `differentiate()`, `jacobian()`, full arithmetic/logic/fuzzy support
+- **Partial evaluation** (v0.1.19): `partially_evaluate()`, `specialize()`, branch pruning
+- **Type inference** (v0.1.20): `TLType`, `annotate()`, Hindley-Milner-lite unification
+- **Bytecode VM** (v0.1.21): 40-instruction stack VM, `compile()`, `execute()`
 
-### In Progress 🔧
-- Automatic strategy selection based on expression context
-- Enhanced metadata propagation
-- Improved error recovery (continue after non-fatal errors)
-
-### Planned Features 📋
-See [TODO.md](TODO.md) for the complete roadmap:
-- ⏳ Property-based testing with proptest
-- ⏳ Fuzzing for edge case discovery
-- ⏳ Visualization (export to DOT format)
-- ⏳ CLI tool for standalone compilation
-- ⏳ Advanced features (higher-order quantification, modal logic)
+### Known Limitations
+- `Next` (X) temporal operator requires backend shift operations
+- `Until` (U) temporal operator requires backend scan operations
+- JIT compilation for hot paths: not yet implemented
+- First-class functions/predicates: not yet implemented
+- Higher-order quantification: not yet implemented
 
 ## Examples
 
-See the test suite for more examples:
+See the test suite and examples directory for demonstrations:
 
 ```bash
 cargo test -p tensorlogic-compiler
 ```
+
+Key examples:
+- `examples/10_modal_temporal_logic.rs`: Box, Diamond, Eventually, Always operators
+- `examples/11_fuzzy_logic.rs`: All 19 fuzzy operators with real-world applications
+- `examples/14_parallel_compilation.rs`: Multi-threaded compilation
+- `examples/15_onnx_export.rs`: ONNX format export
+- `examples/16_tensorflow_export.rs`: TensorFlow GraphDef export
+- `examples/17_pytorch_export.rs`: PyTorch code generation
+- `examples/18_logic_import.rs`: Import from Prolog, S-Expression, TPTP
+- `examples/19_set_operations.rs`: Set theory operations
+- `examples/20_constraint_programming.rs`: AllDifferent, GlobalCardinality
+- `examples/21_profiling_and_optimization.rs`: Profiling and advanced analysis
+- `examples/22_hybrid_logic.rs`: Hybrid logic operators
+- `examples/23_abductive_reasoning.rs`: Abductive reasoning
 
 Key test cases:
 - `test_transitivity_rule_shared_variables`: Transitivity with contraction
@@ -820,7 +790,7 @@ Apache-2.0
 
 ---
 
-**Status**: 🎉 Production Ready (v0.1.0-beta.1)
-****Last Updated**: 2025-12-16
-**Tests**: 158/158 passing (100%)
+**Status**: Stable (v0.1.0)
+**Last Updated**: 2026-04-06
+**Tests**: 862/862 passing (100%)
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

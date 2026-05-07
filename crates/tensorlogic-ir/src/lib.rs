@@ -2,7 +2,7 @@
 //!
 //! **Engine-agnostic Abstract Syntax Tree & Intermediate Representation for TensorLogic**
 //!
-//! **Version**: 0.1.0-beta.1 | **Status**: Production Ready
+//! **Version**: 0.1.0 | **Status**: Production Ready
 //!
 //! This crate provides the core data structures and operations for representing logic-as-tensor
 //! computations in the TensorLogic framework. It serves as the foundational layer that all other
@@ -209,11 +209,15 @@ mod domain;
 pub mod effect_system;
 mod error;
 mod expr;
+pub mod expr_serialize;
 pub mod fuzzing;
 mod graph;
+pub mod graph_validation;
 pub mod linear;
 mod metadata;
 pub mod parametric_types;
+pub mod pattern;
+pub mod pretty_print;
 pub mod refinement;
 pub mod resolution;
 pub mod sequent;
@@ -337,11 +341,13 @@ pub use parametric_types::{
     compose_substitutions, generalize, instantiate, unify, Kind, ParametricType, TypeConstructor,
     TypeSubstitution,
 };
+pub use pattern::MatchPattern;
 pub use refinement::{LiquidTypeInference, Refinement, RefinementContext, RefinementType};
 pub use resolution::{
     Clause, Literal, ProofResult, ProverStats, ResolutionProver, ResolutionStep, ResolutionStrategy,
 };
 // Note: resolution::to_cnf exists but is not exported to avoid conflict with expr::normal_forms::to_cnf
+pub use pretty_print::{pretty, pretty_print, pretty_term, PrettyConfig, SymbolSet};
 pub use sequent::{
     CutElimination, InferenceRule, ProofSearchEngine, ProofSearchStats, ProofSearchStrategy,
     ProofTree, Sequent,
@@ -354,3 +360,14 @@ pub use unification::{
     Substitution,
 };
 pub use util::{pretty_print_expr, pretty_print_graph, ExprStats, GraphStats};
+
+pub use expr_serialize::{
+    batch_from_binary, batch_to_binary, binary_equal, expr_fingerprint, from_binary, from_sexpr,
+    graph_from_binary, graph_to_binary, to_binary, to_sexpr, ExprFormat, ExprSerializeError,
+    SerializationStats,
+};
+pub use graph_validation::{
+    compute_graph_stats as compute_einsum_graph_stats, sanitize_graph as sanitize_einsum_graph,
+    validate_einsum_graph, GraphSanitizationStats, IssueSeverity, ValidationIssue,
+    ValidationResult as EinsumValidationResult,
+};

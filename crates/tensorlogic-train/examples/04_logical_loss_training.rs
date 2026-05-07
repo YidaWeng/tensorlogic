@@ -128,7 +128,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     }
 
     println!("\nFinal parameters:");
-    let weights = parameters.get("weights").unwrap();
+    let weights = parameters.get("weights").expect("unwrap");
     println!("  Weights shape: {:?}", weights.shape());
     println!(
         "  Weight magnitude: {:.6}",

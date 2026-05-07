@@ -13,6 +13,9 @@ test_*
 *.swo
 *~
 
+# Claude AI config
+**/.claude/
+
 # OS
 .DS_Store
 Thumbs.db
@@ -60,3 +63,6 @@ htmlcov/
 *.swp
 *.swo
 *.backup
+
+# Rustc ICE dumps
+rustc-ice-*.txt

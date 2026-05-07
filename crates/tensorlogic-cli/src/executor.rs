@@ -424,11 +424,11 @@ mod tests {
     #[test]
     fn test_backend_from_str() {
         assert!(matches!(
-            Backend::from_str("cpu").unwrap(),
+            Backend::from_str("cpu").expect("'cpu' is a valid backend"),
             Backend::SciRS2CPU
         ));
         assert!(matches!(
-            Backend::from_str("parallel").unwrap(),
+            Backend::from_str("parallel").expect("'parallel' is a valid backend"),
             Backend::Parallel
         ));
         assert!(Backend::from_str("invalid").is_err());

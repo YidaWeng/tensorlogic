@@ -624,19 +624,19 @@ mod tests {
 
     #[test]
     fn test_linear_curriculum() {
-        let curriculum = LinearCurriculum::new(0.2).unwrap();
+        let curriculum = LinearCurriculum::new(0.2).expect("unwrap");
         let difficulties = array![0.1, 0.5, 0.3, 0.9, 0.2];
 
         // At epoch 0, should select 20% of samples (1 sample)
         let selected = curriculum
             .select_samples(0, 10, &difficulties.view())
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(selected.len(), 1);
 
         // At epoch 9 (last epoch), should select all samples
         let selected = curriculum
             .select_samples(9, 10, &difficulties.view())
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(selected.len(), 5);
     }
 
@@ -648,48 +648,48 @@ mod tests {
 
     #[test]
     fn test_exponential_curriculum() {
-        let curriculum = ExponentialCurriculum::new(0.1, 2.0).unwrap();
+        let curriculum = ExponentialCurriculum::new(0.1, 2.0).expect("unwrap");
         let difficulties = array![0.1, 0.5, 0.3, 0.9, 0.2];
 
         let selected = curriculum
             .select_samples(0, 10, &difficulties.view())
-            .unwrap();
+            .expect("unwrap");
         assert!(!selected.is_empty());
 
         let selected = curriculum
             .select_samples(9, 10, &difficulties.view())
-            .unwrap();
+            .expect("unwrap");
         // Should select most/all samples at the end (exponential growth may round differently)
         assert!(selected.len() >= 4);
     }
 
     #[test]
     fn test_self_paced_curriculum() {
-        let curriculum = SelfPacedCurriculum::new(1.0, 0.5).unwrap();
+        let curriculum = SelfPacedCurriculum::new(1.0, 0.5).expect("unwrap");
         let difficulties = array![0.1, 0.6, 0.3, 0.9, 0.2];
 
         // Should select samples with difficulty < 0.5
         let selected = curriculum
             .select_samples(0, 10, &difficulties.view())
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(selected.len(), 3); // indices 0, 2, 4
     }
 
     #[test]
     fn test_competence_curriculum() {
-        let curriculum = CompetenceCurriculum::new(0.3, 0.1).unwrap();
+        let curriculum = CompetenceCurriculum::new(0.3, 0.1).expect("unwrap");
         let difficulties = array![0.1, 0.5, 0.3, 0.9, 0.2];
 
         // At epoch 0, competence = 0.3, should select difficulties <= 0.3
         let selected = curriculum
             .select_samples(0, 10, &difficulties.view())
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(selected.len(), 3); // indices 0, 2, 4
 
         // At epoch 5, competence = 0.8, should select more samples
         let selected = curriculum
             .select_samples(5, 10, &difficulties.view())
-            .unwrap();
+            .expect("unwrap");
         assert!(selected.len() >= 3);
     }
 
@@ -721,12 +721,14 @@ mod tests {
 
         let difficulties = curriculum
             .compute_difficulty(&data, &labels, Some(&predictions))
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(difficulties.len(), 2);
         assert!(difficulties.iter().all(|&d| d >= 0.0));
 
         // Test without predictions
-        let difficulties = curriculum.compute_difficulty(&data, &labels, None).unwrap();
+        let difficulties = curriculum
+            .compute_difficulty(&data, &labels, None)
+            .expect("unwrap");
         assert_eq!(difficulties.len(), 2);
         assert!(difficulties.iter().all(|&d| d == 0.0));
     }
@@ -742,11 +744,11 @@ mod tests {
         // Compute difficulties
         manager
             .compute_difficulty("train", &data, &labels, Some(&predictions))
-            .unwrap();
+            .expect("unwrap");
 
         // Get selected samples
         manager.set_epoch(0);
-        let selected = manager.get_selected_samples("train", 10).unwrap();
+        let selected = manager.get_selected_samples("train", 10).expect("unwrap");
         assert!(!selected.is_empty());
 
         // Clear cache
@@ -762,13 +764,15 @@ mod tests {
 
     #[test]
     fn test_linear_curriculum_without_sorting() {
-        let curriculum = LinearCurriculum::new(0.5).unwrap().without_sorting();
+        let curriculum = LinearCurriculum::new(0.5)
+            .expect("unwrap")
+            .without_sorting();
         let difficulties = array![0.9, 0.1, 0.5, 0.3, 0.7];
 
         // Should not sort by difficulty
         let selected = curriculum
             .select_samples(0, 10, &difficulties.view())
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(selected.len(), 3); // 50% of 5 samples, rounded up
     }
 
@@ -779,7 +783,7 @@ mod tests {
 
         let selected = curriculum
             .select_samples(0, 10, &difficulties.view())
-            .unwrap();
+            .expect("unwrap");
         assert_eq!(selected.len(), 0);
     }
 }

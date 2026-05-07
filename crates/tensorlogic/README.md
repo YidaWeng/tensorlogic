@@ -12,13 +12,17 @@ This is the top-level umbrella crate that re-exports all TensorLogic components 
 
 TensorLogic compiles logical rules (predicates, quantifiers, implications) into **tensor equations (einsum graphs)** with a minimal DSL + IR, enabling neural/symbolic/probabilistic models within a unified tensor computation framework.
 
+**Version**: 0.1.0
+**Last Updated**: 2026-03-06
+**Status**: Production Ready
+
 ## Quick Start
 
 Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tensorlogic = "0.1.0-beta.1"
+tensorlogic = "0.1.0"
 ```
 
 ### Basic Usage
@@ -47,7 +51,7 @@ The meta crate provides organized access to three layers:
 
 ```rust
 use tensorlogic::ir::*;        // AST and IR types
-use tensorlogic::compiler::*;  // Logic → tensor compilation
+use tensorlogic::compiler::*;  // Logic -> tensor compilation
 use tensorlogic::infer::*;     // Execution traits
 use tensorlogic::adapters::*;  // Symbol tables, domains
 ```
@@ -79,24 +83,33 @@ use tensorlogic::trustformers::*;      // Transformer components
 ```
 
 **Components:**
-- `tensorlogic::oxirs_bridge` - RDF*/GraphQL/SHACL → TL rules; provenance binding
+- `tensorlogic::oxirs_bridge` - RDF*/GraphQL/SHACL -> TL rules; provenance binding
 - `tensorlogic::sklears_kernels` - Logic-derived similarity kernels for SkleaRS
 - `tensorlogic::quantrs_hooks` - PGM/message-passing interop for QuantrS2
 - `tensorlogic::trustformers` - Transformer-as-rules (attention/FFN as einsum)
 
 ## Prelude Module
 
-For convenience, commonly used types are available through the prelude:
+For convenience, the most commonly used types are available through the prelude:
 
 ```rust
 use tensorlogic::prelude::*;
 ```
 
 This imports:
-- Core types: `Term`, `TLExpr`, `EinsumGraph`, `EinsumNode`
-- Compilation: `compile_to_einsum`, `CompilerContext`, `CompilationConfig`
-- Execution: `TlExecutor`, `TlAutodiff`, `Scirs2Exec`
-- Errors: `IrError`, `CompilerError`
+- Core types: `Term`, `TLExpr` (from `tensorlogic::ir`)
+- Compilation: `compile_to_einsum` (from `tensorlogic::compiler`)
+- Execution traits: `TlExecutor`, `TlAutodiff` (from `tensorlogic::infer`)
+- Executor: `Scirs2Exec` (from `tensorlogic::scirs_backend`)
+
+For additional types such as `EinsumGraph`, `CompilerContext`, `CompilationConfig`, and error types, import directly from the relevant sub-modules:
+
+```rust
+use tensorlogic::ir::EinsumGraph;
+use tensorlogic::compiler::{CompilerContext, CompilationConfig};
+use tensorlogic::ir::IrError;
+use tensorlogic::compiler::CompilerError;
+```
 
 ## Examples
 
@@ -127,9 +140,9 @@ TensorLogic supports 6 preset compilation strategies:
 
 1. **soft_differentiable** - Neural network training (smooth gradients)
 2. **hard_boolean** - Discrete Boolean logic (exact semantics)
-3. **fuzzy_godel** - Gödel fuzzy logic (min/max operations)
+3. **fuzzy_godel** - Godel fuzzy logic (min/max operations)
 4. **fuzzy_product** - Product fuzzy logic (probabilistic)
-5. **fuzzy_lukasiewicz** - Łukasiewicz fuzzy logic (bounded)
+5. **fuzzy_lukasiewicz** - Lukasiewicz fuzzy logic (bounded)
 6. **probabilistic** - Probabilistic interpretation
 
 ```rust
@@ -148,9 +161,9 @@ Default mappings (configurable per use case):
 | `AND(a, b)` | `a * b` (Hadamard) | Element-wise multiplication |
 | `OR(a, b)` | `max(a, b)` | Or soft variant |
 | `NOT(a)` | `1 - a` | Or temperature-controlled |
-| `∃x. P(x)` | `sum(P, axis=x)` | Or `max` for hard |
-| `∀x. P(x)` | Dual of ∃ | Or product reduction |
-| `a → b` | `max(1-a, b)` | Or ReLU variant |
+| `exists x. P(x)` | `sum(P, axis=x)` | Or `max` for hard |
+| `forall x. P(x)` | Dual of exists | Or product reduction |
+| `a -> b` | `max(1-a, b)` | Or ReLU variant |
 
 ## Feature Flags
 
@@ -158,7 +171,7 @@ Control which components are included:
 
 ```toml
 [dependencies]
-tensorlogic = { version = "0.1.0-beta.1", features = ["simd"] }
+tensorlogic = { version = "0.1.0", features = ["simd"] }
 ```
 
 Available features:
@@ -219,22 +232,22 @@ cargo nextest run -p tensorlogic --all-features
 
 ## Version Compatibility
 
-This meta crate version `0.1.0-beta.1` includes:
+This meta crate version `0.1.0` includes:
 
 | Component | Version | Status |
 |-----------|---------|--------|
-| tensorlogic-ir | 0.1.0-beta.1 | ✅ Production Ready |
-| tensorlogic-compiler | 0.1.0-beta.1 | ✅ Production Ready |
-| tensorlogic-infer | 0.1.0-beta.1 | ✅ Production Ready |
-| tensorlogic-scirs-backend | 0.1.0-beta.1 | ✅ Production Ready |
-| tensorlogic-train | 0.1.0-beta.1 | ✅ Complete |
-| tensorlogic-adapters | 0.1.0-beta.1 | ✅ Complete |
-| tensorlogic-oxirs-bridge | 0.1.0-beta.1 | ✅ Complete |
-| tensorlogic-sklears-kernels | 0.1.0-beta.1 | ✅ Core Features |
-| tensorlogic-quantrs-hooks | 0.1.0-beta.1 | ✅ Core Features |
-| tensorlogic-trustformers | 0.1.0-beta.1 | ✅ Complete |
+| tensorlogic-ir | 0.1.0 | Production Ready |
+| tensorlogic-compiler | 0.1.0 | Production Ready |
+| tensorlogic-infer | 0.1.0 | Production Ready |
+| tensorlogic-scirs-backend | 0.1.0 | Production Ready |
+| tensorlogic-train | 0.1.0 | Complete |
+| tensorlogic-adapters | 0.1.0 | Complete |
+| tensorlogic-oxirs-bridge | 0.1.0 | Complete |
+| tensorlogic-sklears-kernels | 0.1.0 | Core Features |
+| tensorlogic-quantrs-hooks | 0.1.0 | Core Features |
+| tensorlogic-trustformers | 0.1.0 | Complete |
 
-All components are synchronized to version `0.1.0-beta.1`.
+All components are synchronized to version `0.1.0`.
 
 ## Migration from Individual Crates
 
@@ -243,15 +256,15 @@ If you were using individual crates:
 **Before:**
 ```toml
 [dependencies]
-tensorlogic-ir = "0.1.0-beta.1"
-tensorlogic-compiler = "0.1.0-beta.1"
-tensorlogic-scirs-backend = "0.1.0-beta.1"
+tensorlogic-ir = "0.1.0"
+tensorlogic-compiler = "0.1.0"
+tensorlogic-scirs-backend = "0.1.0"
 ```
 
 **After:**
 ```toml
 [dependencies]
-tensorlogic = "0.1.0-beta.1"
+tensorlogic = "0.1.0"
 ```
 
 Your code remains the same, just update imports:
@@ -266,7 +279,7 @@ use tensorlogic_compiler::compile_to_einsum;
 ```rust
 use tensorlogic::ir::{Term, TLExpr};
 use tensorlogic::compiler::compile_to_einsum;
-// Or use prelude for common types
+// Or use prelude for the most common types
 use tensorlogic::prelude::*;
 ```
 

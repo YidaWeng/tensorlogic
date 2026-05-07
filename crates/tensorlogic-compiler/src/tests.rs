@@ -9,7 +9,7 @@ use tensorlogic_ir::{TLExpr, Term};
 #[test]
 fn test_simple_predicate() {
     let pred = TLExpr::pred("Parent", vec![Term::var("x"), Term::var("y")]);
-    let graph = compile_to_einsum(&pred).unwrap();
+    let graph = compile_to_einsum(&pred).expect("unwrap");
 
     assert_eq!(graph.tensors.len(), 1);
     assert!(graph.tensors[0].starts_with("Parent"));
@@ -21,7 +21,7 @@ fn test_and_expression() {
     let p2 = TLExpr::pred("Child", vec![Term::var("x"), Term::var("y")]);
     let and_expr = TLExpr::and(p1, p2);
 
-    let graph = compile_to_einsum(&and_expr).unwrap();
+    let graph = compile_to_einsum(&and_expr).expect("unwrap");
     assert!(graph.tensors.len() >= 2);
     assert!(!graph.nodes.is_empty());
 }
@@ -34,7 +34,7 @@ fn test_exists_quantifier() {
     let mut ctx = CompilerContext::new();
     ctx.add_domain("Person", 100);
 
-    let graph = compile_to_einsum_with_context(&exists_expr, &mut ctx).unwrap();
+    let graph = compile_to_einsum_with_context(&exists_expr, &mut ctx).expect("unwrap");
     assert!(!graph.nodes.is_empty());
 }
 
@@ -58,7 +58,7 @@ fn test_implication() {
     let conclusion = TLExpr::pred("Ancestor", vec![Term::var("x"), Term::var("y")]);
     let imply_expr = TLExpr::imply(premise, conclusion);
 
-    let graph = compile_to_einsum(&imply_expr).unwrap();
+    let graph = compile_to_einsum(&imply_expr).expect("unwrap");
     assert!(graph.tensors.len() >= 2);
 }
 
@@ -92,7 +92,7 @@ fn test_transitivity_rule_shared_variables() {
     let premise = TLExpr::and(knows_xy, knows_yz);
     let rule = TLExpr::imply(premise, knows_xz);
 
-    let graph = compile_to_einsum(&rule).unwrap();
+    let graph = compile_to_einsum(&rule).expect("unwrap");
 
     // Check that compilation succeeded
     assert!(graph.tensors.len() >= 3, "Should have at least 3 tensors");
@@ -123,7 +123,7 @@ fn test_and_with_different_axes() {
     let q = TLExpr::pred("Q", vec![Term::var("y"), Term::var("z")]);
     let and_expr = TLExpr::and(p, q);
 
-    let graph = compile_to_einsum(&and_expr).unwrap();
+    let graph = compile_to_einsum(&and_expr).expect("unwrap");
 
     // Should successfully compile with shared variable 'y'
     assert!(graph.tensors.len() >= 2);
@@ -148,7 +148,7 @@ fn test_and_with_disjoint_variables() {
     let q = TLExpr::pred("Q", vec![Term::var("y")]);
     let and_expr = TLExpr::and(p, q);
 
-    let graph = compile_to_einsum(&and_expr).unwrap();
+    let graph = compile_to_einsum(&and_expr).expect("unwrap");
 
     // Should successfully compile
     assert!(graph.tensors.len() >= 2);
@@ -200,7 +200,7 @@ fn test_transitivity_complete() {
         "Transitivity rule should compile successfully"
     );
 
-    let graph = result.unwrap();
+    let graph = result.expect("unwrap");
 
     // Verify the graph has operations (marginalization, broadcasting, subtraction, relu)
     assert!(
@@ -241,7 +241,7 @@ fn test_implication_with_broadcasting() {
         "Should handle conclusion with extra variables"
     );
 
-    let graph = result.unwrap();
+    let graph = result.expect("unwrap");
     assert!(!graph.nodes.is_empty());
 }
 
@@ -269,7 +269,7 @@ fn test_or_with_different_variables() {
         result.err()
     );
 
-    let graph = result.unwrap();
+    let graph = result.expect("unwrap");
     assert!(!graph.nodes.is_empty());
 }
 
@@ -284,7 +284,7 @@ fn test_compile_with_soft_differentiable_config() {
     let q = TLExpr::pred("Q", vec![Term::var("x")]);
     let and_expr = TLExpr::and(p, q);
 
-    let graph = compile_to_einsum_with_config(&and_expr, &config).unwrap();
+    let graph = compile_to_einsum_with_config(&and_expr, &config).expect("unwrap");
 
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
@@ -297,7 +297,7 @@ fn test_compile_with_hard_boolean_config() {
     let q = TLExpr::pred("Q", vec![Term::var("x")]);
     let and_expr = TLExpr::and(p, q);
 
-    let graph = compile_to_einsum_with_config(&and_expr, &config).unwrap();
+    let graph = compile_to_einsum_with_config(&and_expr, &config).expect("unwrap");
 
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
@@ -310,7 +310,7 @@ fn test_compile_with_fuzzy_godel_config() {
     let q = TLExpr::pred("Q", vec![Term::var("x")]);
     let and_expr = TLExpr::and(p, q);
 
-    let graph = compile_to_einsum_with_config(&and_expr, &config).unwrap();
+    let graph = compile_to_einsum_with_config(&and_expr, &config).expect("unwrap");
 
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
@@ -323,7 +323,7 @@ fn test_compile_with_fuzzy_lukasiewicz_config() {
     let q = TLExpr::pred("Q", vec![Term::var("x")]);
     let and_expr = TLExpr::and(p, q);
 
-    let graph = compile_to_einsum_with_config(&and_expr, &config).unwrap();
+    let graph = compile_to_einsum_with_config(&and_expr, &config).expect("unwrap");
 
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
@@ -336,7 +336,7 @@ fn test_compile_with_probabilistic_config() {
     let q = TLExpr::pred("Q", vec![Term::var("x")]);
     let and_expr = TLExpr::and(p, q);
 
-    let graph = compile_to_einsum_with_config(&and_expr, &config).unwrap();
+    let graph = compile_to_einsum_with_config(&and_expr, &config).expect("unwrap");
 
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());
@@ -361,7 +361,7 @@ fn test_compile_or_with_different_configs() {
     for (name, config) in configs {
         let result = compile_to_einsum_with_config(&or_expr, &config);
         assert!(result.is_ok(), "OR compilation failed with {} config", name);
-        let graph = result.unwrap();
+        let graph = result.expect("unwrap");
         assert!(
             !graph.nodes.is_empty(),
             "{} config produced empty graph",
@@ -391,7 +391,7 @@ fn test_compile_not_with_different_configs() {
             "NOT compilation failed with {} config",
             name
         );
-        let graph = result.unwrap();
+        let graph = result.expect("unwrap");
         assert!(
             !graph.nodes.is_empty(),
             "{} config produced empty graph",
@@ -412,7 +412,7 @@ fn test_compile_complex_expression_with_config() {
     let complex_expr = TLExpr::or(and_expr, not_r);
 
     let config = CompilationConfig::fuzzy_lukasiewicz();
-    let graph = compile_to_einsum_with_config(&complex_expr, &config).unwrap();
+    let graph = compile_to_einsum_with_config(&complex_expr, &config).expect("unwrap");
 
     assert!(!graph.tensors.is_empty());
     assert!(!graph.nodes.is_empty());

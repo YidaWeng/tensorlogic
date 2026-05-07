@@ -554,16 +554,17 @@ mod tests {
             vec![2, 2],
             vec![1.0, -1.0, -1.0, 1.0], // Prefer staying in same state
         )
-        .unwrap()
+        .expect("unwrap")
         .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-        .unwrap();
-        crf.set_transition_weights(transition_weights).unwrap();
+        .expect("unwrap");
+        crf.set_transition_weights(transition_weights)
+            .expect("unwrap");
 
         // Simple input sequence
         let input_sequence = vec![0, 0, 0];
 
         // Run Viterbi
-        let (path, _score) = crf.viterbi(&input_sequence).unwrap();
+        let (path, _score) = crf.viterbi(&input_sequence).expect("unwrap");
 
         assert_eq!(path.len(), 3);
         // With positive weights on diagonal, should prefer staying in state 0
@@ -575,19 +576,20 @@ mod tests {
 
         // Set uniform transition weights
         let transition_weights = Array::from_shape_vec(vec![2, 2], vec![0.0, 0.0, 0.0, 0.0])
-            .unwrap()
+            .expect("unwrap")
             .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-            .unwrap();
-        crf.set_transition_weights(transition_weights).unwrap();
+            .expect("unwrap");
+        crf.set_transition_weights(transition_weights)
+            .expect("unwrap");
 
         let input_sequence = vec![0, 1];
 
         // Run forward
-        let alpha = crf.forward(&input_sequence).unwrap();
+        let alpha = crf.forward(&input_sequence).expect("unwrap");
         assert_eq!(alpha.shape(), &[2, 2]);
 
         // Run backward
-        let beta = crf.backward(&input_sequence).unwrap();
+        let beta = crf.backward(&input_sequence).expect("unwrap");
         assert_eq!(beta.shape(), &[2, 2]);
 
         // Check normalization
@@ -602,14 +604,15 @@ mod tests {
         let mut crf = LinearChainCRF::new(2);
 
         let transition_weights = Array::from_shape_vec(vec![2, 2], vec![0.0, 0.0, 0.0, 0.0])
-            .unwrap()
+            .expect("unwrap")
             .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-            .unwrap();
-        crf.set_transition_weights(transition_weights).unwrap();
+            .expect("unwrap");
+        crf.set_transition_weights(transition_weights)
+            .expect("unwrap");
 
         let input_sequence = vec![0, 1];
 
-        let marginals = crf.marginals(&input_sequence).unwrap();
+        let marginals = crf.marginals(&input_sequence).expect("unwrap");
 
         assert_eq!(marginals.shape(), &[2, 2]);
 
@@ -655,14 +658,15 @@ mod tests {
         let mut crf = LinearChainCRF::new(2);
 
         let transition_weights = Array::from_shape_vec(vec![2, 2], vec![0.5, 0.5, 0.5, 0.5])
-            .unwrap()
+            .expect("unwrap")
             .into_dimensionality::<scirs2_core::ndarray::Ix2>()
-            .unwrap();
-        crf.set_transition_weights(transition_weights).unwrap();
+            .expect("unwrap");
+        crf.set_transition_weights(transition_weights)
+            .expect("unwrap");
 
         let input_sequence = vec![0, 1, 0];
 
-        let graph = crf.to_factor_graph(&input_sequence).unwrap();
+        let graph = crf.to_factor_graph(&input_sequence).expect("unwrap");
 
         // Should have 3 variables (one per position)
         assert_eq!(graph.num_variables(), 3);

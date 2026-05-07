@@ -69,7 +69,10 @@ impl Optimizer for AdagradOptimizer {
                 self.sum_squared_grads
                     .insert(name.clone(), Array::zeros(param.raw_dim()));
             }
-            let sum_sq = self.sum_squared_grads.get_mut(name).unwrap();
+            let sum_sq = self
+                .sum_squared_grads
+                .get_mut(name)
+                .expect("sum_squared_grads initialized for all parameters");
             let grad_squared = grad.mapv(|g| g * g);
             *sum_sq = &*sum_sq + &grad_squared;
             let update = grad / &sum_sq.mapv(|s| s.sqrt() + eps);
@@ -129,8 +132,8 @@ mod tests {
         params.insert("w".to_string(), array![[1.0, 2.0]]);
         let mut grads = HashMap::new();
         grads.insert("w".to_string(), array![[0.1, 0.2]]);
-        optimizer.step(&mut params, &grads).unwrap();
-        let w = params.get("w").unwrap();
+        optimizer.step(&mut params, &grads).expect("unwrap");
+        let w = params.get("w").expect("unwrap");
         assert!(w[[0, 0]] < 1.0);
         assert!(w[[0, 1]] < 2.0);
     }

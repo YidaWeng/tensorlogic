@@ -270,8 +270,8 @@ fn example_complete_workflow() {
 
     graph
         .add_node(EinsumNode::einsum("ij,jk->ik", vec![a, b], vec![c]))
-        .unwrap();
-    graph.add_output(c).unwrap();
+        .expect("unwrap");
+    graph.add_output(c).expect("unwrap");
 
     println!("Step 1: Created computation graph");
     println!("  Tensors: {}", graph.tensor_count());

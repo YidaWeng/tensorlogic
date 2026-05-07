@@ -66,7 +66,13 @@ impl MacroDef {
             return Err(anyhow!("Macro name cannot be empty"));
         }
 
-        if !self.name.chars().next().unwrap().is_alphabetic() {
+        if !self
+            .name
+            .chars()
+            .next()
+            .expect("name non-empty after is_empty check above")
+            .is_alphabetic()
+        {
             return Err(anyhow!(
                 "Macro name must start with a letter: {}",
                 self.name
@@ -488,7 +494,7 @@ mod tests {
 
         let expanded = macro_def
             .expand(&["a".to_string(), "b".to_string()])
-            .unwrap();
+            .expect("macro expansion should succeed");
         assert_eq!(expanded, "pred(a, b) AND pred(b, a)");
     }
 
@@ -502,11 +508,15 @@ mod tests {
             "pred(x)".to_string(),
         );
 
-        registry.define(macro_def).unwrap();
+        registry
+            .define(macro_def)
+            .expect("macro define should succeed");
         assert!(registry.contains("test"));
         assert_eq!(registry.len(), 1);
 
-        let expanded = registry.expand("test", &["a".to_string()]).unwrap();
+        let expanded = registry
+            .expand("test", &["a".to_string()])
+            .expect("macro expand should succeed");
         assert_eq!(expanded, "pred(a)");
     }
 
@@ -521,7 +531,7 @@ mod tests {
     #[test]
     fn test_parse_macro_definition() {
         let input = "DEFINE MACRO test(x, y) = pred(x, y)";
-        let macro_def = parse_macro_definition(input).unwrap();
+        let macro_def = parse_macro_definition(input).expect("macro definition should parse");
         assert_eq!(macro_def.name, "test");
         assert_eq!(macro_def.params, vec!["x", "y"]);
         assert_eq!(macro_def.body, "pred(x, y)");
@@ -543,10 +553,14 @@ mod tests {
             vec!["R".to_string(), "x".to_string(), "z".to_string()],
             "EXISTS y. (R(x, y) AND R(y, z))".to_string(),
         );
-        registry.define(transitive).unwrap();
+        registry
+            .define(transitive)
+            .expect("transitive macro define should succeed");
 
         let expr = "trans(friend, Alice, Bob)";
-        let expanded = registry.expand_all(expr).unwrap();
+        let expanded = registry
+            .expand_all(expr)
+            .expect("macro expand_all should succeed");
         assert!(expanded.contains("EXISTS y"));
         assert!(expanded.contains("friend(Alice, y)"));
         assert!(expanded.contains("friend(y, Bob)"));

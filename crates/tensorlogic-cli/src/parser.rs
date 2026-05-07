@@ -251,7 +251,7 @@ fn parse_conditional(input: &str) -> Result<TLExpr> {
     let input = input
         .strip_prefix("IF ")
         .or_else(|| input.strip_prefix("if "))
-        .unwrap();
+        .expect("input starts with IF or if as ensured by caller");
 
     let then_pos = input
         .find(" THEN ")
@@ -351,43 +351,46 @@ mod tests {
 
     #[test]
     fn test_simple_predicate() {
-        let expr = parse_expression("knows(x, y)").unwrap();
+        let expr = parse_expression("knows(x, y)").expect("valid predicate should parse");
         assert!(matches!(expr, TLExpr::Pred { .. }));
     }
 
     #[test]
     fn test_and_operation() {
-        let expr = parse_expression("p(x) AND q(y)").unwrap();
+        let expr = parse_expression("p(x) AND q(y)").expect("AND expression should parse");
         assert!(matches!(expr, TLExpr::And(_, _)));
     }
 
     #[test]
     fn test_arithmetic() {
-        let expr = parse_expression("x + y").unwrap();
+        let expr = parse_expression("x + y").expect("arithmetic expression should parse");
         assert!(matches!(expr, TLExpr::Add(_, _)));
     }
 
     #[test]
     fn test_comparison() {
-        let expr = parse_expression("x < y").unwrap();
+        let expr = parse_expression("x < y").expect("comparison expression should parse");
         assert!(matches!(expr, TLExpr::Lt(_, _)));
     }
 
     #[test]
     fn test_quantifier() {
-        let expr = parse_expression("EXISTS x IN Person. knows(x, y)").unwrap();
+        let expr = parse_expression("EXISTS x IN Person. knows(x, y)")
+            .expect("quantifier expression should parse");
         assert!(matches!(expr, TLExpr::Exists { .. }));
     }
 
     #[test]
     fn test_conditional() {
-        let expr = parse_expression("IF x < 0 THEN 0 ELSE x").unwrap();
+        let expr = parse_expression("IF x < 0 THEN 0 ELSE x")
+            .expect("conditional expression should parse");
         assert!(matches!(expr, TLExpr::IfThenElse { .. }));
     }
 
     #[test]
     fn test_complex_expression() {
-        let expr = parse_expression("(p(x) OR q(y)) AND r(z)").unwrap();
+        let expr =
+            parse_expression("(p(x) OR q(y)) AND r(z)").expect("complex expression should parse");
         assert!(matches!(expr, TLExpr::And(_, _)));
     }
 }

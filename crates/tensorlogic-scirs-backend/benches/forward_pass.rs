@@ -30,7 +30,7 @@ fn create_test_tensor(shape: &[usize]) -> ArrayD<f64> {
             .map(|i| (i as f64) * 0.01)
             .collect(),
     )
-    .unwrap()
+    .expect("unwrap")
 }
 
 #[cfg(feature = "integration-tests")]
@@ -42,14 +42,14 @@ fn bench_simple_predicate(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &size| {
             // Create a simple predicate expression
             let expr = TLExpr::pred("x", vec![Term::var("i"), Term::var("j")]);
-            let graph = compile_to_einsum(&expr).unwrap();
+            let graph = compile_to_einsum(&expr).expect("unwrap");
 
             let mut executor = Scirs2Exec::new();
             let tensor = create_test_tensor(&[size, size]);
             executor.add_tensor(graph.tensors[0].clone(), tensor);
 
             b.iter(|| {
-                let result = executor.forward(black_box(&graph)).unwrap();
+                let result = executor.forward(black_box(&graph)).expect("unwrap");
                 black_box(result);
             });
         });
@@ -67,7 +67,7 @@ fn bench_and_operation(c: &mut Criterion) {
             let x = TLExpr::pred("x", vec![Term::var("i"), Term::var("j")]);
             let y = TLExpr::pred("y", vec![Term::var("i"), Term::var("j")]);
             let expr = TLExpr::and(x, y);
-            let graph = compile_to_einsum(&expr).unwrap();
+            let graph = compile_to_einsum(&expr).expect("unwrap");
 
             let mut executor = Scirs2Exec::new();
             let tensor1 = create_test_tensor(&[size, size]);
@@ -76,7 +76,7 @@ fn bench_and_operation(c: &mut Criterion) {
             executor.add_tensor(graph.tensors[1].clone(), tensor2);
 
             b.iter(|| {
-                let result = executor.forward(black_box(&graph)).unwrap();
+                let result = executor.forward(black_box(&graph)).expect("unwrap");
                 black_box(result);
             });
         });
@@ -93,14 +93,14 @@ fn bench_exists_quantifier(c: &mut Criterion) {
         group.bench_with_input(BenchmarkId::from_parameter(size), size, |b, &size| {
             let pred = TLExpr::pred("p", vec![Term::var("i"), Term::var("j")]);
             let expr = TLExpr::exists("j", "domain", pred);
-            let graph = compile_to_einsum(&expr).unwrap();
+            let graph = compile_to_einsum(&expr).expect("unwrap");
 
             let mut executor = Scirs2Exec::new();
             let tensor = create_test_tensor(&[size, size]);
             executor.add_tensor(graph.tensors[0].clone(), tensor);
 
             b.iter(|| {
-                let result = executor.forward(black_box(&graph)).unwrap();
+                let result = executor.forward(black_box(&graph)).expect("unwrap");
                 black_box(result);
             });
         });
@@ -122,7 +122,7 @@ fn bench_complex_expression(c: &mut Criterion) {
             let and_expr = TLExpr::and(x, y);
             let not_z = TLExpr::negate(z);
             let expr = TLExpr::or(and_expr, not_z);
-            let graph = compile_to_einsum(&expr).unwrap();
+            let graph = compile_to_einsum(&expr).expect("unwrap");
 
             let mut executor = Scirs2Exec::new();
             let tensor1 = create_test_tensor(&[size, size]);
@@ -133,7 +133,7 @@ fn bench_complex_expression(c: &mut Criterion) {
             executor.add_tensor(graph.tensors[2].clone(), tensor3);
 
             b.iter(|| {
-                let result = executor.forward(black_box(&graph)).unwrap();
+                let result = executor.forward(black_box(&graph)).expect("unwrap");
                 black_box(result);
             });
         });
@@ -157,7 +157,7 @@ fn bench_einsum_matmul(c: &mut Criterion) {
             bencher.iter(|| {
                 let result = executor
                     .einsum("ij,jk->ik", &[tensor_a.clone(), tensor_b.clone()])
-                    .unwrap();
+                    .expect("unwrap");
                 black_box(result);
             });
         });
@@ -172,7 +172,7 @@ fn bench_memory_pooling(c: &mut Criterion) {
     for size in [50, 100, 200].iter() {
         group.bench_with_input(BenchmarkId::new("with_pool", size), size, |b, &size| {
             let expr = TLExpr::pred("x", vec![Term::var("i"), Term::var("j")]);
-            let graph = compile_to_einsum(&expr).unwrap();
+            let graph = compile_to_einsum(&expr).expect("unwrap");
 
             let mut executor = Scirs2Exec::with_memory_pool();
             let tensor = create_test_tensor(&[size, size]);
@@ -180,14 +180,14 @@ fn bench_memory_pooling(c: &mut Criterion) {
 
             b.iter(|| {
                 executor.add_tensor(graph.tensors[0].clone(), tensor.clone());
-                let result = executor.forward(black_box(&graph)).unwrap();
+                let result = executor.forward(black_box(&graph)).expect("unwrap");
                 black_box(result);
             });
         });
 
         group.bench_with_input(BenchmarkId::new("without_pool", size), size, |b, &size| {
             let expr = TLExpr::pred("x", vec![Term::var("i"), Term::var("j")]);
-            let graph = compile_to_einsum(&expr).unwrap();
+            let graph = compile_to_einsum(&expr).expect("unwrap");
 
             let mut executor = Scirs2Exec::new();
             let tensor = create_test_tensor(&[size, size]);
@@ -195,7 +195,7 @@ fn bench_memory_pooling(c: &mut Criterion) {
 
             b.iter(|| {
                 executor.add_tensor(graph.tensors[0].clone(), tensor.clone());
-                let result = executor.forward(black_box(&graph)).unwrap();
+                let result = executor.forward(black_box(&graph)).expect("unwrap");
                 black_box(result);
             });
         });

@@ -17,15 +17,15 @@
 //! let b = graph.add_tensor("B");
 //! let c = graph.add_tensor("C");
 //!
-//! graph.add_node(EinsumNode::einsum("ij,jk->ik", vec![a, b], vec![c])).unwrap();
-//! graph.add_output(c).unwrap();
+//! graph.add_node(EinsumNode::einsum("ij,jk->ik", vec![a, b], vec![c])).expect("unwrap");
+//! graph.add_output(c).expect("unwrap");
 //!
 //! // Export to ONNX text format
-//! let onnx_text = export_to_onnx_text(&graph).unwrap();
+//! let onnx_text = export_to_onnx_text(&graph).expect("unwrap");
 //! println!("{}", onnx_text);
 //!
 //! // Export to TorchScript text format
-//! let torchscript = export_to_torchscript_text(&graph).unwrap();
+//! let torchscript = export_to_torchscript_text(&graph).expect("unwrap");
 //! println!("{}", torchscript);
 //! ```
 
@@ -95,10 +95,10 @@ impl Default for TorchScriptExportOptions {
 /// let y = graph.add_tensor("Y");
 /// let z = graph.add_tensor("Z");
 ///
-/// graph.add_node(EinsumNode::elem_binary("add", x, y, z)).unwrap();
-/// graph.add_output(z).unwrap();
+/// graph.add_node(EinsumNode::elem_binary("add", x, y, z)).expect("unwrap");
+/// graph.add_output(z).expect("unwrap");
 ///
-/// let onnx = export_to_onnx_text(&graph).unwrap();
+/// let onnx = export_to_onnx_text(&graph).expect("unwrap");
 /// assert!(onnx.contains("ir_version"));
 /// assert!(onnx.contains("Add"));
 /// ```
@@ -284,10 +284,10 @@ fn export_node_to_onnx(
 /// let w = graph.add_tensor("W");
 /// let y = graph.add_tensor("Y");
 ///
-/// graph.add_node(EinsumNode::einsum("ij,jk->ik", vec![x, w], vec![y])).unwrap();
-/// graph.add_output(y).unwrap();
+/// graph.add_node(EinsumNode::einsum("ij,jk->ik", vec![x, w], vec![y])).expect("unwrap");
+/// graph.add_output(y).expect("unwrap");
 ///
-/// let script = export_to_torchscript_text(&graph).unwrap();
+/// let script = export_to_torchscript_text(&graph).expect("unwrap");
 /// assert!(script.contains("torch.einsum"));
 /// ```
 pub fn export_to_torchscript_text(graph: &EinsumGraph) -> Result<String, IrError> {
@@ -482,10 +482,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_binary("add", x, y, z))
-            .unwrap();
-        graph.add_output(z).unwrap();
+            .expect("unwrap");
+        graph.add_output(z).expect("unwrap");
 
-        let onnx = export_to_onnx_text(&graph).unwrap();
+        let onnx = export_to_onnx_text(&graph).expect("unwrap");
 
         assert!(onnx.contains("ir_version"));
         assert!(onnx.contains("Add"));
@@ -503,10 +503,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::einsum("ij,jk->ik", vec![a, b], vec![c]))
-            .unwrap();
-        graph.add_output(c).unwrap();
+            .expect("unwrap");
+        graph.add_output(c).expect("unwrap");
 
-        let onnx = export_to_onnx_text(&graph).unwrap();
+        let onnx = export_to_onnx_text(&graph).expect("unwrap");
 
         assert!(onnx.contains("Einsum"));
         assert!(onnx.contains("ij,jk->ik"));
@@ -521,10 +521,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_binary("mul", x, y, z))
-            .unwrap();
-        graph.add_output(z).unwrap();
+            .expect("unwrap");
+        graph.add_output(z).expect("unwrap");
 
-        let script = export_to_torchscript_text(&graph).unwrap();
+        let script = export_to_torchscript_text(&graph).expect("unwrap");
 
         assert!(script.contains("import torch"));
         assert!(script.contains("class TensorLogicGraph"));
@@ -540,10 +540,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::einsum("ij,jk->ik", vec![x, w], vec![y]))
-            .unwrap();
-        graph.add_output(y).unwrap();
+            .expect("unwrap");
+        graph.add_output(y).expect("unwrap");
 
-        let script = export_to_torchscript_text(&graph).unwrap();
+        let script = export_to_torchscript_text(&graph).expect("unwrap");
 
         assert!(script.contains("torch.einsum"));
         assert!(script.contains("'ij,jk->ik'"));
@@ -557,10 +557,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::reduce("sum", vec![0, 1], x, y))
-            .unwrap();
-        graph.add_output(y).unwrap();
+            .expect("unwrap");
+        graph.add_output(y).expect("unwrap");
 
-        let onnx = export_to_onnx_text(&graph).unwrap();
+        let onnx = export_to_onnx_text(&graph).expect("unwrap");
 
         assert!(onnx.contains("ReduceSum"));
         assert!(onnx.contains("axes"));
@@ -574,10 +574,10 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("relu", x, y))
-            .unwrap();
-        graph.add_output(y).unwrap();
+            .expect("unwrap");
+        graph.add_output(y).expect("unwrap");
 
-        let script = export_to_torchscript_text(&graph).unwrap();
+        let script = export_to_torchscript_text(&graph).expect("unwrap");
 
         assert!(script.contains("torch.relu"));
     }
@@ -588,8 +588,10 @@ mod tests {
         let x = graph.add_tensor("X");
         let y = graph.add_tensor("Y");
 
-        graph.add_node(EinsumNode::elem_unary("exp", x, y)).unwrap();
-        graph.add_output(y).unwrap();
+        graph
+            .add_node(EinsumNode::elem_unary("exp", x, y))
+            .expect("unwrap");
+        graph.add_output(y).expect("unwrap");
 
         let options = OnnxExportOptions {
             opset_version: 14,
@@ -597,7 +599,7 @@ mod tests {
             ..Default::default()
         };
 
-        let onnx = export_to_onnx_text_with_options(&graph, &options).unwrap();
+        let onnx = export_to_onnx_text_with_options(&graph, &options).expect("unwrap");
 
         assert!(onnx.contains("version: 14"));
         assert!(onnx.contains("CustomProducer"));
@@ -611,15 +613,15 @@ mod tests {
 
         graph
             .add_node(EinsumNode::elem_unary("tanh", x, y))
-            .unwrap();
-        graph.add_output(y).unwrap();
+            .expect("unwrap");
+        graph.add_output(y).expect("unwrap");
 
         let options = TorchScriptExportOptions {
             include_comments: false,
             ..Default::default()
         };
 
-        let script = export_to_torchscript_text_with_options(&graph, &options).unwrap();
+        let script = export_to_torchscript_text_with_options(&graph, &options).expect("unwrap");
 
         assert!(!script.contains("# "));
         assert!(script.contains("torch.tanh"));
@@ -632,12 +634,16 @@ mod tests {
         let y = graph.add_tensor("Y");
         let z = graph.add_tensor("Z");
 
-        graph.add_node(EinsumNode::elem_unary("exp", x, y)).unwrap();
-        graph.add_node(EinsumNode::elem_unary("log", x, z)).unwrap();
-        graph.add_output(y).unwrap();
-        graph.add_output(z).unwrap();
+        graph
+            .add_node(EinsumNode::elem_unary("exp", x, y))
+            .expect("unwrap");
+        graph
+            .add_node(EinsumNode::elem_unary("log", x, z))
+            .expect("unwrap");
+        graph.add_output(y).expect("unwrap");
+        graph.add_output(z).expect("unwrap");
 
-        let script = export_to_torchscript_text(&graph).unwrap();
+        let script = export_to_torchscript_text(&graph).expect("unwrap");
 
         assert!(script.contains("return (Y, Z)"));
     }

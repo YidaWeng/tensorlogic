@@ -1,487 +1,248 @@
-//! Compilation profiling and performance tracking.
+//! Compilation profiling: track time and resource usage across phases.
 //!
-//! This module provides tools for profiling the compilation process,
-//! tracking performance metrics, and identifying bottlenecks.
+//! Instruments the compilation pipeline to provide per-phase timing breakdowns,
+//! helping identify bottlenecks and optimize compilation performance.
 //!
 //! # Overview
 //!
-//! Compilation profiling helps developers:
-//! - Identify slow compilation passes
-//! - Track memory usage during compilation
-//! - Optimize compilation performance
-//! - Compare different compilation strategies
+//! The profiling module provides three main components:
 //!
-//! # Features
-//!
-//! - **Time Tracking**: Measure time spent in each compilation phase
-//! - **Memory Tracking**: Monitor memory allocations and peak usage
-//! - **Pass Analysis**: Identify expensive optimization passes
-//! - **Cache Statistics**: Track cache hit rates and effectiveness
+//! - [`ProfileEntry`]: A single profiling entry for a compilation phase
+//! - [`ProfileReport`]: A complete profiling report for a compilation run
+//! - [`CompilationProfiler`]: Real-time phase tracker for compilation
 //!
 //! # Examples
 //!
 //! ```rust
-//! use tensorlogic_compiler::profiling::{CompilationProfiler, ProfileConfig};
-//! use tensorlogic_compiler::compile_to_einsum;
-//! use tensorlogic_ir::{TLExpr, Term};
+//! use tensorlogic_compiler::profiling::{CompilationProfiler, ProfileReport, ProfileEntry};
 //!
 //! let mut profiler = CompilationProfiler::new();
-//! profiler.start_phase("compilation");
+//! profiler.set_input_complexity(500);
 //!
-//! let expr = TLExpr::pred("p", vec![Term::var("x")]);
-//! let _graph = compile_to_einsum(&expr).unwrap();
+//! profiler.begin_phase("parse");
+//! profiler.set_items(120);
+//! profiler.end_phase();
 //!
-//! profiler.end_phase("compilation");
+//! profiler.begin_phase("optimize");
+//! profiler.set_items(80);
+//! profiler.end_phase();
 //!
-//! let report = profiler.generate_report();
-//! println!("{}", report);
+//! profiler.set_output_size(60);
+//! let report = profiler.finish();
+//! println!("{}", report.summary());
 //! ```
 
-use std::collections::HashMap;
+use serde::{Deserialize, Serialize};
 use std::time::{Duration, Instant};
 
-/// Configuration for compilation profiling.
-#[derive(Debug, Clone)]
-pub struct ProfileConfig {
-    /// Enable time tracking
-    pub track_time: bool,
-    /// Enable memory tracking
-    pub track_memory: bool,
-    /// Enable detailed pass-level profiling
-    pub track_passes: bool,
-    /// Enable cache statistics
-    pub track_cache: bool,
-    /// Minimum duration to report (filter noise)
-    pub min_duration_ms: u64,
+/// A single profiling entry for a compilation phase.
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct ProfileEntry {
+    /// Phase name (e.g., "parse", "type_check", "optimize", "codegen")
+    pub phase: String,
+    /// Duration of this phase in milliseconds
+    pub duration_ms: f64,
+    /// Number of nodes/expressions processed in this phase
+    pub items_processed: usize,
+    /// Optional notes about what happened
+    pub notes: String,
 }
 
-impl Default for ProfileConfig {
-    fn default() -> Self {
-        Self {
-            track_time: true,
-            track_memory: true,
-            track_passes: true,
-            track_cache: true,
-            min_duration_ms: 1,
-        }
-    }
-}
-
-/// Time spent in a compilation phase.
-#[derive(Debug, Clone)]
-pub struct PhaseTime {
-    /// Phase name
-    pub name: String,
-    /// Total duration
-    pub duration: Duration,
-    /// Number of times this phase was executed
-    pub count: usize,
-    /// Child phases
-    pub children: Vec<PhaseTime>,
-}
-
-impl PhaseTime {
-    /// Create a new phase time entry.
-    pub fn new(name: String, duration: Duration) -> Self {
-        Self {
-            name,
-            duration,
-            count: 1,
-            children: Vec::new(),
+impl ProfileEntry {
+    /// Create a new profile entry from a phase name, duration, and item count.
+    pub fn new(phase: impl Into<String>, duration: Duration, items: usize) -> Self {
+        ProfileEntry {
+            phase: phase.into(),
+            duration_ms: duration.as_secs_f64() * 1000.0,
+            items_processed: items,
+            notes: String::new(),
         }
     }
 
-    /// Get average duration per execution.
-    pub fn average_duration(&self) -> Duration {
-        if self.count == 0 {
-            Duration::from_secs(0)
-        } else {
-            self.duration / self.count as u32
-        }
+    /// Attach notes to this entry (builder pattern).
+    pub fn with_notes(mut self, notes: impl Into<String>) -> Self {
+        self.notes = notes.into();
+        self
     }
 
-    /// Get total time including children.
-    pub fn total_time_with_children(&self) -> Duration {
-        let mut total = self.duration;
-        for child in &self.children {
-            total += child.total_time_with_children();
+    /// Throughput: items per second.
+    ///
+    /// Returns `f64::INFINITY` when duration is effectively zero.
+    pub fn throughput(&self) -> f64 {
+        if self.duration_ms < 1e-9 {
+            return f64::INFINITY;
         }
-        total
+        self.items_processed as f64 / (self.duration_ms / 1000.0)
     }
 }
 
-/// Memory usage snapshot.
-#[derive(Debug, Clone, Default)]
-pub struct MemorySnapshot {
-    /// Timestamp of snapshot
-    pub timestamp: Option<Instant>,
-    /// Estimated heap usage in bytes
-    pub heap_bytes: usize,
-    /// Number of active allocations
-    pub allocation_count: usize,
+/// A complete profiling report for a compilation run.
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct ProfileReport {
+    /// Individual phase entries in execution order
+    pub entries: Vec<ProfileEntry>,
+    /// Total wall-clock duration in milliseconds
+    pub total_duration_ms: f64,
+    /// Expression complexity (number of nodes in input)
+    pub input_complexity: usize,
+    /// Output graph size (number of nodes in compiled graph)
+    pub output_size: usize,
 }
 
-impl MemorySnapshot {
-    /// Create a new memory snapshot.
+impl ProfileReport {
+    /// Create a new empty report.
     pub fn new() -> Self {
-        Self {
-            timestamp: Some(Instant::now()),
-            heap_bytes: 0,
-            allocation_count: 0,
+        Self::default()
+    }
+
+    /// Add an entry and accumulate its duration into the total.
+    pub fn add_entry(&mut self, entry: ProfileEntry) {
+        self.total_duration_ms += entry.duration_ms;
+        self.entries.push(entry);
+    }
+
+    /// Get the slowest phase by duration.
+    pub fn slowest_phase(&self) -> Option<&ProfileEntry> {
+        self.entries.iter().max_by(|a, b| {
+            a.duration_ms
+                .partial_cmp(&b.duration_ms)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
+    }
+
+    /// Get the fastest phase by duration.
+    pub fn fastest_phase(&self) -> Option<&ProfileEntry> {
+        self.entries.iter().min_by(|a, b| {
+            a.duration_ms
+                .partial_cmp(&b.duration_ms)
+                .unwrap_or(std::cmp::Ordering::Equal)
+        })
+    }
+
+    /// Percentage of total time spent in each phase.
+    ///
+    /// Returns an empty vector when total duration is effectively zero.
+    pub fn phase_percentages(&self) -> Vec<(&str, f64)> {
+        if self.total_duration_ms < 1e-9 {
+            return vec![];
         }
+        self.entries
+            .iter()
+            .map(|e| {
+                (
+                    e.phase.as_str(),
+                    e.duration_ms / self.total_duration_ms * 100.0,
+                )
+            })
+            .collect()
     }
 
-    /// Record an allocation.
-    pub fn record_allocation(&mut self, size: usize) {
-        self.heap_bytes += size;
-        self.allocation_count += 1;
+    /// Number of phases recorded.
+    pub fn phase_count(&self) -> usize {
+        self.entries.len()
     }
 
-    /// Record a deallocation.
-    pub fn record_deallocation(&mut self, size: usize) {
-        self.heap_bytes = self.heap_bytes.saturating_sub(size);
-        self.allocation_count = self.allocation_count.saturating_sub(1);
+    /// Human-readable summary of the compilation profile.
+    pub fn summary(&self) -> String {
+        let mut s = format!(
+            "Compilation Profile ({:.2}ms total, {} phases):\n",
+            self.total_duration_ms,
+            self.entries.len()
+        );
+        for entry in &self.entries {
+            let pct = if self.total_duration_ms > 0.0 {
+                entry.duration_ms / self.total_duration_ms * 100.0
+            } else {
+                0.0
+            };
+            s.push_str(&format!(
+                "  {:20} {:8.2}ms ({:5.1}%) [{} items]\n",
+                entry.phase, entry.duration_ms, pct, entry.items_processed
+            ));
+        }
+        s.push_str(&format!(
+            "Input complexity: {}, Output size: {}\n",
+            self.input_complexity, self.output_size
+        ));
+        s
+    }
+
+    /// Compilation speed: output nodes per millisecond.
+    pub fn compilation_speed(&self) -> f64 {
+        if self.total_duration_ms < 1e-9 {
+            return 0.0;
+        }
+        self.output_size as f64 / self.total_duration_ms
     }
 }
 
-/// Pass-level profiling information.
-#[derive(Debug, Clone)]
-pub struct PassProfile {
-    /// Pass name
-    pub name: String,
-    /// Number of times executed
-    pub execution_count: usize,
-    /// Total time spent
-    pub total_time: Duration,
-    /// Number of optimizations applied
-    pub optimizations_applied: usize,
-    /// Memory allocated during pass
-    pub memory_allocated: usize,
-}
-
-impl PassProfile {
-    /// Create a new pass profile.
-    pub fn new(name: String) -> Self {
-        Self {
-            name,
-            execution_count: 0,
-            total_time: Duration::from_secs(0),
-            optimizations_applied: 0,
-            memory_allocated: 0,
-        }
-    }
-
-    /// Record an execution of this pass.
-    pub fn record_execution(&mut self, duration: Duration, optimizations: usize) {
-        self.execution_count += 1;
-        self.total_time += duration;
-        self.optimizations_applied += optimizations;
-    }
-
-    /// Get average time per execution.
-    pub fn average_time(&self) -> Duration {
-        if self.execution_count == 0 {
-            Duration::from_secs(0)
-        } else {
-            self.total_time / self.execution_count as u32
-        }
-    }
-
-    /// Get optimizations per execution.
-    pub fn optimizations_per_execution(&self) -> f64 {
-        if self.execution_count == 0 {
-            0.0
-        } else {
-            self.optimizations_applied as f64 / self.execution_count as f64
-        }
-    }
-}
-
-/// Cache statistics.
-#[derive(Debug, Clone, Default)]
-pub struct CacheStats {
-    /// Total cache lookups
-    pub lookups: usize,
-    /// Cache hits
-    pub hits: usize,
-    /// Cache misses
-    pub misses: usize,
-    /// Cache evictions
-    pub evictions: usize,
-}
-
-impl CacheStats {
-    /// Calculate hit rate as a percentage.
-    pub fn hit_rate(&self) -> f64 {
-        if self.lookups == 0 {
-            0.0
-        } else {
-            (self.hits as f64 / self.lookups as f64) * 100.0
-        }
-    }
-
-    /// Calculate miss rate as a percentage.
-    pub fn miss_rate(&self) -> f64 {
-        100.0 - self.hit_rate()
-    }
-
-    /// Record a cache lookup.
-    pub fn record_lookup(&mut self, hit: bool) {
-        self.lookups += 1;
-        if hit {
-            self.hits += 1;
-        } else {
-            self.misses += 1;
-        }
-    }
-}
-
-/// Main compilation profiler.
+/// A profiler that tracks compilation phases in real-time.
+///
+/// Use [`begin_phase`](CompilationProfiler::begin_phase) /
+/// [`end_phase`](CompilationProfiler::end_phase) to bracket each compilation
+/// stage, then call [`finish`](CompilationProfiler::finish) to collect the
+/// completed [`ProfileReport`].
 pub struct CompilationProfiler {
-    config: ProfileConfig,
-    phases: Vec<PhaseTime>,
-    active_phases: Vec<(String, Instant)>,
-    memory_snapshots: Vec<MemorySnapshot>,
-    pass_profiles: HashMap<String, PassProfile>,
-    cache_stats: CacheStats,
-    start_time: Option<Instant>,
+    report: ProfileReport,
+    current_phase: Option<(String, Instant, usize)>,
 }
 
 impl CompilationProfiler {
-    /// Create a new profiler with default configuration.
+    /// Create a new profiler.
     pub fn new() -> Self {
-        Self::with_config(ProfileConfig::default())
-    }
-
-    /// Create a new profiler with custom configuration.
-    pub fn with_config(config: ProfileConfig) -> Self {
-        Self {
-            config,
-            phases: Vec::new(),
-            active_phases: Vec::new(),
-            memory_snapshots: Vec::new(),
-            pass_profiles: HashMap::new(),
-            cache_stats: CacheStats::default(),
-            start_time: None,
+        CompilationProfiler {
+            report: ProfileReport::new(),
+            current_phase: None,
         }
     }
 
-    /// Start overall compilation profiling.
-    pub fn start(&mut self) {
-        self.start_time = Some(Instant::now());
-        self.phases.clear();
-        self.active_phases.clear();
+    /// Start timing a new phase.
+    ///
+    /// If there is an active phase it is ended automatically before the new
+    /// one begins.
+    pub fn begin_phase(&mut self, phase: impl Into<String>) {
+        // If there's an active phase, end it first
+        self.end_phase();
+        self.current_phase = Some((phase.into(), Instant::now(), 0));
     }
 
-    /// Start profiling a compilation phase.
-    pub fn start_phase(&mut self, name: &str) {
-        if !self.config.track_time {
-            return;
-        }
-
-        self.active_phases.push((name.to_string(), Instant::now()));
-    }
-
-    /// End profiling a compilation phase.
-    pub fn end_phase(&mut self, name: &str) {
-        if !self.config.track_time {
-            return;
-        }
-
-        if let Some(pos) = self.active_phases.iter().rposition(|(n, _)| n == name) {
-            let (phase_name, start_time) = self.active_phases.remove(pos);
-            let duration = start_time.elapsed();
-
-            if duration.as_millis() >= self.config.min_duration_ms as u128 {
-                self.phases.push(PhaseTime::new(phase_name, duration));
-            }
+    /// Set the items processed count for the current phase.
+    pub fn set_items(&mut self, count: usize) {
+        if let Some((_, _, ref mut items)) = self.current_phase {
+            *items = count;
         }
     }
 
-    /// Record a pass execution.
-    pub fn record_pass(&mut self, pass_name: &str, duration: Duration, optimizations: usize) {
-        if !self.config.track_passes {
-            return;
+    /// End the current phase and record it.
+    pub fn end_phase(&mut self) {
+        if let Some((name, start, items)) = self.current_phase.take() {
+            let duration = start.elapsed();
+            self.report
+                .add_entry(ProfileEntry::new(name, duration, items));
         }
-
-        let profile = self
-            .pass_profiles
-            .entry(pass_name.to_string())
-            .or_insert_with(|| PassProfile::new(pass_name.to_string()));
-
-        profile.record_execution(duration, optimizations);
     }
 
-    /// Take a memory snapshot.
-    pub fn snapshot_memory(&mut self) {
-        if !self.config.track_memory {
-            return;
-        }
-
-        self.memory_snapshots.push(MemorySnapshot::new());
+    /// Set input complexity on the report.
+    pub fn set_input_complexity(&mut self, complexity: usize) {
+        self.report.input_complexity = complexity;
     }
 
-    /// Record a cache lookup.
-    pub fn record_cache_lookup(&mut self, hit: bool) {
-        if !self.config.track_cache {
-            return;
-        }
-
-        self.cache_stats.record_lookup(hit);
+    /// Set output graph size on the report.
+    pub fn set_output_size(&mut self, size: usize) {
+        self.report.output_size = size;
     }
 
-    /// Get total compilation time.
-    pub fn total_time(&self) -> Option<Duration> {
-        self.start_time.map(|start| start.elapsed())
+    /// Finish profiling and return the report.
+    ///
+    /// Any open phase is ended automatically.
+    pub fn finish(mut self) -> ProfileReport {
+        self.end_phase(); // end any open phase
+        self.report
     }
 
-    /// Get peak memory usage.
-    pub fn peak_memory(&self) -> usize {
-        self.memory_snapshots
-            .iter()
-            .map(|s| s.heap_bytes)
-            .max()
-            .unwrap_or(0)
-    }
-
-    /// Get the slowest compilation phase.
-    pub fn slowest_phase(&self) -> Option<&PhaseTime> {
-        self.phases.iter().max_by_key(|p| p.duration)
-    }
-
-    /// Get the most expensive pass (by total time).
-    pub fn most_expensive_pass(&self) -> Option<&PassProfile> {
-        self.pass_profiles.values().max_by_key(|p| p.total_time)
-    }
-
-    /// Generate a human-readable profiling report.
-    pub fn generate_report(&self) -> String {
-        let mut report = String::new();
-
-        report.push_str("=== Compilation Profiling Report ===\n\n");
-
-        // Overall stats
-        if let Some(total) = self.total_time() {
-            report.push_str(&format!("Total Time: {:.2?}\n", total));
-        }
-
-        if self.config.track_memory {
-            report.push_str(&format!("Peak Memory: {} bytes\n", self.peak_memory()));
-        }
-
-        report.push('\n');
-
-        // Phase breakdown
-        if self.config.track_time && !self.phases.is_empty() {
-            report.push_str("=== Phase Breakdown ===\n");
-            for phase in &self.phases {
-                report.push_str(&format!(
-                    "  {}: {:.2?} ({} times, avg: {:.2?})\n",
-                    phase.name,
-                    phase.duration,
-                    phase.count,
-                    phase.average_duration()
-                ));
-            }
-            report.push('\n');
-        }
-
-        // Pass profiles
-        if self.config.track_passes && !self.pass_profiles.is_empty() {
-            report.push_str("=== Optimization Passes ===\n");
-            let mut passes: Vec<_> = self.pass_profiles.values().collect();
-            passes.sort_by_key(|p| std::cmp::Reverse(p.total_time));
-
-            for pass in passes.iter().take(10) {
-                report.push_str(&format!(
-                    "  {}: {:.2?} ({} execs, {:.1} opts/exec)\n",
-                    pass.name,
-                    pass.total_time,
-                    pass.execution_count,
-                    pass.optimizations_per_execution()
-                ));
-            }
-            report.push('\n');
-        }
-
-        // Cache statistics
-        if self.config.track_cache && self.cache_stats.lookups > 0 {
-            report.push_str("=== Cache Statistics ===\n");
-            report.push_str(&format!("  Lookups: {}\n", self.cache_stats.lookups));
-            report.push_str(&format!("  Hits: {}\n", self.cache_stats.hits));
-            report.push_str(&format!("  Misses: {}\n", self.cache_stats.misses));
-            report.push_str(&format!(
-                "  Hit Rate: {:.1}%\n",
-                self.cache_stats.hit_rate()
-            ));
-            report.push('\n');
-        }
-
-        // Recommendations
-        if let Some(slowest) = self.slowest_phase() {
-            report.push_str("=== Recommendations ===\n");
-            report.push_str(&format!(
-                "  Slowest phase: {} ({:.2?})\n",
-                slowest.name, slowest.duration
-            ));
-
-            if let Some(expensive_pass) = self.most_expensive_pass() {
-                report.push_str(&format!(
-                    "  Most expensive pass: {} ({:.2?})\n",
-                    expensive_pass.name, expensive_pass.total_time
-                ));
-            }
-
-            if self.config.track_cache && self.cache_stats.hit_rate() < 50.0 {
-                report.push_str("  Consider increasing cache size (low hit rate)\n");
-            }
-        }
-
-        report
-    }
-
-    /// Generate JSON profiling report.
-    pub fn generate_json_report(&self) -> String {
-        // Simple JSON serialization
-        let mut json = String::from("{\n");
-
-        if let Some(total) = self.total_time() {
-            json.push_str(&format!("  \"total_time_ms\": {},\n", total.as_millis()));
-        }
-
-        json.push_str(&format!(
-            "  \"peak_memory_bytes\": {},\n",
-            self.peak_memory()
-        ));
-
-        // Phases
-        json.push_str("  \"phases\": [\n");
-        for (i, phase) in self.phases.iter().enumerate() {
-            json.push_str(&format!(
-                "    {{\"name\": \"{}\", \"duration_ms\": {}, \"count\": {}}}",
-                phase.name,
-                phase.duration.as_millis(),
-                phase.count
-            ));
-            if i < self.phases.len() - 1 {
-                json.push(',');
-            }
-            json.push('\n');
-        }
-        json.push_str("  ],\n");
-
-        // Cache stats
-        json.push_str("  \"cache\": {\n");
-        json.push_str(&format!("    \"lookups\": {},\n", self.cache_stats.lookups));
-        json.push_str(&format!("    \"hits\": {},\n", self.cache_stats.hits));
-        json.push_str(&format!(
-            "    \"hit_rate\": {:.2}\n",
-            self.cache_stats.hit_rate()
-        ));
-        json.push_str("  }\n");
-
-        json.push_str("}\n");
-        json
+    /// Get a reference to the current (in-progress) report.
+    pub fn current_report(&self) -> &ProfileReport {
+        &self.report
     }
 }
 
@@ -491,158 +252,246 @@ impl Default for CompilationProfiler {
     }
 }
 
+/// Profile a closure as a single phase and return (result, entry).
+///
+/// The returned [`ProfileEntry`] has `items_processed` set to 0; callers can
+/// adjust it or attach notes afterwards.
+///
+/// # Examples
+///
+/// ```rust
+/// use tensorlogic_compiler::profiling::profile_phase;
+///
+/// let (result, entry) = profile_phase("my_phase", || {
+///     // expensive work
+///     42
+/// });
+/// assert_eq!(result, 42);
+/// assert_eq!(entry.phase, "my_phase");
+/// ```
+pub fn profile_phase<T, F: FnOnce() -> T>(phase: &str, f: F) -> (T, ProfileEntry) {
+    let start = Instant::now();
+    let result = f();
+    let duration = start.elapsed();
+    (result, ProfileEntry::new(phase, duration, 0))
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
     use std::thread;
 
     #[test]
-    fn test_profiler_basic() {
+    fn test_profile_entry_new() {
+        let entry = ProfileEntry::new("parse", Duration::from_millis(15), 200);
+        assert_eq!(entry.phase, "parse");
+        assert!((entry.duration_ms - 15.0).abs() < 0.01);
+        assert_eq!(entry.items_processed, 200);
+        assert!(entry.notes.is_empty());
+    }
+
+    #[test]
+    fn test_profile_entry_throughput() {
+        // 100 items in 10ms = 10_000 items/s
+        let entry = ProfileEntry::new("phase", Duration::from_millis(10), 100);
+        let tp = entry.throughput();
+        assert!((tp - 10_000.0).abs() < 1.0, "expected ~10000, got {}", tp);
+    }
+
+    #[test]
+    fn test_profile_entry_with_notes() {
+        let entry =
+            ProfileEntry::new("opt", Duration::from_millis(5), 10).with_notes("applied CSE");
+        assert_eq!(entry.notes, "applied CSE");
+    }
+
+    #[test]
+    fn test_profile_entry_zero_duration_throughput() {
+        let entry = ProfileEntry::new("instant", Duration::from_secs(0), 50);
+        assert!(entry.throughput().is_infinite());
+    }
+
+    #[test]
+    fn test_profile_report_new() {
+        let r = ProfileReport::new();
+        assert!(r.entries.is_empty());
+        assert!((r.total_duration_ms).abs() < 1e-9);
+        assert_eq!(r.input_complexity, 0);
+        assert_eq!(r.output_size, 0);
+    }
+
+    #[test]
+    fn test_profile_report_add_entry() {
+        let mut r = ProfileReport::new();
+        r.add_entry(ProfileEntry::new("a", Duration::from_millis(10), 1));
+        r.add_entry(ProfileEntry::new("b", Duration::from_millis(20), 2));
+        assert_eq!(r.entries.len(), 2);
+        assert!((r.total_duration_ms - 30.0).abs() < 0.01);
+    }
+
+    #[test]
+    fn test_profile_report_slowest() {
+        let mut r = ProfileReport::new();
+        r.add_entry(ProfileEntry::new("fast", Duration::from_millis(5), 0));
+        r.add_entry(ProfileEntry::new("slow", Duration::from_millis(50), 0));
+        r.add_entry(ProfileEntry::new("mid", Duration::from_millis(20), 0));
+        let slowest = r.slowest_phase().expect("should have slowest");
+        assert_eq!(slowest.phase, "slow");
+    }
+
+    #[test]
+    fn test_profile_report_fastest() {
+        let mut r = ProfileReport::new();
+        r.add_entry(ProfileEntry::new("fast", Duration::from_millis(5), 0));
+        r.add_entry(ProfileEntry::new("slow", Duration::from_millis(50), 0));
+        let fastest = r.fastest_phase().expect("should have fastest");
+        assert_eq!(fastest.phase, "fast");
+    }
+
+    #[test]
+    fn test_profile_report_percentages() {
+        let mut r = ProfileReport::new();
+        r.add_entry(ProfileEntry::new("a", Duration::from_millis(25), 0));
+        r.add_entry(ProfileEntry::new("b", Duration::from_millis(75), 0));
+        let pcts = r.phase_percentages();
+        assert_eq!(pcts.len(), 2);
+        let sum: f64 = pcts.iter().map(|(_, p)| p).sum();
+        assert!(
+            (sum - 100.0).abs() < 0.01,
+            "percentages should sum to ~100, got {}",
+            sum
+        );
+        // "a" should be ~25%, "b" should be ~75%
+        assert!((pcts[0].1 - 25.0).abs() < 0.1);
+        assert!((pcts[1].1 - 75.0).abs() < 0.1);
+    }
+
+    #[test]
+    fn test_profile_report_phase_count() {
+        let mut r = ProfileReport::new();
+        assert_eq!(r.phase_count(), 0);
+        r.add_entry(ProfileEntry::new("x", Duration::from_millis(1), 0));
+        r.add_entry(ProfileEntry::new("y", Duration::from_millis(1), 0));
+        r.add_entry(ProfileEntry::new("z", Duration::from_millis(1), 0));
+        assert_eq!(r.phase_count(), 3);
+    }
+
+    #[test]
+    fn test_profile_report_summary() {
+        let mut r = ProfileReport::new();
+        r.input_complexity = 100;
+        r.output_size = 50;
+        r.add_entry(ProfileEntry::new("parse", Duration::from_millis(10), 80));
+        r.add_entry(ProfileEntry::new("codegen", Duration::from_millis(20), 50));
+        let summary = r.summary();
+        assert!(
+            summary.contains("parse"),
+            "should contain phase name 'parse'"
+        );
+        assert!(
+            summary.contains("codegen"),
+            "should contain phase name 'codegen'"
+        );
+        assert!(
+            summary.contains("Input complexity: 100"),
+            "should contain input complexity"
+        );
+        assert!(
+            summary.contains("Output size: 50"),
+            "should contain output size"
+        );
+    }
+
+    #[test]
+    fn test_profile_report_compilation_speed() {
+        let mut r = ProfileReport::new();
+        r.output_size = 200;
+        // Manually set total to avoid floating-point drift from add_entry
+        r.total_duration_ms = 100.0;
+        let speed = r.compilation_speed();
+        assert!((speed - 2.0).abs() < 0.01, "expected 2.0, got {}", speed);
+    }
+
+    #[test]
+    fn test_profiler_begin_end() {
         let mut profiler = CompilationProfiler::new();
-        profiler.start();
-
-        profiler.start_phase("test_phase");
-        thread::sleep(Duration::from_millis(10));
-        profiler.end_phase("test_phase");
-
-        assert!(!profiler.phases.is_empty());
-    }
-
-    #[test]
-    fn test_phase_time() {
-        let phase = PhaseTime::new("test".to_string(), Duration::from_secs(1));
-        assert_eq!(phase.name, "test");
-        assert_eq!(phase.count, 1);
-        assert_eq!(phase.average_duration(), Duration::from_secs(1));
-    }
-
-    #[test]
-    fn test_memory_snapshot() {
-        let mut snapshot = MemorySnapshot::new();
-        snapshot.record_allocation(1000);
-        snapshot.record_allocation(500);
-
-        assert_eq!(snapshot.heap_bytes, 1500);
-        assert_eq!(snapshot.allocation_count, 2);
-
-        snapshot.record_deallocation(500);
-        assert_eq!(snapshot.heap_bytes, 1000);
-        assert_eq!(snapshot.allocation_count, 1);
-    }
-
-    #[test]
-    fn test_pass_profile() {
-        let mut profile = PassProfile::new("constant_folding".to_string());
-        profile.record_execution(Duration::from_millis(10), 5);
-        profile.record_execution(Duration::from_millis(15), 3);
-
-        assert_eq!(profile.execution_count, 2);
-        assert_eq!(profile.optimizations_applied, 8);
-        assert!(profile.average_time().as_millis() >= 10);
-        assert_eq!(profile.optimizations_per_execution(), 4.0);
-    }
-
-    #[test]
-    fn test_cache_stats() {
-        let mut stats = CacheStats::default();
-        stats.record_lookup(true); // hit
-        stats.record_lookup(true); // hit
-        stats.record_lookup(false); // miss
-
-        assert_eq!(stats.lookups, 3);
-        assert_eq!(stats.hits, 2);
-        assert_eq!(stats.misses, 1);
-        assert!((stats.hit_rate() - 66.67).abs() < 0.1);
-    }
-
-    #[test]
-    fn test_generate_report() {
-        let mut profiler = CompilationProfiler::new();
-        profiler.start();
-        profiler.start_phase("compilation");
-        thread::sleep(Duration::from_millis(10));
-        profiler.end_phase("compilation");
-
-        let report = profiler.generate_report();
-        assert!(report.contains("Compilation Profiling Report"));
-        assert!(report.contains("Total Time"));
-    }
-
-    #[test]
-    fn test_slowest_phase() {
-        let mut profiler = CompilationProfiler::new();
-        profiler.start();
-
-        profiler.start_phase("fast");
+        profiler.begin_phase("single");
         thread::sleep(Duration::from_millis(5));
-        profiler.end_phase("fast");
+        profiler.set_items(42);
+        profiler.end_phase();
 
-        profiler.start_phase("slow");
-        thread::sleep(Duration::from_millis(20));
-        profiler.end_phase("slow");
-
-        let slowest = profiler.slowest_phase().unwrap();
-        assert_eq!(slowest.name, "slow");
+        let report = profiler.current_report();
+        assert_eq!(report.entries.len(), 1);
+        assert_eq!(report.entries[0].phase, "single");
+        assert_eq!(report.entries[0].items_processed, 42);
+        assert!(report.entries[0].duration_ms > 0.0);
     }
 
     #[test]
-    fn test_most_expensive_pass() {
+    fn test_profiler_multiple_phases() {
         let mut profiler = CompilationProfiler::new();
-        profiler.record_pass("pass1", Duration::from_millis(10), 5);
-        profiler.record_pass("pass2", Duration::from_millis(50), 10);
-
-        let expensive = profiler.most_expensive_pass().unwrap();
-        assert_eq!(expensive.name, "pass2");
+        for name in &["parse", "optimize", "codegen"] {
+            profiler.begin_phase(*name);
+            profiler.set_items(10);
+            profiler.end_phase();
+        }
+        let report = profiler.finish();
+        assert_eq!(report.phase_count(), 3);
+        assert_eq!(report.entries[0].phase, "parse");
+        assert_eq!(report.entries[1].phase, "optimize");
+        assert_eq!(report.entries[2].phase, "codegen");
     }
 
     #[test]
-    fn test_json_report() {
+    fn test_profiler_auto_end_on_begin() {
         let mut profiler = CompilationProfiler::new();
-        profiler.start();
-        profiler.record_cache_lookup(true);
-        profiler.record_cache_lookup(false);
+        profiler.begin_phase("first");
+        profiler.set_items(5);
+        // Starting a new phase should auto-end "first"
+        profiler.begin_phase("second");
+        profiler.end_phase();
 
-        let json = profiler.generate_json_report();
-        assert!(json.contains("total_time_ms"));
-        assert!(json.contains("cache"));
-        assert!(json.contains("hit_rate"));
+        let report = profiler.finish();
+        assert_eq!(report.phase_count(), 2);
+        assert_eq!(report.entries[0].phase, "first");
+        assert_eq!(report.entries[0].items_processed, 5);
+        assert_eq!(report.entries[1].phase, "second");
     }
 
     #[test]
-    fn test_config_filtering() {
-        let config = ProfileConfig {
-            track_time: true,
-            track_memory: false,
-            track_passes: true,
-            track_cache: false,
-            min_duration_ms: 100,
-        };
-
-        let mut profiler = CompilationProfiler::with_config(config);
-        profiler.start();
-
-        // Short phase should be filtered out
-        profiler.start_phase("short");
-        thread::sleep(Duration::from_millis(1));
-        profiler.end_phase("short");
-
-        assert!(profiler.phases.is_empty());
-    }
-
-    #[test]
-    fn test_nested_phases() {
+    fn test_profiler_finish() {
         let mut profiler = CompilationProfiler::new();
-        profiler.start();
+        profiler.set_input_complexity(300);
+        profiler.set_output_size(150);
+        profiler.begin_phase("work");
+        profiler.set_items(100);
+        // finish should auto-end the open phase
+        let report = profiler.finish();
+        assert_eq!(report.phase_count(), 1);
+        assert_eq!(report.input_complexity, 300);
+        assert_eq!(report.output_size, 150);
+        assert!(report.total_duration_ms >= 0.0);
+    }
 
-        profiler.start_phase("outer");
-        thread::sleep(Duration::from_millis(5));
+    #[test]
+    fn test_profiler_set_complexity() {
+        let mut profiler = CompilationProfiler::new();
+        profiler.set_input_complexity(999);
+        assert_eq!(profiler.current_report().input_complexity, 999);
+    }
 
-        profiler.start_phase("inner");
-        thread::sleep(Duration::from_millis(5));
-        profiler.end_phase("inner");
-
-        profiler.end_phase("outer");
-
-        assert_eq!(profiler.phases.len(), 2);
+    #[test]
+    fn test_profile_phase_fn() {
+        let (result, entry) = profile_phase("compute", || {
+            let mut sum = 0u64;
+            for i in 0..1000 {
+                sum += i;
+            }
+            sum
+        });
+        assert_eq!(result, 499_500);
+        assert_eq!(entry.phase, "compute");
+        assert_eq!(entry.items_processed, 0);
+        assert!(entry.duration_ms >= 0.0);
     }
 }

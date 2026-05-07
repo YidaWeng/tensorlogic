@@ -28,6 +28,7 @@
 //! ```
 
 use serde::{Deserialize, Serialize};
+use std::cmp::Reverse;
 use std::collections::{HashMap, HashSet};
 use thiserror::Error;
 
@@ -329,7 +330,7 @@ impl RewriteEngine {
 
     /// Sort rules by priority.
     fn sort_rules_by_priority(&mut self) {
-        self.rules.sort_by(|a, b| b.priority.cmp(&a.priority));
+        self.rules.sort_by_key(|b| Reverse(b.priority));
     }
 
     /// Apply rewrites to a simplified graph representation.
@@ -632,7 +633,7 @@ mod tests {
             .add_rule(rule)
             .with_strategy(RewriteStrategy::OnePass);
 
-        let result = engine.rewrite_simple(10).unwrap();
+        let result = engine.rewrite_simple(10).expect("unwrap");
         assert!(result <= 10);
         assert!(engine.stats().graphs_processed > 0);
     }
@@ -644,7 +645,7 @@ mod tests {
             .add_rule(rule)
             .with_strategy(RewriteStrategy::Exhaustive);
 
-        let result = engine.rewrite_simple(10).unwrap();
+        let result = engine.rewrite_simple(10).expect("unwrap");
         assert!(result <= 10);
     }
 
@@ -655,7 +656,7 @@ mod tests {
             .add_rule(rule)
             .with_strategy(RewriteStrategy::FixedPoint { max_iterations: 10 });
 
-        let result = engine.rewrite_simple(10).unwrap();
+        let result = engine.rewrite_simple(10).expect("unwrap");
         assert!(result <= 10);
     }
 
@@ -669,7 +670,7 @@ mod tests {
             .add_rule(rule2)
             .with_strategy(RewriteStrategy::Prioritized);
 
-        engine.rewrite_simple(10).unwrap();
+        engine.rewrite_simple(10).expect("unwrap");
         // After sorting, high priority rule should be first
         assert_eq!(engine.rules[0].name, "high");
     }
@@ -679,7 +680,7 @@ mod tests {
         let rule = RewriteRule::new("test");
         let mut engine = RewriteEngine::new().add_rule(rule);
 
-        engine.rewrite_simple(10).unwrap();
+        engine.rewrite_simple(10).expect("unwrap");
         assert!(engine.stats().graphs_processed > 0);
 
         engine.reset_stats();

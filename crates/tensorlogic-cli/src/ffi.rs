@@ -595,7 +595,8 @@ mod tests {
     #[test]
     fn test_compile_expr_success() {
         // Use variables in the expression
-        let expr = CString::new("AND(pred1(x), pred2(x, y))").unwrap();
+        let expr =
+            CString::new("AND(pred1(x), pred2(x, y))").expect("literal has no interior nul bytes");
 
         unsafe {
             let result = tl_compile_expr(expr.as_ptr());
@@ -604,11 +605,15 @@ mod tests {
 
             // Print debug info
             if !result.error_message.is_null() {
-                let err = CStr::from_ptr(result.error_message).to_str().unwrap();
+                let err = CStr::from_ptr(result.error_message)
+                    .to_str()
+                    .expect("error message should be valid UTF-8");
                 println!("Compilation error: {}", err);
             }
             if !result.graph_data.is_null() {
-                let graph = CStr::from_ptr(result.graph_data).to_str().unwrap();
+                let graph = CStr::from_ptr(result.graph_data)
+                    .to_str()
+                    .expect("graph data should be valid UTF-8");
                 println!("Graph: {}", &graph[..graph.len().min(200)]);
                 println!(
                     "Tensors: {}, Nodes: {}",
@@ -634,7 +639,7 @@ mod tests {
     #[test]
     fn test_compile_expr_invalid_syntax() {
         // Use truly invalid syntax - mismatched parentheses and invalid operators
-        let expr = CString::new("AND(pred1(x), )").unwrap();
+        let expr = CString::new("AND(pred1(x), )").expect("literal has no interior nul bytes");
 
         unsafe {
             let result = tl_compile_expr(expr.as_ptr());
@@ -658,7 +663,7 @@ mod tests {
     #[test]
     fn test_compile_expr_with_error() {
         // Use an expression that should definitely fail: unmatched quotes or similar
-        let expr = CString::new("\"unclosed_string").unwrap();
+        let expr = CString::new("\"unclosed_string").expect("literal has no interior nul bytes");
 
         unsafe {
             let result = tl_compile_expr(expr.as_ptr());
@@ -683,7 +688,9 @@ mod tests {
         unsafe {
             let version = tl_version();
             assert!(!version.is_null());
-            let version_str = CStr::from_ptr(version).to_str().unwrap();
+            let version_str = CStr::from_ptr(version)
+                .to_str()
+                .expect("version string should be valid UTF-8");
             assert!(!version_str.is_empty());
             tl_free_string(version);
         }
@@ -691,12 +698,12 @@ mod tests {
 
     #[test]
     fn test_backend_availability() {
-        let cpu = CString::new("cpu").unwrap();
+        let cpu = CString::new("cpu").expect("literal has no interior nul bytes");
         unsafe {
             assert_eq!(tl_is_backend_available(cpu.as_ptr()), 1);
         }
 
-        let invalid = CString::new("invalid_backend").unwrap();
+        let invalid = CString::new("invalid_backend").expect("literal has no interior nul bytes");
         unsafe {
             assert_eq!(tl_is_backend_available(invalid.as_ptr()), 0);
         }

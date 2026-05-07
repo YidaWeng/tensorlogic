@@ -316,12 +316,16 @@ fn strongconnect(
         for &w in neighbors {
             if !indices.contains_key(&w) {
                 strongconnect(w, adj, index, stack, indices, lowlinks, on_stack, sccs);
-                let w_lowlink = *lowlinks.get(&w).unwrap();
-                let v_lowlink = lowlinks.get_mut(&v).unwrap();
+                let w_lowlink = *lowlinks.get(&w).expect("w visited before, so in lowlinks");
+                let v_lowlink = lowlinks
+                    .get_mut(&v)
+                    .expect("v is current node, so in lowlinks");
                 *v_lowlink = (*v_lowlink).min(w_lowlink);
             } else if on_stack.contains(&w) {
-                let w_index = *indices.get(&w).unwrap();
-                let v_lowlink = lowlinks.get_mut(&v).unwrap();
+                let w_index = *indices.get(&w).expect("w visited before, so in indices");
+                let v_lowlink = lowlinks
+                    .get_mut(&v)
+                    .expect("v is current node, so in lowlinks");
                 *v_lowlink = (*v_lowlink).min(w_index);
             }
         }
@@ -330,7 +334,9 @@ fn strongconnect(
     if lowlinks.get(&v) == indices.get(&v) {
         let mut scc = HashSet::new();
         loop {
-            let w = stack.pop().unwrap();
+            let w = stack
+                .pop()
+                .expect("stack is non-empty while searching for SCC root");
             on_stack.remove(&w);
             scc.insert(w);
             if w == v {
@@ -371,7 +377,9 @@ fn compute_topo_order(graph: &EinsumGraph) -> Option<Vec<usize>> {
 
         if let Some(neighbors) = adj.get(&node) {
             for &neighbor in neighbors {
-                let deg = in_degree.get_mut(&neighbor).unwrap();
+                let deg = in_degree
+                    .get_mut(&neighbor)
+                    .expect("neighbor was inserted during initialization");
                 *deg -= 1;
                 if *deg == 0 {
                     queue.push_back(neighbor);
@@ -452,7 +460,7 @@ mod tests {
         let t1 = 1;
         graph
             .add_node(tensorlogic_ir::EinsumNode::elem_unary("exp", t0, t1))
-            .unwrap();
+            .expect("unwrap");
 
         let analysis = analyze_reachability(&graph);
         assert!(!analysis.reachable_from.is_empty());
@@ -490,7 +498,7 @@ mod tests {
         let t1 = 1;
         graph
             .add_node(tensorlogic_ir::EinsumNode::elem_unary("exp", t0, t1))
-            .unwrap();
+            .expect("unwrap");
 
         let adj = build_adjacency_list(&graph);
         assert!(!adj.is_empty() || adj.is_empty());
@@ -517,10 +525,10 @@ mod tests {
 
         graph
             .add_node(tensorlogic_ir::EinsumNode::elem_unary("exp", t0, t1))
-            .unwrap();
+            .expect("unwrap");
         graph
             .add_node(tensorlogic_ir::EinsumNode::elem_unary("log", t1, t2))
-            .unwrap();
+            .expect("unwrap");
 
         let order = compute_topo_order(&graph);
         // Should have topological order for DAG
@@ -537,10 +545,10 @@ mod tests {
 
         let n0 = graph
             .add_node(tensorlogic_ir::EinsumNode::elem_unary("exp", t0, t1))
-            .unwrap();
+            .expect("unwrap");
         let n1 = graph
             .add_node(tensorlogic_ir::EinsumNode::elem_unary("log", t1, t2))
-            .unwrap();
+            .expect("unwrap");
 
         let analysis = analyze_reachability(&graph);
 

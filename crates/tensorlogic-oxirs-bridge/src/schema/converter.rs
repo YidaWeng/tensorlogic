@@ -322,8 +322,8 @@ impl SchemaAnalyzer {
 /// use tensorlogic_oxirs_bridge::schema::converter::symbol_table_to_turtle;
 ///
 /// let mut table = SymbolTable::new();
-/// table.add_domain(DomainInfo::new("Person", 100).with_description("A human being")).unwrap();
-/// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])).unwrap();
+/// table.add_domain(DomainInfo::new("Person", 100).with_description("A human being")).expect("unwrap");
+/// table.add_predicate(PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])).expect("unwrap");
 ///
 /// let turtle = symbol_table_to_turtle(&table, "http://example.org/");
 /// assert!(turtle.contains("ex:Person"));
@@ -411,9 +411,9 @@ pub fn symbol_table_to_turtle(table: &SymbolTable, base_iri: &str) -> String {
 /// use tensorlogic_oxirs_bridge::schema::converter::symbol_table_to_json;
 ///
 /// let mut table = SymbolTable::new();
-/// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+/// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
 ///
-/// let json = symbol_table_to_json(&table).unwrap();
+/// let json = symbol_table_to_json(&table).expect("unwrap");
 /// assert!(json.contains("\"Person\""));
 /// ```
 pub fn symbol_table_to_json(table: &SymbolTable) -> Result<String> {
@@ -430,10 +430,10 @@ pub fn symbol_table_to_json(table: &SymbolTable) -> Result<String> {
 /// use tensorlogic_oxirs_bridge::schema::converter::{symbol_table_to_json, symbol_table_from_json};
 ///
 /// let mut table = SymbolTable::new();
-/// table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+/// table.add_domain(DomainInfo::new("Person", 100)).expect("unwrap");
 ///
-/// let json = symbol_table_to_json(&table).unwrap();
-/// let imported = symbol_table_from_json(&json).unwrap();
+/// let json = symbol_table_to_json(&table).expect("unwrap");
+/// let imported = symbol_table_from_json(&json).expect("unwrap");
 ///
 /// assert!(imported.domains.contains_key("Person"));
 /// ```
@@ -460,16 +460,16 @@ mod tests {
         let mut table = SymbolTable::new();
         table
             .add_domain(DomainInfo::new("Person", 100).with_description("A human being"))
-            .unwrap();
+            .expect("unwrap");
         table
             .add_domain(DomainInfo::new("Organization", 50))
-            .unwrap();
+            .expect("unwrap");
         table
             .add_predicate(PredicateInfo::new(
                 "worksFor",
                 vec!["Person".to_string(), "Organization".to_string()],
             ))
-            .unwrap();
+            .expect("unwrap");
 
         let turtle = symbol_table_to_turtle(&table, "http://example.org/");
 
@@ -486,9 +486,15 @@ mod tests {
     #[test]
     fn test_symbol_table_to_turtle_skips_standard_types() {
         let mut table = SymbolTable::new();
-        table.add_domain(DomainInfo::new("Literal", 10000)).unwrap();
-        table.add_domain(DomainInfo::new("Entity", 1000)).unwrap();
-        table.add_domain(DomainInfo::new("Person", 100)).unwrap();
+        table
+            .add_domain(DomainInfo::new("Literal", 10000))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Entity", 1000))
+            .expect("unwrap");
+        table
+            .add_domain(DomainInfo::new("Person", 100))
+            .expect("unwrap");
 
         let turtle = symbol_table_to_turtle(&table, "http://example.org/");
 
@@ -504,16 +510,16 @@ mod tests {
         let mut table = SymbolTable::new();
         table
             .add_domain(DomainInfo::new("Person", 100).with_description("A person"))
-            .unwrap();
+            .expect("unwrap");
         table
             .add_predicate(
                 PredicateInfo::new("knows", vec!["Person".to_string(), "Person".to_string()])
                     .with_description("Knows relationship"),
             )
-            .unwrap();
+            .expect("unwrap");
 
-        let json = symbol_table_to_json(&table).unwrap();
-        let imported = symbol_table_from_json(&json).unwrap();
+        let json = symbol_table_to_json(&table).expect("unwrap");
+        let imported = symbol_table_from_json(&json).expect("unwrap");
 
         assert_eq!(table.domains.len(), imported.domains.len());
         assert_eq!(table.predicates.len(), imported.predicates.len());

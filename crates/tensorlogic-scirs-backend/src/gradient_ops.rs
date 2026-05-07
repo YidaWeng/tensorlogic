@@ -75,7 +75,7 @@ impl Default for GumbelSoftmaxConfig {
 /// Provides smooth approximations of logical quantifiers:
 /// - ∃ (exists): At least one element is true
 /// - ∀ (forall): All elements are true
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone)]
 pub enum QuantifierMode {
     /// Hard quantifiers using max/min (non-differentiable)
     Hard,
@@ -83,6 +83,8 @@ pub enum QuantifierMode {
     Smooth { temperature: f64 },
     /// Probabilistic interpretation (1 - ∏(1-x) for ∃)
     Probabilistic,
+    /// Log-space mode: delegates to `LogSpaceAggregator::log_sum_exp`.
+    LogSpace(crate::scoring::ScoringConfig),
 }
 
 impl Default for QuantifierMode {
@@ -236,6 +238,18 @@ pub fn soft_exists(
             // This is equivalent to OR in probability theory
             probabilistic_exists(input, axis)
         }
+        QuantifierMode::LogSpace(config) => {
+            // Delegate to numerically stable log-sum-exp aggregator
+            crate::scoring::LogSpaceAggregator::new(config)
+                .log_sum_exp(input, axis)
+                .map_err(|e| {
+                    crate::error::TlBackendError::NumericalError(crate::error::NumericalError {
+                        kind: crate::error::NumericalErrorKind::Overflow,
+                        location: e.to_string(),
+                        values: None,
+                    })
+                })
+        }
     }
 }
 
@@ -270,6 +284,10 @@ pub fn soft_exists_backward(
         QuantifierMode::Probabilistic => {
             // Probabilistic gradient: ∂(1 - ∏(1-x_i))/∂x_j = ∏_{i≠j}(1-x_i)
             probabilistic_exists_gradient(grad_output, input, axis)
+        }
+        QuantifierMode::LogSpace(config) => {
+            // Gradient of log-sum-exp: softmax weights applied to upstream grad
+            smooth_max_gradient(grad_output, input, config.temperature, axis)
         }
     }
 }
@@ -312,6 +330,20 @@ pub fn soft_forall(
             // Probabilistic: ∏ x_i (product of probabilities)
             probabilistic_forall(input, axis)
         }
+        QuantifierMode::LogSpace(config) => {
+            // Log-space forall: log-sum-exp of negated inputs (smooth min)
+            let neg_input = input.mapv(|x| -x / config.temperature);
+            let lse = crate::scoring::LogSpaceAggregator::new(config.clone())
+                .log_sum_exp(&neg_input, axis)
+                .map_err(|e| {
+                    crate::error::TlBackendError::NumericalError(crate::error::NumericalError {
+                        kind: crate::error::NumericalErrorKind::Overflow,
+                        location: e.to_string(),
+                        values: None,
+                    })
+                })?;
+            Ok(lse.mapv(|v| -v * config.temperature))
+        }
     }
 }
 
@@ -346,6 +378,10 @@ pub fn soft_forall_backward(
             // Product gradient: ∂(∏ x_i)/∂x_j = (∏ x_i) / x_j
             probabilistic_forall_gradient(grad_output, input, output, axis)
         }
+        QuantifierMode::LogSpace(config) => {
+            // Gradient of log-space forall (smooth min): use smooth_min_gradient equivalent
+            smooth_min_gradient(grad_output, input, config.temperature, axis)
+        }
     }
 }
 
@@ -357,7 +393,7 @@ pub fn soft_forall_backward(
 fn sample_gumbel(shape: &[usize], seed: Option<u64>) -> TlBackendResult<Scirs2Tensor> {
     use scirs2_core::ndarray::IxDyn;
 
-    let uniform_dist = Uniform::new(1e-10, 1.0 - 1e-10).unwrap(); // Avoid log(0)
+    let uniform_dist = Uniform::new(1e-10, 1.0 - 1e-10).expect("range 1e-10..=1-1e-10 is valid"); // Avoid log(0)
     let dyn_shape = IxDyn(shape);
 
     let gumbel = if let Some(s) = seed {
@@ -636,7 +672,7 @@ fn argmax_gradient(
             let max_idx = slice
                 .iter()
                 .enumerate()
-                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                 .map(|(idx, _)| idx)
                 .unwrap_or(0);
 
@@ -650,11 +686,12 @@ fn argmax_gradient(
         let max_idx = input
             .iter()
             .enumerate()
-            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .max_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(idx, _)| idx)
             .unwrap_or(0);
 
-        grad.as_slice_mut().unwrap()[max_idx] = *grad_output.iter().next().unwrap_or(&0.0);
+        grad.as_slice_mut().expect("grad has contiguous layout")[max_idx] =
+            *grad_output.iter().next().unwrap_or(&0.0);
     }
 
     Ok(grad)
@@ -674,7 +711,7 @@ fn argmin_gradient(
             let min_idx = slice
                 .iter()
                 .enumerate()
-                .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+                .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
                 .map(|(idx, _)| idx)
                 .unwrap_or(0);
 
@@ -688,11 +725,12 @@ fn argmin_gradient(
         let min_idx = input
             .iter()
             .enumerate()
-            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap())
+            .min_by(|(_, a), (_, b)| a.partial_cmp(b).unwrap_or(std::cmp::Ordering::Equal))
             .map(|(idx, _)| idx)
             .unwrap_or(0);
 
-        grad.as_slice_mut().unwrap()[min_idx] = *grad_output.iter().next().unwrap_or(&0.0);
+        grad.as_slice_mut().expect("grad has contiguous layout")[min_idx] =
+            *grad_output.iter().next().unwrap_or(&0.0);
     }
 
     Ok(grad)
@@ -708,7 +746,7 @@ mod tests {
         let input = array![[0.2, 0.6], [0.4, 0.8]].into_dyn();
         let config = SteConfig::default();
 
-        let output = ste_threshold(&input, config).unwrap();
+        let output = ste_threshold(&input, config).expect("unwrap");
         let expected = array![[0.0, 1.0], [0.0, 1.0]].into_dyn();
 
         assert_eq!(output, expected);
@@ -720,7 +758,7 @@ mod tests {
         let input = array![[0.2, 0.6], [0.4, 0.8]].into_dyn();
         let config = SteConfig::default();
 
-        let grad_input = ste_threshold_backward(&grad_output, &input, config).unwrap();
+        let grad_input = ste_threshold_backward(&grad_output, &input, config).expect("unwrap");
 
         // Gradient passes through unchanged
         assert_eq!(grad_input, grad_output);
@@ -735,7 +773,7 @@ mod tests {
             clip_gradients: true,
         };
 
-        let grad_input = ste_threshold_backward(&grad_output, &input, config).unwrap();
+        let grad_input = ste_threshold_backward(&grad_output, &input, config).expect("unwrap");
         let expected = array![[1.0, -1.0], [0.5, -1.0]].into_dyn();
 
         assert_eq!(grad_input, expected);
@@ -750,7 +788,7 @@ mod tests {
             seed: Some(42),
         };
 
-        let samples = gumbel_softmax(&logits, config).unwrap();
+        let samples = gumbel_softmax(&logits, config).expect("unwrap");
 
         // Check output is valid probability distribution
         assert_eq!(samples.shape(), &[1, 3]);
@@ -772,7 +810,7 @@ mod tests {
             seed: Some(123),
         };
 
-        let samples = gumbel_softmax(&logits, config).unwrap();
+        let samples = gumbel_softmax(&logits, config).expect("unwrap");
 
         // In hard mode with low temperature and high logit[1], should be close to one-hot
         let sum: f64 = samples.iter().sum();
@@ -788,7 +826,7 @@ mod tests {
         let input = array![[0.1, 0.3], [0.2, 0.9]].into_dyn();
         let mode = QuantifierMode::Smooth { temperature: 1.0 };
 
-        let output = soft_exists(&input, Some(1), mode).unwrap();
+        let output = soft_exists(&input, Some(1), mode).expect("unwrap");
 
         // Should be approximately max along axis 1 (but higher due to log-sum-exp)
         // smooth_max([0.1, 0.3], τ=1) ≈ 0.898
@@ -811,7 +849,7 @@ mod tests {
         let input = array![[0.5, 0.5]].into_dyn();
         let mode = QuantifierMode::Probabilistic;
 
-        let output = soft_exists(&input, Some(1), mode).unwrap();
+        let output = soft_exists(&input, Some(1), mode).expect("unwrap");
 
         // 1 - (1-0.5)*(1-0.5) = 1 - 0.25 = 0.75
         assert!((output[0] - 0.75).abs() < 1e-6);
@@ -822,7 +860,7 @@ mod tests {
         let input = array![[0.5, 0.5]].into_dyn();
         let mode = QuantifierMode::Probabilistic;
 
-        let output = soft_forall(&input, Some(1), mode).unwrap();
+        let output = soft_forall(&input, Some(1), mode).expect("unwrap");
 
         // 0.5 * 0.5 = 0.25
         assert!((output[0] - 0.25).abs() < 1e-6);
@@ -835,7 +873,7 @@ mod tests {
         let grad_output = array![1.0].into_dyn();
 
         let grad_input =
-            probabilistic_forall_gradient(&grad_output, &input, &output, Some(1)).unwrap();
+            probabilistic_forall_gradient(&grad_output, &input, &output, Some(1)).expect("unwrap");
 
         // ∂(0.4)/∂x[0] = 0.4 / 0.5 = 0.8
         // ∂(0.4)/∂x[1] = 0.4 / 0.8 = 0.5
@@ -848,7 +886,7 @@ mod tests {
         let input = array![[1.0, 2.0, 3.0]].into_dyn();
 
         // Hard max
-        let hard = soft_exists(&input, Some(1), QuantifierMode::Hard).unwrap();
+        let hard = soft_exists(&input, Some(1), QuantifierMode::Hard).expect("unwrap");
         assert!((hard[0] - 3.0).abs() < 1e-6);
 
         // Smooth max with low temperature
@@ -857,7 +895,7 @@ mod tests {
             Some(1),
             QuantifierMode::Smooth { temperature: 0.01 },
         )
-        .unwrap();
+        .expect("unwrap");
         assert!((smooth[0] - 3.0).abs() < 0.1); // Should be close to 3.0
     }
 
@@ -865,7 +903,7 @@ mod tests {
     fn test_gumbel_noise_properties() {
         // Test that Gumbel samples have correct properties
         let shape = &[1000];
-        let noise = sample_gumbel(shape, Some(42)).unwrap();
+        let noise = sample_gumbel(shape, Some(42)).expect("unwrap");
 
         // Mean of Gumbel(0,1) is Euler-Mascheroni constant ≈ 0.5772
         let mean: f64 = noise.iter().sum::<f64>() / noise.len() as f64;

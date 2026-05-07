@@ -95,11 +95,11 @@ mod tests {
 
         let results = tracker
             .compute_all(&predictions.view(), &targets.view())
-            .unwrap();
+            .expect("unwrap");
         assert!(results.contains_key("accuracy"));
         assert!(results.contains_key("f1_score"));
 
-        let history = tracker.get_history("accuracy").unwrap();
+        let history = tracker.get_history("accuracy").expect("unwrap");
         assert_eq!(history.len(), 1);
     }
 }

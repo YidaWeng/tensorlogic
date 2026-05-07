@@ -538,8 +538,8 @@ mod tests {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("Person", 100);
         ctx.add_domain("Thing", 50);
-        ctx.bind_var("x", "Person").unwrap();
-        ctx.bind_var("y", "Thing").unwrap();
+        ctx.bind_var("x", "Person").expect("unwrap");
+        ctx.bind_var("y", "Thing").expect("unwrap");
 
         let expr = TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]);
         let estimate = estimate_memory(&expr, &ctx);
@@ -553,7 +553,7 @@ mod tests {
     fn test_binary_operation_memory() {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("D", 100);
-        ctx.bind_var("x", "D").unwrap();
+        ctx.bind_var("x", "D").expect("unwrap");
 
         let a = TLExpr::pred("a", vec![Term::var("x")]);
         let b = TLExpr::pred("b", vec![Term::var("x")]);
@@ -572,8 +572,8 @@ mod tests {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("Person", 100);
         ctx.add_domain("Thing", 50);
-        ctx.bind_var("x", "Person").unwrap();
-        ctx.bind_var("y", "Thing").unwrap();
+        ctx.bind_var("x", "Person").expect("unwrap");
+        ctx.bind_var("y", "Thing").expect("unwrap");
 
         let pred = TLExpr::pred("knows", vec![Term::var("x"), Term::var("y")]);
         let expr = TLExpr::exists("y", "Thing", pred);
@@ -590,7 +590,7 @@ mod tests {
     fn test_peak_memory() {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("D", 1000);
-        ctx.bind_var("x", "D").unwrap();
+        ctx.bind_var("x", "D").expect("unwrap");
 
         // Build deep expression tree
         let mut expr = TLExpr::pred("a", vec![Term::var("x")]);
@@ -611,7 +611,7 @@ mod tests {
     fn test_batch_estimation() {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("D", 100);
-        ctx.bind_var("x", "D").unwrap();
+        ctx.bind_var("x", "D").expect("unwrap");
 
         let expr = TLExpr::pred("a", vec![Term::var("x")]);
         let single = estimate_memory(&expr, &ctx);
@@ -625,8 +625,8 @@ mod tests {
     fn test_memory_limit_check() {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("D", 10000);
-        ctx.bind_var("x", "D").unwrap();
-        ctx.bind_var("y", "D").unwrap();
+        ctx.bind_var("x", "D").expect("unwrap");
+        ctx.bind_var("y", "D").expect("unwrap");
 
         let expr = TLExpr::pred("big", vec![Term::var("x"), Term::var("y")]);
         let estimate = estimate_memory(&expr, &ctx);
@@ -672,8 +672,8 @@ mod tests {
         let mut ctx = CompilerContext::new();
         ctx.add_domain("A", 100);
         ctx.add_domain("B", 50);
-        ctx.bind_var("x", "A").unwrap();
-        ctx.bind_var("y", "B").unwrap();
+        ctx.bind_var("x", "A").expect("unwrap");
+        ctx.bind_var("y", "B").expect("unwrap");
 
         let pred = TLExpr::pred("rel", vec![Term::var("x"), Term::var("y")]);
         let expr = TLExpr::exists("x", "A", TLExpr::forall("y", "B", pred));
