@@ -1,6 +1,6 @@
 # TensorLogic — Flagship Meta-Crate — TODO
 
-**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**Status**: Stable | **Version**: 0.1.1 | **Released**: 2026-04-06 | **Last Updated**: 2026-06-09
 **History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
 Umbrella crate re-exporting planning, execution, and integration layers.
@@ -155,7 +155,7 @@ First pass of workspace-level integration tests and the long-staged v0.1.1 conve
 - **Integration tests** — added `tests/prelude_smoke.rs` (3 tests) exercising a minimal end-to-end flow through the re-exported prelude items (`Term`, `TLExpr`, `compile_to_einsum`, `Scirs2Exec`, `.forward()`), and `tests/reexport_surface.rs` (7 tests, 5 feature-gated) verifying every re-exported sub-crate module (`tensorlogic::ir`, `::compiler`, `::infer`, `::adapters`, `::scirs_backend`, `::train`, `::oxirs_bridge`, `::quantrs_hooks`, `::sklears_kernels`, `::trustformers`) resolves and type-checks.
 - **Prelude extension** — `EinsumGraph`, `CompilationConfig`, and the 10 canonical sub-crate error types (`AdapterError`, `CompileError`, `ExecutorError`, `IrError`, `TlBackendError`, plus feature-gated `BridgeError`, `PgmError`, `KernelError`, `TrainError`, `TrustformerError`) are now in `tensorlogic::prelude` so downstream users don't have to know which sub-crate owns each type.
 - **Feature flags** — `default = ["full"]`, `full = ["train", "oxirs", "quantrs", "sklears", "trustformers"]`, `minimal = []`, plus one gate per optional integration. The 5 integration-layer sub-crate deps are marked `optional = true`; each corresponding `pub use` in `lib.rs` is `#[cfg]`-gated. `--features minimal` builds only the 5 mandatory-core crates (ir / infer / adapters / compiler / scirs-backend).
-- **Verification** — `cargo check --workspace --all-features` (0 warnings), `cargo clippy --workspace --all-targets --all-features -- -D warnings` (clean), `cargo nextest run --workspace --all-features` (6,407 tests, all green).
+- **Verification** — `cargo check --workspace --all-features` (0 warnings), `cargo clippy --workspace --all-targets --all-features -- -D warnings` (clean), `cargo nextest run --workspace --all-features` (7,178 tests, all green).
 
 ## v0.2.0 / Future Work
 

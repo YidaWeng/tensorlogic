@@ -1,6 +1,6 @@
 //! OxiRS Bridge: RDF*/SHACL/GraphQL → TensorLogic Integration
 //!
-//! **Version**: 0.1.0 | **Status**: Production Ready
+//! **Version**: 0.1.1 | **Status**: Production Ready
 //!
 //! This crate provides comprehensive bidirectional integration between RDF knowledge graphs
 //! and TensorLogic's tensor-based logical reasoning system. It enables semantic web data
@@ -247,6 +247,7 @@ mod error;
 pub mod execute_validate;
 pub mod graph_stats;
 pub mod graphql;
+pub mod interned_graph;
 pub mod json_ld;
 pub mod knowledge_embeddings;
 pub mod ontology_diff;
@@ -281,6 +282,7 @@ pub use graph_stats::{
     connected_components, predicate_statistics, DegreeDistribution, GraphStats, PredicateStats,
 };
 pub use graphql::{DirectiveValue, GraphQLConverter, GraphQLDirective};
+pub use interned_graph::{rdf_bulk_importer_into_interned, InternedGraph};
 pub use json_ld::{
     build_entity_node, context_from_expr, context_from_predicates, expr_to_json_ld_node,
     standard_prefixes_context, validate_document, ContextTerm as TlContextTerm,
@@ -319,8 +321,8 @@ pub use shacl::{
     ReportExportError, ShaclConverter, ShaclReportExporter, ShaclReportFormat,
 };
 pub use sparql::{
-    AggregateFunction, BindExpr, FilterCondition, GraphPattern, PatternElement, SelectElement,
-    SparqlCompiler, SparqlQuery, TriplePattern,
+    AggregateFunction, BindExpr, FilterCondition, GraphPattern, PatternElement, QueryType,
+    SelectElement, SparqlCompiler, SparqlQuery, TensorBgpEvaluator, TriplePattern,
 };
 pub use sparql_builder::{
     validate_variable_name, AskQuery, BuilderTriplePattern, OrderDirection, SelectQuery,

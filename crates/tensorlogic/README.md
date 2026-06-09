@@ -12,8 +12,8 @@ This is the top-level umbrella crate that re-exports all TensorLogic components 
 
 TensorLogic compiles logical rules (predicates, quantifiers, implications) into **tensor equations (einsum graphs)** with a minimal DSL + IR, enabling neural/symbolic/probabilistic models within a unified tensor computation framework.
 
-**Version**: 0.1.0
-**Last Updated**: 2026-03-06
+**Version**: 0.1.1
+**Last Updated**: 2026-06-09
 **Status**: Production Ready
 
 ## Quick Start
@@ -22,7 +22,7 @@ Add to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-tensorlogic = "0.1.0"
+tensorlogic = "0.1.1"
 ```
 
 ### Basic Usage
@@ -171,7 +171,7 @@ Control which components are included:
 
 ```toml
 [dependencies]
-tensorlogic = { version = "0.1.0", features = ["simd"] }
+tensorlogic = { version = "0.1.1", features = ["simd"] }
 ```
 
 Available features:
@@ -232,22 +232,22 @@ cargo nextest run -p tensorlogic --all-features
 
 ## Version Compatibility
 
-This meta crate version `0.1.0` includes:
+This meta crate version `0.1.1` includes:
 
 | Component | Version | Status |
 |-----------|---------|--------|
-| tensorlogic-ir | 0.1.0 | Production Ready |
-| tensorlogic-compiler | 0.1.0 | Production Ready |
-| tensorlogic-infer | 0.1.0 | Production Ready |
-| tensorlogic-scirs-backend | 0.1.0 | Production Ready |
-| tensorlogic-train | 0.1.0 | Complete |
-| tensorlogic-adapters | 0.1.0 | Complete |
-| tensorlogic-oxirs-bridge | 0.1.0 | Complete |
-| tensorlogic-sklears-kernels | 0.1.0 | Core Features |
-| tensorlogic-quantrs-hooks | 0.1.0 | Core Features |
-| tensorlogic-trustformers | 0.1.0 | Complete |
+| tensorlogic-ir | 0.1.1 | Production Ready |
+| tensorlogic-compiler | 0.1.1 | Production Ready |
+| tensorlogic-infer | 0.1.1 | Production Ready |
+| tensorlogic-scirs-backend | 0.1.1 | Production Ready |
+| tensorlogic-train | 0.1.1 | Complete |
+| tensorlogic-adapters | 0.1.1 | Complete |
+| tensorlogic-oxirs-bridge | 0.1.1 | Complete |
+| tensorlogic-sklears-kernels | 0.1.1 | Core Features |
+| tensorlogic-quantrs-hooks | 0.1.1 | Core Features |
+| tensorlogic-trustformers | 0.1.1 | Complete |
 
-All components are synchronized to version `0.1.0`.
+All components are synchronized to version `0.1.1`.
 
 ## Migration from Individual Crates
 
@@ -256,15 +256,15 @@ If you were using individual crates:
 **Before:**
 ```toml
 [dependencies]
-tensorlogic-ir = "0.1.0"
-tensorlogic-compiler = "0.1.0"
-tensorlogic-scirs-backend = "0.1.0"
+tensorlogic-ir = "0.1.1"
+tensorlogic-compiler = "0.1.1"
+tensorlogic-scirs-backend = "0.1.1"
 ```
 
 **After:**
 ```toml
 [dependencies]
-tensorlogic = "0.1.0"
+tensorlogic = "0.1.1"
 ```
 
 Your code remains the same, just update imports:

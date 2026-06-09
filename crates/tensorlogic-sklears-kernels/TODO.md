@@ -1,6 +1,6 @@
 # TensorLogic SklearRS Kernels — TODO
 
-**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**Status**: Stable | **Version**: 0.1.1 | **Released**: 2026-04-06 | **Last Updated**: 2026-06-09
 **History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
 Kernel methods bridging tensor logic with sklearRS kernel approximations.
@@ -193,7 +193,7 @@ Kernel methods bridging tensor logic with sklearRS kernel approximations.
 - [x] Add README.md with architecture overview
 - [x] Kernel design guide
 - [x] **Performance benchmarks** (5 benchmark suites, 47 groups)
-- [ ] Case studies (SVM, GP, etc.) (FUTURE)
+- [x] Case studies (SVM) — `src/svm/`: `SvcModel`/`SvcFitted` (C-SVM binary+multiclass OvR via SMO), `SvrModel`/`SvrFitted` (ε-SVR via augmented SMO dual), `SmoConfig`; Platt-1998 SMO with Keerthi two-loop heuristics, error cache, KKT convergence; 24 tests
 
 ---
 
@@ -216,7 +216,7 @@ Kernel methods bridging tensor logic with sklearRS kernel approximations.
 ## Future Enhancements
 
 - [ ] GPU acceleration
-- [ ] Case studies (SVM, Gaussian Process, etc.)
+- [x] Case studies (SVM) — see above (`src/svm/`)
 - [ ] SkleaRS integration (feature-gated, currently behind `sklears` feature)
 
 ## v0.2.0 Research Preview (2026-04-15)
@@ -266,4 +266,9 @@ Kernel methods bridging tensor logic with sklearRS kernel approximations.
 
 ## v0.2.0 / Future Work
 
-- Multi-output / vector-valued kernels.
+- [x] **Multi-output / vector-valued kernels** (`multi_output/`): `MultiOutputKernel`
+  trait returns `p×p` `Array2<f64>` blocks; `KroneckerICMKernel` and
+  `KroneckerLMCKernel` wrap the existing scalar `ICMKernel`/`LMCKernel` to
+  implement the trait; `VvgpModel`/`VvgpFitted` provide full vector-valued GP
+  fit+predict via Cholesky with O(N·p) posterior mean and covariance.
+  10 unit tests + 10 integration tests (all passing, zero warnings).

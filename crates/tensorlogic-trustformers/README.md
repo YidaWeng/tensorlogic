@@ -402,8 +402,8 @@ Apache-2.0
 
 ---
 
-**Status**: Stable (v0.1.0)
-**Last Updated**: 2026-04-06
+**Status**: Stable (v0.1.1)
+**Last Updated**: 2026-06-09
 **Tests**: 346/346 passing (100%)
 **Examples**: 10 comprehensive examples
 **Benchmarks**: Criterion suite with HTML reports

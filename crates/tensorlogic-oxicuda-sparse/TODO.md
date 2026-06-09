@@ -1,6 +1,6 @@
 # tensorlogic-oxicuda-sparse — TODO
 
-**Status**: Alpha | **Version**: 0.1.0 | **Last Updated**: 2026-04-27
+**Status**: Alpha | **Version**: 0.1.1 | **Last Updated**: 2026-06-09
 
 ## Completed
 
@@ -17,8 +17,8 @@
 ## Planned
 
 - [ ] GPU path wired to real `oxicuda-sparse` kernels (currently stubbed)
-- [ ] `SparseCsc` — Compressed Sparse Column format
-- [ ] `SparseCsr::transpose()` → CSR of transposed matrix
+- [x] `SparseCsc` — Compressed Sparse Column format
+- [x] `SparseCsr::transpose()` → CSR of transposed matrix
 - [ ] f64 variants for `spmv` / `spmm`
 - [ ] `spmv_batched` for multiple RHS vectors
 - [ ] Sparse-dense conversion utilities

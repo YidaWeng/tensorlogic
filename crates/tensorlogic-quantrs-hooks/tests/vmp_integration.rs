@@ -16,8 +16,8 @@ use scirs2_core::random::{RngExt, SeedableRng, StdRng};
 use tensorlogic_quantrs_hooks::vmp::beta as vmp_beta;
 use tensorlogic_quantrs_hooks::vmp::gamma as vmp_gamma;
 use tensorlogic_quantrs_hooks::{
-    BayesianNetwork, BetaNP, GammaNP, VariationalMessagePassing, VariationalState, VmpConfig,
-    VmpFactor,
+    BayesianNetwork, BetaNP, GammaNP, VariationalGaussianMixture, VariationalMessagePassing,
+    VariationalState, VgmmConfig, VmpConfig, VmpFactor,
 };
 
 #[test]
@@ -278,4 +278,69 @@ fn vmp_beta_bernoulli_end_to_end() {
     // KL(posterior || prior) must be strictly positive.
     let kl = posterior.kl_to(&prior);
     assert!(kl > 0.0, "KL(posterior || prior) = {}", kl);
+}
+
+/// Box-Muller Gaussian sampler using `rng.random::<f64>()` — no `rand_distr`.
+fn sample_gaussian(mean: f64, std: f64, rng: &mut StdRng) -> f64 {
+    let u1: f64 = rng.random::<f64>().max(1e-15);
+    let u2: f64 = rng.random::<f64>();
+    let z = (-2.0_f64 * u1.ln()).sqrt() * (2.0_f64 * std::f64::consts::PI * u2).cos();
+    mean + std * z
+}
+
+#[test]
+fn vmp_gaussian_mixture_end_to_end() {
+    let mut rng = StdRng::seed_from_u64(7);
+    let mut data = Vec::new();
+    for _ in 0..50 {
+        data.push(sample_gaussian(-4.0, 0.7, &mut rng));
+    }
+    for _ in 0..50 {
+        data.push(sample_gaussian(0.0, 0.7, &mut rng));
+    }
+    for _ in 0..50 {
+        data.push(sample_gaussian(5.0, 0.7, &mut rng));
+    }
+
+    let config = VgmmConfig::new(3)
+        .with_prior(0.0, 1e-3, 1.0)
+        .with_observation_precision(1.0 / (0.7 * 0.7))
+        .with_limits(300, 1e-7)
+        .with_seed(123);
+    let vgmm = VariationalGaussianMixture::new(config).unwrap();
+    let result = vgmm.fit(&data).unwrap();
+
+    assert!(
+        result.converged,
+        "VBEM should converge on well-separated clusters"
+    );
+    assert!(!result.elbo_history.is_empty());
+
+    // ELBO non-decreasing (allow tiny numerical noise)
+    for w in result.elbo_history.windows(2) {
+        assert!(w[1] + 1e-6 >= w[0], "ELBO decreased: {} -> {}", w[0], w[1]);
+    }
+
+    // Sort posterior means to handle label switching
+    let mut means: Vec<f64> = result.components.iter().map(|c| c.mean).collect();
+    means.sort_by(|a, b| a.partial_cmp(b).unwrap());
+    let ground_truth = [-4.0, 0.0, 5.0_f64];
+    for (recovered, truth) in means.iter().zip(&ground_truth) {
+        assert!(
+            (recovered - truth).abs() < 0.8,
+            "Recovered mean {} too far from {}",
+            recovered,
+            truth
+        );
+    }
+
+    // Mixing weights should be near 1/3 each
+    let weights = result.mixing_weights();
+    for w in &weights {
+        assert!(
+            (w - 1.0 / 3.0).abs() < 0.15,
+            "Weight {} too far from 1/3",
+            w
+        );
+    }
 }

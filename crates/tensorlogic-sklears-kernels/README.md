@@ -1,7 +1,7 @@
 # tensorlogic-sklears-kernels
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic-sklears-kernels-orange)](https://crates.io/crates/tensorlogic-sklears-kernels)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-sklears-kernels)
-[![Tests](https://img.shields.io/badge/tests-451%2F451-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/tests-557%2F557-brightgreen)](#)
 [![Production](https://img.shields.io/badge/status-production_ready-success)](#)
 
 **Logic-derived similarity kernels for machine learning integration**
@@ -138,7 +138,7 @@ This crate provides kernel functions that measure similarity based on logical ru
 - Expression simplification and PSD property checking
 
 ### Quality Assurance
-- **451 Tests** - Comprehensive test coverage (100% passing)
+- **557 Tests** - Comprehensive test coverage (100% passing)
 - **Zero Warnings** - Strict code quality enforcement (clippy clean)
 - **Type-Safe API** - Builder pattern with validation
 - **Production Ready** - Battle-tested implementations
@@ -292,7 +292,7 @@ let kernel_matrix = kernel.compute_matrix(&features).unwrap();
 
 ```bash
 cargo nextest run -p tensorlogic-sklears-kernels
-# 451 tests, all passing, zero warnings
+# 557 tests, all passing, zero warnings
 ```
 
 ## Benchmarking
@@ -315,8 +315,8 @@ Apache-2.0
 
 ---
 
-**Status**: Production Ready (v0.1.0 Stable)
-**Last Updated**: 2026-04-06
-**Tests**: 451/451 passing (100%)
+**Status**: Production Ready (v0.1.1 Stable)
+**Last Updated**: 2026-06-09
+**Tests**: 557/557 passing (100%)
 **Benchmarks**: 5 suites, 47 benchmark groups
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

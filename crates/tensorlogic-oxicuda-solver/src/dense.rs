@@ -1,9 +1,13 @@
 //! Dense linear solvers: LU (with partial pivoting), Cholesky, and QR least-squares.
 //!
-//! All routines operate on row-major `f32` slices.  No external linear-algebra
+//! All routines operate on row-major float slices.  No external linear-algebra
 //! crates are required: the CPU paths implement Doolittle LU, Cholesky-Banachiewicz,
 //! and modified Gram-Schmidt QR in plain Rust, which keeps the dependency surface
 //! minimal and avoids the ndarray import that the SciRS2 policy forbids here.
+//!
+//! Generic cores (`lu_core`, `cholesky_core`, `qr_core`) work for any
+//! `scirs2_core::numeric::Float` scalar type.  The public `f32` entry points
+//! simply delegate to those cores, and the `f64` variants do the same.
 //!
 //! # GPU dispatch
 //!
@@ -11,16 +15,21 @@
 //! public entry point calls the corresponding OxiCUDA GPU kernel.  The GPU paths
 //! are scaffolded in Round 5; the full wiring is completed in Round 6.
 
+use scirs2_core::numeric::Float;
+
 use crate::error::SolverError;
 
 // ---------------------------------------------------------------------------
 // Small helpers (dot product, matrix–vector multiply)
 // ---------------------------------------------------------------------------
 
-/// Dot product of two equal-length slices.
+/// Dot product of two equal-length `f32` slices (used by the test-only `mat_vec` helper).
+#[cfg(test)]
 #[inline]
 fn dot(u: &[f32], v: &[f32]) -> f32 {
-    u.iter().zip(v.iter()).map(|(&a, &b)| a * b).sum()
+    u.iter()
+        .zip(v.iter())
+        .fold(0.0f32, |acc, (&a, &b)| acc + a * b)
 }
 
 /// Row-major matrix–vector multiply: y = A * x, where A is m×n.
@@ -35,25 +44,36 @@ fn mat_vec(a: &[f32], m: usize, n: usize, x: &[f32], y: &mut [f32]) {
 }
 
 // ---------------------------------------------------------------------------
-// CPU LU solve (Doolittle decomposition with partial pivoting)
+// Generic helper: convert a numeric literal to T
 // ---------------------------------------------------------------------------
 
-/// Solve the n×n square system `A · x = b` using LU factorisation with partial
-/// (row-wise) pivoting.
+/// Convert a `u64` constant to `T`, returning `SolverError::DimMismatch` on failure.
 ///
-/// # Algorithm
-/// 1. Copy A into a working n×n buffer.
-/// 2. Doolittle factorisation with partial pivoting: at each step k the row
-///    with the largest absolute value in column k (at or below the diagonal)
-///    is swapped to position k, then the sub-column is scaled.
-/// 3. Forward substitution (L · y = Pb).
-/// 4. Back substitution (U · x = y).
+/// This is used internally to write numeric literals inside generic functions.
+#[inline]
+fn cast_val<T: Float>(v: u64, ctx: &'static str) -> Result<T, SolverError> {
+    T::from(v).ok_or_else(|| SolverError::DimMismatch(format!("numeric cast failed: {ctx}")))
+}
+
+// ---------------------------------------------------------------------------
+// Generic LU core (Doolittle decomposition with partial pivoting)
+// ---------------------------------------------------------------------------
+
+/// Generic LU solve for any Float scalar type.
+///
+/// Implements Doolittle factorisation with partial (row-wise) pivoting.
 ///
 /// # Errors
-/// Returns [`SolverError::NotSquare`] if `a.len() != n*n` or `b.len() != n`,
-/// and [`SolverError::Singular`] if a pivot is below machine epsilon.
-pub(crate) fn solve_lu_cpu(a: &[f32], n: usize, b: &[f32]) -> Result<Vec<f32>, SolverError> {
-    // --- dimension checks ---
+/// Returns [`SolverError::NotSquare`], [`SolverError::DimMismatch`], or
+/// [`SolverError::Singular`] as appropriate.
+pub(crate) fn lu_core<T>(a: &[T], n: usize, b: &[T]) -> Result<Vec<T>, SolverError>
+where
+    T: Float
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign,
+{
     if a.len() != n * n {
         let rows = a.len() / n.max(1);
         return Err(SolverError::NotSquare { rows, cols: n });
@@ -68,93 +88,100 @@ pub(crate) fn solve_lu_cpu(a: &[f32], n: usize, b: &[f32]) -> Result<Vec<f32>, S
         return Ok(vec![]);
     }
 
-    // --- working copies ---
-    let mut lu: Vec<f32> = a.to_vec(); // row-major LU in-place
-    let mut perm: Vec<usize> = (0..n).collect(); // pivot permutation
+    let eps_scale: T = cast_val(64, "eps_scale")?;
+    let threshold = T::epsilon() * eps_scale;
 
-    // --- Doolittle with partial pivoting ---
+    let mut lu: Vec<T> = a.to_vec();
+    let mut perm: Vec<usize> = (0..n).collect();
+
     for k in 0..n {
-        // find pivot row
-        let pivot_row = (k..n)
-            .max_by(|&r1, &r2| {
-                lu[r1 * n + k]
-                    .abs()
-                    .partial_cmp(&lu[r2 * n + k].abs())
-                    .unwrap_or(std::cmp::Ordering::Equal)
-            })
-            .unwrap_or(k);
+        // find pivot row (row with largest absolute value in column k from row k onward)
+        let mut pivot_row = k;
+        let mut pivot_abs = lu[k * n + k].abs();
+        for r in (k + 1)..n {
+            let val_abs = lu[r * n + k].abs();
+            if val_abs > pivot_abs {
+                pivot_abs = val_abs;
+                pivot_row = r;
+            }
+        }
 
-        if lu[pivot_row * n + k].abs() < f32::EPSILON * 64.0 {
+        if pivot_abs < threshold {
             return Err(SolverError::Singular);
         }
 
         if pivot_row != k {
-            // swap rows k and pivot_row in lu
             for j in 0..n {
                 lu.swap(k * n + j, pivot_row * n + j);
             }
             perm.swap(k, pivot_row);
         }
 
-        let pivot_inv = 1.0 / lu[k * n + k];
-        // update sub-column (multipliers stored below diagonal)
+        let one: T = cast_val(1, "one")?;
+        let pivot_inv = one / lu[k * n + k];
         for i in (k + 1)..n {
             lu[i * n + k] *= pivot_inv;
-            // update remaining submatrix
+            let mult = lu[i * n + k];
             for j in (k + 1)..n {
-                let mult = lu[i * n + k];
-                lu[i * n + j] -= mult * lu[k * n + j];
+                let kj_val = lu[k * n + j];
+                lu[i * n + j] -= mult * kj_val;
             }
         }
     }
 
-    // --- apply permutation to b ---
-    let mut pb = vec![0.0f32; n];
-    for i in 0..n {
-        pb[i] = b[perm[i]];
-    }
+    // apply permutation to b
+    let mut pb: Vec<T> = (0..n).map(|i| b[perm[i]]).collect();
 
-    // --- forward substitution: L · y = Pb (L has implicit unit diagonal) ---
-    let mut y = pb;
+    // forward substitution: L · y = Pb (unit lower triangular)
     for i in 1..n {
         for j in 0..i {
-            y[i] -= lu[i * n + j] * y[j];
+            let lij = lu[i * n + j];
+            let yj = pb[j];
+            pb[i] -= lij * yj;
         }
     }
 
-    // --- back substitution: U · x = y ---
-    let mut x = y;
+    // back substitution: U · x = y
+    let mut x = pb;
     for i in (0..n).rev() {
         for j in (i + 1)..n {
-            x[i] -= lu[i * n + j] * x[j];
+            let uij = lu[i * n + j];
+            let xj = x[j];
+            x[i] -= uij * xj;
         }
         let u_ii = lu[i * n + i];
-        if u_ii.abs() < f32::EPSILON * 64.0 {
+        if u_ii.abs() < threshold {
             return Err(SolverError::Singular);
         }
-        x[i] /= u_ii;
+        let u_ii_inv = {
+            let one: T = cast_val(1, "u_ii_inv")?;
+            one / u_ii
+        };
+        x[i] *= u_ii_inv;
     }
 
     Ok(x)
 }
 
 // ---------------------------------------------------------------------------
-// CPU Cholesky solve (Banachiewicz decomposition, SPD matrices only)
+// Generic Cholesky core (Banachiewicz decomposition, SPD matrices only)
 // ---------------------------------------------------------------------------
 
-/// Solve the n×n symmetric positive-definite system `A · x = b` using the
-/// Cholesky–Banachiewicz decomposition `A = L · Lᵀ`.
+/// Generic Cholesky solve for any Float scalar type.
 ///
-/// # Algorithm
-/// 1. Compute lower-triangular L such that A = L Lᵀ, using the column-wise
-///    Banachiewicz recurrence.
-/// 2. Forward substitution: L · y = b.
-/// 3. Backward substitution: Lᵀ · x = y.
+/// Computes the Cholesky–Banachiewicz decomposition `A = L · Lᵀ` and solves
+/// by forward and backward substitution.
 ///
 /// # Errors
-/// Returns [`SolverError::Singular`] if a diagonal entry of L would be
-/// non-positive (i.e. the matrix is not positive-definite).
-pub(crate) fn solve_cholesky_cpu(a: &[f32], n: usize, b: &[f32]) -> Result<Vec<f32>, SolverError> {
+/// Returns [`SolverError::Singular`] if A is not positive-definite.
+pub(crate) fn cholesky_core<T>(a: &[T], n: usize, b: &[T]) -> Result<Vec<T>, SolverError>
+where
+    T: Float
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign,
+{
     if a.len() != n * n {
         let rows = a.len() / n.max(1);
         return Err(SolverError::NotSquare { rows, cols: n });
@@ -169,82 +196,77 @@ pub(crate) fn solve_cholesky_cpu(a: &[f32], n: usize, b: &[f32]) -> Result<Vec<f
         return Ok(vec![]);
     }
 
-    // l[i][j] stored row-major; only the lower-triangular part is filled.
-    let mut l = vec![0.0f32; n * n];
+    let mut l: Vec<T> = vec![T::zero(); n * n];
 
     for j in 0..n {
-        // diagonal element
         let mut diag = a[j * n + j];
         for k in 0..j {
             let l_jk = l[j * n + k];
             diag -= l_jk * l_jk;
         }
-        if diag <= 0.0 {
+        if diag <= T::zero() {
             return Err(SolverError::Singular);
         }
         l[j * n + j] = diag.sqrt();
 
         let l_jj = l[j * n + j];
-        // sub-diagonal elements in column j
+        let one: T = cast_val(1, "chol_one")?;
+        let l_jj_inv = one / l_jj;
         for i in (j + 1)..n {
             let mut val = a[i * n + j];
             for k in 0..j {
-                val -= l[i * n + k] * l[j * n + k];
+                let lik = l[i * n + k];
+                let ljk = l[j * n + k];
+                val -= lik * ljk;
             }
-            l[i * n + j] = val / l_jj;
+            l[i * n + j] = val * l_jj_inv;
         }
     }
 
     // forward substitution: L · y = b
-    let mut y = vec![0.0f32; n];
+    let mut y: Vec<T> = vec![T::zero(); n];
     for i in 0..n {
         let mut sum = b[i];
         for j in 0..i {
             sum -= l[i * n + j] * y[j];
         }
-        y[i] = sum / l[i * n + i];
+        let one: T = cast_val(1, "chol_fwd")?;
+        y[i] = sum * (one / l[i * n + i]);
     }
 
     // backward substitution: Lᵀ · x = y
-    // Lᵀ[i][j] = L[j][i], so element (i, j) of Lᵀ (j >= i) is L[j * n + i].
-    let mut x = vec![0.0f32; n];
+    let mut x: Vec<T> = vec![T::zero(); n];
     for i in (0..n).rev() {
         let mut sum = y[i];
         for j in (i + 1)..n {
             sum -= l[j * n + i] * x[j];
         }
-        x[i] = sum / l[i * n + i];
+        let one: T = cast_val(1, "chol_bwd")?;
+        x[i] = sum * (one / l[i * n + i]);
     }
 
     Ok(x)
 }
 
 // ---------------------------------------------------------------------------
-// CPU QR least-squares (modified Gram-Schmidt orthogonalisation)
+// Generic QR core (modified Gram-Schmidt orthogonalisation)
 // ---------------------------------------------------------------------------
 
-/// Compute the minimum-norm least-squares solution to the (possibly
+/// Generic QR least-squares solve for any Float scalar type.
+///
+/// Computes the minimum-norm least-squares solution to the (possibly
 /// overdetermined) m×n system `A · x ≈ b` using modified Gram-Schmidt QR.
 ///
-/// When m < n the system is underdetermined and the first n columns of Q span
-/// the column space; the algorithm still produces a valid answer for the
-/// determined part (Gram-Schmidt stops at column min(m, n)).
-///
-/// # Algorithm
-/// 1. Modified Gram-Schmidt: compute Q (m×k) and R (k×n) where k = min(m, n).
-/// 2. Form `Qᵀ · b` (the projected right-hand side, length k).
-/// 3. Back-substitution on the k×n upper-triangular system R̂ · x̂ = Qᵀb,
-///    where R̂ is the leading k×k part of R (assuming rank k).
-///
 /// # Errors
-/// Returns [`SolverError::Singular`] when R has a near-zero diagonal (rank
-/// deficient system).
-pub(crate) fn solve_qr_lstsq_cpu(
-    a: &[f32],
-    m: usize,
-    n: usize,
-    b: &[f32],
-) -> Result<Vec<f32>, SolverError> {
+/// Returns [`SolverError::Singular`] when the matrix is rank-deficient.
+pub(crate) fn qr_core<T>(a: &[T], m: usize, n: usize, b: &[T]) -> Result<Vec<T>, SolverError>
+where
+    T: Float
+        + std::ops::AddAssign
+        + std::ops::SubAssign
+        + std::ops::MulAssign
+        + std::ops::DivAssign,
+{
     if a.len() != m * n {
         return Err(SolverError::DimMismatch(format!(
             "A has {} elements but m={m}, n={n} implies {}",
@@ -259,45 +281,40 @@ pub(crate) fn solve_qr_lstsq_cpu(
         )));
     }
     if n == 0 || m == 0 {
-        return Ok(vec![0.0f32; n]);
+        return Ok(vec![T::zero(); n]);
     }
 
-    let k = m.min(n); // rank at most min(m, n)
+    let eps_scale: T = cast_val(64, "qr_eps_scale")?;
+    let threshold = T::epsilon() * eps_scale;
 
-    // Q stored as a Vec of column vectors (column-major): q_cols[j] has length m.
-    // R stored row-major (k × n); only the upper-triangular k×k block matters for back-sub.
-    let mut q_cols: Vec<Vec<f32>> = Vec::with_capacity(k);
-    let mut r = vec![0.0f32; k * n]; // row-major k×n
+    let k = m.min(n);
 
-    // Working matrix: columns of A as mutable Vec<f32> each of length m.
-    // Modified Gram-Schmidt operates directly on these — no separate `v` clone needed.
-    // After step j, a_cols[j] holds the orthogonal (not yet normalised) basis vector,
-    // and a_cols[jj] (jj > j) have been deflated by all q_i computed so far.
-    let mut a_cols: Vec<Vec<f32>> = (0..n)
+    let mut q_cols: Vec<Vec<T>> = Vec::with_capacity(k);
+    let mut r: Vec<T> = vec![T::zero(); k * n];
+
+    let mut a_cols: Vec<Vec<T>> = (0..n)
         .map(|j| (0..m).map(|i| a[i * n + j]).collect())
         .collect();
 
+    let one: T = cast_val(1, "qr_one")?;
+
     for j in 0..k {
-        // Compute the diagonal R[j,j] = ||a_cols[j]||.
-        let norm_j = dot(&a_cols[j], &a_cols[j]).sqrt();
-        if norm_j < f32::EPSILON * 64.0 {
+        let norm_sq = a_cols[j].iter().fold(T::zero(), |acc, &v| acc + v * v);
+        let norm_j = norm_sq.sqrt();
+        if norm_j < threshold {
             return Err(SolverError::Singular);
         }
         r[j * n + j] = norm_j;
 
-        // Normalise column j to get q_j.
-        let inv_norm = 1.0 / norm_j;
-        let q_j: Vec<f32> = a_cols[j].iter().map(|&v| v * inv_norm).collect();
+        let inv_norm = one / norm_j;
+        let q_j: Vec<T> = a_cols[j].iter().map(|&v| v * inv_norm).collect();
 
-        // Project and deflate all subsequent columns against q_j:
-        //   R[j, jj] = q_j · a_cols[jj]   (off-diagonal of R, row j)
-        //   a_cols[jj] -= R[j,jj] * q_j   (orthogonalise future columns)
-        // This is the "modified" step that gives MGS better numerical properties
-        // than classical GS (which computes all projections against the original column).
         for jj in (j + 1)..n {
-            let r_j_jj = dot(&q_j, &a_cols[jj]);
+            let r_j_jj = q_j
+                .iter()
+                .zip(a_cols[jj].iter())
+                .fold(T::zero(), |acc, (&qi, &av)| acc + qi * av);
             r[j * n + jj] = r_j_jj;
-            // deflate in-place to avoid a temporary Vec allocation
             for l in 0..m {
                 let subtract = q_j[l] * r_j_jj;
                 a_cols[jj][l] -= subtract;
@@ -307,28 +324,108 @@ pub(crate) fn solve_qr_lstsq_cpu(
         q_cols.push(q_j);
     }
 
-    // Qᵀ · b  (length k)
-    let mut qtb = vec![0.0f32; k];
+    // Qᵀ · b
+    let mut qtb: Vec<T> = vec![T::zero(); k];
     for (i, q_i) in q_cols.iter().enumerate() {
-        qtb[i] = dot(q_i, b);
+        qtb[i] = q_i
+            .iter()
+            .zip(b.iter())
+            .fold(T::zero(), |acc, (&qi, &bi)| acc + qi * bi);
     }
 
-    // Back-substitution on the k×k upper-triangular leading block of R.
-    // Result x has length n; entries beyond k are set to 0 (underdetermined case).
-    let mut x = vec![0.0f32; n];
+    // back-substitution on the k×k upper-triangular leading block of R
+    let mut x: Vec<T> = vec![T::zero(); n];
     for i in (0..k).rev() {
         let mut sum = qtb[i];
         for j in (i + 1)..k {
             sum -= r[i * n + j] * x[j];
         }
         let r_ii = r[i * n + i];
-        if r_ii.abs() < f32::EPSILON * 64.0 {
+        if r_ii.abs() < threshold {
             return Err(SolverError::Singular);
         }
-        x[i] = sum / r_ii;
+        x[i] = sum * (one / r_ii);
     }
 
     Ok(x)
+}
+
+// ---------------------------------------------------------------------------
+// CPU LU solve — f32 and f64 entry points
+// ---------------------------------------------------------------------------
+
+/// Solve the n×n square system `A · x = b` using LU factorisation with partial
+/// (row-wise) pivoting (f32 variant).
+///
+/// # Algorithm
+/// Doolittle factorisation with partial pivoting, then forward and backward
+/// substitution.
+///
+/// # Errors
+/// Returns [`SolverError::NotSquare`] if `a.len() != n*n` or `b.len() != n`,
+/// and [`SolverError::Singular`] if a pivot is below machine epsilon.
+pub(crate) fn solve_lu_cpu(a: &[f32], n: usize, b: &[f32]) -> Result<Vec<f32>, SolverError> {
+    lu_core::<f32>(a, n, b)
+}
+
+/// f64 variant of the LU solver.
+///
+/// Delegates to [`lu_core::<f64>`].
+pub(crate) fn solve_lu_cpu_f64(a: &[f64], n: usize, b: &[f64]) -> Result<Vec<f64>, SolverError> {
+    lu_core::<f64>(a, n, b)
+}
+
+// ---------------------------------------------------------------------------
+// CPU Cholesky solve — f32 and f64 entry points
+// ---------------------------------------------------------------------------
+
+/// Solve the n×n SPD system `A · x = b` using Cholesky–Banachiewicz (f32 variant).
+///
+/// # Errors
+/// Returns [`SolverError::Singular`] if A is not positive-definite.
+pub(crate) fn solve_cholesky_cpu(a: &[f32], n: usize, b: &[f32]) -> Result<Vec<f32>, SolverError> {
+    cholesky_core::<f32>(a, n, b)
+}
+
+/// f64 variant of the Cholesky solver.
+///
+/// Delegates to [`cholesky_core::<f64>`].
+pub(crate) fn solve_cholesky_cpu_f64(
+    a: &[f64],
+    n: usize,
+    b: &[f64],
+) -> Result<Vec<f64>, SolverError> {
+    cholesky_core::<f64>(a, n, b)
+}
+
+// ---------------------------------------------------------------------------
+// CPU QR least-squares — f32 and f64 entry points
+// ---------------------------------------------------------------------------
+
+/// Compute the minimum-norm least-squares solution to the (possibly
+/// overdetermined) m×n system `A · x ≈ b` using modified Gram-Schmidt QR (f32 variant).
+///
+/// # Errors
+/// Returns [`SolverError::Singular`] when A is rank-deficient.
+pub(crate) fn solve_qr_lstsq_cpu(
+    a: &[f32],
+    m: usize,
+    n: usize,
+    b: &[f32],
+) -> Result<Vec<f32>, SolverError> {
+    qr_core::<f32>(a, m, n, b)
+}
+
+/// f64 variant of the QR least-squares solver.
+///
+/// Delegates to [`qr_core::<f64>`].
+pub(crate) fn solve_qr_lstsq_cpu_f64(
+    a: &[f64],
+    m: usize,
+    n: usize,
+    b: &[f64],
+) -> Result<Vec<f64>, SolverError> {
+    qr_core::<f64>(a, m, n, b)
 }
 
 // ---------------------------------------------------------------------------

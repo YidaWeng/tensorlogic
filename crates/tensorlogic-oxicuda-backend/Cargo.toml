@@ -26,11 +26,11 @@ native-broadcast = ["gpu"]
 tensorlogic-infer.workspace = true
 tensorlogic-ir.workspace = true
 thiserror.workspace = true
-oxicuda-backend = { version = "0.1.4", optional = true }
-oxicuda-blas = { version = "0.1.4", optional = true }
-oxicuda-driver = { version = "0.1.4", optional = true }
-oxicuda-memory = { version = "0.1.4", optional = true }
-oxicuda-fft = { version = "0.1.4", optional = true }
+oxicuda-backend = { workspace = true, optional = true }
+oxicuda-blas    = { workspace = true, optional = true }
+oxicuda-driver  = { workspace = true, optional = true }
+oxicuda-memory  = { workspace = true, optional = true }
+oxicuda-fft     = { workspace = true, optional = true }
 
 [[bench]]
 name = "gpu_vs_cpu_matmul"

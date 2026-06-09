@@ -5,107 +5,41 @@ All notable changes to TensorLogic will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [0.1.1] - 2026-06-09
 
-### Added
+### Added — Round 7 (2026-06-02)
 
-- **Longformer-style sparse attention** (tensorlogic-trustformers): numerical sliding-window + global-token attention per Beltagy et al. (2020). `LongformerConfig` with window_size / global_token_indices / num_heads / head_dim / causal / dropout, `LongformerMask` dense boolean mask with `build_mask()` and sparsity metrics, `LongformerAttention` multi-head forward pass with pre-built or on-the-fly mask, `SparseAttentionError` with thiserror bridging. Original graph-building types renamed to `SparseAttentionGraph` / `SparseAttentionGraphConfig`. 12 unit tests + 4 integration tests.
-- **LoRA adapter** (tensorlogic-train): Low-Rank Adaptation (Hu et al., 2021) for parameter-efficient fine-tuning. `LoraLayer` with A/B decomposition, merge/unmerge, effective_weight, dropout, compression ratio. `LoraAdapter` multi-layer manager with summary statistics. `LoraConfig` (rank, alpha, dropout, target_modules, seed). `LoraError` with InvalidRank, DimensionMismatch, MergeError, FrozenWeights. 12 unit tests + 2 integration tests.
-- **`tensorlogic-oxicuda-backend` SGEMM wiring**: Real GPU matmul via `oxicuda-blas` SGEMM. `GpuState` manages `Arc<Context>` + `Stream` + `BlasHandle`; `matmul_ij_jk_ik` performs host->device copy, `gemm_api::gemm` dispatch, stream sync, device->host readback. Safe `u32` dimension casts with `DimensionOverflow` error. `From<CudaError>` and `From<BlasError>` conversions. Integration test (`tests/gpu_sgemm.rs`) gated behind `TENSORLOGIC_GPU_TESTS=1`.
-- **`tensorlogic-oxicuda-backend`** (new crate): Feature-gated OxiCUDA GPU backend exposing `OxiCudaExecutor` (implements `TlExecutor`). Default build is pure Rust with no GPU dependency; `--features gpu` pulls in `oxicuda-backend` + `oxicuda-blas` from crates.io. MVP supports 2D matmul einsum (`ij,jk->ik`); other ops return `OxiCudaBackendError::Unsupported`. Runtime requires only the NVIDIA driver — no CUDA SDK / nvcc / C/C++ toolchain. Supersedes the prior "blocked on SciRS2 GPU stabilization" status.
-- Partial error recovery (tensorlogic-compiler): TolerantCompiler with Diagnostic / DiagnosticCollector and configurable RecoveryStrategy (SkipOnError / SkipOnFatal / AbortOnAny); compiles well-formed expressions around non-fatal errors instead of aborting the whole program.
-- Speculative decoding (tensorlogic-trustformers): model-level speculative decoding with DraftModel + TargetModel traits, rejection sampling with adjusted resampling, empirical-distribution-preserving acceptance — implements Leviathan et al. (2023).
-- Rule-guided sampling decoder (tensorlogic-trustformers): TLExpr-constrained beam search with hard-masking and soft-penalty modes, integrating tensorlogic-infer::BeamSearchDecoder.
-- Learned kernel composition (tensorlogic-sklears-kernels): differentiable mixture over a kernel library with trainable softmax-gated weights, gradient ∂K_mix/∂w_i = p_i·(K_i - K_mix).
-- Deep Kernel Learning (tensorlogic-sklears-kernels): DKL wraps a base Kernel with an MLP feature extractor K_DKL(x,y) = K_base(g_θ(x), g_θ(y)); Xavier init via SciRS2-Core RNG; ReLU/Tanh/Identity activations.
-- Variational Message Passing (tensorlogic-quantrs-hooks v0.2.0 research preview): coordinate-ascent VMP engine for conjugate-exponential families with Gaussian (mean-unknown, precision-known), Categorical, and Dirichlet distributions, four factor relationships (GaussianObservation, GaussianStep, DirichletCategorical, CategoricalObservation), closed-form KL helpers, monotone ELBO with divergence detection, and optional FactorGraph validation via `VariationalMessagePassing::with_graph`. Local ln_gamma/digamma keeps the module scirs2-special free. 30 new tests covering single-variable conjugacy, Gaussian chains, Dirichlet-Categorical counts, ELBO monotonicity, and BayesianNetwork integration. Reference: Winn & Bishop (2005), JMLR 6, 661-694.
-- Expanded VMP family catalogue (tensorlogic-quantrs-hooks): Gamma (shape-rate) and Beta (alpha-beta) distributions with ExponentialFamily trait, closed-form KL divergences, natural-parameter round-trips, Gamma-Poisson and Beta-Bernoulli conjugate posterior updates, and Gamma-Poisson / Beta-Bernoulli end-to-end integration tests. 17 new unit tests + 2 integration tests.
-- Kernel PCA (tensorlogic-sklears-kernels): full Scholkopf-Smola-Muller (1998) implementation with double-centering, scirs2-linalg eigh-based eigendecomposition, fit/transform/fit_transform API generic over any Kernel + Clone + 'static, explained-variance-ratio, out-of-sample projection via centered test-kernel path. 8 unit tests + 2 integration tests (Swiss-roll RBF embedding, collinear linear-kernel dominance).
-- Numerical Mixture-of-Experts layer (tensorlogic-trustformers): research-preview MoELayer with TopKGate (xavier_init / from_weights), LinearExpert, top-k softmax gating, Switch-Transformer capacity-factor dropping, importance_loss / load_loss / combined_aux_loss auxiliary losses, and BatchGatingStats. 12 unit tests + 2 integration tests (4-expert batch-32 routing, capacity-factor overflow).
+- **Exact LTL Next (X) operator** (tensorlogic-compiler): `compile_next` now emits a `temporal_next:<axis>` unary node dispatched via `tensorlogic_scirs_backend::temporal_ops::shift_next`; previously returned an unimplemented error.
+- **Exact LTL Until (U) operator** (tensorlogic-compiler): `compile_until` now emits a `temporal_until:<tag>:<axis>` binary node; previously returned an unimplemented error.
+- **Exact LTL Release (R), WeakUntil (W), StrongRelease (M) operators** (tensorlogic-compiler + tensorlogic-scirs-backend): replaced three mathematically incorrect single-step approximations with exact finite-trace backward-scan recurrences. Unified `temporal_binary_scan` / `temporal_binary_scan_vjp` generalise the `until_scan` from Round 6. `OUTER`/`INNER` parametrised over `TemporalBinaryForm` × `UntilSemantics`; `boundary_val` ∈ {0.0, 1.0} distinguishes strong/weak variants.
+- **Temporal ops backend** (tensorlogic-scirs-backend): new `temporal_ops.rs` module exposing `UntilSemantics` (MaxMin / ProbSumProduct), `TemporalBinaryForm` (Until / WeakUntil / Release / StrongRelease), `shift_next`, `shift_prev`, `temporal_binary_scan`, `temporal_binary_scan_vjp`. +16 tests (10 unit + 6 integration).
+- **OxiCUDA solver f64 + PCG + Thomas algorithm** (tensorlogic-oxicuda-solver): generic `solve_lu_f64`, `solve_cholesky_f64`, `solve_qr_lstsq_f64`, `cg_solve_f64`; preconditioned CG (`pcg_solve` / `pcg_solve_f64`) with `Precond::Jacobi` and `Precond::IncompleteCholesky`; `solve_tridiagonal` / `solve_tridiagonal_f64` via Thomas LU (new `banded.rs`). 12 new integration tests; 47 total in crate.
+- **Generic OxiCUDA sparse: SparseCsr<T> + SparseCsc<T>** (tensorlogic-oxicuda-sparse): `SparseCsr<T>` generalised over `T: Float` (backward-compatible `f32` default); new `SparseCsc<T>` (column-histogram build, `csc_spmv`, `to_csr`, `from_dense`); `SparseCsr::transpose()`, `to_csc()`, `from_dense()`; `spmv_f64`, `spmm_f64`, `spmv_batched`. 14 new tests; 27 total in crate.
+- **OxiCUDA RNG f64 + streaming** (tensorlogic-oxicuda-rng): `uniform_f64` / `normal_f64` using 52-bit mantissa extraction + Box-Muller on f64; streaming `fill_uniform_chunked` / `fill_uniform_chunked_f64` / `fill_normal_chunked` callbacks; CPU builds now auto-derive `Sync` (PhantomData guard moved behind `#[cfg(feature="gpu")]`). 12 new integration tests; 60 total in crate.
 
-#### Neurosymbolic AI Enhancements (2026-01-02)
-- **ToRSh tensor interoperability** (pure Rust PyTorch alternative)
-  - Bidirectional conversion: TensorLogic ↔ ToRSh (f32/f64)
-  - torsh_interop.rs module (462 lines, 7 tests, 100% passing)
-  - Feature-gated: `--features torsh` (optional dependency)
-  - Lossless roundtrip for f64 precision
-  - Device validation (CPU enforced, GPU future-ready)
-- **Advanced neurosymbolic AI examples** (557 lines total)
-  - knowledge_graph_reasoning.rs (267 lines, 4 scenarios)
-    - Hybrid logic-neural reasoning for knowledge completion
-    - Demonstrates transitivity, symmetry rules with neural embeddings
-    - Configurable α-weighted hybrid scoring
-    - Constraint validation via bidirectional conversion
-  - constrained_neural_optimization.rs (290 lines, 6 parts)
-    - Enforces logical constraints on neural network outputs
-    - Mutual exclusivity and hierarchical rules
-    - Automatic violation detection and guided correction
-    - Constraint loss computation for gradient-based training
-  - torsh_integration.rs (150 lines, 4 scenarios) - Basic interop demo
-- **Fuzzing infrastructure** (cargo-fuzz ready, requires nightly)
-  - tensorlogic-ir fuzz targets (318 lines total)
-  - fuzz_tlexpr: TLExpr construction and serialization robustness
-  - fuzz_einsum_graph: EinsumGraph operations testing
-  - fuzz_optimizations: Optimization pass correctness verification
-  - Independent workspace configuration
-- **ToRSh interoperability benchmarks** (249 lines, 8 groups)
-  - Bidirectional conversion benchmarks (TL ↔ ToRSh)
-  - Type conversion benchmarks (f32 ↔ f64)
-  - Roundtrip conversion performance
-  - Matrix conversion (2D tensors, 10×10 to 200×200)
-  - Hybrid workflow benchmark (realistic neurosymbolic AI scenario)
-  - Performance measurements across multiple sizes (10-10,000 elements)
-  - Statistical analysis with criterion
+### Added — GPU Autodiff + Multi-output Kernels (2026-05-29)
 
-#### Dependency Upgrades
-- **SkleaRS upgraded to 0.1.0-beta.1** (from alpha.2)
-  - sklears-core: 0.1.0-alpha.2 → 0.1.0-beta.1 (from crates.io)
-  - sklears-kernel-approximation: 0.1.0-alpha.2 → 0.1.0-beta.1 (from crates.io)
-  - Eliminated local path dependencies
-  - All 4,363 tests passing with new dependencies
+- **Tape-based autodiff for OxiCudaExecutor** (tensorlogic-oxicuda-backend): `TlAutodiff` implementation recording a tape during `forward` and replaying it in reverse for `backward`. Supports Matmul2D, BatchedMatmul3D, Identity, Unary, Binary, and Reduce ops. `OxiCudaTape` with `gradients: HashMap<usize, OxiCudaTensor>` exposed for inspection. Optional `native-broadcast` feature routes gradient broadcasts through GPU kernels.
+- **Multi-output Gaussian Processes** (tensorlogic-sklears-kernels): new `multi_output/` module — `MultiOutputKernel` trait (`compute_block`, `block_gram_matrix`), ICM (Intrinsic Coregionalization Model), LMC (Linear Model of Coregionalization), VVGP (vector-valued GP regression). Integration tests for Swiss-roll and block-structure scenarios.
+- **Variational Bayes Gaussian Mixture** (tensorlogic-quantrs-hooks): new `vmp/mixture.rs` — `VariationalGaussianMixture` implementing the VBEM algorithm (Bishop 2006 §10.2 / Attias 1999) with `VgmmConfig`, Dirichlet-prior mixing proportions, Gaussian-Normal component means, coordinate-ascent E-step / M-step, ELBO monitoring.
 
-#### Policy Compliance
-- **Oxicode migration** (COOLJAPAN policy compliance)
-  - Replaced bincode with oxicode 0.1.1
-  - Updated 4 serialization points in tensorlogic-py
-  - Zero breaking changes via serde compatibility layer
+### Added — Round 8 (2026-06-03)
+
+- **Probabilistic execution** (tensorlogic-scirs-backend): new `probabilistic/` sub-module — Monte Carlo samplers (`sample_bernoulli`, `sample_uniform`, `sample_normal`, `sample_categorical` via Gumbel-max trick), `mc_integrate`; `MonteCarloEstimator` with mean/variance/percentile credible intervals; `predictive_entropy`, `bald_epistemic_uncertainty`; `VariationalInference::fit` — mean-field Gaussian VI with reparameterization trick + Adam SGA maximising the ELBO. +15 tests; 641 total in crate.
+- **SPARQL tensor evaluation** (tensorlogic-oxirs-bridge): new `InternedGraph` — O(1) term dictionary, predicate-indexed adjacency, parallel N-Triples bulk loading via `std::thread::scope`, `from_rdf_triples` / `into_quad_store`; new `TensorBgpEvaluator` evaluates conjunctive SELECT/BGP queries as boolean tensor contractions over `EinsumGraph` + `Scirs2Exec::forward`, decoding non-zero entries back to variable bindings. +21 tests (12 unit + 9 integration); 541 total in crate.
+- **Neural Architecture Search** (tensorlogic-train): new `nas/` module — `ArchSearchSpace` / `Architecture` / `LayerSpec` with `param_count()` + `HyperparamConfig` interop; `ArchSampler` with 4-operator mutation (change op / width / activation, add/remove layer); `RegularizedEvolution` (Real et al. 2019 aging evolution with tournament selection and oldest eviction, ask/tell API); `RandomArchSearch` baseline; `NasResult`. +15 tests; 741 total in crate.
+- **SVM via SMO** (tensorlogic-sklears-kernels): new `svm/` module — `SvcModel` / `SvcFitted` (C-SVM binary + one-vs-rest multiclass); `SvrModel` / `SvrFitted` (ε-SVR via 2N-variable augmented dual); `smo_svc` implementing Platt 1998 SMO with Keerthi two-loop heuristics, error cache, KKT convergence guard. All built on `Arc<dyn Kernel>`. +24 tests; 557 total in crate.
 
 ### Changed
-- **Test count**: 4,287 → 4,363 tests (+76 new tests)
-  - ToRSh interop tests: 7 tests (100% passing)
-  - Property tests: Existing 700-line proptest suite
-  - 100% pass rate maintained across all additions
-- **Examples count**: 15 → 17 Rust examples (+2 neurosymbolic AI)
-- **Benchmark suites**: 9 → 10 files (+1 ToRSh interop benchmarks)
-- **Code quality**: Zero deprecated warnings (fixed into_raw_vec usage)
-- **Documentation**: Enhanced README with neurosymbolic AI section
 
-### Changed — 2026-04-15
-- **Binary rename** — `tensorlogic-cli` `[[bin]]` renamed from `tensorlogic` to `tensorlogic-cli` to resolve the doc-build name collision with the meta crate (Cargo issue #6313). README shell-example invocations updated (~68 lines) to match.
-- **File splits (v0.1.x refactoring policy)** — Ten oversize source files (1524–1789 lines) refactored into submodule directories with every submodule under 500 lines:
-  - `tensorlogic-adapters`: `database.rs` → `database/` (7 files)
-  - `tensorlogic-compiler`: `dead_code.rs` → `dead_code/` (11 files), `partial_eval.rs` → `partial_eval/` (11 files), `symbolic_diff.rs` → `symbolic_diff/` (10 files)
-  - `tensorlogic-infer`: `causal.rs` → `causal/` (6 files)
-  - `tensorlogic-ir`: `resolution.rs` → `resolution/` (9 files)
-  - `tensorlogic-oxirs-bridge`: `sparql_gen.rs` → `sparql_gen/` (8 files)
-  - `tensorlogic-quantrs-hooks`: `loopy_bp.rs` → `loopy_bp/` (9 files)
-  - `tensorlogic-train`: `hyperparameter.rs` → `hyperparameter/` (9 files), `loss.rs` → `loss/` (18 files)
-  Public APIs preserved via `pub use` re-exports from each new `mod.rs`. All 6,407 tests still pass.
-
-### Fixed — 2026-04-15
-- Eliminated one `.unwrap()` in `loopy_bp` and one fragile indexed-`HashMap` access during the `loopy_bp` split (no-unwrap policy).
-
-### Status
-- **4,363/4,363 tests passing (100%)** - Comprehensive coverage
-- **Zero compiler warnings, zero clippy warnings**
-- **Production-ready neurosymbolic AI workflows**
-- **Pure Rust ecosystem compliance** (no C++ dependencies by default)
-
-### Planned
-- GPU backend support
-- Additional fuzzy logic variants
-- Execute fuzzing on nightly Rust
-- Reference comparisons against symbolic logic solvers
+- `scirs2-{core,linalg,autograd,optimize,sparse}` updated 0.4.2 → 0.5.0
+- `oxiarc-deflate` updated 0.2.7 → 0.3.3
+- `quantrs2-{core,circuit,sim}` updated 0.1.3 → 0.2.0
+- `oxirs-{core,gql,ttl}` updated 0.2.4 → 0.3.1
+- `oxicuda-{backend,blas,driver,fft,memory,rand,solver,sparse}` updated to 0.1.8; `oxicuda-backend` and `oxicuda-fft` added as new workspace dependencies
+- `oxicode` updated 0.2 → 0.2.4
+- `sklears-{core,kernel-approximation}` updated 0.1.0 → 0.1.1
+- Test count: 6,407 → 7,178 (+771 new tests, 100% pass rate; 37 GPU-only tests skipped)
 
 ## [0.1.0] - 2026-04-27
 
@@ -485,3 +419,5 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Contributing guidelines
 - Tutorial notebooks
 - 15+ examples (Rust + Python)
+
+[0.1.1]: https://github.com/cool-japan/tensorlogic/releases/tag/v0.1.1

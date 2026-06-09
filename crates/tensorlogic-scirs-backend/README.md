@@ -844,7 +844,7 @@ Apache-2.0
 
 ---
 
-**Status**: Stable (v0.1.0)
-**Last Updated**: 2026-04-06
+**Status**: Stable (v0.1.1)
+**Last Updated**: 2026-06-09
 **Tests**: 669/669 passing (100%)
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

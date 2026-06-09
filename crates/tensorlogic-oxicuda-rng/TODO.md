@@ -1,6 +1,6 @@
 # tensorlogic-oxicuda-rng — TODO
 
-**Status**: Alpha | **Version**: 0.1.0 | **Last Updated**: 2026-04-27
+**Status**: Alpha | **Version**: 0.1.1 | **Last Updated**: 2026-06-09
 
 ## Completed
 
@@ -14,9 +14,12 @@
 - [x] Pure-Rust CPU path (default features)
 - [x] GPU stub path (feature-gated)
 
+## Completed (Round 7 Track D)
+
+- [x] `uniform_f64` / `normal_f64` — f64 variants with 52-bit mantissa precision
+- [x] Streaming API for large buffers (`fill_uniform_chunked`, `fill_uniform_chunked_f64`, `fill_normal_chunked`)
+- [x] `RngEngine: Send + Sync` on CPU path; GPU path remains `Send + !Sync`
+
 ## Planned
 
-- [ ] `uniform_f64` / `normal_f64` — f64 variants
 - [ ] GPU path wired to real `oxicuda-rand` kernel (currently stubbed)
-- [ ] Streaming API for large buffers
-- [ ] `RngEngine: Send + Sync` for parallel workloads (currently `Send + !Sync`)

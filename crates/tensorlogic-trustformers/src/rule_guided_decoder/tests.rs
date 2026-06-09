@@ -192,9 +192,13 @@ fn constraint_reports_source_and_support_flag() {
     assert!(rc.is_supported());
     assert_eq!(rc.source(), &expr);
 
-    // An unsupported expression still compiles but marks itself as
-    // unsupported and evaluates to SoftPenalty(0.0).
-    let unsupported = TLExpr::Not(Box::new(expr));
+    // An unsupported expression (Exists requires domain enumeration) still
+    // compiles but marks itself as unsupported and evaluates to SoftPenalty(0.0).
+    let unsupported = TLExpr::Exists {
+        var: "x".to_string(),
+        domain: "Person".to_string(),
+        body: Box::new(expr),
+    };
     let rc2 = RuleConstraint::compile(unsupported, mapper()).expect("compile");
     assert!(!rc2.is_supported());
     assert_eq!(rc2.evaluate(&[], 1), ConstraintVerdict::SoftPenalty(0.0));

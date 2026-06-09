@@ -1,6 +1,6 @@
 # TensorLogic QuantRS2 Hooks — TODO
 
-**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**Status**: Stable | **Version**: 0.1.1 | **Released**: 2026-04-06 | **Last Updated**: 2026-06-09
 **History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
 Probabilistic graphical model hooks over QuantRS2 factor graphs.
@@ -255,6 +255,7 @@ Probabilistic graphical model hooks over QuantRS2 factor graphs.
 
 ## v0.2.0 / Future Work
 
-- [x] ~~Expanded VMP family catalogue (Gamma, Beta)~~ — `vmp/gamma.rs` (GammaNP + Gamma-Poisson conjugacy, 8 unit tests) and `vmp/beta.rs` (BetaNP + Beta-Bernoulli conjugacy, 9 unit tests), both implementing ExponentialFamily with closed-form KL. Two end-to-end integration tests (100 Poisson counts, 200 Bernoulli draws). Remaining: mixture components, structured mean-field.
+- [x] ~~Expanded VMP family catalogue (Gamma, Beta)~~ — `vmp/gamma.rs` (GammaNP + Gamma-Poisson conjugacy, 8 unit tests) and `vmp/beta.rs` (BetaNP + Beta-Bernoulli conjugacy, 9 unit tests), both implementing ExponentialFamily with closed-form KL. Two end-to-end integration tests (100 Poisson counts, 200 Bernoulli draws). Remaining: ~~mixture components~~, structured mean-field.
+- [x] **Variational Bayes Gaussian Mixture Model** (`vmp/mixture.rs`) — `VariationalGaussianMixture` fitter implementing the full VBEM (coordinate-ascent variational EM) algorithm for univariate Gaussian mixtures with conjugate Dirichlet/Gaussian priors. `VgmmConfig` builder (symmetric Dirichlet α₀, Gaussian prior m₀/β₀, per-component or shared observation precision τ_k, seed, max_iterations, tolerance, divergence_tolerance). `VgmmResult` with soft responsibilities N×K, K posterior `GaussianNP` components, `DirichletNP` weight posterior, ELBO history, convergence flag. E-step uses `DirichletNP::expected_sufficient_statistics` (ψ(αₖ)−ψ(α₀)) for E[ln π_k], numerically stable log-sum-exp normalisation. M-step closed-form conjugate updates (αₖ = α₀+Nₖ, βₖ = β₀+τₖNₖ, mₖ = (β₀m₀+τₖSₖ)/βₖ), empty-component prior fallback. ELBO = Σ_n LSE_n − KL[q(π)||p(π)] − Σₖ KL[q(μₖ)||p(μₖ)] with divergence detection mirroring engine.rs. 10 inline unit tests + 1 end-to-end integration test (150 points, 3 well-separated clusters, mean recovery within 0.8). All 346 tests pass, zero clippy warnings.
 - GPU-accelerated inference via QuantRS2.
 - [x] ~~Split `src/loopy_bp.rs` (1,744 L) into a `loopy_bp/` directory.~~ (completed 2026-04-15)

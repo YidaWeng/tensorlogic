@@ -1,6 +1,6 @@
 //! # Tensorlogic-SkleaRS-Kernels
 //!
-//! **Version**: 0.1.0 | **Status**: Production Ready
+//! **Version**: 0.1.1 | **Status**: Production Ready
 //!
 //! Logic-derived similarity kernels for machine learning integration.
 //!
@@ -240,6 +240,7 @@ pub mod kpca;
 pub mod learned_composition;
 pub mod logic_kernel;
 pub mod low_rank;
+pub mod multi_output;
 pub mod multitask;
 pub mod online;
 pub mod provenance;
@@ -249,6 +250,7 @@ pub mod sklears_integration;
 pub mod sparse;
 pub mod spectral_kernel;
 pub mod string_kernel;
+pub mod svm;
 pub mod symbolic;
 pub mod tensor_kernels;
 pub mod tree_kernel;
@@ -291,6 +293,9 @@ pub use learned_composition::{
 };
 pub use logic_kernel::{PredicateOverlapKernel, RuleSimilarityKernel};
 pub use low_rank::{NystromApproximation, NystromConfig, SamplingMethod};
+pub use multi_output::{
+    KroneckerICMKernel, KroneckerLMCKernel, MultiOutputKernel, VvgpFitted, VvgpModel,
+};
 pub use multitask::{
     HadamardTaskKernel, ICMKernel, ICMKernelWrapper, IndexKernel, LMCKernel, LMCKernelWrapper,
     MultiTaskConfig, MultiTaskKernelBuilder, TaskInput,
@@ -317,6 +322,7 @@ pub use spectral_kernel::{
 pub use string_kernel::{
     EditDistanceKernel, NGramKernel, NGramKernelConfig, SubsequenceKernel, SubsequenceKernelConfig,
 };
+pub use svm::{SmoConfig, SvcFitted, SvcModel, SvrFitted, SvrModel};
 pub use symbolic::{KernelBuilder, KernelExpr, SymbolicKernel};
 pub use tensor_kernels::{
     ChiSquaredKernel, CosineKernel, HistogramIntersectionKernel, LaplacianKernel, LinearKernel,

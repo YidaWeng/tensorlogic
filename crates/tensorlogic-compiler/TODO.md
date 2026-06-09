@@ -1,6 +1,6 @@
 # TensorLogic Compiler — TODO
 
-**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**Status**: Stable | **Version**: 0.1.1 | **Released**: 2026-04-06 | **Last Updated**: 2026-06-09
 **History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
 Compiler that lowers logical expressions into optimized einsum graphs.
@@ -370,9 +370,9 @@ Compiler that lowers logical expressions into optimized einsum graphs.
 - [x] Always (G) - temporal always with min/product reduction over time
 - [x] TemporalStrategy configuration (Max, Sum, LogSumExp)
 - [x] Automatic time axis management
-- [ ] Next (X) - requires backend shift operations (documented limitation)
-- [ ] Until (U) - requires backend scan operations (documented limitation)
-- [ ] Advanced operators (Release, WeakUntil, StrongRelease) - future work
+- [x] Next (X) - implemented via `temporal_next:<axis>` unary node; backend uses `shift_next` (shift forward one step, zero-pad last slice); full VJP via `shift_prev` in autodiff backward pass
+- [x] Until (U) - implemented via `temporal_until:<tag>:<axis>` binary node; backend uses backward-scan `until_scan`; two semantics: MaxMin (crisp) and ProbSumProduct (smooth, differentiable); full adjoint VJP via `until_scan_vjp`
+- [x] Advanced operators (Release, WeakUntil, StrongRelease) — exact finite-trace recurrences via unified `temporal_binary_scan`; see `temporal_ops.rs`
 - [x] 9 comprehensive tests
 
 ### Probabilistic Logic
@@ -480,9 +480,9 @@ Compiler that lowers logical expressions into optimized einsum graphs.
 
 - [ ] First-class functions/predicates
 - [ ] Higher-order quantification
-- [ ] Next (X) temporal operator (requires backend shift operations)
-- [ ] Until (U) temporal operator (requires backend scan operations)
-- [ ] Advanced temporal operators (Release, WeakUntil, StrongRelease)
+- [x] Next (X) temporal operator — see `temporal_ops.rs`; `shift_next`/`shift_prev` primitives
+- [x] Until (U) temporal operator — see `temporal_ops.rs`; `until_scan`/`until_scan_vjp` primitives; MaxMin and ProbSumProduct semantics; tag selected by `TemporalStrategy`
+- [x] Advanced temporal operators (Release, WeakUntil, StrongRelease) — exact finite-trace recurrences, VJPs; see temporal_ops.rs
 - [x] JIT compilation for hot paths — call-count-based promotion with pre-optimized graph caching
 - [ ] Source location tracking in TLExpr (requires TLExpr metadata extension)
 - [x] Continue compilation after non-fatal errors (partial error recovery) — completed 2026-04-15 via `error_recovery/` module

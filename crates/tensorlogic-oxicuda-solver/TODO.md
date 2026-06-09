@@ -1,6 +1,6 @@
 # tensorlogic-oxicuda-solver — TODO
 
-**Status**: Alpha | **Version**: 0.1.0 | **Last Updated**: 2026-04-27
+**Status**: Alpha | **Version**: 0.1.1 | **Last Updated**: 2026-06-09
 
 ## Completed
 
@@ -18,5 +18,5 @@
 - [ ] GPU path wired to real `oxicuda-solver` kernels (currently stubbed)
 - [ ] `solve_lu_f64` / `solve_cholesky_f64` — f64 variants
 - [ ] Sparse system support (CG already supports sparse via SpMV)
-- [ ] Preconditioned CG (diagonal/incomplete Cholesky preconditioner)
+- [x] Preconditioned CG (diagonal/incomplete Cholesky preconditioner)
 - [ ] Banded matrix LU for tridiagonal systems

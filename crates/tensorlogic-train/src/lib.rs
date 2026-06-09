@@ -1,6 +1,6 @@
 //! Training scaffolds: loss wiring, schedules, callbacks.
 //!
-//! **Version**: 0.1.0 | **Status**: Production Ready
+//! **Version**: 0.1.1 | **Status**: Production Ready
 //!
 //! This crate provides comprehensive training infrastructure for Tensorlogic models:
 //! - Loss functions (standard and logical constraint-based)
@@ -49,6 +49,7 @@ mod metrics;
 mod mixed_precision;
 mod model;
 mod multitask;
+pub mod nas;
 pub mod neural_ode;
 pub mod online_learning;
 mod optimizer;
@@ -292,3 +293,9 @@ pub use neural_ode::{
 
 // LoRA — low-rank adaptation for parameter-efficient fine-tuning
 pub use lora::{LoraAdapter, LoraConfig, LoraError, LoraLayer};
+
+// Neural Architecture Search
+pub use nas::{
+    ArchSampler, ArchSearchSpace, Architecture, LayerSpec, NasResult, RandomArchSearch,
+    RegularizedEvolution,
+};

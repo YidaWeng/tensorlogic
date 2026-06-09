@@ -1,6 +1,6 @@
 # TensorLogic Infer — TODO
 
-**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**Status**: Stable | **Version**: 0.1.1 | **Released**: 2026-04-06 | **Last Updated**: 2026-06-09
 **History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
 Executor and autodiff traits for tensor-logic inference pipelines.
@@ -521,7 +521,7 @@ Executor and autodiff traits for tensor-logic inference pipelines.
 **Total Lines of Code:** ~26,000 lines Rust code
 **Examples:** 3 working examples (jit_demo.rs, distributed_demo.rs, recovery_demo.rs)
 
-**Version**: 0.1.0
+**Version**: 0.1.1
 **Release Date**: 2026-04-06
 **Backward Compatibility**: Maintained
 

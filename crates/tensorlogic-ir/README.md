@@ -8,7 +8,7 @@
 [![Examples](https://img.shields.io/badge/examples-17-blue)](#)
 [![Benchmarks](https://img.shields.io/badge/benchmarks-50+-orange)](#)
 [![Production](https://img.shields.io/badge/status-production_ready-success)](#)
-[![Version](https://img.shields.io/badge/version-0.1.0-blue)](#)
+[![Version](https://img.shields.io/badge/version-0.1.1-blue)](#)
 [![Zero Warnings](https://img.shields.io/badge/warnings-0-success)](#)
 
 ## Overview
@@ -19,7 +19,7 @@ This crate serves as the **lingua franca** between all TensorLogic components, p
 
 ## Features
 
-### Production Ready (v0.1.0)
+### Production Ready (v0.1.1)
 
 #### Advanced Type Systems
 - **Parametric Types**: Type constructors (`List<T>`, `Option<T>`, `Map<K,V>`), unification, generalization
@@ -68,7 +68,7 @@ This crate serves as the **lingua franca** between all TensorLogic components, p
 
 ```toml
 [dependencies]
-tensorlogic-ir = "0.1.0"
+tensorlogic-ir = "0.1.1"
 ```
 
 ## Quick Start
@@ -583,9 +583,9 @@ cargo bench -p tensorlogic-ir --bench ir_benchmarks -- serialization
 
 See [TODO.md](./TODO.md) for detailed roadmap.
 
-**Current Status**: 100% complete as of v0.1.0
+**Current Status**: 100% complete as of v0.1.1
 
-### Completed in Stable v0.1.0 (2026-04-06)
+### Completed in Stable v0.1.1 (2026-06-09)
 
 - Advanced type systems: dependent types, linear types, refinement types
 - Automated theorem proving: unification, resolution, sequent calculus, CLP
@@ -605,8 +605,8 @@ Apache-2.0
 
 ---
 
-**Status**: Stable (v0.1.0)
-**Last Updated**: 2026-04-06
+**Status**: Stable (v0.1.1)
+**Last Updated**: 2026-06-09
 **Tests**: 806/806 passing (100%)
 **Examples**: 17 comprehensive demonstrations
 **Benchmarks**: 50+ performance tests
