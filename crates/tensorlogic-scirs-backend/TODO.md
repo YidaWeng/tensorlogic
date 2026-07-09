@@ -1,6 +1,6 @@
 # TensorLogic SciRS2 Backend — TODO
 
-**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**Status**: Stable | **Version**: 0.1.1 | **Released**: 2026-04-06 | **Last Updated**: 2026-06-09
 **History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
 SciRS2-backed execution engine with SIMD acceleration and autograd.
@@ -465,10 +465,10 @@ SciRS2-backed execution engine with SIMD acceleration and autograd.
 - [ ] Execute with JAX
 
 ### Probabilistic Execution
-- [ ] Monte Carlo sampling
-- [ ] Variational inference
-- [ ] Probabilistic programming integration
-- [ ] Uncertainty quantification
+- [x] Monte Carlo sampling — `probabilistic/sampling.rs`: `sample_bernoulli`, `sample_uniform`, `sample_normal`, `sample_categorical` (Gumbel-max), `mc_integrate`; `MonteCarloConfig`
+- [x] Variational inference — `probabilistic/variational.rs`: `VariationalInference::fit` — mean-field Gaussian VI with reparameterization trick + Adam SGA, ELBO maximization; recovers Gaussian targets
+- [x] Probabilistic programming integration — `probabilistic/mod.rs`: unified `probabilistic` module integrated into `Scirs2Exec` ecosystem via re-exports in `lib.rs`
+- [x] Uncertainty quantification — `probabilistic/uncertainty.rs`: `MonteCarloEstimator` (mean/var/CI), `predictive_entropy`, `bald_epistemic_uncertainty` (BALD = H(mean)−mean(H))
 
 ---
 

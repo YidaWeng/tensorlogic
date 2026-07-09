@@ -806,6 +806,413 @@ impl TlAutodiff for OxiCudaExecutor {
 }
 
 // ---------------------------------------------------------------------------
+// Public seeding API: forward_with_seeds / backward_with_seeds
+// ---------------------------------------------------------------------------
+
+impl OxiCudaExecutor {
+    /// Execute a forward pass with pre-seeded tensor values.
+    ///
+    /// `seeds` maps tensor indices (graph positions) to concrete [`OxiCudaTensor`]
+    /// values.  Typically all graph inputs are seeded; the executor computes the
+    /// remaining tensors in topological order.
+    ///
+    /// This method is the recommended way to inject concrete values into an
+    /// [`EinsumGraph`] for testing and inference: build the graph with
+    /// [`tensorlogic_ir::EinsumGraph`] (which only stores topology), then supply
+    /// values here.
+    ///
+    /// # Errors
+    ///
+    /// Returns [`OxiCudaBackendError::InvalidEinsumSpec`] if any node's inputs
+    /// are not available (neither seeded nor produced by an earlier node).
+    /// Returns [`OxiCudaBackendError::BackendDisabled`] when the `gpu` feature
+    /// is disabled.
+    pub fn forward_with_seeds(
+        &mut self,
+        graph: &EinsumGraph,
+        seeds: &HashMap<usize, OxiCudaTensor>,
+    ) -> Result<OxiCudaTensor, OxiCudaBackendError> {
+        if graph.is_empty() {
+            return Err(OxiCudaBackendError::InvalidEinsumSpec(
+                "empty EinsumGraph passed to forward_with_seeds".to_string(),
+            ));
+        }
+        if graph.outputs.is_empty() {
+            return Err(OxiCudaBackendError::InvalidEinsumSpec(
+                "EinsumGraph has no output tensors".to_string(),
+            ));
+        }
+
+        let mut computed: Vec<Option<OxiCudaTensor>> = vec![None; graph.tensors.len()];
+        // Pre-populate seeded positions.
+        for (&idx, tensor) in seeds {
+            if let Some(slot) = computed.get_mut(idx) {
+                *slot = Some(tensor.clone());
+            }
+        }
+
+        for node in &graph.nodes {
+            let input_tensors: Vec<OxiCudaTensor> = node
+                .inputs
+                .iter()
+                .map(|&idx| {
+                    computed
+                        .get(idx)
+                        .and_then(|slot| slot.as_ref())
+                        .cloned()
+                        .ok_or_else(|| {
+                            OxiCudaBackendError::InvalidEinsumSpec(format!(
+                                "tensor at index {idx} not yet computed (forward_with_seeds)"
+                            ))
+                        })
+                })
+                .collect::<Result<_, _>>()?;
+
+            let result = match &node.op {
+                OpType::Einsum { spec } => self.einsum(spec, &input_tensors)?,
+                OpType::ElemUnary { op } => {
+                    let elem_op = parse_elem_op(op)?;
+                    self.elem_op(elem_op, &input_tensors[0])?
+                }
+                OpType::ElemBinary { op } => {
+                    if input_tensors.len() != 2 {
+                        return Err(OxiCudaBackendError::InvalidEinsumSpec(format!(
+                            "binary op '{op}' expects 2 inputs, got {}",
+                            input_tensors.len()
+                        )));
+                    }
+                    let elem_op = parse_elem_op(op)?;
+                    self.elem_op_binary(elem_op, &input_tensors[0], &input_tensors[1])?
+                }
+                OpType::Reduce { op, axes } => {
+                    let reduce_op = parse_reduce_op(op)?;
+                    self.reduce(reduce_op, &input_tensors[0], axes)?
+                }
+            };
+
+            let output_idx = node.outputs.first().copied().ok_or_else(|| {
+                OxiCudaBackendError::InvalidEinsumSpec("node has no output index".to_string())
+            })?;
+            computed[output_idx] = Some(result);
+        }
+
+        let output_idx = graph.outputs[0];
+        computed
+            .get(output_idx)
+            .and_then(|slot| slot.clone())
+            .ok_or_else(|| {
+                OxiCudaBackendError::InvalidEinsumSpec(
+                    "output tensor was not produced by any node".to_string(),
+                )
+            })
+    }
+
+    /// Compute gradients for a graph with pre-seeded input values.
+    ///
+    /// This is the backward-pass counterpart of `forward_with_seeds`.
+    /// It re-runs the forward pass internally (recording the tape), then
+    /// propagates `loss` backward to produce input gradients.
+    ///
+    /// `seeds` maps tensor indices to concrete input values — the same map
+    /// you would pass to `forward_with_seeds`.
+    ///
+    /// # Errors
+    ///
+    /// Same errors as `forward_with_seeds` plus autodiff-specific errors
+    /// such as [`OxiCudaBackendError::UnsupportedAutodiffOp`].
+    pub fn backward_with_seeds(
+        &mut self,
+        graph: &EinsumGraph,
+        seeds: &HashMap<usize, OxiCudaTensor>,
+        loss: &OxiCudaTensor,
+    ) -> Result<OxiCudaTape, OxiCudaBackendError> {
+        if graph.is_empty() {
+            return Err(OxiCudaBackendError::InvalidEinsumSpec(
+                "empty EinsumGraph passed to backward_with_seeds".to_string(),
+            ));
+        }
+
+        // Rebuild the tape with saved inputs using seeded values.
+        let tape = self.forward_with_tape_seeded(graph, seeds)?;
+
+        // Seed: gradient of root output is the loss tensor.
+        let mut gradients: HashMap<usize, OxiCudaTensor> = HashMap::new();
+        if let Some(&output_idx) = graph.outputs.first() {
+            gradients.insert(output_idx, loss.clone());
+        }
+
+        // Reverse-iterate tape entries — identical logic to `backward`.
+        for entry in tape.entries.into_iter().rev() {
+            let output_grad = match gradients.remove(&entry.output_tensor_idx) {
+                Some(g) => g,
+                None => continue,
+            };
+
+            match &entry.op {
+                TapedOp::Identity => {
+                    if let Some(&input_idx) = entry.input_tensor_indices.first() {
+                        gradient_accumulate(&mut gradients, input_idx, output_grad, self)?;
+                    }
+                }
+
+                TapedOp::Matmul2D => {
+                    if entry.saved_inputs.len() != 2 || entry.input_tensor_indices.len() != 2 {
+                        return Err(OxiCudaBackendError::InvalidEinsumSpec(
+                            "Matmul2D backward_with_seeds: expected 2 saved inputs".to_string(),
+                        ));
+                    }
+                    let a = &entry.saved_inputs[0];
+                    let b = &entry.saved_inputs[1];
+                    let a_idx = entry.input_tensor_indices[0];
+                    let b_idx = entry.input_tensor_indices[1];
+
+                    #[cfg(feature = "gpu")]
+                    let da = crate::einsum::matmul_2d_trans_flags(
+                        self.gpu.blas_handle(),
+                        &output_grad,
+                        oxicuda_blas::types::Transpose::NoTrans,
+                        b,
+                        oxicuda_blas::types::Transpose::Trans,
+                    )?;
+                    #[cfg(not(feature = "gpu"))]
+                    let da = {
+                        let b_t = transpose_2d_host(b)?;
+                        self.einsum("ij,jk->ik", &[output_grad.clone(), b_t])?
+                    };
+                    gradient_accumulate(&mut gradients, a_idx, da, self)?;
+
+                    #[cfg(feature = "gpu")]
+                    let db = crate::einsum::matmul_2d_trans_flags(
+                        self.gpu.blas_handle(),
+                        a,
+                        oxicuda_blas::types::Transpose::Trans,
+                        &output_grad,
+                        oxicuda_blas::types::Transpose::NoTrans,
+                    )?;
+                    #[cfg(not(feature = "gpu"))]
+                    let db = {
+                        let a_t = transpose_2d_host(a)?;
+                        self.einsum("ij,jk->ik", &[a_t, output_grad])?
+                    };
+                    gradient_accumulate(&mut gradients, b_idx, db, self)?;
+                }
+
+                TapedOp::BatchedMatmul3D => {
+                    if entry.saved_inputs.len() != 2 || entry.input_tensor_indices.len() != 2 {
+                        return Err(OxiCudaBackendError::InvalidEinsumSpec(
+                            "BatchedMatmul3D backward_with_seeds: expected 2 saved inputs"
+                                .to_string(),
+                        ));
+                    }
+                    let a = &entry.saved_inputs[0];
+                    let b = &entry.saved_inputs[1];
+                    let a_idx = entry.input_tensor_indices[0];
+                    let b_idx = entry.input_tensor_indices[1];
+
+                    #[cfg(feature = "gpu")]
+                    let da = crate::einsum::matmul_batched_trans_flags(
+                        self.gpu.blas_handle(),
+                        &output_grad,
+                        oxicuda_blas::types::Transpose::NoTrans,
+                        b,
+                        oxicuda_blas::types::Transpose::Trans,
+                    )?;
+                    #[cfg(not(feature = "gpu"))]
+                    let da = {
+                        let b_t = transpose_3d_last_host(b)?;
+                        self.einsum("bij,bjk->bik", &[output_grad.clone(), b_t])?
+                    };
+                    gradient_accumulate(&mut gradients, a_idx, da, self)?;
+
+                    #[cfg(feature = "gpu")]
+                    let db = crate::einsum::matmul_batched_trans_flags(
+                        self.gpu.blas_handle(),
+                        a,
+                        oxicuda_blas::types::Transpose::Trans,
+                        &output_grad,
+                        oxicuda_blas::types::Transpose::NoTrans,
+                    )?;
+                    #[cfg(not(feature = "gpu"))]
+                    let db = {
+                        let a_t = transpose_3d_last_host(a)?;
+                        self.einsum("bij,bjk->bik", &[a_t, output_grad])?
+                    };
+                    gradient_accumulate(&mut gradients, b_idx, db, self)?;
+                }
+
+                TapedOp::Unary(elem_op) => {
+                    if entry.saved_inputs.is_empty() || entry.input_tensor_indices.is_empty() {
+                        return Err(OxiCudaBackendError::InvalidEinsumSpec(
+                            "Unary backward_with_seeds: expected 1 saved input".to_string(),
+                        ));
+                    }
+                    let x = &entry.saved_inputs[0];
+                    let x_idx = entry.input_tensor_indices[0];
+
+                    let input_grad = match elem_op {
+                        ElemOp::Relu => {
+                            let zeros = zeros_host(&x.shape);
+                            let mask = self.elem_op_binary(ElemOp::Gt, x, &zeros)?;
+                            self.elem_op_binary(ElemOp::Multiply, &output_grad, &mask)?
+                        }
+                        ElemOp::Sigmoid => {
+                            let y = self.elem_op(ElemOp::Sigmoid, x)?;
+                            let one_minus_y = self.elem_op(ElemOp::OneMinus, &y)?;
+                            let y_times_1my =
+                                self.elem_op_binary(ElemOp::Multiply, &y, &one_minus_y)?;
+                            self.elem_op_binary(ElemOp::Multiply, &output_grad, &y_times_1my)?
+                        }
+                        ElemOp::OneMinus => {
+                            let zeros = zeros_host(&output_grad.shape);
+                            self.elem_op_binary(ElemOp::Subtract, &zeros, &output_grad)?
+                        }
+                        other => {
+                            return Err(OxiCudaBackendError::UnsupportedAutodiffOp(format!(
+                                "{other:?}"
+                            )));
+                        }
+                    };
+
+                    gradient_accumulate(&mut gradients, x_idx, input_grad, self)?;
+                }
+
+                TapedOp::Binary(elem_op) => {
+                    if entry.saved_inputs.len() != 2 || entry.input_tensor_indices.len() != 2 {
+                        return Err(OxiCudaBackendError::InvalidEinsumSpec(
+                            "Binary backward_with_seeds: expected 2 saved inputs".to_string(),
+                        ));
+                    }
+                    let x = &entry.saved_inputs[0];
+                    let y = &entry.saved_inputs[1];
+                    let x_idx = entry.input_tensor_indices[0];
+                    let y_idx = entry.input_tensor_indices[1];
+
+                    let (grad_x, grad_y) = match elem_op {
+                        ElemOp::Add => (output_grad.clone(), output_grad),
+                        ElemOp::Subtract => {
+                            let zeros = zeros_host(&output_grad.shape);
+                            let neg_dy =
+                                self.elem_op_binary(ElemOp::Subtract, &zeros, &output_grad)?;
+                            (output_grad, neg_dy)
+                        }
+                        ElemOp::Multiply => {
+                            let dx = self.elem_op_binary(ElemOp::Multiply, &output_grad, y)?;
+                            let dy = self.elem_op_binary(ElemOp::Multiply, &output_grad, x)?;
+                            (dx, dy)
+                        }
+                        ElemOp::Divide => {
+                            let dx = self.elem_op_binary(ElemOp::Divide, &output_grad, y)?;
+                            let dg_times_x =
+                                self.elem_op_binary(ElemOp::Multiply, &output_grad, x)?;
+                            let y_sq = self.elem_op_binary(ElemOp::Multiply, y, y)?;
+                            let dy_pos = self.elem_op_binary(ElemOp::Divide, &dg_times_x, &y_sq)?;
+                            let zeros = zeros_host(&dy_pos.shape);
+                            let dy = self.elem_op_binary(ElemOp::Subtract, &zeros, &dy_pos)?;
+                            (dx, dy)
+                        }
+                        other @ (ElemOp::Eq
+                        | ElemOp::Lt
+                        | ElemOp::Gt
+                        | ElemOp::Lte
+                        | ElemOp::Gte
+                        | ElemOp::OrMax
+                        | ElemOp::OrProbSum
+                        | ElemOp::Nand
+                        | ElemOp::Nor
+                        | ElemOp::Xor
+                        | ElemOp::Min
+                        | ElemOp::Max) => {
+                            return Err(OxiCudaBackendError::UnsupportedAutodiffOp(format!(
+                                "{other:?}"
+                            )));
+                        }
+                        other => {
+                            return Err(OxiCudaBackendError::UnsupportedAutodiffOp(format!(
+                                "{other:?}"
+                            )));
+                        }
+                    };
+
+                    gradient_accumulate(&mut gradients, x_idx, grad_x, self)?;
+                    gradient_accumulate(&mut gradients, y_idx, grad_y, self)?;
+                }
+
+                TapedOp::Reduce(reduce_op, axes) => {
+                    if entry.saved_inputs.is_empty() || entry.input_tensor_indices.is_empty() {
+                        return Err(OxiCudaBackendError::InvalidEinsumSpec(
+                            "Reduce backward_with_seeds: expected 1 saved input".to_string(),
+                        ));
+                    }
+                    let x = &entry.saved_inputs[0];
+                    let x_idx = entry.input_tensor_indices[0];
+
+                    let input_grad = match reduce_op {
+                        ReduceOp::Sum => {
+                            #[cfg(feature = "native-broadcast")]
+                            {
+                                broadcast_to_shape_native(
+                                    &output_grad,
+                                    &x.shape,
+                                    axes,
+                                    self.gpu_state_internal(),
+                                )?
+                            }
+                            #[cfg(not(feature = "native-broadcast"))]
+                            {
+                                broadcast_to_shape(&output_grad, &x.shape, axes)?
+                            }
+                        }
+                        ReduceOp::Max | ReduceOp::Min => {
+                            let y = self.reduce(*reduce_op, x, axes)?;
+                            let y_broadcast = broadcast_to_shape(&y, &x.shape, axes)?;
+                            let mask = self.elem_op_binary(ElemOp::Eq, x, &y_broadcast)?;
+                            let dg_broadcast = broadcast_to_shape(&output_grad, &x.shape, axes)?;
+                            self.elem_op_binary(ElemOp::Multiply, &dg_broadcast, &mask)?
+                        }
+                        ReduceOp::Mean => {
+                            #[cfg(feature = "native-broadcast")]
+                            let expanded = broadcast_to_shape_native(
+                                &output_grad,
+                                &x.shape,
+                                axes,
+                                self.gpu_state_internal(),
+                            )?;
+                            #[cfg(not(feature = "native-broadcast"))]
+                            let expanded = broadcast_to_shape(&output_grad, &x.shape, axes)?;
+
+                            let axis_len: usize = axes.iter().map(|&a| x.shape[a]).product();
+
+                            #[cfg(feature = "native-broadcast")]
+                            let divisor = fill_tensor_native(
+                                axis_len as f32,
+                                &x.shape,
+                                self.gpu_state_internal(),
+                            )?;
+                            #[cfg(not(feature = "native-broadcast"))]
+                            let divisor = fill_tensor_host(axis_len as f32, &x.shape);
+
+                            self.elem_op_binary(ElemOp::Divide, &expanded, &divisor)?
+                        }
+                        ReduceOp::Product => {
+                            return Err(OxiCudaBackendError::UnsupportedAutodiffOp(
+                                "Product".to_string(),
+                            ));
+                        }
+                    };
+
+                    gradient_accumulate(&mut gradients, x_idx, input_grad, self)?;
+                }
+            }
+        }
+
+        Ok(OxiCudaTape {
+            entries: Vec::new(),
+            gradients,
+        })
+    }
+}
+
+// ---------------------------------------------------------------------------
 // Internal forward-with-tape (produces TapeEntry list for backward)
 // ---------------------------------------------------------------------------
 
@@ -831,6 +1238,100 @@ impl OxiCudaExecutor {
                         .ok_or_else(|| {
                             OxiCudaBackendError::InvalidEinsumSpec(format!(
                                 "tensor at index {idx} not yet computed (forward_with_tape)"
+                            ))
+                        })
+                })
+                .collect::<Result<_, _>>()?;
+
+            let (result, taped_op) = match &node.op {
+                OpType::Einsum { spec } => {
+                    let norm: String = spec
+                        .chars()
+                        .filter(|c| !c.is_whitespace())
+                        .flat_map(|c| c.to_lowercase())
+                        .collect();
+                    let taped = match norm.as_str() {
+                        "ij,jk->ik" => TapedOp::Matmul2D,
+                        "bij,bjk->bik" => TapedOp::BatchedMatmul3D,
+                        _ if is_identity_spec(&norm) => TapedOp::Identity,
+                        _ => TapedOp::Identity,
+                    };
+                    let out = self.einsum(spec, &input_tensors)?;
+                    (out, taped)
+                }
+                OpType::ElemUnary { op } => {
+                    let elem_op = parse_elem_op(op)?;
+                    let out = self.elem_op(elem_op, &input_tensors[0])?;
+                    (out, TapedOp::Unary(elem_op))
+                }
+                OpType::ElemBinary { op } => {
+                    if input_tensors.len() != 2 {
+                        return Err(OxiCudaBackendError::InvalidEinsumSpec(format!(
+                            "binary op '{op}' expects 2 inputs, got {}",
+                            input_tensors.len()
+                        )));
+                    }
+                    let elem_op = parse_elem_op(op)?;
+                    let out = self.elem_op_binary(elem_op, &input_tensors[0], &input_tensors[1])?;
+                    (out, TapedOp::Binary(elem_op))
+                }
+                OpType::Reduce { op, axes } => {
+                    let reduce_op = parse_reduce_op(op)?;
+                    let out = self.reduce(reduce_op, &input_tensors[0], axes)?;
+                    (out, TapedOp::Reduce(reduce_op, axes.clone()))
+                }
+            };
+
+            let output_idx = node.outputs.first().copied().ok_or_else(|| {
+                OxiCudaBackendError::InvalidEinsumSpec("node has no output index".to_string())
+            })?;
+
+            tape_entries.push(TapeEntry {
+                output_tensor_idx: output_idx,
+                input_tensor_indices: node.inputs.clone(),
+                op: taped_op,
+                saved_inputs: input_tensors,
+            });
+
+            computed[output_idx] = Some(result);
+        }
+
+        Ok(OxiCudaTape {
+            entries: tape_entries,
+            gradients: HashMap::new(),
+        })
+    }
+
+    /// Like [`forward_with_tape`], but pre-populates `computed[]` from `seeds`.
+    ///
+    /// Used internally by [`backward_with_seeds`] so that the tape records
+    /// concrete saved-input tensors for gradient computation.
+    fn forward_with_tape_seeded(
+        &mut self,
+        graph: &EinsumGraph,
+        seeds: &HashMap<usize, OxiCudaTensor>,
+    ) -> Result<OxiCudaTape, OxiCudaBackendError> {
+        let mut computed: Vec<Option<OxiCudaTensor>> = vec![None; graph.tensors.len()];
+        // Pre-populate seeded positions.
+        for (&idx, tensor) in seeds {
+            if let Some(slot) = computed.get_mut(idx) {
+                *slot = Some(tensor.clone());
+            }
+        }
+        let mut tape_entries: Vec<TapeEntry> = Vec::with_capacity(graph.nodes.len());
+
+        for node in &graph.nodes {
+            let input_tensors: Vec<OxiCudaTensor> = node
+                .inputs
+                .iter()
+                .map(|&idx| {
+                    computed
+                        .get(idx)
+                        .and_then(|slot| slot.as_ref())
+                        .cloned()
+                        .ok_or_else(|| {
+                            OxiCudaBackendError::InvalidEinsumSpec(format!(
+                                "tensor at index {idx} not yet computed (forward_with_tape_seeded)"
                             ))
                         })
                 })

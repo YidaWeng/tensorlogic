@@ -17,15 +17,33 @@
 //!
 //! let mut rng = RngEngine::new(RngEngineKind::Philox, 42).unwrap();
 //!
+//! // f32 variants
 //! let mut out = vec![0f32; 1024];
 //! rng.uniform_f32(&mut out).unwrap();
 //!
 //! let mut normal_out = vec![0f32; 1024];
 //! rng.normal_f32(&mut normal_out, 0.0, 1.0).unwrap();
 //!
+//! // f64 variants (52-bit mantissa precision)
+//! let mut out64 = vec![0f64; 1024];
+//! rng.uniform_f64(&mut out64).unwrap();
+//!
+//! let mut normal_out64 = vec![0f64; 1024];
+//! rng.normal_f64(&mut normal_out64, 0.0, 1.0).unwrap();
+//!
+//! // Streaming API — large buffers without single allocation
+//! rng.fill_uniform_chunked(1_000_000, 4096, &mut |chunk: &[f32]| {
+//!     let _ = chunk; // process chunk
+//! }).unwrap();
+//!
 //! let mut bernoulli_out = vec![0u8; 1024];
 //! rng.bernoulli(&mut bernoulli_out, 0.3).unwrap();
 //! ```
+//!
+//! ## Thread safety
+//!
+//! On the **CPU path** (`default`), [`RngEngine`] is `Send + Sync`.
+//! On the **GPU path** (`feature = "gpu"`), [`RngEngine`] is `Send` but not `Sync`.
 //!
 //! ## Policy notes
 //!

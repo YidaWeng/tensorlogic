@@ -66,3 +66,5 @@ htmlcov/
 
 # Rustc ICE dumps
 rustc-ice-*.txt
+
+target

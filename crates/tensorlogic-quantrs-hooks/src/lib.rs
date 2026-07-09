@@ -1,6 +1,6 @@
 //! TL <-> QuantrS2 hooks (PGM/message passing as reductions).
 //!
-//! **Version**: 0.1.0 | **Status**: Production Ready
+//! **Version**: 0.1.1 | **Status**: Production Ready
 //!
 //! This crate provides integration between TensorLogic and probabilistic graphical models (PGMs).
 //! It maps belief propagation and other message passing algorithms onto einsum reduction patterns.
@@ -111,8 +111,9 @@ pub use variational::{BetheApproximation, MeanFieldInference, TreeReweightedBP};
 pub use vmp::{
     categorical_kl, dirichlet_kl, gaussian_kl, gaussian_kl_fixed_precision,
     BetaBernoulliObservation, BetaNP, CategoricalNP, DirichletNP, ExponentialFamily, Family,
-    GammaNP, GammaPoissonObservation, GaussianNP, MessageDirection, VariationalMessagePassing,
-    VariationalState, VmpConfig, VmpFactor, VmpMessage, VmpResult,
+    GammaNP, GammaPoissonObservation, GaussianNP, MessageDirection, VariationalGaussianMixture,
+    VariationalMessagePassing, VariationalState, VgmmConfig, VgmmResult, VmpConfig, VmpFactor,
+    VmpMessage, VmpResult,
 };
 
 use scirs2_core::ndarray::ArrayD;

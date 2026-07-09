@@ -380,8 +380,8 @@ Apache-2.0
 
 ---
 
-**Status**: Production Ready (v0.1.0 Stable)
-**Last Updated**: 2026-04-06
+**Status**: Production Ready (v0.1.1 Stable)
+**Last Updated**: 2026-06-09
 **Tests**: 276 passing (100% pass rate for non-precision-limited tests, 4 skipped)
 **Benchmarks**: 3 suites, 50+ benchmarks
 **Examples**: 8 comprehensive examples

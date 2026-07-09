@@ -1,6 +1,6 @@
 # TensorLogic Train — TODO
 
-**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**Status**: Stable | **Version**: 0.1.1 | **Released**: 2026-04-06 | **Last Updated**: 2026-06-09
 **History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
 Training loop, loss functions, optimizers, schedulers, and callbacks.
@@ -233,7 +233,7 @@ Training loop, loss functions, optimizers, schedulers, and callbacks.
   - [x] Cholesky decomposition for efficient GP inference
   - [x] Multi-dimensional optimization, continuous/discrete/log-uniform/integer spaces
   - [x] 32 comprehensive tests
-- [ ] Neural architecture search (FUTURE)
+- [x] Neural architecture search — `src/nas/`: `ArchSearchSpace`, `ArchSampler`, `RegularizedEvolution` (Real et al. 2019 aging evolution with tournament selection + ask/tell), `RandomArchSearch` baseline; `Architecture`/`LayerSpec` with `param_count()` and `HyperparamConfig` interop; 15 tests
 
 ### Cross-Validation
 - [x] KFold, StratifiedKFold, TimeSeriesSplit, LeaveOneOut

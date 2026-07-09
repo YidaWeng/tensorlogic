@@ -1,7 +1,7 @@
 # tensorlogic-oxirs-bridge
 [![Crate](https://img.shields.io/badge/crates.io-tensorlogic-oxirs-bridge-orange)](https://crates.io/crates/tensorlogic-oxirs-bridge)
 [![Documentation](https://img.shields.io/badge/docs-latest-blue)](https://docs.rs/tensorlogic-oxirs-bridge)
-[![Tests](https://img.shields.io/badge/tests-468%2F468-brightgreen)](#)
+[![Tests](https://img.shields.io/badge/tests-541%2F541-brightgreen)](#)
 [![Production](https://img.shields.io/badge/status-production_ready-success)](#)
 
 Lightweight RDF/SHACL → TensorLogic integration using oxrdf.
@@ -279,7 +279,7 @@ For full SPARQL/federation/GraphQL support, use oxirs-core directly.
 
 ```bash
 cargo nextest run -p tensorlogic-oxirs-bridge
-# 468 tests, all passing, zero warnings
+# 541 tests, all passing, zero warnings
 ```
 
 Key test categories:
@@ -494,9 +494,9 @@ Apache-2.0
 
 ---
 
-**Status**: Production Ready (v0.1.0 Stable)
-**Last Updated**: 2026-04-06
-**Tests**: 468/468 passing (100%)
+**Status**: Production Ready (v0.1.1 Stable)
+**Last Updated**: 2026-06-09
+**Tests**: 541/541 passing (100%)
 **Examples**: 9 comprehensive examples
 **Features**: Full SPARQL 1.1 query support (SELECT/ASK/DESCRIBE/CONSTRUCT + OPTIONAL/UNION + aggregates)
 **Part of**: [TensorLogic Ecosystem](https://github.com/cool-japan/tensorlogic)

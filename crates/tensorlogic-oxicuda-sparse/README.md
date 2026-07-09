@@ -4,7 +4,7 @@ GPU-accelerated sparse matrix operations for TensorLogic with pure-Rust CPU fall
 
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../LICENSE)
 [![Status](https://img.shields.io/badge/status-Alpha-yellow.svg)]()
-[![Tests](https://img.shields.io/badge/tests-13%2F13-brightgreen.svg)]()
+[![Tests](https://img.shields.io/badge/tests-27%2F27-brightgreen.svg)]()
 
 Provides Compressed Sparse Row (CSR) matrices with sparse matrix-vector (SpMV) and
 sparse matrix-matrix (SpMM) operations. The CPU path is pure-Rust; enabling `--features gpu`

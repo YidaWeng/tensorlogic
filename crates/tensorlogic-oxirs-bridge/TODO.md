@@ -1,6 +1,6 @@
 # TensorLogic OxiRS Bridge — TODO
 
-**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**Status**: Stable | **Version**: 0.1.1 | **Released**: 2026-04-06 | **Last Updated**: 2026-06-09
 **History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
 RDF / SPARQL / SHACL / OWL / JSON-LD integration via the OxiRS stack.
@@ -228,9 +228,9 @@ RDF / SPARQL / SHACL / OWL / JSON-LD integration via the OxiRS stack.
 
 ### Performance
 - [ ] Optimize RDF parsing (FUTURE)
-  - [ ] Use bulk loading for large graphs
-  - [ ] Parallel triple processing
-  - [ ] Memory-efficient graph representation
+  - [x] Use bulk loading for large graphs — `InternedGraph::from_rdf_triples(Vec<RdfTriple>)` + `rdf_bulk_importer_into_interned` bridge
+  - [x] Parallel triple processing — `std::thread::scope` chunked parallel N-Triples parsing in `interned_graph.rs`
+  - [x] Memory-efficient graph representation — `InternedGraph` with O(1) term dictionary + predicate-indexed adjacency lists (vs. O(n) linear scan in `DomainInfo::get_index`)
 
 ### Error Handling
 - [x] **Validation warnings** ✅ (v0.1.2) — SchemaWarningAnalyzer (MissingLabel, UnusedClass, SuggestSHACL)
@@ -291,7 +291,7 @@ RDF / SPARQL / SHACL / OWL / JSON-LD integration via the OxiRS stack.
   - [ ] Convert to RDF* where possible
 
 ### SPARQL Integration
-- [ ] Execute SPARQL via tensor operations (requires SciRS2 backend integration)
+- [x] Execute SPARQL via tensor operations — `sparql/tensor_eval.rs`: `TensorBgpEvaluator` evaluates conjunctive SELECT/BGP queries as boolean tensor contraction via `EinsumGraph` + `Scirs2Exec::forward`; supported: fixed-pred triple patterns, var+const in S/O, projection; unsupported forms return `BridgeError::ValidationError`
 - [ ] Federated SPARQL queries
 - [ ] SPARQL property paths (e.g., `?x foaf:knows+ ?y`)
 - [ ] GRAPH patterns for named graphs

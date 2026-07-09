@@ -1,6 +1,6 @@
 # TensorLogic OxiCUDA Backend — TODO
 
-**Status**: Research Preview | **Version**: 0.1.0 | **Last Updated**: 2026-04-15
+**Status**: Research Preview | **Version**: 0.1.1 | **Last Updated**: 2026-06-09
 **History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
 GPU tensor execution backend for TensorLogic, built on the COOLJAPAN **OxiCUDA** ecosystem
@@ -79,7 +79,7 @@ at runtime — no CUDA SDK, no nvcc, no C/C++ toolchain.
 - Autodiff: `native-broadcast` feature gates GPU kernel paths for ReduceSum/Mean backward
 - LRU memo cache correctness fix in tensorlogic-infer (deque-front strategy, O(1), tie-safe)
 - No-warnings pass: 14 clippy issues fixed across 7 files (cfg-gating, range contains, needless return, dead code, should_implement_trait)
-- Full workspace: **6784 tests, 6784 passed**
+- Full workspace: **7,178 tests, 7,178 passed**
 
 - [x] `tensorlogic-backend-wire-new-kernels` (planned 2026-04-17)
   - **Goal:** Wire all new OxiCUDA elementwise and reduction ops into the TensorLogic GPU backend. In `src/elem_ops.rs`, extend `dispatch_unary` to cover `Gelu, Silu, Tanh, Neg, Abs, Sqrt, Rsqrt, Exp, Log, Ceil, Floor, HardSigmoid, HardSwish, Softplus, LeakyRelu, OneMinus` and `dispatch_binary` to cover `Sub, Div, Pow, Min, Max, CmpEq, CmpNe, CmpLt, CmpGt, CmpLe, CmpGe, OrMax, OrProbSum, Nand, Nor, Xor`. In `src/reduce.rs`, delete `cpu_move_axis_to_last` and the CPU loop in `reduce_one_axis`; compute `(outer, axis_len, inner)` from input shape and axis index; call `oxicuda_blas::reduction::axis::reduce_axis`.

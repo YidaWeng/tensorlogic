@@ -5,6 +5,7 @@ use tensorlogic_ir::EinsumGraph;
 
 use crate::einsum_grad::compute_einsum_gradients;
 use crate::ops::{parse_elem_op, parse_reduce_op};
+use crate::temporal_ops;
 use crate::{Scirs2Exec, Scirs2Tensor};
 
 /// Stores intermediate values from forward pass for gradient computation
@@ -112,8 +113,28 @@ impl TlAutodiff for Scirs2Exec {
                             input_tensors.len()
                         )));
                     }
-                    let elem_op = parse_elem_op(op)?;
-                    self.elem_op(elem_op, &input_tensors[0])?
+                    // Intercept temporal operators before generic elem_op dispatch.
+                    if let Some(top_result) = temporal_ops::parse_temporal_op(op) {
+                        let top = top_result.map_err(|e| {
+                            ExecutorError::InvalidEinsumSpec(format!(
+                                "Temporal op parse error: {}",
+                                e
+                            ))
+                        })?;
+                        match top {
+                            temporal_ops::TemporalOp::Next { axis } => {
+                                temporal_ops::shift_next(&input_tensors[0].view(), axis)
+                            }
+                            temporal_ops::TemporalOp::Binary { .. } => {
+                                return Err(ExecutorError::InvalidEinsumSpec(
+                                    "temporal binary op (until/weakuntil/release/strongrelease) is a binary op, not unary".to_string(),
+                                ))
+                            }
+                        }
+                    } else {
+                        let elem_op = parse_elem_op(op)?;
+                        self.elem_op(elem_op, &input_tensors[0])?
+                    }
                 }
                 tensorlogic_ir::OpType::ElemBinary { op } => {
                     if input_tensors.len() != 2 {
@@ -123,8 +144,34 @@ impl TlAutodiff for Scirs2Exec {
                             input_tensors.len()
                         )));
                     }
-                    let elem_op = parse_elem_op(op)?;
-                    self.elem_op_binary(elem_op, &input_tensors[0], &input_tensors[1])?
+                    // Intercept temporal Until before generic elem_op dispatch.
+                    if let Some(top_result) = temporal_ops::parse_temporal_op(op) {
+                        let top = top_result.map_err(|e| {
+                            ExecutorError::InvalidEinsumSpec(format!(
+                                "Temporal op parse error: {}",
+                                e
+                            ))
+                        })?;
+                        match top {
+                            temporal_ops::TemporalOp::Binary { axis, sem, form } => {
+                                temporal_ops::temporal_binary_scan(
+                                    &input_tensors[0].view(),
+                                    &input_tensors[1].view(),
+                                    axis,
+                                    form,
+                                    sem,
+                                )
+                            }
+                            temporal_ops::TemporalOp::Next { .. } => {
+                                return Err(ExecutorError::InvalidEinsumSpec(
+                                    "temporal_next is a unary op, not binary".to_string(),
+                                ))
+                            }
+                        }
+                    } else {
+                        let elem_op = parse_elem_op(op)?;
+                        self.elem_op_binary(elem_op, &input_tensors[0], &input_tensors[1])?
+                    }
                 }
                 tensorlogic_ir::OpType::Reduce { op, axes } => {
                     if input_tensors.len() != 1 {
@@ -248,6 +295,29 @@ impl TlAutodiff for Scirs2Exec {
                         let input_idx = node.inputs[0];
                         let input = &input_tensors[0];
 
+                        // Intercept temporal Next VJP.
+                        if let Some(top_result) = temporal_ops::parse_temporal_op(op) {
+                            match top_result {
+                                Ok(temporal_ops::TemporalOp::Next { axis }) => {
+                                    let grad = temporal_ops::shift_prev(&output_grad.view(), axis);
+                                    if gradients[input_idx].is_none() {
+                                        gradients[input_idx] = Some(grad);
+                                    } else if let Some(existing_grad) = &mut gradients[input_idx] {
+                                        *existing_grad = &*existing_grad + &grad;
+                                    }
+                                }
+                                _ => {
+                                    // Until or parse error: pass gradient through
+                                    if gradients[input_idx].is_none() {
+                                        gradients[input_idx] = Some(output_grad.clone());
+                                    } else if let Some(existing_grad) = &mut gradients[input_idx] {
+                                        *existing_grad = &*existing_grad + &output_grad;
+                                    }
+                                }
+                            }
+                            continue;
+                        }
+
                         let grad = match op.as_str() {
                             "relu" => {
                                 // ReLU gradient: grad * (input > 0)
@@ -285,6 +355,57 @@ impl TlAutodiff for Scirs2Exec {
                 tensorlogic_ir::OpType::ElemBinary { op } => {
                     // Gradient through binary operations with access to input values
                     if node.inputs.len() == 2 && input_tensors.len() == 2 {
+                        // Intercept temporal Until VJP.
+                        if let Some(top_result) = temporal_ops::parse_temporal_op(op) {
+                            match top_result {
+                                Ok(temporal_ops::TemporalOp::Binary { axis, sem, form }) => {
+                                    let a = &input_tensors[0];
+                                    let b = &input_tensors[1];
+                                    let (grad_a, grad_b) = temporal_ops::temporal_binary_scan_vjp(
+                                        &a.view(),
+                                        &b.view(),
+                                        &output_grad.view(),
+                                        axis,
+                                        form,
+                                        sem,
+                                    );
+                                    let input_idx_0 = node.inputs[0];
+                                    if gradients[input_idx_0].is_none() {
+                                        gradients[input_idx_0] = Some(grad_a);
+                                    } else if let Some(eg) = &mut gradients[input_idx_0] {
+                                        *eg = &*eg + &grad_a;
+                                    }
+                                    let input_idx_1 = node.inputs[1];
+                                    if gradients[input_idx_1].is_none() {
+                                        gradients[input_idx_1] = Some(grad_b);
+                                    } else if let Some(eg) = &mut gradients[input_idx_1] {
+                                        *eg = &*eg + &grad_b;
+                                    }
+                                }
+                                Ok(temporal_ops::TemporalOp::Next { .. }) => {
+                                    // temporal_next is not a binary op; pass gradient through
+                                    for &iidx in &node.inputs {
+                                        if gradients[iidx].is_none() {
+                                            gradients[iidx] = Some(output_grad.clone());
+                                        } else if let Some(eg) = &mut gradients[iidx] {
+                                            *eg = &*eg + &output_grad;
+                                        }
+                                    }
+                                }
+                                Err(_) => {
+                                    // Parse error in binary context: pass gradient through
+                                    for &iidx in &node.inputs {
+                                        if gradients[iidx].is_none() {
+                                            gradients[iidx] = Some(output_grad.clone());
+                                        } else if let Some(eg) = &mut gradients[iidx] {
+                                            *eg = &*eg + &output_grad;
+                                        }
+                                    }
+                                }
+                            }
+                            continue;
+                        }
+
                         let x = &input_tensors[0];
                         let y = &input_tensors[1];
 

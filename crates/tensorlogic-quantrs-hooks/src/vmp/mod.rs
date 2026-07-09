@@ -56,6 +56,7 @@ pub mod engine;
 pub mod exponential_family;
 pub mod gamma;
 pub mod messages;
+pub mod mixture;
 pub mod special;
 
 #[cfg(test)]
@@ -72,3 +73,4 @@ pub use engine::{
 pub use exponential_family::ExponentialFamily;
 pub use gamma::{GammaNP, GammaPoissonObservation};
 pub use messages::{MessageDirection, VmpMessage};
+pub use mixture::{VariationalGaussianMixture, VgmmConfig, VgmmResult};

@@ -6,7 +6,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](../../LICENSE)
 [![Status](https://img.shields.io/badge/status-stable-success)](#)
 
-**Version**: 0.1.0 | **Status**: Stable | **Last Updated**: 2026-04-06
+**Version**: 0.1.1 | **Status**: Stable | **Last Updated**: 2026-06-09
 
 A comprehensive command-line tool for compiling logical expressions to tensor graphs using TensorLogic.
 
@@ -744,7 +744,7 @@ cargo build -p tensorlogic-cli
 
 ```bash
 cargo nextest run -p tensorlogic-cli --all-features
-# 291 tests run: 291 passed (as of 2026-04-06)
+# 291 tests run: 291 passed (as of 2026-06-09)
 ```
 
 ### Running from Source

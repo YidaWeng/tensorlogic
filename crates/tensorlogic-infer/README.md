@@ -1233,8 +1233,8 @@ Apache-2.0
 
 ---
 
-**Status**: Stable (v0.1.0)
-**Last Updated**: 2026-04-06
+**Status**: Stable (v0.1.1)
+**Last Updated**: 2026-06-09
 **Tests**: 909 passing (100%)
 **Code**: 74 files, ~26,000 lines
 **Completeness**: 100%

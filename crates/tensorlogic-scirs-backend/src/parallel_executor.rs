@@ -38,6 +38,8 @@ use crate::autodiff::ForwardTape;
 use crate::dependency_analyzer::DependencyAnalysis;
 #[cfg(feature = "parallel")]
 use crate::ops::{parse_elem_op, parse_reduce_op};
+#[cfg(feature = "parallel")]
+use crate::temporal_ops;
 use crate::Scirs2Tensor;
 
 /// Configuration for parallel execution.
@@ -183,6 +185,22 @@ impl ParallelScirs2Exec {
                         input_tensors.len()
                     )));
                 }
+                // Intercept temporal Next.
+                if let Some(top_result) = temporal_ops::parse_temporal_op(op) {
+                    let top = top_result.map_err(|e| {
+                        ExecutorError::InvalidEinsumSpec(format!("Temporal op parse error: {}", e))
+                    })?;
+                    return match top {
+                        temporal_ops::TemporalOp::Next { axis } => {
+                            Ok(temporal_ops::shift_next(&input_tensors[0].view(), axis))
+                        }
+                        temporal_ops::TemporalOp::Binary { .. } => {
+                            Err(ExecutorError::InvalidEinsumSpec(
+                                "temporal binary op (until/weakuntil/release/strongrelease) is a binary op, not unary".to_string(),
+                            ))
+                        }
+                    };
+                }
                 let elem_op = parse_elem_op(op)?;
                 match elem_op {
                     ElemOp::Relu => Ok(input_tensors[0].mapv(|v| v.max(0.0))),
@@ -200,6 +218,28 @@ impl ParallelScirs2Exec {
                         "Binary operation requires 2 inputs, got {}",
                         input_tensors.len()
                     )));
+                }
+                // Intercept temporal Until.
+                if let Some(top_result) = temporal_ops::parse_temporal_op(op) {
+                    let top = top_result.map_err(|e| {
+                        ExecutorError::InvalidEinsumSpec(format!("Temporal op parse error: {}", e))
+                    })?;
+                    return match top {
+                        temporal_ops::TemporalOp::Binary { axis, sem, form } => {
+                            Ok(temporal_ops::temporal_binary_scan(
+                                &input_tensors[0].view(),
+                                &input_tensors[1].view(),
+                                axis,
+                                form,
+                                sem,
+                            ))
+                        }
+                        temporal_ops::TemporalOp::Next { .. } => {
+                            Err(ExecutorError::InvalidEinsumSpec(
+                                "temporal_next is a unary op, not binary".to_string(),
+                            ))
+                        }
+                    };
                 }
                 let elem_op = parse_elem_op(op)?;
                 let x = &input_tensors[0];

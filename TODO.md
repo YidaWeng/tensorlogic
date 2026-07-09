@@ -1,6 +1,6 @@
 # TensorLogic — TODO
 
-**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-27
+**Status**: Stable | **Version**: 0.1.1 | **Released**: 2026-06-09 | **Last Updated**: 2026-06-09
 **History**: See [CHANGELOG.md](./CHANGELOG.md) for release history.
 
 ## Round 5 (2026-04-17) — Complete
@@ -101,6 +101,52 @@ See [CHANGELOG.md](./CHANGELOG.md) for the full record of each phase, RC, and st
 #### Remaining
 
 All initial v0.2.0 research-preview items for in-repo work are delivered. Next enhancements tracked per-crate: see each `crates/*/TODO.md`.
+
+## Round 6 (2026-05-29) — Complete
+
+### Deliverables
+
+- [x] **Temporal `Next (X)` operator** — `crates/tensorlogic-compiler/src/compile/modal_temporal.rs`: replaces the `bail!` stub with a real shift-forward implementation. Compiler emits `ElemUnary { op: "temporal_next:<axis>" }`. Backend `crates/tensorlogic-scirs-backend/src/temporal_ops.rs`: `shift_next` (forward shift along any axis, T=1 edge case handled), `shift_prev` (VJP). Wired into `autodiff.rs` (forward + backward) and `parallel_executor.rs`.
+- [x] **Temporal `Until (U)` operator** — same files as Next. Backward-in-time recurrence `u[T-1]=b[T-1]`, `u[t]=b[t]⊕(a[t]⊗u[t+1])`. Two semantics: MaxMin (⊕=max, ⊗=min) for `TemporalStrategy::Max/LogSumExp`; ProbSumProduct (⊕=a+b−ab, ⊗=a·b) for `Sum`. Encoded in op string `"temporal_until:<tag>:<axis>"`. VJP `until_scan_vjp` uses forward-in-time adjoint accumulation. 17 new tests.
+- [x] **Variational Bayes GMM** — `crates/tensorlogic-quantrs-hooks/src/vmp/mixture.rs` (NEW, 570 lines): `VariationalGaussianMixture` (standalone VBEM, following gamma/beta pattern — NOT wired into engine enums). Full Bishop PRML §10.2 VBEM: Dirichlet prior on weights, Gaussian-mean posteriors with known precision. Divergence-guard ELBO loop matching `engine.rs`. `VgmmConfig` builder, `VgmmResult` with `mixing_weights`, `hard_assignments`, `component_counts`. 11 unit tests + 1 end-to-end integration test (3-cluster recovery).
+- [x] **Multi-output / vector-valued kernels** — `crates/tensorlogic-sklears-kernels/src/multi_output/` (NEW directory module): `MultiOutputKernel` trait (`compute_block → Array2<f64>`, default `block_gram_matrix`), `KroneckerICMKernel` and `KroneckerLMCKernel` (matrix-valued wrappers over existing scalar multi-task kernels), `VvgpModel` / `VvgpFitted` (vector-valued GP regression via Cholesky solve + posterior prediction). 20 new tests (10 unit + 10 integration).
+
+### Round 6 Test Coverage
+- `tensorlogic-scirs-backend/src/temporal_ops.rs`: 10 unit tests; `tests/temporal_grad.rs`: 7 integration tests
+- `tensorlogic-quantrs-hooks/src/vmp/mixture.rs`: 10 unit tests; `tests/vmp_integration.rs`: +1 integration test
+- `tensorlogic-sklears-kernels/src/multi_output/tests.rs`: 10 unit tests; `tests/multi_output_integration.rs`: 10 integration tests
+
+## Round 7 (2026-06-02) — Complete
+
+### Deliverables
+
+- [x] **Exact LTL Release (R), WeakUntil (W), StrongRelease (M) operators** — `crates/tensorlogic-scirs-backend/src/temporal_ops.rs` + `crates/tensorlogic-compiler/src/compile/modal_temporal.rs`: replaced three mathematically incorrect single-step approximations with exact finite-trace backward-scan recurrences. Unified `temporal_binary_scan` / `temporal_binary_scan_vjp` (generalize Round 6's `until_scan`): OUTER/INNER closed over `TemporalBinaryForm` × `UntilSemantics`; boundary_val ∈ {0.0,1.0} distinguishes strong/weak variants. Op strings `temporal_weakuntil:<tag>:<axis>`, `temporal_release:`, `temporal_strongrelease:`. VJPs wired into all 6 dispatch sites in `autodiff.rs` + `parallel_executor.rs`. +10 unit tests + 6 integration tests; all 17 Round 6 temporal tests still pass.
+- [x] **OxiCUDA solver: f64 variants + Preconditioned CG + Thomas tridiagonal LU** — `crates/tensorlogic-oxicuda-solver/`: generic `lu_core<T:Float>` / `cholesky_core` / `qr_core` / `cg_core` extracted; `solve_lu_f64`, `solve_cholesky_f64`, `solve_qr_lstsq_f64`, `cg_solve_f64` added. New `pcg_solve` / `pcg_solve_f64` with `Precond::Jacobi` (diagonal scaling) and `Precond::IncompleteCholesky` (exact dense Cholesky for IC(0) preconditioner). New `banded.rs`: Thomas algorithm `solve_tridiagonal` / `solve_tridiagonal_f64`. 12 new integration tests in `tests/advanced_solver.rs`; 47 total.
+- [x] **OxiCUDA sparse: generic SparseCsr<T> + SparseCsc + transpose + f64 + batched SpMV** — `crates/tensorlogic-oxicuda-sparse/`: `SparseCsr<T=f32>` generalized over `T:Float` (backward-compatible default). New `csc.rs`: `SparseCsc<T>` (column-histogram build, `csc_spmv`, `to_csr`, `from_dense`). `SparseCsr::transpose()`, `SparseCsr::to_csc()`, `SparseCsr::from_dense()`. `spmv_f64`, `spmm_f64`, `spmv_batched`. 14 new tests in `tests/advanced_sparse.rs`; 27 total.
+- [x] **OxiCUDA rng: f64 sampling + streaming API + Send+Sync for CPU builds** — `crates/tensorlogic-oxicuda-rng/`: `uniform_f64` / `normal_f64` using 52-bit mantissa extraction + Box–Muller on f64. `fill_uniform_chunked` / `fill_uniform_chunked_f64` / `fill_normal_chunked` streaming callbacks (chunk-size-agnostic determinism). `PhantomData<*const ()>` made `#[cfg(feature="gpu")]`-only so CPU builds auto-derive `Sync`. 12 new integration tests in `tests/f64_and_stream.rs`; 60 total.
+
+### Round 7 Test Coverage
+- `tensorlogic-scirs-backend/src/temporal_ops.rs`: +10 unit tests; `tests/temporal_grad.rs`: +6 integration tests
+- `tensorlogic-oxicuda-solver/tests/advanced_solver.rs`: 12 new integration tests; 47 total in crate
+- `tensorlogic-oxicuda-sparse/tests/advanced_sparse.rs`: 14 new tests; 27 total in crate
+- `tensorlogic-oxicuda-rng/tests/f64_and_stream.rs`: 12 new tests; 60 total in crate
+- **Full workspace: 6938 tests, 6938 passed, 21 skipped (GPU-only), 0 failed**
+
+## Round 8 (2026-06-03) — Complete
+
+### Deliverables
+
+- [x] **Probabilistic Execution in scirs-backend** — new `crates/tensorlogic-scirs-backend/src/probabilistic/` module: `sample_bernoulli`/`sample_uniform`/`sample_normal`/`sample_categorical` (Gumbel-max trick) + `mc_integrate`; `MonteCarloEstimator` (mean/variance/percentile CI) + `predictive_entropy` + BALD epistemic uncertainty; `VariationalInference::fit` — mean-field Gaussian VI with reparameterization trick and Adam SGA maximizing the reparameterized ELBO. RNG via `scirs2_core::random`. 15 new tests; 641 total in crate.
+- [x] **SPARQL via tensor operations in oxirs-bridge** — `src/interned_graph.rs`: `InternedGraph` O(1) term dictionary + predicate-indexed adjacency, parallel N-Triples bulk loading via `std::thread::scope`, `from_rdf_triples`/`into_quad_store` bridges; `src/sparql/tensor_eval.rs`: `TensorBgpEvaluator` evaluates conjunctive SELECT/BGP queries as boolean tensor contraction over `EinsumGraph` + `Scirs2Exec::forward`, decoding nonzero output entries back to variable bindings. 21 new tests (12 unit + 9 integration); 541 total in crate.
+- [x] **Neural Architecture Search in tensorlogic-train** — `src/nas/`: `ArchSearchSpace`/`Architecture`/`LayerSpec` with `param_count()` + `HyperparamConfig` interop; `ArchSampler` (random generation + 4-operator mutation); `RegularizedEvolution` (Real et al. 2019 aging evolution with tournament selection, aging eviction, ask/tell API); `RandomArchSearch` baseline. 15 new tests; 741 total in crate.
+- [x] **SVM via SMO in tensorlogic-sklears-kernels** — `src/svm/`: `SvcModel`/`SvcFitted` (C-SVM binary + one-vs-rest multiclass), `SvrModel`/`SvrFitted` (ε-SVR via 2N-variable augmented dual); `smo_svc` implementing Platt 1998 SMO with Keerthi two-loop heuristics, error cache, KKT convergence guard, non-convergence error. All built on the existing `Arc<dyn Kernel>` trait. 24 new tests; 557 total in crate.
+
+### Round 8 Test Coverage
+- `tensorlogic-scirs-backend/src/probabilistic/`: 15 new tests; 641 total in crate
+- `tensorlogic-oxirs-bridge/src/interned_graph.rs`: 12 unit tests; `tests/tensor_sparql.rs`: 9 integration tests; 541 total in crate
+- `tensorlogic-train/src/nas/tests.rs`: 15 new tests; 741 total in crate
+- `tensorlogic-sklears-kernels/src/svm/tests.rs`: 24 new tests; 557 total in crate
+- **Full workspace: 7019 tests, 7018 passed, 21 skipped (GPU-only), 0 failures** (1 pre-existing resource-exhaustion flake in tensorlogic-adapters::integration_tests, passes in isolation)
 
 ## Per-crate TODOs
 

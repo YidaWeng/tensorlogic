@@ -14,9 +14,11 @@
 //! For production SPARQL federation and advanced features, consider using a dedicated SPARQL engine.
 
 mod compiler;
+mod tensor_eval;
 mod types;
 
 pub use compiler::SparqlCompiler;
+pub use tensor_eval::TensorBgpEvaluator;
 pub use types::{
     AggregateFunction, BindExpr, FilterCondition, GraphPattern, PatternElement, QueryType,
     SelectElement, SparqlQuery, TriplePattern,

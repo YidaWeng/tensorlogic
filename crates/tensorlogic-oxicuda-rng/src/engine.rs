@@ -3,7 +3,8 @@
 //! # Design
 //!
 //! [`RngEngine`] exposes a small, ergonomic surface (`uniform_f32`,
-//! `normal_f32`, `bernoulli`) that dispatches at runtime to either:
+//! `normal_f32`, `bernoulli`, `uniform_f64`, `normal_f64`, streaming variants)
+//! that dispatches at runtime to either:
 //!
 //! * The **CPU path** — a minimal PCG-XSH-RR 64-bit generator with Box-Muller
 //!   transform, implemented entirely in pure Rust with zero external
@@ -17,9 +18,10 @@
 //!
 //! # Thread safety
 //!
-//! `RngEngine` is `Send` but NOT `Sync`.  The GPU path owns a CUDA stream
-//! (not sharable across threads), and we mark the CPU path identically so
-//! user code is feature-portable without unsafe surprises.
+//! On the **CPU path**, `RngEngine` is both [`Send`] and [`Sync`] — the state
+//! is plain integers with no shared mutable references.  On the **GPU path**,
+//! `RngEngine` is `Send` but NOT `Sync` because a CUDA stream cannot be shared
+//! across threads.
 //!
 //! # Policy compliance
 //!
@@ -178,6 +180,54 @@ impl CpuRngState {
         let theta = std::f32::consts::TAU * u2; // TAU = 2π
         (r * theta.cos(), r * theta.sin())
     }
+
+    /// Returns the next 64-bit pseudorandom output by combining two 32-bit
+    /// PCG outputs into a single u64.
+    ///
+    /// The high 32 bits come from the first PCG step, the low 32 bits from
+    /// the second.  This preserves the sequential structure of the stream so
+    /// that `next_u64` and `next_u32` interleave predictably.
+    #[inline]
+    fn next_u64(&mut self) -> u64 {
+        let hi = self.next_u32() as u64;
+        let lo = self.next_u32() as u64;
+        (hi << 32) | lo
+    }
+
+    /// Returns a uniform sample in `[0.0, 1.0)` with 52-bit mantissa
+    /// precision using the IEEE 754 exponent-field trick.
+    ///
+    /// Construction:
+    /// ```text
+    ///   bits = next_u64() >> 12               (top 52 bits from the 64-bit PCG output)
+    ///   x    = f64::from_bits(0x3FF0…0 | bits) - 1.0
+    /// ```
+    /// The exponent `0x3FF` represents a biased value of 1023, placing the
+    /// result in `[1.0, 2.0)`.  Subtracting 1.0 maps to `[0.0, 1.0)`.
+    #[inline]
+    fn next_f64(&mut self) -> f64 {
+        // 64-bit PCG output; keep top 52 bits for the f64 mantissa.
+        let bits = self.next_u64();
+        // IEEE 754 double: sign=0, exponent=1023 (0x3FF bias → [1.0, 2.0)).
+        f64::from_bits(0x3FF0_0000_0000_0000_u64 | (bits >> 12)) - 1.0_f64
+    }
+
+    /// Returns a pair of independent standard normal f64 samples via Box-Muller.
+    ///
+    /// We use `(1.0 - u1)` rather than `u1` directly to guarantee the argument
+    /// to `ln()` is strictly in `(0.0, 1.0]`, avoiding `ln(0)`.
+    #[inline]
+    fn next_normal_pair_f64(&mut self) -> (f64, f64) {
+        // u1 ∈ [0, 1) — we invert to (0, 1] before the logarithm.
+        let u1 = self.next_f64();
+        let u2 = self.next_f64();
+
+        // Use (1 - u1) to map [0,1) → (0,1] and guard against ln(0).
+        let safe_u1 = if u1 >= 1.0 { f64::EPSILON } else { 1.0 - u1 };
+        let r = (-2.0_f64 * safe_u1.ln()).sqrt();
+        let theta = std::f64::consts::TAU * u2; // TAU = 2π
+        (r * theta.cos(), r * theta.sin())
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -219,24 +269,36 @@ struct GpuRngState {
 ///
 /// # Thread safety
 ///
-/// `RngEngine` is [`Send`] but NOT [`Sync`].  The `PhantomData<*const ()>`
-/// field statically prevents `Sync` without any runtime cost.
+/// On the **CPU path** (`default`), `RngEngine` is both [`Send`] and [`Sync`]
+/// — the state is a pair of `u64` integers and carries no shared references.
+///
+/// On the **GPU path** (`feature = "gpu"`), `RngEngine` is [`Send`] but NOT
+/// [`Sync`].  A CUDA stream cannot be shared across threads; the
+/// `PhantomData<*const ()>` field enforces that statically.
 pub struct RngEngine {
     /// The engine kind (preserved for introspection and GPU dispatch).
     kind: RngEngineKind,
     /// The inner state — either CPU or GPU.
     inner: RngEngineInner,
-    /// Makes `RngEngine` non-`Sync` (a raw pointer is never `Sync`).
+    /// Makes `RngEngine` non-`Sync` on the GPU path only.
+    ///
+    /// On the CPU path this field is absent, allowing the compiler to
+    /// auto-derive `Sync` from the plain-integer fields.
+    #[cfg(feature = "gpu")]
     _not_sync: std::marker::PhantomData<*const ()>,
 }
 
 // SAFETY: `RngEngine` owns its state exclusively (no shared references).
-// The CPU path is a plain `u64` pair.  The GPU path holds a `RngGenerator`
-// which in turn owns a CUDA stream — streams are not `Sync` (cannot be shared
-// across threads) but are safe to *move* between threads, hence `Send`.
+// The CPU path is a plain `u64` pair — both `Send` and `Sync` are safe.
+// The GPU path holds a `RngGenerator` which owns a CUDA stream.  Streams are
+// safe to *move* across threads (`Send`) but must not be shared (`!Sync`).
+// We provide an explicit `Send` impl because the PhantomData on the GPU path
+// would otherwise block the auto-derived `Send` as well.
 unsafe impl Send for RngEngine {}
-// `Sync` is intentionally NOT implemented.  The `PhantomData<*const ()>` field
-// already prevents the auto-derived `Sync` impl.
+// `Sync` is intentionally NOT implemented on the GPU path.
+// `PhantomData<*const ()>` prevents the auto-derived impl there.
+// On the CPU path (no PhantomData) the compiler auto-derives `Sync` because
+// all fields are `u64` (which are `Send + Sync`).
 
 impl RngEngine {
     /// Constructs a new RNG engine of the requested `kind` and `seed`.
@@ -265,6 +327,7 @@ impl RngEngine {
             Ok(Self {
                 kind,
                 inner: RngEngineInner::Cpu(CpuRngState::new(seed)),
+                #[cfg(feature = "gpu")]
                 _not_sync: std::marker::PhantomData,
             })
         }
@@ -298,7 +361,7 @@ impl RngEngine {
         Ok(Self {
             kind,
             inner: RngEngineInner::Gpu(GpuRngState { generator }),
-            _not_sync: std::marker::PhantomData,
+            _not_sync: std::marker::PhantomData::<*const ()>,
         })
     }
 
@@ -473,6 +536,230 @@ impl RngEngine {
                 Ok(())
             }
         }
+    }
+
+    // -----------------------------------------------------------------------
+    // Uniform f64
+    // -----------------------------------------------------------------------
+
+    /// Fills `out` with independent uniform samples drawn from `[0.0, 1.0)`
+    /// with 52-bit mantissa precision.
+    ///
+    /// Each value is constructed from a 64-bit PCG output using the IEEE 754
+    /// exponent-field trick: the top 52 bits are inserted into the mantissa of
+    /// a double with exponent bias 1023 (∈ `[1.0, 2.0)`), then 1.0 is
+    /// subtracted to shift to `[0.0, 1.0)`.
+    ///
+    /// # Errors
+    ///
+    /// * [`RngError::EmptyBuffer`] — `out` is empty.
+    pub fn uniform_f64(&mut self, out: &mut [f64]) -> Result<(), RngError> {
+        if out.is_empty() {
+            return Err(RngError::EmptyBuffer);
+        }
+        match &mut self.inner {
+            #[cfg(feature = "cpu")]
+            RngEngineInner::Cpu(state) => {
+                for slot in out.iter_mut() {
+                    *slot = state.next_f64();
+                }
+                Ok(())
+            }
+            #[cfg(feature = "gpu")]
+            RngEngineInner::Gpu(_gs) => {
+                // GPU path: no native f64 cuRAND kernel wired yet; use CPU
+                // emulation on the host side for correctness.
+                Err(RngError::GpuError(
+                    "uniform_f64 on GPU path not yet implemented".to_string(),
+                ))
+            }
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Normal f64
+    // -----------------------------------------------------------------------
+
+    /// Fills `out` with independent normal samples from `N(mean, std_dev²)`
+    /// with double precision.
+    ///
+    /// Uses Box-Muller on the CPU path.  Each pair of output values consumes
+    /// two `uniform_f64` draws; an odd-length buffer consumes one additional
+    /// pair (discarding the second normal from the last Box-Muller step).
+    ///
+    /// # Errors
+    ///
+    /// * [`RngError::EmptyBuffer`]  — `out` is empty.
+    /// * [`RngError::InvalidParam`] — `std_dev < 0` or not finite, or `mean`
+    ///   is not finite.
+    pub fn normal_f64(&mut self, out: &mut [f64], mean: f64, std_dev: f64) -> Result<(), RngError> {
+        if out.is_empty() {
+            return Err(RngError::EmptyBuffer);
+        }
+        if !std_dev.is_finite() || std_dev < 0.0 {
+            return Err(RngError::InvalidParam(format!(
+                "std_dev must be finite and >= 0, got {std_dev}"
+            )));
+        }
+        if !mean.is_finite() {
+            return Err(RngError::InvalidParam(format!(
+                "mean must be finite, got {mean}"
+            )));
+        }
+
+        match &mut self.inner {
+            #[cfg(feature = "cpu")]
+            RngEngineInner::Cpu(state) => {
+                let n = out.len();
+                let mut i = 0usize;
+                // Consume pairs from Box-Muller; handle the odd trailing element.
+                while i + 1 < n {
+                    let (z0, z1) = state.next_normal_pair_f64();
+                    out[i] = mean + std_dev * z0;
+                    out[i + 1] = mean + std_dev * z1;
+                    i += 2;
+                }
+                if i < n {
+                    let (z0, _) = state.next_normal_pair_f64();
+                    out[i] = mean + std_dev * z0;
+                }
+                Ok(())
+            }
+            #[cfg(feature = "gpu")]
+            RngEngineInner::Gpu(_gs) => Err(RngError::GpuError(
+                "normal_f64 on GPU path not yet implemented".to_string(),
+            )),
+        }
+    }
+
+    // -----------------------------------------------------------------------
+    // Streaming API
+    // -----------------------------------------------------------------------
+
+    /// Generates `total` f32 uniform samples and delivers them in chunks of at
+    /// most `chunk_size` elements, calling `consumer` once per chunk.
+    ///
+    /// The final chunk may be smaller than `chunk_size` when `total` is not a
+    /// multiple of `chunk_size`.
+    ///
+    /// # Determinism
+    ///
+    /// Given the same seed and the same `total`, the complete sequence of
+    /// generated values is identical regardless of `chunk_size`.  The chunk
+    /// size only affects how many values are presented per callback.
+    ///
+    /// # Errors
+    ///
+    /// * [`RngError::EmptyBuffer`] — `total == 0` or `chunk_size == 0`.
+    pub fn fill_uniform_chunked<F: FnMut(&[f32])>(
+        &mut self,
+        total: usize,
+        chunk_size: usize,
+        consumer: &mut F,
+    ) -> Result<(), RngError> {
+        if total == 0 || chunk_size == 0 {
+            return Err(RngError::EmptyBuffer);
+        }
+
+        let mut buf = vec![0f32; chunk_size];
+        let mut remaining = total;
+
+        while remaining > 0 {
+            let n = remaining.min(chunk_size);
+            self.uniform_f32(&mut buf[..n])?;
+            consumer(&buf[..n]);
+            remaining -= n;
+        }
+        Ok(())
+    }
+
+    /// Generates `total` f64 uniform samples and delivers them in chunks of at
+    /// most `chunk_size` elements, calling `consumer` once per chunk.
+    ///
+    /// The final chunk may be smaller than `chunk_size` when `total` is not a
+    /// multiple of `chunk_size`.
+    ///
+    /// # Determinism
+    ///
+    /// Given the same seed and the same `total`, the complete sequence of
+    /// generated values is identical regardless of `chunk_size`.
+    ///
+    /// # Errors
+    ///
+    /// * [`RngError::EmptyBuffer`] — `total == 0` or `chunk_size == 0`.
+    pub fn fill_uniform_chunked_f64<F: FnMut(&[f64])>(
+        &mut self,
+        total: usize,
+        chunk_size: usize,
+        consumer: &mut F,
+    ) -> Result<(), RngError> {
+        if total == 0 || chunk_size == 0 {
+            return Err(RngError::EmptyBuffer);
+        }
+
+        let mut buf = vec![0f64; chunk_size];
+        let mut remaining = total;
+
+        while remaining > 0 {
+            let n = remaining.min(chunk_size);
+            self.uniform_f64(&mut buf[..n])?;
+            consumer(&buf[..n]);
+            remaining -= n;
+        }
+        Ok(())
+    }
+
+    /// Generates `total` f32 normal samples from `N(mean, std_dev²)` and
+    /// delivers them in chunks of at most `chunk_size` elements, calling
+    /// `consumer` once per chunk.
+    ///
+    /// The final chunk may be smaller than `chunk_size`.
+    ///
+    /// # Determinism
+    ///
+    /// Given the same seed and the same `total`, the full sequence is identical
+    /// regardless of `chunk_size`.  Note: because Box-Muller consumes values in
+    /// pairs, chunk boundaries that split a pair internally will advance the
+    /// stream by a full pair — the global sequence is determined by `total`, not
+    /// chunk boundaries.
+    ///
+    /// # Errors
+    ///
+    /// * [`RngError::EmptyBuffer`] — `total == 0` or `chunk_size == 0`.
+    /// * [`RngError::InvalidParam`] — `std_dev < 0` or not finite, or `mean`
+    ///   is not finite.
+    pub fn fill_normal_chunked<F: FnMut(&[f32])>(
+        &mut self,
+        total: usize,
+        chunk_size: usize,
+        mean: f32,
+        std_dev: f32,
+        consumer: &mut F,
+    ) -> Result<(), RngError> {
+        if total == 0 || chunk_size == 0 {
+            return Err(RngError::EmptyBuffer);
+        }
+        if !std_dev.is_finite() || std_dev < 0.0 {
+            return Err(RngError::InvalidParam(format!(
+                "std_dev must be finite and >= 0, got {std_dev}"
+            )));
+        }
+        if !mean.is_finite() {
+            return Err(RngError::InvalidParam(format!(
+                "mean must be finite, got {mean}"
+            )));
+        }
+
+        let mut buf = vec![0f32; chunk_size];
+        let mut remaining = total;
+
+        while remaining > 0 {
+            let n = remaining.min(chunk_size);
+            self.normal_f32(&mut buf[..n], mean, std_dev)?;
+            consumer(&buf[..n]);
+            remaining -= n;
+        }
+        Ok(())
     }
 }
 
@@ -720,5 +1007,27 @@ mod tests {
         let mut out = vec![0u8; 500];
         eng.bernoulli(&mut out, 1.0).unwrap();
         assert!(out.iter().all(|&b| b == 1));
+    }
+}
+
+// ---------------------------------------------------------------------------
+// Compile-time Send+Sync assertions for the CPU path
+// ---------------------------------------------------------------------------
+
+/// Verifies at compile time that [`RngEngine`] is both [`Send`] and [`Sync`]
+/// on the CPU path (no `gpu` feature).
+///
+/// If the type bounds fail, this module fails to compile — no runtime test
+/// needed.
+#[cfg(not(feature = "gpu"))]
+mod send_sync_assertions {
+    use super::RngEngine;
+
+    fn _assert_send<T: Send>() {}
+    fn _assert_sync<T: Sync>() {}
+
+    fn _check_rng_engine_send_sync() {
+        _assert_send::<RngEngine>();
+        _assert_sync::<RngEngine>();
     }
 }

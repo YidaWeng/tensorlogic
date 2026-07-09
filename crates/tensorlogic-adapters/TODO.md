@@ -1,6 +1,6 @@
 # TensorLogic Adapters — TODO
 
-**Status**: Stable | **Version**: 0.1.0 | **Released**: 2026-04-06 | **Last Updated**: 2026-04-15
+**Status**: Stable | **Version**: 0.1.1 | **Released**: 2026-04-06 | **Last Updated**: 2026-06-09
 **History**: See [CHANGELOG.md](../../CHANGELOG.md) for release history.
 
 External-data adapters (RDF import, SQL/NoSQL bridges) and code generators (Rust, Python, TypeScript, GraphQL).

@@ -5,7 +5,7 @@
 [![License](https://img.shields.io/badge/license-Apache%202.0-blue.svg)](LICENSE)
 [![Rust](https://img.shields.io/badge/rust-1.90%2B-orange.svg)](https://www.rust-lang.org/)
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue.svg)](https://www.python.org/)
-[![Tests](https://img.shields.io/badge/tests-6982%2F6982-brightgreen.svg)](#testing)
+[![Tests](https://img.shields.io/badge/tests-7178%2F7178-brightgreen.svg)](#testing)
 
 TensorLogic compiles logical rules (predicates, quantifiers, implications) into **tensor equations (einsum graphs)** with a minimal DSL + IR, enabling neural/symbolic/probabilistic models within a unified tensor computation framework.
 
@@ -16,14 +16,14 @@ TensorLogic compiles logical rules (predicates, quantifiers, implications) into 
 - 🐍 **Python Bindings**: Production-ready PyO3 bindings with NumPy integration
 - 🔧 **Multiple Backends**: CPU, SIMD-accelerated CPU, GPU (OxiCUDA, driver-only)
 - 📊 **Comprehensive Benchmarks**: 24 benchmark groups across 5 suites
-- 🧪 **Extensively Tested**: 6,982 tests with 100% pass rate
+- 🧪 **Extensively Tested**: 7,178 tests with 100% pass rate
 - 📚 **Rich Documentation**: Tutorials, examples, API docs
 - 🔗 **Ecosystem Integration**: OxiRS (RDF*/SHACL), SkleaRS, QuantrS2, TrustformeRS, ToRSh
 - 🤖 **Neurosymbolic AI**: Bidirectional tensor conversion with ToRSh (pure Rust PyTorch alternative)
 
 ## 🎉 Stable Release
 
-**Version**: 0.1.0 | **Status**: Stable Release | **Date**: 2026-04-27
+**Version**: 0.1.1 | **Status**: Stable Release | **Date**: 2026-06-09
 
 TensorLogic has reached stable release status with comprehensive testing, benchmarking, and documentation:
 
@@ -35,8 +35,14 @@ TensorLogic has reached stable release status with comprehensive testing, benchm
 - ✅ **Pure Rust compression** — `flate2` replaced with `oxiarc-deflate` (OxiARC policy)
 - ✅ **RNG unified via scirs2_core** — All `rand_09`/`rand_distr_05` aliases removed; no direct `rand` deps
 - ✅ **No `unwrap()` in production/example/bench code** — clippy::unwrap_used = 0
-- ✅ **6,982/6,982 tests passing** (100% pass rate)
+- ✅ **7,178/7,178 tests passing** (100% pass rate)
 - ✅ **Zero compiler/clippy warnings** — Clean build with latest dependencies
+- ✅ **Exact LTL operators** — Release/WeakUntil/StrongRelease with backward-scan recurrences in scirs-backend
+- ✅ **OxiCUDA enhancements** — f64 variants, PCG preconditioned solver, generic SparseCsr<T>, f64/streaming RNG
+- ✅ **Probabilistic Execution** — Monte Carlo integration, variational inference, epistemic uncertainty in scirs-backend
+- ✅ **SPARQL tensor evaluation** — Conjunctive BGP queries via EinsumGraph contraction in oxirs-bridge
+- ✅ **Neural Architecture Search** — Regularized Evolution + ask/tell API in tensorlogic-train
+- ✅ **SVM via SMO** — C-SVM + ε-SVR with Platt SMO in tensorlogic-sklears-kernels
 
 **Ready for real-world use in research, production systems, and educational contexts!**
 
@@ -223,9 +229,9 @@ The project is organized as a Cargo workspace with 13 specialized crates:
 
 | Crate | Purpose | Status |
 |-------|---------|--------|
-| **tensorlogic-oxicuda-rng** | GPU-accelerated RNG (PCG/Box-Muller) with CPU fallback — 47 tests | ✅ Complete |
-| **tensorlogic-oxicuda-solver** | GPU-accelerated linear solvers (LU/Cholesky/QR/CG) with CPU fallback — 35 tests | ✅ Complete |
-| **tensorlogic-oxicuda-sparse** | GPU-accelerated sparse matrix ops (SpMV/SpMM/CSR) with CPU fallback — 13 tests | ✅ Complete |
+| **tensorlogic-oxicuda-rng** | GPU-accelerated RNG (PCG/Box-Muller) with CPU fallback — 60 tests | ✅ Complete |
+| **tensorlogic-oxicuda-solver** | GPU-accelerated linear solvers (LU/Cholesky/QR/CG) with CPU fallback — 47 tests | ✅ Complete |
+| **tensorlogic-oxicuda-sparse** | GPU-accelerated sparse matrix ops (SpMV/SpMM/CSR) with CPU fallback — 27 tests | ✅ Complete |
 
 ## 🔬 Logic-to-Tensor Mapping
 
@@ -377,10 +383,10 @@ pytest tests/ -v
 ```
 
 **Test Statistics**:
-- **6,982 tests** across all crates (lib + integration + doc)
-- **100% pass rate** (12 tests intentionally skipped)
+- **7,178 tests** across all crates (lib + integration + doc)
+- **100% pass rate** (37 tests intentionally skipped)
 - **Zero compiler warnings, zero clippy warnings, zero rustdoc warnings**
-- **~294K lines of Rust code** (843 source files — tokei)
+- **~325K lines of Rust code** (1,108 source files — tokei)
 - Coverage includes:
   - Unit tests (logic operations, type checking, optimization)
   - Integration tests (end-to-end workflows)
@@ -537,7 +543,7 @@ let output = attention.forward(&query, &key, &value)?;
 | 7 | Python Bindings | ✅ Production Ready | 98% |
 | 8 | Validation & Scale | ✅ Complete | 100% |
 
-**Overall Project Status**: 🎉 **Stable Release (0.1.0)**
+**Overall Project Status**: 🎉 **Stable Release (0.1.1)**
 
 ## 🤝 Contributing
 

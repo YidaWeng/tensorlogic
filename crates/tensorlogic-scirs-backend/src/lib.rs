@@ -1,6 +1,6 @@
 //! SciRS2-backed executor (CPU/SIMD/GPU via features).
 //!
-//! **Version**: 0.1.0 | **Status**: Production Ready
+//! **Version**: 0.1.1 | **Status**: Production Ready
 //!
 //! This crate provides a production-ready implementation of the TensorLogic execution
 //! traits using the SciRS2 scientific computing library.
@@ -50,6 +50,7 @@
 //! - `device`: Device management (CPU/GPU selection)
 //! - `execution_mode`: Execution mode abstractions (Eager/Graph/JIT)
 //! - `precision`: Precision control (f32/f64/mixed)
+//! - `probabilistic`: Monte Carlo sampling, uncertainty quantification, and mean-field VI
 
 pub mod activations;
 pub mod attention;
@@ -91,12 +92,14 @@ pub mod parallel_executor;
 pub mod pooling;
 pub mod precision;
 pub mod precision_cast;
+pub mod probabilistic;
 pub mod profiled_executor;
 pub mod quantization;
 pub mod recurrent;
 pub mod scoring;
 pub mod shape_inference;
 pub mod signal_ops;
+pub mod temporal_ops;
 pub mod tensor_io;
 pub mod tensor_loss;
 pub mod tracing;
@@ -214,6 +217,11 @@ pub use pooling::{
 };
 pub use precision::{ComputePrecision, Precision, PrecisionConfig, Scalar};
 pub use precision_cast::{cast_f32_to_f64, cast_f64_to_f32, DualPrecisionBridge};
+pub use probabilistic::{
+    bald_epistemic_uncertainty, mc_integrate, predictive_entropy, sample_bernoulli,
+    sample_categorical, sample_normal, sample_uniform, MeanFieldGaussian, MonteCarloConfig,
+    MonteCarloEstimator, UncertaintyEstimate, VariationalConfig, VariationalInference,
+};
 pub use profiled_executor::ProfiledScirs2Exec;
 pub use quantization::{
     calibrate_quantization, QatConfig, QuantizationGranularity, QuantizationParams,
